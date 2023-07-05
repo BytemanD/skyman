@@ -1,0 +1,13 @@
+debug: false
+
+# 认证信息
+auth:
+  url: http://keystone-server:35357/v3
+  regionName: RegionOne
+  user:
+    name: admin
+    password: keystone123
+    domainName: Default
+  project:
+    name: admin
+    domainName: Default
