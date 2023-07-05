@@ -1,0 +1,2 @@
+# stackcrud
+Goalng Openstack client
