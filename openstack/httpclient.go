@@ -77,7 +77,7 @@ func (resp *Response) JudgeStatus() error {
 	case resp.Status == 400:
 		return fmt.Errorf("BadRequest")
 	case resp.Status == 404:
-		return fmt.Errorf("NotFound")
+		return fmt.Errorf("%d NotFound", resp.Status)
 	case resp.Status == 500:
 		return fmt.Errorf("BadRequest")
 	default:
