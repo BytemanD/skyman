@@ -16,4 +16,6 @@ type ServerOpt struct {
 	Networks             interface{}            `json:"networks,omitempty"`
 	AvailabilityZone     string                 `json:"availability_zone,omitempty"`
 	BlockDeviceMappingV2 []BlockDeviceMappingV2 `json:"block_device_mapping_v2,omitempty"`
+	MinCount             uint16                 `json:"min_count"`
+	MaxCount             uint16                 `json:"max_count"`
 }
