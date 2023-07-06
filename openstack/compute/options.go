@@ -10,10 +10,10 @@ type BlockDeviceMappingV2 struct {
 }
 
 type ServerOpt struct {
-	Flavor               string                 `json:"flavorRef"`
+	Flavor               string                 `json:"flavorRef,omitempty"`
 	Image                string                 `json:"imageRef,omitempty"`
-	Name                 string                 `json:"name"`
-	Networks             interface{}            `json:"networks"`
+	Name                 string                 `json:"name,omitempty"`
+	Networks             interface{}            `json:"networks,omitempty"`
 	AvailabilityZone     string                 `json:"availability_zone,omitempty"`
 	BlockDeviceMappingV2 []BlockDeviceMappingV2 `json:"block_device_mapping_v2,omitempty"`
 }

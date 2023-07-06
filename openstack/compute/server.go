@@ -60,8 +60,19 @@ func (computeClient ComputeClientV2) getBlockDeviceMappingV2(imageRef string) Bl
 }
 func (computeClient ComputeClientV2) ServerCreate(options ServerOpt) (Server, error) {
 	if options.Name == "" {
-		options.Name = fmt.Sprintf("ecTools-server-%s", time.Now().Format("2006-01-02-15:04:05"))
+		return Server{}, fmt.Errorf("name is empty")
 	}
+	if options.Flavor == "" {
+		return Server{}, fmt.Errorf("flavor is empty")
+	}
+	if options.Image == "" || (len(options.BlockDeviceMappingV2) > 0 && options.BlockDeviceMappingV2[0].UUID == "") {
+		return Server{}, fmt.Errorf("image is empty")
+	}
+
+	if options.Networks == nil {
+		options.Networks = "none"
+	}
+
 	body, _ := json.Marshal(ServeCreaterBody{Server: options})
 	var url string
 	if options.BlockDeviceMappingV2 != nil {
@@ -72,7 +83,13 @@ func (computeClient ComputeClientV2) ServerCreate(options ServerOpt) (Server, er
 	resp, _ := computeClient.AuthClient.Post(url, body, computeClient.BaseHeaders)
 	serverBody := ServerBody{}
 	json.Unmarshal(resp.Body, &serverBody)
-	return serverBody.Server, resp.JudgeStatus()
+
+	var createErr error
+	err := resp.JudgeStatus()
+	if err != nil {
+		createErr = fmt.Errorf("%s", resp.BodyString())
+	}
+	return serverBody.Server, createErr
 }
 func (client ComputeClientV2) WaitServerCreate(options ServerOpt) (Server, error) {
 	server, err := client.ServerCreate(options)

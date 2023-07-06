@@ -43,6 +43,7 @@ type Server struct {
 	LaunchedAt   string               `json:"OS-SRV-USG:launched_at"`
 	UserId       string               `json:"user_id"`
 	Description  string               `json:"description"`
+	RootBdmType  string               `json:"root_bdm_type"`
 }
 type Image struct {
 	Id string `json:"id"`

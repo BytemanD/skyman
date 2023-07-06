@@ -40,6 +40,8 @@ func (t ServerTable) Print() {
 		{"status", t.Server.Status}, {"task_state", t.Server.TaskState},
 		{"power_state", t.Server.PowerState}, {"vm_state", t.Server.VmState},
 
+		{"root_bdm_type", t.Server.RootBdmType},
+
 		{"created", t.Server.Created}, {"updated", t.Server.Updated},
 		{"terminated_at", t.Server.TerminatedAt}, {"launched_at", t.Server.LaunchedAt},
 
