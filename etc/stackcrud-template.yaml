@@ -11,3 +11,11 @@ auth:
   project:
     name: admin
     domainName: Default
+
+server:
+  flavor:
+  image:
+  network:
+  volumeBoot: true
+  volumeSize: 1
+  availabilityZone:

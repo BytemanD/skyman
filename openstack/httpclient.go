@@ -72,7 +72,7 @@ func (err *HttpError) Error() string {
 
 func (resp *Response) JudgeStatus() error {
 	switch {
-	case resp.Status <= 400:
+	case resp.Status < 400:
 		return nil
 	case resp.Status == 400:
 		return fmt.Errorf("BadRequest")

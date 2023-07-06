@@ -22,7 +22,9 @@ var (
 
 type ConfGroup struct {
 	Debug bool `yaml:"debug"`
-	Auth  Auth `yaml:"auth"`
+
+	Auth   Auth   `yaml:"auth"`
+	Server Server `yaml:"server"`
 }
 type Auth struct {
 	Url             string            `yaml:"url"`
@@ -30,6 +32,15 @@ type Auth struct {
 	User            map[string]string `yaml:"user"`
 	Project         map[string]string `yaml:"project"`
 	TokenExpireTime int               `yaml:"tokenExpireTime"`
+}
+
+type Server struct {
+	Flavor           string `yaml:"flavor"`
+	Image            string `yaml:"image"`
+	Network          string `yaml:"network"`
+	VolumeBoot       bool   `yaml:"volumeBoot"`
+	VolumeSize       int    `yaml:"volumeSize"`
+	AvailabilityZone string `yaml:"availabilityZone"`
 }
 
 func fileExists(path string) bool {
