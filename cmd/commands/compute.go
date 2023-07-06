@@ -2,11 +2,7 @@ package commands
 
 import (
 	"net/url"
-	"os"
-	"strings"
 
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -23,44 +19,33 @@ var ServerList = &cobra.Command{
 		query := url.Values{}
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
+		host, _ := cmd.Flags().GetString("host")
+		statusList, _ := cmd.Flags().GetStringArray("status")
+
 		if name != "" {
 			query.Set("name", name)
 		}
-
-		tableWriter := table.NewWriter()
-		header := table.Row{
-			"ID", "Name", "Status", "Task State", "Power State", "Networks",
+		if host != "" {
+			query.Set("host", host)
 		}
-		if long {
-			header = append(header, "AZ")
-			header = append(header, "Host")
-			header = append(header, "InstanceName")
+		for _, status := range statusList {
+			query.Add("status", status)
 		}
 
-		tableWriter.AppendHeader(header)
-		tableWriter.SetOutputMirror(os.Stdout)
-		// tableWriter.SetStyle(table.StyleLight)
-		tableWriter.Style().Format.Header = text.FormatDefault
-		for _, server := range computeClient.ServerListDetails(query) {
-			row := table.Row{
-				server.Id, server.Name, server.Status,
-				server.GetTaskState(), server.GetPowerState(),
-				strings.Join(server.GetNetworks(), "\n"),
-			}
-			if long {
-				row = append(row, server.AZ, server.Host, server.InstanceName)
-			}
-			tableWriter.AppendRow(row)
-		}
-		tableWriter.Render()
-
+		serversTable := ServersTable{Servers: computeClient.ServerListDetails(query)}
+		serversTable.Print(long)
 	},
 }
 var ServerShow = &cobra.Command{
-	Use:   "Show",
+	Use:   "show <name or id>",
 	Short: "Show server details",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		logging.Info("list servers")
+		computeClient := getComputeClient()
+		nameOrId := args[0]
+		server, _ := computeClient.ServerShow(nameOrId)
+		serverTable := ServerTable{Server: server}
+		serverTable.Print()
 	},
 }
 var ServerCreate = &cobra.Command{
@@ -86,10 +71,13 @@ var ServerDelete = &cobra.Command{
 }
 
 func init() {
-	ServerList.Flags().StringP("name", "n", "", "server name")
-	ServerList.Flags().BoolP("long", "l", false, "server name")
+	ServerList.Flags().StringP("name", "n", "", "Search by server name")
+	ServerList.Flags().String("host", "", "Search by hostname")
+	ServerList.Flags().StringArrayP("status", "s", nil, "Search by server status")
+	ServerList.Flags().BoolP("long", "l", false, "List additional fields in output")
 
 	Server.AddCommand(ServerList)
+	Server.AddCommand(ServerShow)
 	Server.AddCommand(ServerCreate)
 	Server.AddCommand(ServerDelete)
 	Server.AddCommand(ServerSet)
