@@ -15,6 +15,7 @@ const (
 
 	TYPE_COMPUTE  string = "compute"
 	TYPE_IDENTITY string = "identity"
+	TYPE_IMAGE    string = "image"
 
 	INTERFACE_PUBLIC   string = "public"
 	INTERFACE_ADMIN    string = "admin"

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/BytemanD/stackcrud/openstack/compute"
+	"github.com/BytemanD/stackcrud/openstack/image"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 )
@@ -107,4 +108,30 @@ func (t ServersTable) Print(long bool, verbose bool) {
 	tableWriter.SetOutputMirror(os.Stdout)
 	tableWriter.Render()
 
+}
+
+type ImagesTable struct {
+	Images []image.Image
+}
+
+func (t ImagesTable) Print(long bool, verbose bool) {
+	header := table.Row{
+		"ID", "Name", "Disk Format", "Container Format",
+		"Size", "Status",
+	}
+	tableWriter := table.NewWriter()
+	for _, image := range t.Images {
+		row := table.Row{image.ID, image.Name, image.DiskFormat,
+			image.ContainerFormat, image.Size, image.Status}
+		tableWriter.SortBy([]table.SortBy{
+			{Name: "Name", Mode: table.Asc},
+		})
+		tableWriter.AppendRow(row)
+	}
+
+	// tableWriter.SetStyle(table.StyleLight)
+	tableWriter.AppendHeader(header)
+	tableWriter.Style().Format.Header = text.FormatDefault
+	tableWriter.SetOutputMirror(os.Stdout)
+	tableWriter.Render()
 }

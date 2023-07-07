@@ -5,6 +5,7 @@ import (
 	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/compute"
 	"github.com/BytemanD/stackcrud/openstack/identity"
+	"github.com/BytemanD/stackcrud/openstack/image"
 )
 
 func getAuthClient() identity.V3AuthClient {
@@ -29,4 +30,14 @@ func getComputeClient() compute.ComputeClientV2 {
 	}
 	computeClient.UpdateVersion()
 	return computeClient
+}
+
+func getImageClient() image.ImageClientV2 {
+	authClient := getAuthClient()
+	client, err := image.GetImageClientV2(authClient)
+	if err != nil {
+		logging.Fatal("获取计算客户端失败, %s", err)
+	}
+	client.UpdateVersion()
+	return client
 }
