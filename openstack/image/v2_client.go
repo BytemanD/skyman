@@ -1,42 +1,36 @@
 package image
 
 import (
-	"encoding/json"
-	"fmt"
-
+	"github.com/BytemanD/stackcrud/openstack/common"
 	"github.com/BytemanD/stackcrud/openstack/identity"
 )
 
-type VersionBody struct {
-	Version ServerVersion `json:"version"`
-}
-type ServerVersion struct {
-	MinVersion string `json:"min_version"`
-	Version    string `json:"version"`
-}
-
 type ImageClientV2 struct {
-	AuthClient    identity.V3AuthClient
-	Endpoint      string
-	ServerVersion ServerVersion
-	BaseHeaders   map[string]string
-}
-
-func (client ImageClientV2) getUrl(resource string, id string) string {
-	url := fmt.Sprintf("%s/v2/%s", client.Endpoint, resource)
-	if id != "" {
-		url += "/" + id
-	}
-	return url
+	common.ResourceClient
 }
 
 // X-OpenStack-Nova-API-Version
 func (client ImageClientV2) UpdateVersion() {
-	resp, _ := client.AuthClient.Get(client.Endpoint, nil, nil)
-	versionBody := VersionBody{}
-	json.Unmarshal(resp.Body, &versionBody)
-	client.BaseHeaders = map[string]string{}
-	client.ServerVersion = versionBody.Version
-	client.BaseHeaders["OpenStack-API-Versionn"] = client.ServerVersion.Version
-	client.BaseHeaders["X-OpenStack-GLANCE-API-Version"] = client.ServerVersion.Version
+	if client.APiVersion == "" {
+		client.APiVersion = "v2"
+	}
+	client.BaseHeaders["User-Agent"] = "go-stackcurd"
+}
+
+func GetImageClientV2(authClient identity.V3AuthClient) (ImageClientV2, error) {
+	if authClient.RegionName == "" {
+		authClient.RegionName = "RegionOne"
+	}
+	endpoint, err := authClient.GetEndpointFromCatalog(
+		identity.TYPE_IMAGE, identity.INTERFACE_PUBLIC, authClient.RegionName)
+
+	if err != nil {
+		return ImageClientV2{}, err
+	}
+	return ImageClientV2{
+		ResourceClient: common.ResourceClient{
+			AuthClient: authClient, Endpoint: endpoint, APiVersion: "v2",
+			BaseHeaders: map[string]string{},
+		},
+	}, nil
 }
