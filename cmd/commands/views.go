@@ -1,12 +1,10 @@
 package commands
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
 	"github.com/BytemanD/stackcrud/openstack/compute"
-	"github.com/BytemanD/stackcrud/openstack/image"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 )
@@ -109,55 +107,4 @@ func (t ServersTable) Print(long bool, verbose bool) {
 	tableWriter.SetOutputMirror(os.Stdout)
 	tableWriter.Render()
 
-}
-
-type ImagesTable struct {
-	Images []image.Image
-}
-
-const (
-	KB = 1024
-	MB = KB * 1024
-	GB = MB * 1024
-)
-
-func humanSize(size uint) string {
-	switch {
-	case size >= GB:
-		return fmt.Sprintf("%f GB", float32(size)/GB)
-	case size >= MB:
-		return fmt.Sprintf("%2f MB", float32(size)/MB)
-	case size >= KB:
-		return fmt.Sprintf("%f KB", float32(size)/KB)
-	default:
-		return fmt.Sprintf("%d B", size)
-	}
-}
-
-func (t ImagesTable) Print(long bool, human bool) {
-	header := table.Row{
-		"ID", "Name", "Disk Format", "Container Format", "Status", "Size",
-	}
-	tableWriter := table.NewWriter()
-	for _, image := range t.Images {
-		row := table.Row{image.ID, image.Name, image.DiskFormat,
-			image.ContainerFormat,
-			image.Status,
-		}
-		if human {
-			row = append(row, humanSize(image.Size))
-		} else {
-			row = append(row, image.Size)
-		}
-		tableWriter.SortBy([]table.SortBy{
-			{Name: "Name", Mode: table.Asc},
-		})
-		tableWriter.AppendRow(row)
-	}
-
-	// tableWriter.SetStyle(table.StyleLight)
-	tableWriter.AppendHeader(header)
-	tableWriter.Style().Format.Header = text.FormatDefault
-	tableWriter.SetOutputMirror(os.Stdout)
-	tableWriter.Render()
 }

@@ -57,7 +57,7 @@ type Address struct {
 	Type    string `json:"OS-EXT-IPS:type"`
 }
 type ServerBody struct {
-	Server Server `json:"server"`
+	Server *Server `json:"server"`
 }
 
 type ServersBody struct {

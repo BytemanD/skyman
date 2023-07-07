@@ -84,25 +84,25 @@ func (client *V3AuthClient) rejectToken(headers map[string]string) map[string]st
 	}
 	return headers
 }
-func (client *V3AuthClient) Get(url string, query netUrl.Values, headers map[string]string) (openstack.Response, error) {
+func (client *V3AuthClient) Get(url string, query netUrl.Values, headers map[string]string) (*openstack.Response, error) {
 	headers = client.rejectToken(headers)
 	return client.session.Get(url, query, headers)
 }
-func (client *V3AuthClient) Post(url string, body []byte, headers map[string]string) (openstack.Response, error) {
+func (client *V3AuthClient) Post(url string, body []byte, headers map[string]string) (*openstack.Response, error) {
 	headers = client.rejectToken(headers)
 	return client.session.Post(url, body, headers)
 }
-func (client *V3AuthClient) Delete(url string, headers map[string]string) (openstack.Response, error) {
+func (client *V3AuthClient) Delete(url string, headers map[string]string) (*openstack.Response, error) {
 	headers = client.rejectToken(headers)
 	return client.session.Delete(url, headers)
 }
 
-func (client *V3AuthClient) ServiceList() (openstack.Response, error) {
+func (client *V3AuthClient) ServiceList() (*openstack.Response, error) {
 	url := fmt.Sprintf("%s%s", client.AuthUrl, "/services")
 	return client.Get(url, nil, map[string]string{})
 }
 
-func (client *V3AuthClient) UserList() (openstack.Response, error) {
+func (client *V3AuthClient) UserList() (*openstack.Response, error) {
 	url := fmt.Sprintf("%s%s", client.AuthUrl, "/users")
 	return client.Get(url, nil, map[string]string{})
 }

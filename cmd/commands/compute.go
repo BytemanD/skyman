@@ -42,7 +42,7 @@ var ServerList = &cobra.Command{
 	},
 }
 var ServerShow = &cobra.Command{
-	Use:   "show <name or id>",
+	Use:   "show <id or name>",
 	Short: "Show server details",
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
@@ -50,10 +50,19 @@ var ServerShow = &cobra.Command{
 		nameOrId := args[0]
 		server, err := computeClient.ServerShow(nameOrId)
 		if err != nil {
-			logging.Fatal("%s", err)
+			servers := computeClient.ServerListDetailsByName(nameOrId)
+			if len(servers) > 1 {
+				fmt.Printf("Found multy severs named %s\n", nameOrId)
+			} else if len(servers) == 1 {
+				server = &servers[0]
+			} else {
+				fmt.Println(err)
+			}
 		}
-		serverTable := ServerTable{Server: server}
-		serverTable.Print()
+		if server != nil {
+			serverTable := ServerTable{Server: *server}
+			serverTable.Print()
+		}
 	},
 }
 var ServerCreate = &cobra.Command{
@@ -129,8 +138,8 @@ var ServerCreate = &cobra.Command{
 		if err != nil {
 			logging.Fatal("create server faield, %s", err)
 		}
-		server, _ = CLIENT.ServerShow(server.Id)
-		table := ServerTable{Server: server}
+		serverShow, _ := CLIENT.ServerShow(server.Id)
+		table := ServerTable{Server: *serverShow}
 		table.Print()
 	},
 }
