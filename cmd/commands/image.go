@@ -13,16 +13,16 @@ var ImageList = &cobra.Command{
 		imageClient := getImageClient()
 
 		long, _ := cmd.Flags().GetBool("long")
-		verbose, _ := cmd.Flags().GetBool("verbose")
-		serversTable := ImagesTable{Images: imageClient.ImageList(nil)}
-		serversTable.Print(long, verbose)
+		human, _ := cmd.Flags().GetBool("human")
+		imagesTable := ImagesTable{Images: imageClient.ImageList(nil)}
+		imagesTable.Print(long, human)
 	},
 }
 
 func init() {
 	// Server list flags
 	ImageList.Flags().BoolP("long", "l", false, "List additional fields in output")
-	ImageList.Flags().BoolP("verbose", "v", false, "List verbose fields in output")
+	ImageList.Flags().Bool("human", false, "Human size")
 
 	Image.AddCommand(ImageList)
 }

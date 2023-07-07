@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -114,15 +115,40 @@ type ImagesTable struct {
 	Images []image.Image
 }
 
-func (t ImagesTable) Print(long bool, verbose bool) {
+const (
+	KB = 1024
+	MB = KB * 1024
+	GB = MB * 1024
+)
+
+func humanSize(size uint) string {
+	switch {
+	case size >= GB:
+		return fmt.Sprintf("%f GB", float32(size)/GB)
+	case size >= MB:
+		return fmt.Sprintf("%2f MB", float32(size)/MB)
+	case size >= KB:
+		return fmt.Sprintf("%f KB", float32(size)/KB)
+	default:
+		return fmt.Sprintf("%d B", size)
+	}
+}
+
+func (t ImagesTable) Print(long bool, human bool) {
 	header := table.Row{
-		"ID", "Name", "Disk Format", "Container Format",
-		"Size", "Status",
+		"ID", "Name", "Disk Format", "Container Format", "Status", "Size",
 	}
 	tableWriter := table.NewWriter()
 	for _, image := range t.Images {
 		row := table.Row{image.ID, image.Name, image.DiskFormat,
-			image.ContainerFormat, image.Size, image.Status}
+			image.ContainerFormat,
+			image.Status,
+		}
+		if human {
+			row = append(row, humanSize(image.Size))
+		} else {
+			row = append(row, image.Size)
+		}
 		tableWriter.SortBy([]table.SortBy{
 			{Name: "Name", Mode: table.Asc},
 		})

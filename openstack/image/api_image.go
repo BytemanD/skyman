@@ -10,7 +10,7 @@ type Image struct {
 	Name            string `json:"name"`
 	DiskFormat      string `json:"disk_format"`
 	ContainerFormat string `json:"container_format"`
-	Size            uint   `json:"size"`
+	Size            uint   `json:"size,omitempty"`
 	Status          string `json:"status"`
 }
 
