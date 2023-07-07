@@ -3,6 +3,8 @@ package compute
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
 )
 
 type Flavor struct {
@@ -85,8 +87,12 @@ func (server *Server) GetNetworks() []string {
 	return networks
 }
 func (server Server) GetFlavorExtraSpecsString() string {
-	extraSpecs, _ := json.Marshal(server.Flavor.ExtraSpecs)
-	return string(extraSpecs)
+	var extraList []string
+	for key, value := range server.Flavor.ExtraSpecs {
+		extraList = append(extraList, key+"="+value)
+	}
+	sort.Sort(sort.StringSlice(extraList))
+	return strings.Join(extraList, "\n")
 }
 func (server Server) GetFaultString() string {
 	fault, _ := json.Marshal(server.Fault)

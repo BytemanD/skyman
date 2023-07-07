@@ -17,11 +17,10 @@ var Server = &cobra.Command{Use: "server"}
 var ServerList = &cobra.Command{
 	Use:   "list",
 	Short: "List servers",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		computeClient := getComputeClient()
 
 		query := url.Values{}
-		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
 		host, _ := cmd.Flags().GetString("host")
 		statusList, _ := cmd.Flags().GetStringArray("status")
@@ -36,18 +35,23 @@ var ServerList = &cobra.Command{
 			query.Add("status", status)
 		}
 
+		long, _ := cmd.Flags().GetBool("long")
+		verbose, _ := cmd.Flags().GetBool("verbose")
 		serversTable := ServersTable{Servers: computeClient.ServerListDetails(query)}
-		serversTable.Print(long)
+		serversTable.Print(long, verbose)
 	},
 }
 var ServerShow = &cobra.Command{
 	Use:   "show <name or id>",
 	Short: "Show server details",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		computeClient := getComputeClient()
 		nameOrId := args[0]
-		server, _ := computeClient.ServerShow(nameOrId)
+		server, err := computeClient.ServerShow(nameOrId)
+		if err != nil {
+			logging.Fatal("%s", err)
+		}
 		serverTable := ServerTable{Server: server}
 		serverTable.Print()
 	},
@@ -61,11 +65,8 @@ var ServerCreate = &cobra.Command{
 		}
 		min, _ := cmd.Flags().GetUint16("min")
 		max, _ := cmd.Flags().GetUint16("max")
-		if min < 0 || max < 0 {
-			return fmt.Errorf("Invalid flags: expect min and max > 0, got %d, %d", min, max)
-		}
 		if min > max {
-			return fmt.Errorf("Invalid flags: expect min <= max, got: %d > %d", min, max)
+			return fmt.Errorf("invalid flags: expect min <= max, got: %d > %d", min, max)
 		}
 		return nil
 	},
@@ -136,7 +137,7 @@ var ServerCreate = &cobra.Command{
 var ServerSet = &cobra.Command{
 	Use:   "set",
 	Short: "Set server properties",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		logging.Info("list servers")
 	},
 }
@@ -144,7 +145,7 @@ var ServerDelete = &cobra.Command{
 	Use:   "delete <server1> [server2 ...]",
 	Short: "Delete server(s)",
 	Args:  cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		computeClient := getComputeClient()
 		for _, id := range args {
 			err := computeClient.ServerDelete(id)
@@ -160,7 +161,7 @@ var ServerPrune = &cobra.Command{
 	Use:   "prune",
 	Short: "Prune server(s)",
 	Args:  cobra.MinimumNArgs(0),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		yes, _ := cmd.Flags().GetBool("yes")
 		wait, _ := cmd.Flags().GetBool("wait")
 		name, _ := cmd.Flags().GetString("name")
@@ -177,9 +178,7 @@ var ServerPrune = &cobra.Command{
 		for _, status := range statusList {
 			query.Add("status", status)
 		}
-
 		computeClient := getComputeClient()
-
 		computeClient.ServerPrune(query, yes, wait)
 	},
 }
@@ -190,6 +189,7 @@ func init() {
 	ServerList.Flags().String("host", "", "Search by hostname")
 	ServerList.Flags().StringArrayP("status", "s", nil, "Search by server status")
 	ServerList.Flags().BoolP("long", "l", false, "List additional fields in output")
+	ServerList.Flags().BoolP("verbose", "v", false, "List verbose fields in output")
 	// Server create flags
 	ServerCreate.Flags().StringP("flavor", "f", "", "Create server with this flavor")
 	ServerCreate.Flags().StringP("image", "i", "", "Create server with this image")

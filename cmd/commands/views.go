@@ -60,21 +60,24 @@ type ServersTable struct {
 	Servers []compute.Server
 }
 
-func (t ServersTable) Print(long bool) {
+func (t ServersTable) Print(long bool, verbose bool) {
 	header := table.Row{
 		"ID", "Name", "Status", "Task State", "Power State", "Networks",
 	}
 	var networksJoinSep string
 	if long {
 		networksJoinSep = "\n"
-		header = append(header, "Flavor")
-		header = append(header, "Image")
+		if verbose {
+			header = append(header, "Flavor:ram")
+			header = append(header, "Flavor:vcpus")
+		} else {
+			header = append(header, "Flavor:Name")
+		}
 		header = append(header, "AZ")
 		header = append(header, "Host")
 		header = append(header, "Instance Name")
-
 	} else {
-		networksJoinSep = ", "
+		networksJoinSep = "; "
 	}
 	tableWriter := table.NewWriter()
 
@@ -85,9 +88,16 @@ func (t ServersTable) Print(long bool) {
 			strings.Join(server.GetNetworks(), networksJoinSep),
 		}
 		if long {
-			row = append(row, server.Flavor.OriginalName, server.AZ, server.Host,
-				server.InstanceName)
+			if verbose {
+				row = append(row, server.Flavor.Ram, server.Flavor.Vcpus)
+			} else {
+				row = append(row, server.Flavor.OriginalName)
+			}
+			row = append(row, server.AZ, server.Host, server.InstanceName)
 		}
+		tableWriter.SortBy([]table.SortBy{
+			{Name: "Name", Mode: table.Asc},
+		})
 		tableWriter.AppendRow(row)
 	}
 

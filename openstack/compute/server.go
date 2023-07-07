@@ -30,7 +30,7 @@ func (computeClient ComputeClientV2) ServerShow(id string) (Server, error) {
 	resp, _ := computeClient.AuthClient.Get(
 		computeClient.getUrl("servers", id), nil, computeClient.BaseHeaders)
 	if err := resp.JudgeStatus(); err != nil {
-		return Server{}, err
+		return Server{}, fmt.Errorf(resp.BodyString())
 	}
 	serverBody := ServerBody{}
 	json.Unmarshal(resp.Body, &serverBody)
