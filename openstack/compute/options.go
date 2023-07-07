@@ -3,7 +3,7 @@ package compute
 type BlockDeviceMappingV2 struct {
 	BootIndex          int    `json:"boot_index"`
 	UUID               string `json:"uuid"`
-	VolumeSize         int    `json:"volume_size"`
+	VolumeSize         uint16 `json:"volume_size"`
 	SourceType         string `json:"source_type"`
 	DestinationType    string `json:"destination_type"`
 	DeleteOnTemination bool   `json:"delete_on_termination"`

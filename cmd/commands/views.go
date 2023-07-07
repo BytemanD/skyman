@@ -67,9 +67,12 @@ func (t ServersTable) Print(long bool) {
 	var networksJoinSep string
 	if long {
 		networksJoinSep = "\n"
+		header = append(header, "Flavor")
+		header = append(header, "Image")
 		header = append(header, "AZ")
 		header = append(header, "Host")
-		header = append(header, "InstanceName")
+		header = append(header, "Instance Name")
+
 	} else {
 		networksJoinSep = ", "
 	}
@@ -82,13 +85,15 @@ func (t ServersTable) Print(long bool) {
 			strings.Join(server.GetNetworks(), networksJoinSep),
 		}
 		if long {
-			row = append(row, server.AZ, server.Host, server.InstanceName)
+			row = append(row, server.Flavor.OriginalName, server.AZ, server.Host,
+				server.InstanceName)
 		}
 		tableWriter.AppendRow(row)
 	}
 
 	// tableWriter.SetStyle(table.StyleLight)
 	tableWriter.AppendHeader(header)
+	tableWriter.Style().Format.Header = text.FormatDefault
 	tableWriter.SetOutputMirror(os.Stdout)
 	tableWriter.Render()
 

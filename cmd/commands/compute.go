@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -55,7 +56,7 @@ var ServerCreate = &cobra.Command{
 	Use:   "create",
 	Short: "Create server(s)",
 	Args: func(cmd *cobra.Command, args []string) error {
-		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
+		if err := cobra.MaximumNArgs(1)(cmd, args); err != nil {
 			return err
 		}
 		min, _ := cmd.Flags().GetUint16("min")
@@ -69,12 +70,21 @@ var ServerCreate = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		name := args[0]
+		var name string
+		if len(args) == 1 {
+			name = args[0]
+		} else {
+			name = fmt.Sprintf(
+				"%s%s", common.CONF.Server.NamePrefix,
+				time.Now().Format("2006-01-02_15:04:05"),
+			)
+
+		}
 		CLIENT := getComputeClient()
 		flavor, _ := cmd.Flags().GetString("flavor")
 		image, _ := cmd.Flags().GetString("image")
 		volumeBoot, _ := cmd.Flags().GetBool("volume-boot")
-		volumeSize, _ := cmd.Flags().GetInt("volume-size")
+		volumeSize, _ := cmd.Flags().GetUint16("volume-size")
 		az, _ := cmd.Flags().GetString("az")
 
 		min, _ := cmd.Flags().GetUint16("min")
@@ -95,7 +105,6 @@ var ServerCreate = &cobra.Command{
 		if az == "" {
 			az = common.CONF.Server.AvailabilityZone
 		}
-
 		createOption := compute.ServerOpt{
 			Name:             name,
 			Flavor:           flavor,
@@ -104,7 +113,6 @@ var ServerCreate = &cobra.Command{
 			MinCount:         min,
 			MaxCount:         max,
 		}
-
 		if !volumeBoot {
 			createOption.Image = image
 		} else {
@@ -191,7 +199,7 @@ func init() {
 			"port-id=<port-uuid>: attach NIC to port with this UUID",
 	)
 	ServerCreate.Flags().Bool("volume-boot", false, "Boot with volume")
-	ServerCreate.Flags().Int("volume-size", 1, "Volume size(GB)")
+	ServerCreate.Flags().Uint16("volume-size", 0, "Volume size(GB)")
 	ServerCreate.Flags().String("az", "", "Select an availability zone for the server.")
 	ServerCreate.Flags().Uint16("min", 1, "Minimum number of servers to launch.")
 	ServerCreate.Flags().Uint16("max", 1, "Maximum number of servers to launch.")
