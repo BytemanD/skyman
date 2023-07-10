@@ -13,9 +13,12 @@ import (
 const (
 	ContentType string = "application/json"
 
-	TYPE_COMPUTE  string = "compute"
-	TYPE_IDENTITY string = "identity"
-	TYPE_IMAGE    string = "image"
+	TYPE_COMPUTE   string = "compute"
+	TYPE_VOLUME    string = "volume"
+	TYPE_VOLUME_V2 string = "volumev2"
+	TYPE_VOLUME_V3 string = "volumev3"
+	TYPE_IDENTITY  string = "identity"
+	TYPE_IMAGE     string = "image"
 
 	INTERFACE_PUBLIC   string = "public"
 	INTERFACE_ADMIN    string = "admin"

@@ -19,6 +19,7 @@ func (computeClient ComputeClientV2) UpdateVersion() {
 	computeClient.Version = versionBody.Version
 	computeClient.BaseHeaders["OpenStack-API-Versionn"] = computeClient.Version.Version
 	computeClient.BaseHeaders["X-OpenStack-Nova-API-Version"] = computeClient.Version.Version
+	computeClient.BaseHeaders["User-Agent"] = "go-stackcurd"
 }
 
 func GetComputeClientV2(authClient identity.V3AuthClient) (ComputeClientV2, error) {
