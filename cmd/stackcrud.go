@@ -48,7 +48,10 @@ func main() {
 	rootCmd.PersistentFlags().StringArrayP("conf", "c", common.CONF_FILES, "配置文件")
 
 	rootCmd.AddCommand(commands.Server)
+
 	rootCmd.AddCommand(commands.Image)
+
+	rootCmd.AddCommand(commands.Volume)
 
 	rootCmd.Execute()
 }

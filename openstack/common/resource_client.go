@@ -31,12 +31,15 @@ type ResourceClient struct {
 func (client ResourceClient) getUrl(path ...string) string {
 	if client.baseUrl == "" {
 		if client.APiVersion != "" {
-			client.baseUrl = client.Endpoint + "/" + client.APiVersion
+			client.SetBaseUrl(client.Endpoint + "/" + client.APiVersion)
 		} else {
-			client.baseUrl = client.Endpoint
+			client.SetBaseUrl(client.Endpoint)
 		}
 	}
 	return strings.Join(append([]string{client.baseUrl}, path...), "/")
+}
+func (client *ResourceClient) SetBaseUrl(baseUrl string) {
+	client.baseUrl = baseUrl
 }
 func (client ResourceClient) List(resource string, query url.Values, obj interface{}) error {
 	resp, err1 := client.AuthClient.Get(client.getUrl(resource), query, client.BaseHeaders)
