@@ -12,6 +12,16 @@ func (client StorageClientV2) VolumeListDetail(query url.Values) Volumes {
 	client.List("volumes/detail", query, &body)
 	return body.Volumes
 }
+func (client StorageClientV2) VolumeListDetailByName(name string) Volumes {
+	query := url.Values{}
+	query.Set("name", name)
+	return client.VolumeListDetail(query)
+}
+func (client StorageClientV2) VolumeShow(id string) (*Volume, error) {
+	body := VolumeBody{}
+	err := client.Show("volumes", id, nil, &body)
+	return body.Volume, err
+}
 
 // func (client CinderClientV2) VolumeListByName(name string) []Volumes {
 // 	query := url.Values{}
