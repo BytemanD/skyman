@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"net/url"
 
 	"github.com/spf13/cobra"
@@ -26,36 +27,34 @@ var VolumeList = &cobra.Command{
 	},
 }
 
-// var VolumeShow = &cobra.Command{
-// 	Use:   "show <id or name>",
-// 	Short: "Show volume",
-// 	Args:  cobra.ExactArgs(1),
-// 	Run: func(cmd *cobra.Command, args []string) {
-// 		CLIENT := getVolumeClient()
-// 		id := args[0]
-// 		human, _ := cmd.Flags().GetBool("human")
-// 		volume, err := CLIENT.VolumeShow(id)
-// 		if err != nil {
-// 			volumes := CLIENT.ImageListByName(id)
-// 			if len(volumes) > 1 {
-// 				fmt.Printf("Found multi volumes named %s\n", id)
-// 			} else if len(volumes) == 1 {
-// 				volume = &volumes[0]
-// 			} else if len(volumes) > 1 {
-// 				fmt.Println(err)
-// 			}
-// 		}
-// 		if volume != nil {
-// 			volume.PrintTable(human)
-// 		}
-// 	},
-// }
+var VolumeShow = &cobra.Command{
+	Use:   "show <id or name>",
+	Short: "Show volume",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		CLIENT := getVolumeClient()
+		idOrName := args[0]
+		volume, err := CLIENT.VolumeShow(idOrName)
+		if err != nil {
+			volumes := CLIENT.VolumeListDetailByName(idOrName)
+			if len(volumes) > 1 {
+				fmt.Printf("Found multi volumes named %s\n", idOrName)
+			} else if len(volumes) == 1 {
+				volume = &volumes[0]
+			} else {
+				fmt.Println(err)
+			}
+		}
+		if volume != nil {
+			volume.PrintTable()
+		}
+	},
+}
 
 func init() {
 	VolumeList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	VolumeList.Flags().StringP("name", "n", "", "Search by volume name")
 
-	Volume.PersistentFlags().Bool("human", false, "Human size")
 	Volume.AddCommand(VolumeList)
-	// Image.AddCommand(VolumeShow)
+	Volume.AddCommand(VolumeShow)
 }

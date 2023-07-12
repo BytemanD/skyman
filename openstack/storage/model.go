@@ -41,17 +41,30 @@ type Attachment struct {
 }
 type Volume struct {
 	common.Resource
-	Size uint `json:"size,omitempty"`
+	Size       uint   `json:"size,omitempty"`
+	VolumeType string `json:"volume_type,omitempty"`
+	Bootable   string `json:"bootable"`
 
-	Attachments []Attachment `json:"attachments,omitempty"`
+	Attachments         []Attachment      `json:"attachments"`
+	Metadata            map[string]string `json:"metadata"`
+	AvailabilityZone    string            `json:"availability_zone"`
+	Host                string            `json:"os-vol-host-attr:host"`
+	Multiattach         bool              `json:"multiattach"`
+	SourceVolid         string            `json:"source_volid"`
+	GroupId             string            `json:"group_id"`
+	TaskStatus          string            `json:"task_status"`
+	VolumeImageMetadata map[string]string `json:"volume_image_metadata"`
 }
+
 type Volumes []Volume
 
 type VolumesBody struct {
 	Volumes Volumes `json:"volumes"`
 }
 
-type VolumeBody Volume
+type VolumeBody struct {
+	Volume *Volume `json:"volume"`
+}
 
 func (volume Volume) GetAttachmentStrings() []string {
 	attachmentString := []string{}
@@ -62,16 +75,44 @@ func (volume Volume) GetAttachmentStrings() []string {
 	}
 	return attachmentString
 }
+func (volume Volume) IsBootable() bool {
+	return volume.Bootable == "true"
+}
 
-func (volume Volume) PrintTable(human bool) {
+func (volume Volume) GetMetadataList() []string {
+	metadataList := []string{}
+	for k, v := range volume.Metadata {
+		metadataList = append(metadataList, fmt.Sprintf("%s=%s", k, v))
+	}
+	return metadataList
+}
+func (volume Volume) GetImageMetadataList() []string {
+	metadataList := []string{}
+	for k, v := range volume.VolumeImageMetadata {
+		metadataList = append(metadataList, fmt.Sprintf("%s=%s", k, v))
+	}
+	return metadataList
+}
+func (volume Volume) PrintTable() {
 	header := table.Row{"Property", "Value"}
 	tableWriter := table.NewWriter()
 	// Use reject
 	tableWriter.AppendRows([]table.Row{
-		{"ID", volume.Id}, {"name", volume.Name},
+		{"Id", volume.Id}, {"name", volume.Name},
 		{"description", volume.Description},
 		{"status", volume.Status},
+		{"task_status", volume.TaskStatus},
 		{"size", volume.Size},
+		{"bootable", volume.Bootable},
+		{"attachments", strings.Join(volume.GetAttachmentStrings(), "\n")},
+		{"volume_type", volume.VolumeType},
+		{"metadata", strings.Join(volume.GetMetadataList(), "\n")},
+		{"availability_zone", volume.AvailabilityZone},
+		{"host", volume.Host},
+		{"multiattach", volume.Multiattach},
+		{"group_id", volume.GroupId},
+		{"source_volid", volume.SourceVolid},
+		{"volume_image_metadata", strings.Join(volume.GetImageMetadataList(), "\n")},
 
 		{"created", volume.CreatedAt},
 		{"updated", volume.UpdatedAt},
@@ -83,9 +124,9 @@ func (volume Volume) PrintTable(human bool) {
 }
 
 func (volumes Volumes) PrintTable(long bool, human bool) {
-	header := table.Row{"ID", "Name", "Status", "Size", "Attached to"}
+	header := table.Row{"ID", "Name", "Status", "Size", "Bootable", "Attached to"}
 	if long {
-		header = append(header, "Properties")
+		header = append(header, "Volume Type", "Metadata")
 	}
 	tableWriter := table.NewWriter()
 	for _, volume := range volumes {
@@ -95,9 +136,11 @@ func (volumes Volumes) PrintTable(long bool, human bool) {
 		} else {
 			row = append(row, volume.Size)
 		}
+		row = append(row, volume.IsBootable())
 		row = append(row, strings.Join(volume.GetAttachmentStrings(), "\n"))
 		if long {
-			row = append(row, "TODO")
+			row = append(row, volume.VolumeType,
+				strings.Join(volume.GetMetadataList(), "\n"))
 		}
 		tableWriter.SortBy([]table.SortBy{
 			{Name: "Name", Mode: table.Asc},
