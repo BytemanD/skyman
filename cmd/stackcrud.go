@@ -7,6 +7,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/gitutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/stackcrud/cli/compute"
 	"github.com/BytemanD/stackcrud/cmd/commands"
 	"github.com/BytemanD/stackcrud/common"
 )
@@ -48,6 +49,7 @@ func main() {
 	rootCmd.PersistentFlags().StringArrayP("conf", "c", common.CONF_FILES, "配置文件")
 
 	rootCmd.AddCommand(commands.Server)
+	rootCmd.AddCommand(compute.Flavor)
 	rootCmd.AddCommand(commands.Compute)
 
 	rootCmd.AddCommand(commands.Image)
