@@ -20,7 +20,24 @@ type Flavor struct {
 	Vcpus        int               `json:"vcpus"`
 	Disk         int               `json:"disk"`
 	Swap         int               `json:"swap"`
-	ExtraSpecs   map[string]string `json:"extra_specs"`
+	RXTXFactor   float32           `json:"rxtx_factor"`
+	ExtraSpecs   ExtraSpecs        `json:"extra_specs"`
+	IsPublic     bool              `json:"os-flavor-access:is_public"`
+	Ephemeral    int               `json:"OS-FLV-DISABLED:ephemeral"`
+	Disabled     map[string]string `json:"OS-FLV-DISABLED:disabled"`
+}
+type ExtraSpecs map[string]string
+
+type ExtraSpecsBody struct {
+	ExtraSpecs ExtraSpecs `json:"extra_specs"`
+}
+
+func (extraSpecs ExtraSpecs) GetList() []string {
+	properties := []string{}
+	for k, v := range extraSpecs {
+		properties = append(properties, fmt.Sprintf("%s=%s", k, v))
+	}
+	return properties
 }
 
 type Fault struct {
@@ -213,7 +230,9 @@ type ServicesBody struct {
 func (services Services) PrintTable(long bool) {
 	header := table.Row{
 		"ID", "Binary", "Host", "Zone", "Status", "State", "Update At",
-		"Disable Reason", "Forced Down",
+	}
+	if long {
+		header = append(header, "Disable Reason", "Forced Down")
 	}
 	tableWriter := table.NewWriter()
 
@@ -224,6 +243,43 @@ func (services Services) PrintTable(long bool) {
 		}
 		if long {
 			row = append(row, service.DisabledReason, service.ForceDown)
+		}
+		tableWriter.AppendRow(row)
+	}
+
+	// tableWriter.SetStyle(table.StyleLight)
+	tableWriter.AppendHeader(header)
+	tableWriter.Style().Format.Header = text.FormatDefault
+	tableWriter.SetOutputMirror(os.Stdout)
+	tableWriter.Render()
+}
+
+type Flavors []Flavor
+type FlavorBody struct {
+	Flavor Flavor `json:"flavor"`
+}
+type FlavorsBody struct {
+	Flavors Flavors `json:"flavors"`
+}
+
+func (flavors Flavors) PrintTable(long bool) {
+	header := table.Row{
+		"ID", "Name", "VCPUs", "RAM", "Disk", "Ephemeral", "Is Public",
+	}
+	if long {
+		header = append(header, "Swap", "RXTX Factor", "Properties")
+	}
+	tableWriter := table.NewWriter()
+
+	for _, flavor := range flavors {
+		row := table.Row{
+			flavor.Id, flavor.Name, flavor.Vcpus, flavor.Ram,
+			flavor.Disk, flavor.Ephemeral, flavor.IsPublic,
+		}
+		if long {
+
+			row = append(row, flavor.Swap, flavor.RXTXFactor,
+				strings.Join(flavor.ExtraSpecs.GetList(), "\n"))
 		}
 		tableWriter.AppendRow(row)
 	}

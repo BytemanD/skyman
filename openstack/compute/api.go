@@ -121,3 +121,28 @@ func (client ComputeClientV2) ServiceList(query netUrl.Values) Services {
 	client.List("os-services", query, client.BaseHeaders, &body)
 	return body.Services
 }
+
+// flavor api
+func (client ComputeClientV2) FlavorList(query netUrl.Values) (Flavors, error) {
+	body := FlavorsBody{}
+	client.List("flavors", query, client.BaseHeaders, &body)
+	return body.Flavors, nil
+}
+func (client ComputeClientV2) FlavorListDetail(query netUrl.Values) (Flavors, error) {
+	body := FlavorsBody{}
+	err := client.List("flavors/detail", query, client.BaseHeaders, &body)
+	if err != nil {
+		return nil, err
+	}
+	return body.Flavors, nil
+}
+func (client ComputeClientV2) FlavorExtraSpecsList(flavorId string) (ExtraSpecs, error) {
+	body := ExtraSpecsBody{}
+	err := client.List(
+		fmt.Sprintf("flavors/%s/os-extra_specs", flavorId), nil, client.BaseHeaders,
+		&body)
+	if err != nil {
+		return nil, err
+	}
+	return body.ExtraSpecs, nil
+}
