@@ -11,29 +11,29 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
-func (client ComputeClientV2) ServerList(query netUrl.Values) []Server {
+func (client ComputeClientV2) ServerList(query netUrl.Values) Servers {
 	serversBody := ServersBody{}
-	client.List("servers", query, &serversBody)
+	client.List("servers", query, client.BaseHeaders, &serversBody)
 	return serversBody.Servers
 }
-func (client ComputeClientV2) ServerListDetails(query netUrl.Values) []Server {
+func (client ComputeClientV2) ServerListDetails(query netUrl.Values) Servers {
 	serversBody := ServersBody{}
-	client.Show("servers", "detail", query, &serversBody)
+	client.List("servers/detail", query, client.BaseHeaders, &serversBody)
 	return serversBody.Servers
 }
-func (client ComputeClientV2) ServerListDetailsByName(name string) []Server {
+func (client ComputeClientV2) ServerListDetailsByName(name string) Servers {
 	query := url.Values{}
 	query.Set("name", name)
 	return client.ServerListDetails(query)
 }
 func (client ComputeClientV2) ServerShow(id string) (*Server, error) {
 	serverBody := ServerBody{}
-	err := client.Show("servers", id, nil, &serverBody)
+	err := client.Show("servers", id, client.BaseHeaders, &serverBody)
 	return serverBody.Server, err
 }
 
 func (client ComputeClientV2) ServerDelete(id string) error {
-	return client.Delete("servers", id)
+	return client.Delete("servers", id, client.BaseHeaders)
 }
 func (client ComputeClientV2) getBlockDeviceMappingV2(imageRef string) BlockDeviceMappingV2 {
 	return BlockDeviceMappingV2{
@@ -52,7 +52,8 @@ func (client ComputeClientV2) ServerCreate(options ServerOpt) (*Server, error) {
 	if options.Flavor == "" {
 		return nil, fmt.Errorf("flavor is empty")
 	}
-	if options.Image == "" || (len(options.BlockDeviceMappingV2) > 0 && options.BlockDeviceMappingV2[0].UUID == "") {
+	if options.Image == "" ||
+		(len(options.BlockDeviceMappingV2) > 0 && options.BlockDeviceMappingV2[0].UUID == "") {
 		return nil, fmt.Errorf("image is empty")
 	}
 
@@ -64,9 +65,9 @@ func (client ComputeClientV2) ServerCreate(options ServerOpt) (*Server, error) {
 	serverBody := ServerBody{}
 	var createErr error
 	if options.BlockDeviceMappingV2 != nil {
-		createErr = client.Create("os-volumes_boot", body, &serverBody)
+		createErr = client.Create("os-volumes_boot", body, client.BaseHeaders, &serverBody)
 	} else {
-		createErr = client.Create("servers", body, &serverBody)
+		createErr = client.Create("servers", body, client.BaseHeaders, &serverBody)
 	}
 	return serverBody.Server, createErr
 }

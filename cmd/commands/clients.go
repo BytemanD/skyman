@@ -9,8 +9,8 @@ import (
 	"github.com/BytemanD/stackcrud/openstack/storage"
 )
 
-func getAuthClient() identity.V3AuthClient {
-	authClient, err := identity.GetV3Client(
+func getAuthClient() *identity.V3AuthClient {
+	authClient, err := identity.GetV3AuthClient(
 		common.CONF.Auth.Url, common.CONF.Auth.User,
 		common.CONF.Auth.Project, common.CONF.Auth.RegionName,
 	)
@@ -23,9 +23,9 @@ func getAuthClient() identity.V3AuthClient {
 	return authClient
 }
 
-func getComputeClient() compute.ComputeClientV2 {
+func getComputeClient() *compute.ComputeClientV2 {
 	authClient := getAuthClient()
-	computeClient, err := compute.GetComputeClientV2(authClient)
+	computeClient, err := compute.GetComputeClientV2(*authClient)
 	if err != nil {
 		logging.Fatal("获取计算客户端失败, %s", err)
 	}
@@ -33,21 +33,20 @@ func getComputeClient() compute.ComputeClientV2 {
 	return computeClient
 }
 
-func getImageClient() image.ImageClientV2 {
+func getImageClient() *image.ImageClientV2 {
 	authClient := getAuthClient()
-	client, err := image.GetImageClientV2(authClient)
+	client, err := image.GetImageClientV2(*authClient)
 	if err != nil {
 		logging.Fatal("获取镜像客户端失败, %s", err)
 	}
-	client.UpdateVersion()
 	return client
 }
 func getVolumeClient() storage.StorageClientV2 {
 	authClient := getAuthClient()
-	client, err := storage.GetStorageClientV2(authClient)
+	client, err := storage.GetStorageClientV2(*authClient)
 	if err != nil {
 		logging.Fatal("获取存储客户端失败, %s", err)
 	}
 	client.UpdateVersion()
-	return client
+	return *client
 }

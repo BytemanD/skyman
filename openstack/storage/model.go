@@ -70,7 +70,7 @@ func (volume Volume) GetAttachmentStrings() []string {
 	attachmentString := []string{}
 	for _, attachment := range volume.Attachments {
 		attachmentString = append(attachmentString,
-			fmt.Sprintf("Attached to %s on %s", attachment.ServerId, attachment.Device),
+			fmt.Sprintf("%s -> %s", attachment.ServerId, attachment.Device),
 		)
 	}
 	return attachmentString
@@ -123,21 +123,16 @@ func (volume Volume) PrintTable() {
 	tableWriter.Render()
 }
 
-func (volumes Volumes) PrintTable(long bool, human bool) {
-	header := table.Row{"ID", "Name", "Status", "Size", "Bootable", "Attached to"}
+func (volumes Volumes) PrintTable(long bool) {
+	header := table.Row{"ID", "Name", "Status", "Size", "Bootable", "Attachments"}
 	if long {
 		header = append(header, "Volume Type", "Metadata")
 	}
 	tableWriter := table.NewWriter()
 	for _, volume := range volumes {
-		row := table.Row{volume.Id, volume.Name, volume.Status}
-		if human {
-			row = append(row, humanSize(volume.Size))
-		} else {
-			row = append(row, volume.Size)
-		}
-		row = append(row, volume.IsBootable())
-		row = append(row, strings.Join(volume.GetAttachmentStrings(), "\n"))
+		row := table.Row{
+			volume.Id, volume.Name, volume.Status, volume.Size,
+			volume.IsBootable(), strings.Join(volume.GetAttachmentStrings(), "\n")}
 		if long {
 			row = append(row, volume.VolumeType,
 				strings.Join(volume.GetMetadataList(), "\n"))

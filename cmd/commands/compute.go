@@ -9,7 +9,9 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/common"
+	"github.com/BytemanD/stackcrud/openstack"
 	"github.com/BytemanD/stackcrud/openstack/compute"
+	imageLib "github.com/BytemanD/stackcrud/openstack/image"
 )
 
 var Server = &cobra.Command{Use: "server"}
@@ -18,8 +20,12 @@ var ServerList = &cobra.Command{
 	Use:   "list",
 	Short: "List servers",
 	Run: func(cmd *cobra.Command, _ []string) {
-		computeClient := getComputeClient()
-
+		authClient := getAuthClient()
+		client, err := openstack.GetClientWithAuthToken(authClient)
+		if err != nil {
+			logging.Fatal("get openstack client failed %s", err)
+		}
+		client.Compute.UpdateVersion()
 		query := url.Values{}
 		name, _ := cmd.Flags().GetString("name")
 		host, _ := cmd.Flags().GetString("host")
@@ -37,8 +43,24 @@ var ServerList = &cobra.Command{
 
 		long, _ := cmd.Flags().GetBool("long")
 		verbose, _ := cmd.Flags().GetBool("verbose")
-		serversTable := ServersTable{Servers: computeClient.ServerListDetails(query)}
-		serversTable.Print(long, verbose)
+		servers := client.Compute.ServerListDetails(query)
+
+		imageMap := map[string]imageLib.Image{}
+		if long && verbose {
+			for i, server := range servers {
+				if _, ok := imageMap[server.Image.Id]; ok {
+					continue
+				}
+				image, err := client.Image.ImageShow(server.Image.Id)
+				if err != nil {
+					logging.Warning("get image %s faield, %s", server.Image.Id, err)
+				} else {
+					imageMap[server.Image.Id] = *image
+				}
+				servers[i].Image.Name = image.Name
+			}
+		}
+		servers.Print(long, verbose)
 	},
 }
 var ServerShow = &cobra.Command{
@@ -60,8 +82,7 @@ var ServerShow = &cobra.Command{
 			}
 		}
 		if server != nil {
-			serverTable := ServerTable{Server: *server}
-			serverTable.Print()
+			server.Print()
 		}
 	},
 }
@@ -138,9 +159,8 @@ var ServerCreate = &cobra.Command{
 		if err != nil {
 			logging.Fatal("create server faield, %s", err)
 		}
-		serverShow, _ := CLIENT.ServerShow(server.Id)
-		table := ServerTable{Server: *serverShow}
-		table.Print()
+		server, _ = CLIENT.ServerShow(server.Id)
+		server.Print()
 	},
 }
 var ServerSet = &cobra.Command{
