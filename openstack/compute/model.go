@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/BytemanD/stackcrud/openstack/common"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 )
@@ -29,8 +30,7 @@ type Fault struct {
 }
 
 type Server struct {
-	Id           string               `json:"id"`
-	Name         string               `json:"name"`
+	common.Resource
 	Status       string               `json:"status"`
 	TaskState    string               `json:"OS-EXT-STS:task_state"`
 	PowerState   int                  `json:"OS-EXT-STS:power_state"`
@@ -181,6 +181,50 @@ func (servers Servers) Print(long bool, verbose bool) {
 		tableWriter.SortBy([]table.SortBy{
 			{Name: "Name", Mode: table.Asc},
 		})
+		tableWriter.AppendRow(row)
+	}
+
+	// tableWriter.SetStyle(table.StyleLight)
+	tableWriter.AppendHeader(header)
+	tableWriter.Style().Format.Header = text.FormatDefault
+	tableWriter.SetOutputMirror(os.Stdout)
+	tableWriter.Render()
+}
+
+type Service struct {
+	common.Resource
+	Zone           string `json:"zone"`
+	Host           string `json:"host"`
+	Binary         string `json:"binary"`
+	Status         string `json:"status"`
+	State          string `json:"state"`
+	DisabledReason string `json:"disabled_reason"`
+	ForceDown      bool   `json:"forced_down"`
+}
+
+type Services []Service
+type ServiceBody struct {
+	Service Service `json:"service"`
+}
+type ServicesBody struct {
+	Services Services `json:"services"`
+}
+
+func (services Services) PrintTable(long bool) {
+	header := table.Row{
+		"ID", "Binary", "Host", "Zone", "Status", "State", "Update At",
+		"Disable Reason", "Forced Down",
+	}
+	tableWriter := table.NewWriter()
+
+	for _, service := range services {
+		row := table.Row{
+			service.Id, service.Binary, service.Host, service.Zone,
+			service.Status, service.State, service.UpdatedAt,
+		}
+		if long {
+			row = append(row, service.DisabledReason, service.ForceDown)
+		}
 		tableWriter.AppendRow(row)
 	}
 

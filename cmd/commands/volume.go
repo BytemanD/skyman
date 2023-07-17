@@ -54,6 +54,5 @@ func init() {
 	VolumeList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	VolumeList.Flags().StringP("name", "n", "", "Search by volume name")
 
-	Volume.AddCommand(VolumeList)
-	Volume.AddCommand(VolumeShow)
+	Volume.AddCommand(VolumeList, VolumeShow)
 }

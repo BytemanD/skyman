@@ -56,6 +56,6 @@ func init() {
 	ImageList.Flags().StringP("name", "n", "", "Search by image name")
 
 	Image.PersistentFlags().Bool("human", false, "Human size")
-	Image.AddCommand(ImageList)
-	Image.AddCommand(ImageShow)
+
+	Image.AddCommand(ImageList, ImageShow)
 }

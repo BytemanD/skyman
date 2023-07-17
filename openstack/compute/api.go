@@ -115,3 +115,9 @@ func (client ComputeClientV2) WaitServerDeleted(id string) {
 		time.Sleep(time.Second * 2)
 	}
 }
+
+func (client ComputeClientV2) ServiceList(query netUrl.Values) Services {
+	body := ServicesBody{}
+	client.List("os-services", query, client.BaseHeaders, &body)
+	return body.Services
+}
