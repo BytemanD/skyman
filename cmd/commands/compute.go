@@ -15,6 +15,8 @@ import (
 )
 
 var Server = &cobra.Command{Use: "server"}
+var Compute = &cobra.Command{Use: "compute"}
+var computeService = &cobra.Command{Use: "service"}
 
 var ServerList = &cobra.Command{
 	Use:   "list",
@@ -211,6 +213,33 @@ var ServerPrune = &cobra.Command{
 		computeClient.ServerPrune(query, yes, wait)
 	},
 }
+var csList = &cobra.Command{
+	Use:   "list",
+	Short: "List compute services",
+	Run: func(cmd *cobra.Command, _ []string) {
+		authClient := getAuthClient()
+		client, err := openstack.GetClientWithAuthToken(authClient)
+		if err != nil {
+			logging.Fatal("get openstack client failed %s", err)
+		}
+		client.Compute.UpdateVersion()
+		query := url.Values{}
+		binary, _ := cmd.Flags().GetString("binary")
+		host, _ := cmd.Flags().GetString("host")
+
+		long, _ := cmd.Flags().GetBool("long")
+
+		if binary != "" {
+			query.Set("binary", binary)
+		}
+		if host != "" {
+			query.Set("host", host)
+		}
+
+		services := client.Compute.ServiceList(query)
+		services.PrintTable(long)
+	},
+}
 
 func init() {
 	// Server list flags
@@ -240,10 +269,16 @@ func init() {
 	ServerPrune.Flags().BoolP("wait", "w", false, "等待虚拟删除完成")
 	ServerPrune.Flags().BoolP("yes", "y", false, "所有问题自动回答'是'")
 
-	Server.AddCommand(ServerList)
-	Server.AddCommand(ServerShow)
-	Server.AddCommand(ServerCreate)
-	Server.AddCommand(ServerDelete)
-	Server.AddCommand(ServerSet)
-	Server.AddCommand(ServerPrune)
+	// compute service
+	csList.Flags().String("binary", "", "Search by binary")
+	csList.Flags().String("host", "", "Search by hostname")
+	csList.Flags().StringArrayP("state", "s", nil, "Search by server status")
+	csList.Flags().BoolP("long", "l", false, "List additional fields in output")
+	computeService.AddCommand(csList)
+
+	Server.AddCommand(
+		ServerList, ServerShow, ServerCreate, ServerDelete, ServerSet,
+		ServerPrune)
+
+	Compute.AddCommand(computeService)
 }
