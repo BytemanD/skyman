@@ -22,3 +22,4 @@ go.work
 
 etc/stackcrud.yaml
 stackcrud
+dist
