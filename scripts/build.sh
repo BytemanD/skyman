@@ -10,7 +10,8 @@ function main(){
         exit 1
     fi
     logInfo "Start to build with option main.Version=${version}"
-    go build  -ldflags "-X main.Version=${version}" cmd/stackcrud.go
+    mkdir -p dist
+    go build  -ldflags "-X main.Version=${version}" -o dist/ cmd/stackcrud.go
     logInfo "Build success"
 }
 main
