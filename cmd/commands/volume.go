@@ -16,14 +16,13 @@ var VolumeList = &cobra.Command{
 		CLIENT := getVolumeClient()
 
 		long, _ := cmd.Flags().GetBool("long")
-		human, _ := cmd.Flags().GetBool("human")
 		name, _ := cmd.Flags().GetString("name")
 		query := url.Values{}
 		if name != "" {
 			query.Set("name", name)
 		}
 		volumes := CLIENT.VolumeListDetail(query)
-		volumes.PrintTable(long, human)
+		volumes.PrintTable(long)
 	},
 }
 

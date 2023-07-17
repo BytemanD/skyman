@@ -4,12 +4,12 @@ import "net/url"
 
 func (client StorageClientV2) VolumeList(query url.Values) Volumes {
 	body := VolumesBody{}
-	client.List("volumes", query, &body)
+	client.List("volumes", query, nil, &body)
 	return body.Volumes
 }
 func (client StorageClientV2) VolumeListDetail(query url.Values) Volumes {
 	body := VolumesBody{}
-	client.List("volumes/detail", query, &body)
+	client.List("volumes/detail", query, nil, &body)
 	return body.Volumes
 }
 func (client StorageClientV2) VolumeListDetailByName(name string) Volumes {
@@ -19,7 +19,7 @@ func (client StorageClientV2) VolumeListDetailByName(name string) Volumes {
 }
 func (client StorageClientV2) VolumeShow(id string) (*Volume, error) {
 	body := VolumeBody{}
-	err := client.Show("volumes", id, nil, &body)
+	err := client.Show("volumes", id, client.BaseHeaders, &body)
 	return body.Volume, err
 }
 

@@ -3,8 +3,12 @@ package compute
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
+
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 type Flavor struct {
@@ -48,7 +52,8 @@ type Server struct {
 	RootBdmType  string               `json:"root_bdm_type"`
 }
 type Image struct {
-	Id string `json:"id"`
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
 type Address struct {
 	MacAddr string `json:"OS-EXT-IPS-MAC:mac_addr"`
@@ -59,9 +64,9 @@ type Address struct {
 type ServerBody struct {
 	Server *Server `json:"server"`
 }
-
+type Servers []Server
 type ServersBody struct {
-	Servers []Server `json:"servers"`
+	Servers Servers `json:"servers"`
 }
 
 type ServeCreaterBody struct {
@@ -97,4 +102,91 @@ func (server Server) GetFlavorExtraSpecsString() string {
 func (server Server) GetFaultString() string {
 	fault, _ := json.Marshal(server.Fault)
 	return string(fault)
+}
+
+func (server Server) Print() {
+	header := table.Row{"Property", "Value"}
+
+	tableWriter := table.NewWriter()
+	tableWriter.AppendHeader(header)
+	tableWriter.AppendRows([]table.Row{
+		{"ID", server.Id}, {"name", server.Name},
+		{"description", server.Description},
+
+		{"flavor:original_name", server.Flavor.OriginalName},
+		{"flavor:ram", server.Flavor.Ram},
+		{"flavor:vcpus", server.Flavor.Vcpus},
+		{"flavor:disk", server.Flavor.Disk},
+		{"flavor:swap", server.Flavor.Swap},
+		{"flavor:extra_specs", server.GetFlavorExtraSpecsString()},
+
+		{"image", server.Image.Id},
+
+		{"availability_zone  ", server.AZ}, {"host", server.Host},
+
+		{"status", server.Status}, {"task_state", server.TaskState},
+		{"power_state", server.PowerState}, {"vm_state", server.VmState},
+
+		{"root_bdm_type", server.RootBdmType},
+
+		{"created", server.Created}, {"updated", server.Updated},
+		{"terminated_at", server.TerminatedAt}, {"launched_at", server.LaunchedAt},
+
+		{"user_id", server.UserId},
+		{"fault:code", server.Fault.Code},
+		{"fault:message", server.Fault.Message},
+		{"fault:details", server.Fault.Details},
+	})
+	// tableWriter.SetStyle(table.StyleLight)
+	tableWriter.Style().Format.Header = text.FormatDefault
+	tableWriter.SetOutputMirror(os.Stdout)
+	tableWriter.Render()
+}
+
+func (servers Servers) Print(long bool, verbose bool) {
+	header := table.Row{
+		"ID", "Name", "Status", "Task State", "Power State", "Networks",
+	}
+	var networksJoinSep string
+	if long {
+		header = append(header, "AZ", "Host", "Instance Name", "Flavor:Name")
+		if verbose {
+			header = append(header, "Flavor:ram")
+			header = append(header, "Flavor:vcpus")
+			header = append(header, "Image")
+		}
+		networksJoinSep = "\n"
+	} else {
+		networksJoinSep = "; "
+	}
+	tableWriter := table.NewWriter()
+
+	for _, server := range servers {
+		row := table.Row{
+			server.Id, server.Name, server.Status,
+			server.GetTaskState(), server.GetPowerState(),
+			strings.Join(server.GetNetworks(), networksJoinSep),
+		}
+		if long {
+			row = append(row, server.AZ, server.Host, server.InstanceName, server.Flavor.OriginalName)
+			if verbose {
+				row = append(row, server.Flavor.Ram, server.Flavor.Vcpus)
+				if server.Image.Name != "" {
+					row = append(row, server.Image.Name)
+				} else {
+					row = append(row, server.Image.Id)
+				}
+			}
+		}
+		tableWriter.SortBy([]table.SortBy{
+			{Name: "Name", Mode: table.Asc},
+		})
+		tableWriter.AppendRow(row)
+	}
+
+	// tableWriter.SetStyle(table.StyleLight)
+	tableWriter.AppendHeader(header)
+	tableWriter.Style().Format.Header = text.FormatDefault
+	tableWriter.SetOutputMirror(os.Stdout)
+	tableWriter.Render()
 }

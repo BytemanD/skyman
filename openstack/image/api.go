@@ -6,7 +6,7 @@ import (
 
 func (client ImageClientV2) ImageList(query url.Values) Images {
 	imagesBody := ImagesBody{}
-	client.List("images", query, &imagesBody)
+	client.List("images", query, nil, &imagesBody)
 	return imagesBody.Images
 }
 func (client ImageClientV2) ImageListByName(name string) Images {
@@ -16,7 +16,7 @@ func (client ImageClientV2) ImageListByName(name string) Images {
 }
 func (client ImageClientV2) ImageShow(id string) (*Image, error) {
 	image := Image{}
-	err := client.Show("images", id, nil, &image)
+	err := client.Show("images", id, client.BaseHeaders, &image)
 	if err != nil {
 		return nil, err
 	}
