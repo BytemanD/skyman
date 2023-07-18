@@ -6,7 +6,7 @@ auth:
   regionName: RegionOne
   user:
     name: admin
-    password: keystone123
+    password: admin123
     domainName: Default
   project:
     name: admin
