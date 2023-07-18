@@ -292,3 +292,67 @@ func (flavors Flavors) PrintTable(long bool) {
 	tableWriter.SetOutputMirror(os.Stdout)
 	tableWriter.Render()
 }
+
+type HypervisorServer struct {
+	Name string `json:"name"`
+	UUID string `json:"uuid"`
+}
+type Hypervisor struct {
+	common.Resource
+	Hostname     string `json:"hypervisor_hostname"`
+	HostIp       string `json:"host_ip"`
+	Status       string `json:"status"`
+	State        string `json:"state"`
+	Type         string `json:"hypervisor_type"`
+	Version      int    `json:"hypervisor_version"`
+	Uptime       string `json:"uptime"`
+	Vcpus        int    `json:"vcpus"`
+	VcpusUsed    int    `json:"vcpus_used"`
+	MemoryMB     int    `json:"memory_mb"`
+	MemoryMBUsed int    `json:"memory_mb_used"`
+
+	Servers []HypervisorServer
+}
+type Hypervisors []Hypervisor
+
+func (hypervisors Hypervisors) PrintTable(long bool, withServers bool) {
+	header := table.Row{
+		"ID", "Hostname", "Host IP", "Status", "State",
+	}
+	if long {
+		header = append(header, "Type", "Version", "VCPUs", "VCPUs Used",
+			"MemoryMB", "MemoryMB Used")
+	}
+	if withServers {
+		header = append(header, "Servers")
+	}
+	tableWriter := table.NewWriter()
+
+	for _, hypervisor := range hypervisors {
+		row := table.Row{
+			hypervisor.Id, hypervisor.Hostname, hypervisor.HostIp,
+			hypervisor.Status, hypervisor.State,
+		}
+		if long {
+			row = append(row, hypervisor.Type, hypervisor.Version,
+				hypervisor.Vcpus, hypervisor.VcpusUsed,
+				hypervisor.MemoryMB, hypervisor.MemoryMBUsed)
+		}
+		if withServers {
+			servers := []string{}
+			for _, server := range hypervisor.Servers {
+				servers = append(servers, server.Name)
+			}
+			row = append(row, strings.Join(servers, ", "))
+		}
+		tableWriter.AppendRow(row)
+	}
+	tableWriter.SortBy([]table.SortBy{
+		{Name: "Name", Mode: table.Asc},
+	})
+	// tableWriter.SetStyle(table.StyleLight)
+	tableWriter.AppendHeader(header)
+	tableWriter.Style().Format.Header = text.FormatDefault
+	tableWriter.SetOutputMirror(os.Stdout)
+	tableWriter.Render()
+}
