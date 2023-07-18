@@ -146,3 +146,22 @@ func (client ComputeClientV2) FlavorExtraSpecsList(flavorId string) (ExtraSpecs,
 	}
 	return body.ExtraSpecs, nil
 }
+
+// hypervisor api
+func (client ComputeClientV2) HypervisorList(query netUrl.Values) (Hypervisors, error) {
+	body := map[string]Hypervisors{
+		"hypervisors": []Hypervisor{},
+	}
+	client.List("os-hypervisors", query, client.BaseHeaders, &body)
+	return body["hypervisors"], nil
+}
+func (client ComputeClientV2) HypervisorListDetail(query netUrl.Values) (Hypervisors, error) {
+	body := map[string]Hypervisors{
+		"hypervisors": Hypervisors{},
+	}
+	err := client.List("os-hypervisors/detail", query, client.BaseHeaders, &body)
+	if err != nil {
+		return nil, err
+	}
+	return body["hypervisors"], nil
+}
