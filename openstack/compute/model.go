@@ -283,7 +283,9 @@ func (flavors Flavors) PrintTable(long bool) {
 		}
 		tableWriter.AppendRow(row)
 	}
-
+	tableWriter.SortBy([]table.SortBy{
+		{Name: "Name", Mode: table.Asc},
+	})
 	// tableWriter.SetStyle(table.StyleLight)
 	tableWriter.AppendHeader(header)
 	tableWriter.Style().Format.Header = text.FormatDefault

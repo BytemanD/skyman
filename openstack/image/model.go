@@ -19,11 +19,11 @@ const (
 func humanSize(size uint) string {
 	switch {
 	case size >= GB:
-		return fmt.Sprintf("%f GB", float32(size)/GB)
+		return fmt.Sprintf("%.2f GB", float32(size)/GB)
 	case size >= MB:
-		return fmt.Sprintf("%2f MB", float32(size)/MB)
+		return fmt.Sprintf("%.2f MB", float32(size)/MB)
 	case size >= KB:
-		return fmt.Sprintf("%f KB", float32(size)/KB)
+		return fmt.Sprintf("%.2f KB", float32(size)/KB)
 	default:
 		return fmt.Sprintf("%d B", size)
 	}
@@ -115,5 +115,8 @@ func (images Images) PrintTable(long bool, human bool) {
 	tableWriter.AppendHeader(header)
 	tableWriter.Style().Format.Header = text.FormatDefault
 	tableWriter.SetOutputMirror(os.Stdout)
+	tableWriter.SetColumnConfigs([]table.ColumnConfig{
+		{Number: 4, Align: text.AlignRight},
+	})
 	tableWriter.Render()
 }
