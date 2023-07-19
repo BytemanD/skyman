@@ -32,19 +32,33 @@ var hypervisorList = &cobra.Command{
 			query.Set("hypervisor_hostname_pattern", name)
 		}
 		hypervisors, err := client.Compute.HypervisorListDetail(query)
+
+		dataTable := cli.DataListTable{
+			ShortHeaders: []string{
+				"Id", "Hostname", "HostIp", "Status", "State"},
+			LongHeaders: []string{
+				"Type", "Version", "Vcpus", "VcpusUsed",
+				"MemoryMB", "MemoryMBUsed"},
+			HeaderLabel: map[string]string{
+				"HostIp":       "Host IP",
+				"VcpusUsed":    "VCPUs Used",
+				"MemoryMBUsed": "MemoryMB Used"},
+		}
+		for _, hypervisor := range hypervisors {
+			dataTable.Items = append(dataTable.Items, hypervisor)
+		}
 		if err != nil {
 			logging.Fatal("%s", err)
 		}
-		hypervisors.PrintTable(long, withServers)
+		dataTable.Print(long)
 	},
 }
 
 func init() {
-	// flavor list flags
+	// hypervisor list flags
 	hypervisorList.Flags().StringP("name", "n", "", "Show hypervisors matched by name")
 	hypervisorList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	hypervisorList.Flags().Bool("with-servers", false, "List hypervisors with servers")
-	// Server create flags
 
 	Hypervisor.AddCommand(hypervisorList)
 }

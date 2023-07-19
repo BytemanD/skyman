@@ -62,7 +62,6 @@ func init() {
 	flavorList.Flags().Bool("public", false, "List public flavors")
 	flavorList.Flags().StringP("name", "n", "", "Show flavors matched by name")
 	flavorList.Flags().BoolP("long", "l", false, "List additional fields in output")
-	// Server create flags
 
 	Flavor.AddCommand(flavorList)
 }

@@ -356,3 +356,15 @@ func (hypervisors Hypervisors) PrintTable(long bool, withServers bool) {
 	tableWriter.SetOutputMirror(os.Stdout)
 	tableWriter.Render()
 }
+
+type keypair struct {
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Fingerprint string `json:"fingerprint"`
+	PublicKey   string `json:"public_key"`
+}
+
+type Keypair struct {
+	Keypair keypair `json:"keypair"`
+}
+type Keypairs []Keypair

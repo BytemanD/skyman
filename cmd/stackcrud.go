@@ -51,6 +51,7 @@ func main() {
 	rootCmd.AddCommand(commands.Server)
 	rootCmd.AddCommand(compute.Flavor)
 	rootCmd.AddCommand(compute.Hypervisor)
+	rootCmd.AddCommand(compute.Keypair)
 	rootCmd.AddCommand(commands.Compute)
 
 	rootCmd.AddCommand(commands.Image)
