@@ -50,7 +50,7 @@ var flavorList = &cobra.Command{
 				if err != nil {
 					logging.Fatal("get flavor extra specs failed %s", err)
 				}
-				flavors[i].ExtraSpecs = extraSpecs
+				filteredFlavors[i].ExtraSpecs = extraSpecs
 			}
 		}
 		filteredFlavors.PrintTable(long)
