@@ -165,3 +165,15 @@ func (client ComputeClientV2) HypervisorListDetail(query netUrl.Values) (Hypervi
 	}
 	return body["hypervisors"], nil
 }
+
+// keypair api
+func (client ComputeClientV2) KeypairList(query netUrl.Values) ([]Keypair, error) {
+	body := map[string][]Keypair{
+		"keypairs": []Keypair{},
+	}
+	err := client.List("os-keypairs", query, client.BaseHeaders, &body)
+	if err != nil {
+		return nil, err
+	}
+	return body["keypairs"], nil
+}
