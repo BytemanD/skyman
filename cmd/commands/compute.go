@@ -50,16 +50,15 @@ var ServerList = &cobra.Command{
 		imageMap := map[string]imageLib.Image{}
 		if long && verbose {
 			for i, server := range servers {
-				if _, ok := imageMap[server.Image.Id]; ok {
-					continue
+				if _, ok := imageMap[server.Image.Id]; !ok {
+					image, err := client.Image.ImageShow(server.Image.Id)
+					if err != nil {
+						logging.Warning("get image %s faield, %s", server.Image.Id, err)
+					} else {
+						imageMap[server.Image.Id] = *image
+					}
 				}
-				image, err := client.Image.ImageShow(server.Image.Id)
-				if err != nil {
-					logging.Warning("get image %s faield, %s", server.Image.Id, err)
-				} else {
-					imageMap[server.Image.Id] = *image
-				}
-				servers[i].Image.Name = image.Name
+				servers[i].Image.Name = imageMap[server.Image.Id].Name
 			}
 		}
 		servers.Print(long, verbose)
