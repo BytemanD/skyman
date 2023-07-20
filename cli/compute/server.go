@@ -3,8 +3,10 @@ package compute
 import (
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -43,27 +45,6 @@ var serverList = &cobra.Command{
 		long, _ := cmd.Flags().GetBool("long")
 		verbose, _ := cmd.Flags().GetBool("verbose")
 		servers := client.Compute.ServerListDetails(query)
-
-		dataTable := cli.DataListTable{
-			ShortHeaders: []string{
-				"Id", "Name", "Status", "TaskState", "PowerState", "Addresses"},
-			LongHeaders: []string{
-				"AZ", "Host", "InstanceName", "Flavor:Name"},
-			HeaderLabel: map[string]string{
-				"InstanceName": "Instance Name",
-				"TaskState":    "Task State",
-				"PowerState":   "Power State",
-				"Addresses":    "Networks",
-			},
-		}
-		if verbose {
-			dataTable.LongHeaders = append(dataTable.LongHeaders,
-				"Flavor:ram", "Flavor:vcpus", "Image")
-		}
-		for _, item := range servers {
-			dataTable.Items = append(dataTable.Items, item)
-		}
-
 		imageMap := map[string]imageLib.Image{}
 		if long && verbose {
 			for i, server := range servers {
@@ -78,8 +59,53 @@ var serverList = &cobra.Command{
 				servers[i].Image.Name = imageMap[server.Image.Id].Name
 			}
 		}
+		dataTable := cli.DataListTable{
+			ShortHeaders: []string{
+				"Id", "Name", "Status", "TaskState", "PowerState", "Addresses"},
+			LongHeaders: []string{
+				"AZ", "Host", "InstanceName", "Flavor:Name"},
+			HeaderLabel: map[string]string{
+				"InstanceName": "Instance Name",
+				"TaskState":    "Task State",
+				"PowerState":   "Power State",
+				"Addresses":    "Networks",
+			},
+			SortBy: []table.SortBy{{Name: "Name", Mode: table.Asc}},
+			Slots: map[string]func(item interface{}) interface{}{
+				"PowerState": func(item interface{}) interface{} {
+					p, _ := (item).(compute.Server)
+					return p.GetPowerState()
+				},
+				"Addresses": func(item interface{}) interface{} {
+					p, _ := (item).(compute.Server)
+					return strings.Join(p.GetNetworks(), "\n")
+				},
+				"Flavor:Name": func(item interface{}) interface{} {
+					p, _ := (item).(compute.Server)
+					return p.Flavor.OriginalName
+				},
+				"Flavor:ram": func(item interface{}) interface{} {
+					p, _ := (item).(compute.Server)
+					return p.Flavor.Ram
+				},
+				"Flavor:vcpus": func(item interface{}) interface{} {
+					p, _ := (item).(compute.Server)
+					return p.Flavor.Vcpus
+				},
+				"Image": func(item interface{}) interface{} {
+					p, _ := (item).(compute.Server)
+					return p.Image.Name
+				},
+			},
+		}
+		if verbose {
+			dataTable.LongHeaders = append(dataTable.LongHeaders,
+				"Flavor:ram", "Flavor:vcpus", "Image")
+		}
+		for _, item := range servers {
+			dataTable.Items = append(dataTable.Items, item)
+		}
 		dataTable.Print(long)
-		// servers.Print(long, verbose)
 	},
 }
 var serverShow = &cobra.Command{

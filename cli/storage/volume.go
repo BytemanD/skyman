@@ -3,9 +3,11 @@ package storage
 import (
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/openstack/storage"
 	"github.com/spf13/cobra"
 )
 
@@ -29,10 +31,20 @@ var VolumeList = &cobra.Command{
 		volumes := client.Storage.VolumeListDetail(query)
 		dataTable := cli.DataListTable{
 			ShortHeaders: []string{
-				"ID", "Name", "Status", "Size", "Bootable", "Attachments"},
+				"Id", "Name", "Status", "Size", "Bootable", "Attachments"},
 			LongHeaders: []string{"VolumeType", "Metadata"},
 			HeaderLabel: map[string]string{
 				"VolumeType": "Volume Type",
+			},
+			Slots: map[string]func(item interface{}) interface{}{
+				"Attachments": func(item interface{}) interface{} {
+					obj, _ := (item).(storage.Volume)
+					return strings.Join(obj.GetMetadataList(), "\n")
+				},
+				"Metadata": func(item interface{}) interface{} {
+					obj, _ := (item).(storage.Volume)
+					return strings.Join(obj.GetMetadataList(), "\n")
+				},
 			},
 		}
 		for _, item := range volumes {

@@ -16,11 +16,9 @@ type DataListTable struct {
 	Items         []interface{}
 	SortBy        []table.SortBy
 	ColumnConfigs []table.ColumnConfig
+	Slots         map[string]func(item interface{}) interface{}
 }
 
-func (dataTable DataListTable) AddItems(items []interface{}) {
-	dataTable.Items = append(dataTable.Items, items...)
-}
 func (dataTable DataListTable) Print(long bool) {
 	tableWriter := table.NewWriter()
 	tableWriter.Style().Format.Header = text.FormatDefault
@@ -42,11 +40,16 @@ func (dataTable DataListTable) Print(long bool) {
 	}
 	tableWriter.AppendHeader(headerRow)
 
-	for _, data := range dataTable.Items {
-		reflectValue := reflect.ValueOf(data)
+	for _, item := range dataTable.Items {
+		reflectValue := reflect.ValueOf(item)
 		row := table.Row{}
 		for _, name := range titles {
-			value := reflectValue.FieldByName(name)
+			var value interface{}
+			if _, ok := dataTable.Slots[name]; ok {
+				value = dataTable.Slots[name](item)
+			} else {
+				value = reflectValue.FieldByName(name)
+			}
 			row = append(row, value)
 		}
 		tableWriter.AppendRow(row)

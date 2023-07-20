@@ -127,7 +127,7 @@ func (server Server) Print() {
 	tableWriter := table.NewWriter()
 	tableWriter.AppendHeader(header)
 	tableWriter.AppendRows([]table.Row{
-		{"ID", server.Id}, {"name", server.Name},
+		{"Id", server.Id}, {"name", server.Name},
 		{"description", server.Description},
 
 		{"flavor:original_name", server.Flavor.OriginalName},

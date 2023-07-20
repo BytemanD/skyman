@@ -66,14 +66,14 @@ type VolumeBody struct {
 	Volume *Volume `json:"volume"`
 }
 
-func (volume Volume) GetAttachmentStrings() []string {
-	attachmentString := []string{}
+func (volume Volume) GetAttachmentList() []string {
+	attachmentList := []string{}
 	for _, attachment := range volume.Attachments {
-		attachmentString = append(attachmentString,
+		attachmentList = append(attachmentList,
 			fmt.Sprintf("%s -> %s", attachment.ServerId, attachment.Device),
 		)
 	}
-	return attachmentString
+	return attachmentList
 }
 func (volume Volume) IsBootable() bool {
 	return volume.Bootable == "true"
@@ -104,7 +104,7 @@ func (volume Volume) PrintTable() {
 		{"task_status", volume.TaskStatus},
 		{"size", volume.Size},
 		{"bootable", volume.Bootable},
-		{"attachments", strings.Join(volume.GetAttachmentStrings(), "\n")},
+		{"attachments", strings.Join(volume.GetAttachmentList(), "\n")},
 		{"volume_type", volume.VolumeType},
 		{"metadata", strings.Join(volume.GetMetadataList(), "\n")},
 		{"availability_zone", volume.AvailabilityZone},

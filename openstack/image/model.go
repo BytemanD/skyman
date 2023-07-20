@@ -57,7 +57,7 @@ func (image Image) PrintTable(human bool) {
 	tableWriter := table.NewWriter()
 	// Use reject
 	tableWriter.AppendRows([]table.Row{
-		{"ID", image.Id}, {"name", image.Name}, {"description", image.Description},
+		{"Id", image.Id}, {"name", image.Name}, {"description", image.Description},
 
 		{"direct_url", image.DirectUrl},
 		{"checksum", image.Checksum},
