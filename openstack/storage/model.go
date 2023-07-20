@@ -122,30 +122,3 @@ func (volume Volume) PrintTable() {
 	tableWriter.SetOutputMirror(os.Stdout)
 	tableWriter.Render()
 }
-
-func (volumes Volumes) PrintTable(long bool) {
-	header := table.Row{"ID", "Name", "Status", "Size", "Bootable", "Attachments"}
-	if long {
-		header = append(header, "Volume Type", "Metadata")
-	}
-	tableWriter := table.NewWriter()
-	for _, volume := range volumes {
-		row := table.Row{
-			volume.Id, volume.Name, volume.Status, volume.Size,
-			volume.IsBootable(), strings.Join(volume.GetAttachmentStrings(), "\n")}
-		if long {
-			row = append(row, volume.VolumeType,
-				strings.Join(volume.GetMetadataList(), "\n"))
-		}
-		tableWriter.SortBy([]table.SortBy{
-			{Name: "Name", Mode: table.Asc},
-		})
-		tableWriter.AppendRow(row)
-	}
-
-	// tableWriter.SetStyle(table.StyleLight)
-	tableWriter.AppendHeader(header)
-	tableWriter.Style().Format.Header = text.FormatDefault
-	tableWriter.SetOutputMirror(os.Stdout)
-	tableWriter.Render()
-}

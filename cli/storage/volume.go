@@ -1,9 +1,11 @@
-package commands
+package storage
 
 import (
 	"fmt"
 	"net/url"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/stackcrud/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +15,10 @@ var VolumeList = &cobra.Command{
 	Use:   "list",
 	Short: "List volumes",
 	Run: func(cmd *cobra.Command, _ []string) {
-		CLIENT := getVolumeClient()
+		client, err := cli.GetClient()
+		if err != nil {
+			logging.Fatal("get openstack client failed %s", err)
+		}
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
@@ -21,8 +26,19 @@ var VolumeList = &cobra.Command{
 		if name != "" {
 			query.Set("name", name)
 		}
-		volumes := CLIENT.VolumeListDetail(query)
-		volumes.PrintTable(long)
+		volumes := client.Storage.VolumeListDetail(query)
+		dataTable := cli.DataListTable{
+			ShortHeaders: []string{
+				"ID", "Name", "Status", "Size", "Bootable", "Attachments"},
+			LongHeaders: []string{"VolumeType", "Metadata"},
+			HeaderLabel: map[string]string{
+				"VolumeType": "Volume Type",
+			},
+		}
+		for _, item := range volumes {
+			dataTable.Items = append(dataTable.Items, item)
+		}
+		dataTable.Print(long)
 	},
 }
 
@@ -31,11 +47,17 @@ var VolumeShow = &cobra.Command{
 	Short: "Show volume",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		CLIENT := getVolumeClient()
-		idOrName := args[0]
-		volume, err := CLIENT.VolumeShow(idOrName)
+		client, err := cli.GetClient()
 		if err != nil {
-			volumes := CLIENT.VolumeListDetailByName(idOrName)
+			logging.Fatal("get openstack client failed %s", err)
+		}
+		idOrName := args[0]
+		volume, err := client.Storage.VolumeShow(idOrName)
+		if err != nil {
+			logging.Fatal("%s", err)
+		}
+		if err != nil {
+			volumes := client.Storage.VolumeListDetailByName(idOrName)
 			if len(volumes) > 1 {
 				fmt.Printf("Found multi volumes named %s\n", idOrName)
 			} else if len(volumes) == 1 {

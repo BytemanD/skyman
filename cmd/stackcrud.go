@@ -8,7 +8,8 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/gitutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli/compute"
-	"github.com/BytemanD/stackcrud/cmd/commands"
+	"github.com/BytemanD/stackcrud/cli/image"
+	"github.com/BytemanD/stackcrud/cli/storage"
 	"github.com/BytemanD/stackcrud/common"
 )
 
@@ -48,15 +49,15 @@ func main() {
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "显示Debug信息")
 	rootCmd.PersistentFlags().StringArrayP("conf", "c", common.CONF_FILES, "配置文件")
 
-	rootCmd.AddCommand(commands.Server)
+	rootCmd.AddCommand(compute.Server)
 	rootCmd.AddCommand(compute.Flavor)
 	rootCmd.AddCommand(compute.Hypervisor)
 	rootCmd.AddCommand(compute.Keypair)
-	rootCmd.AddCommand(commands.Compute)
+	rootCmd.AddCommand(compute.Compute)
 
-	rootCmd.AddCommand(commands.Image)
+	rootCmd.AddCommand(image.Image)
 
-	rootCmd.AddCommand(commands.Volume)
+	rootCmd.AddCommand(storage.Volume)
 
 	rootCmd.Execute()
 }

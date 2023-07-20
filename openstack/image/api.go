@@ -5,9 +5,9 @@ import (
 )
 
 func (client ImageClientV2) ImageList(query url.Values) Images {
-	imagesBody := ImagesBody{}
-	client.List("images", query, nil, &imagesBody)
-	return imagesBody.Images
+	body := map[string]Images{"images": Images{}}
+	client.List("images", query, nil, &body)
+	return body["images"]
 }
 func (client ImageClientV2) ImageListByName(name string) Images {
 	query := url.Values{}

@@ -216,7 +216,7 @@ type Service struct {
 	Status         string `json:"status"`
 	State          string `json:"state"`
 	DisabledReason string `json:"disabled_reason"`
-	ForceDown      bool   `json:"forced_down"`
+	ForcedDown     bool   `json:"forced_down"`
 }
 
 type Services []Service
@@ -227,70 +227,12 @@ type ServicesBody struct {
 	Services Services `json:"services"`
 }
 
-func (services Services) PrintTable(long bool) {
-	header := table.Row{
-		"ID", "Binary", "Host", "Zone", "Status", "State", "Update At",
-	}
-	if long {
-		header = append(header, "Disable Reason", "Forced Down")
-	}
-	tableWriter := table.NewWriter()
-
-	for _, service := range services {
-		row := table.Row{
-			service.Id, service.Binary, service.Host, service.Zone,
-			service.Status, service.State, service.UpdatedAt,
-		}
-		if long {
-			row = append(row, service.DisabledReason, service.ForceDown)
-		}
-		tableWriter.AppendRow(row)
-	}
-
-	// tableWriter.SetStyle(table.StyleLight)
-	tableWriter.AppendHeader(header)
-	tableWriter.Style().Format.Header = text.FormatDefault
-	tableWriter.SetOutputMirror(os.Stdout)
-	tableWriter.Render()
-}
-
 type Flavors []Flavor
 type FlavorBody struct {
 	Flavor Flavor `json:"flavor"`
 }
 type FlavorsBody struct {
 	Flavors Flavors `json:"flavors"`
-}
-
-func (flavors Flavors) PrintTable(long bool) {
-	header := table.Row{
-		"ID", "Name", "VCPUs", "RAM", "Disk", "Ephemeral", "Is Public",
-	}
-	if long {
-		header = append(header, "Swap", "RXTX Factor", "Properties")
-	}
-	tableWriter := table.NewWriter()
-
-	for _, flavor := range flavors {
-		row := table.Row{
-			flavor.Id, flavor.Name, flavor.Vcpus, flavor.Ram,
-			flavor.Disk, flavor.Ephemeral, flavor.IsPublic,
-		}
-		if long {
-
-			row = append(row, flavor.Swap, flavor.RXTXFactor,
-				strings.Join(flavor.ExtraSpecs.GetList(), "\n"))
-		}
-		tableWriter.AppendRow(row)
-	}
-	tableWriter.SortBy([]table.SortBy{
-		{Name: "Name", Mode: table.Asc},
-	})
-	// tableWriter.SetStyle(table.StyleLight)
-	tableWriter.AppendHeader(header)
-	tableWriter.Style().Format.Header = text.FormatDefault
-	tableWriter.SetOutputMirror(os.Stdout)
-	tableWriter.Render()
 }
 
 type HypervisorServer struct {
