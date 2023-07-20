@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -44,6 +45,18 @@ var flavorList = &cobra.Command{
 		} else {
 			filteredFlavors = flavors
 		}
+		dataTable := cli.DataListTable{
+			ShortHeaders: []string{
+				"ID", "Name", "Vcpus", "Ram", "Disk", "Ephemeral", "IsPublic"},
+			LongHeaders: []string{
+				"Swap", "RXTXFactor", "ExtraSpecs"},
+			HeaderLabel: map[string]string{
+				"IsPublic":   "Is Public",
+				"RXTXFactor": "RXTX Factor",
+				"ExtraSpecs": "Extra Specs",
+			},
+			SortBy: []table.SortBy{{Name: "Name", Mode: table.Asc}},
+		}
 		if long {
 			for i, flavor := range filteredFlavors {
 				extraSpecs, err := client.Compute.FlavorExtraSpecsList(flavor.Id)
@@ -53,7 +66,10 @@ var flavorList = &cobra.Command{
 				filteredFlavors[i].ExtraSpecs = extraSpecs
 			}
 		}
-		filteredFlavors.PrintTable(long)
+		for _, flavor := range filteredFlavors {
+			dataTable.Items = append(dataTable.Items, flavor)
+		}
+		dataTable.Print(long)
 	},
 }
 

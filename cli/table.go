@@ -10,10 +10,12 @@ import (
 
 // TODO: move to easygo
 type DataListTable struct {
-	ShortHeaders []string
-	LongHeaders  []string
-	HeaderLabel  map[string]string
-	Items        []interface{}
+	ShortHeaders  []string
+	LongHeaders   []string
+	HeaderLabel   map[string]string
+	Items         []interface{}
+	SortBy        []table.SortBy
+	ColumnConfigs []table.ColumnConfig
 }
 
 func (dataTable DataListTable) AddItems(items []interface{}) {
@@ -38,6 +40,7 @@ func (dataTable DataListTable) Print(long bool) {
 		}
 		headerRow = append(headerRow, title)
 	}
+	tableWriter.AppendHeader(headerRow)
 
 	for _, data := range dataTable.Items {
 		reflectValue := reflect.ValueOf(data)
@@ -48,7 +51,7 @@ func (dataTable DataListTable) Print(long bool) {
 		}
 		tableWriter.AppendRow(row)
 	}
-
-	tableWriter.AppendHeader(headerRow)
+	tableWriter.SortBy(dataTable.SortBy)
+	tableWriter.SetColumnConfigs(dataTable.ColumnConfigs)
 	tableWriter.Render()
 }

@@ -22,9 +22,7 @@ var keypairList = &cobra.Command{
 			logging.Fatal("%s", err)
 		}
 		dataTable := cli.DataListTable{
-			ShortHeaders: []string{
-				"Name", "Type", "Fingerprint",
-			},
+			ShortHeaders: []string{"Name", "Type", "Fingerprint"},
 		}
 		for _, keypair := range keypairs {
 			dataTable.Items = append(dataTable.Items, keypair.Keypair)

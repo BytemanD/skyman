@@ -129,12 +129,12 @@ func (client ComputeClientV2) FlavorList(query netUrl.Values) (Flavors, error) {
 	return body.Flavors, nil
 }
 func (client ComputeClientV2) FlavorListDetail(query netUrl.Values) (Flavors, error) {
-	body := FlavorsBody{}
+	body := map[string]Flavors{"flavors": Flavors{}}
 	err := client.List("flavors/detail", query, client.BaseHeaders, &body)
 	if err != nil {
 		return nil, err
 	}
-	return body.Flavors, nil
+	return body["flavors"], nil
 }
 func (client ComputeClientV2) FlavorExtraSpecsList(flavorId string) (ExtraSpecs, error) {
 	body := ExtraSpecsBody{}
@@ -168,9 +168,7 @@ func (client ComputeClientV2) HypervisorListDetail(query netUrl.Values) (Hypervi
 
 // keypair api
 func (client ComputeClientV2) KeypairList(query netUrl.Values) ([]Keypair, error) {
-	body := map[string][]Keypair{
-		"keypairs": []Keypair{},
-	}
+	body := map[string][]Keypair{"keypairs": []Keypair{}}
 	err := client.List("os-keypairs", query, client.BaseHeaders, &body)
 	if err != nil {
 		return nil, err

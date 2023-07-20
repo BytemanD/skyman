@@ -32,7 +32,9 @@ var hypervisorList = &cobra.Command{
 			query.Set("hypervisor_hostname_pattern", name)
 		}
 		hypervisors, err := client.Compute.HypervisorListDetail(query)
-
+		if err != nil {
+			logging.Fatal("%s", err)
+		}
 		dataTable := cli.DataListTable{
 			ShortHeaders: []string{
 				"Id", "Hostname", "HostIp", "Status", "State"},
@@ -46,9 +48,6 @@ var hypervisorList = &cobra.Command{
 		}
 		for _, hypervisor := range hypervisors {
 			dataTable.Items = append(dataTable.Items, hypervisor)
-		}
-		if err != nil {
-			logging.Fatal("%s", err)
 		}
 		dataTable.Print(long)
 	},

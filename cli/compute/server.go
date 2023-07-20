@@ -1,4 +1,4 @@
-package commands
+package compute
 
 import (
 	"fmt"
@@ -8,26 +8,23 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/stackcrud/cli"
 	"github.com/BytemanD/stackcrud/common"
-	"github.com/BytemanD/stackcrud/openstack"
 	"github.com/BytemanD/stackcrud/openstack/compute"
 	imageLib "github.com/BytemanD/stackcrud/openstack/image"
 )
 
 var Server = &cobra.Command{Use: "server"}
-var Compute = &cobra.Command{Use: "compute"}
-var computeService = &cobra.Command{Use: "service"}
 
-var ServerList = &cobra.Command{
+var serverList = &cobra.Command{
 	Use:   "list",
 	Short: "List servers",
 	Run: func(cmd *cobra.Command, _ []string) {
-		authClient := getAuthClient()
-		client, err := openstack.GetClientWithAuthToken(authClient)
+		client, err := cli.GetClient()
 		if err != nil {
 			logging.Fatal("get openstack client failed %s", err)
 		}
-		client.Compute.UpdateVersion()
+
 		query := url.Values{}
 		name, _ := cmd.Flags().GetString("name")
 		host, _ := cmd.Flags().GetString("host")
@@ -64,16 +61,19 @@ var ServerList = &cobra.Command{
 		servers.Print(long, verbose)
 	},
 }
-var ServerShow = &cobra.Command{
+var serverShow = &cobra.Command{
 	Use:   "show <id or name>",
 	Short: "Show server details",
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		computeClient := getComputeClient()
-		nameOrId := args[0]
-		server, err := computeClient.ServerShow(nameOrId)
+		client, err := cli.GetClient()
 		if err != nil {
-			servers := computeClient.ServerListDetailsByName(nameOrId)
+			logging.Fatal("get openstack client failed %s", err)
+		}
+		nameOrId := args[0]
+		server, err := client.Compute.ServerShow(nameOrId)
+		if err != nil {
+			servers := client.Compute.ServerListDetailsByName(nameOrId)
 			if len(servers) > 1 {
 				fmt.Printf("Found multy severs named %s\n", nameOrId)
 			} else if len(servers) == 1 {
@@ -87,7 +87,7 @@ var ServerShow = &cobra.Command{
 		}
 	},
 }
-var ServerCreate = &cobra.Command{
+var serverCreate = &cobra.Command{
 	Use:   "create",
 	Short: "Create server(s)",
 	Args: func(cmd *cobra.Command, args []string) error {
@@ -112,7 +112,10 @@ var ServerCreate = &cobra.Command{
 			)
 
 		}
-		CLIENT := getComputeClient()
+		client, err := cli.GetClient()
+		if err != nil {
+			logging.Fatal("get openstack client failed %s", err)
+		}
 		flavor, _ := cmd.Flags().GetString("flavor")
 		image, _ := cmd.Flags().GetString("image")
 		volumeBoot, _ := cmd.Flags().GetBool("volume-boot")
@@ -156,29 +159,33 @@ var ServerCreate = &cobra.Command{
 				},
 			}
 		}
-		server, err := CLIENT.ServerCreate(createOption)
+		server, err := client.Compute.ServerCreate(createOption)
 		if err != nil {
 			logging.Fatal("create server faield, %s", err)
 		}
-		server, _ = CLIENT.ServerShow(server.Id)
+		server, _ = client.Compute.ServerShow(server.Id)
 		server.Print()
 	},
 }
-var ServerSet = &cobra.Command{
+var serverSet = &cobra.Command{
 	Use:   "set",
 	Short: "Set server properties",
 	Run: func(_ *cobra.Command, _ []string) {
 		logging.Info("list servers")
 	},
 }
-var ServerDelete = &cobra.Command{
+var serverDelete = &cobra.Command{
 	Use:   "delete <server1> [server2 ...]",
 	Short: "Delete server(s)",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		computeClient := getComputeClient()
+		client, err := cli.GetClient()
+		if err != nil {
+			logging.Fatal("get openstack client failed %s", err)
+		}
+
 		for _, id := range args {
-			err := computeClient.ServerDelete(id)
+			err := client.Compute.ServerDelete(id)
 			if err != nil {
 				logging.Error("Reqeust to delete server failed, %v", err)
 			} else {
@@ -187,7 +194,7 @@ var ServerDelete = &cobra.Command{
 		}
 	},
 }
-var ServerPrune = &cobra.Command{
+var serverPrune = &cobra.Command{
 	Use:   "prune",
 	Short: "Prune server(s)",
 	Args:  cobra.MinimumNArgs(0),
@@ -208,76 +215,42 @@ var ServerPrune = &cobra.Command{
 		for _, status := range statusList {
 			query.Add("status", status)
 		}
-		computeClient := getComputeClient()
-		computeClient.ServerPrune(query, yes, wait)
-	},
-}
-var csList = &cobra.Command{
-	Use:   "list",
-	Short: "List compute services",
-	Run: func(cmd *cobra.Command, _ []string) {
-		authClient := getAuthClient()
-		client, err := openstack.GetClientWithAuthToken(authClient)
+		client, err := cli.GetClient()
 		if err != nil {
 			logging.Fatal("get openstack client failed %s", err)
 		}
-		client.Compute.UpdateVersion()
-		query := url.Values{}
-		binary, _ := cmd.Flags().GetString("binary")
-		host, _ := cmd.Flags().GetString("host")
-
-		long, _ := cmd.Flags().GetBool("long")
-
-		if binary != "" {
-			query.Set("binary", binary)
-		}
-		if host != "" {
-			query.Set("host", host)
-		}
-
-		services := client.Compute.ServiceList(query)
-		services.PrintTable(long)
+		client.Compute.ServerPrune(query, yes, wait)
 	},
 }
 
 func init() {
 	// Server list flags
-	ServerList.Flags().StringP("name", "n", "", "Search by server name")
-	ServerList.Flags().String("host", "", "Search by hostname")
-	ServerList.Flags().StringArrayP("status", "s", nil, "Search by server status")
-	ServerList.Flags().BoolP("long", "l", false, "List additional fields in output")
-	ServerList.Flags().BoolP("verbose", "v", false, "List verbose fields in output")
+	serverList.Flags().StringP("name", "n", "", "Search by server name")
+	serverList.Flags().String("host", "", "Search by hostname")
+	serverList.Flags().StringArrayP("status", "s", nil, "Search by server status")
+	serverList.Flags().BoolP("long", "l", false, "List additional fields in output")
+	serverList.Flags().BoolP("verbose", "v", false, "List verbose fields in output")
 	// Server create flags
-	ServerCreate.Flags().StringP("flavor", "f", "", "Create server with this flavor")
-	ServerCreate.Flags().StringP("image", "i", "", "Create server with this image")
-	ServerCreate.Flags().StringP("nic", "n", "",
+	serverCreate.Flags().StringP("flavor", "f", "", "Create server with this flavor")
+	serverCreate.Flags().StringP("image", "i", "", "Create server with this image")
+	serverCreate.Flags().StringP("nic", "n", "",
 		"Create a NIC on the server. NIC format:\n"+
 			"net-id=<net-uuid>: attach NIC to network with this UUID\n"+
-			"port-id=<port-uuid>: attach NIC to port with this UUID",
-	)
-	ServerCreate.Flags().Bool("volume-boot", false, "Boot with volume")
-	ServerCreate.Flags().Uint16("volume-size", 0, "Volume size(GB)")
-	ServerCreate.Flags().String("az", "", "Select an availability zone for the server.")
-	ServerCreate.Flags().Uint16("min", 1, "Minimum number of servers to launch.")
-	ServerCreate.Flags().Uint16("max", 1, "Maximum number of servers to launch.")
+			"port-id=<port-uuid>: attach NIC to port with this UUID")
+	serverCreate.Flags().Bool("volume-boot", false, "Boot with volume")
+	serverCreate.Flags().Uint16("volume-size", 0, "Volume size(GB)")
+	serverCreate.Flags().String("az", "", "Select an availability zone for the server.")
+	serverCreate.Flags().Uint16("min", 1, "Minimum number of servers to launch.")
+	serverCreate.Flags().Uint16("max", 1, "Maximum number of servers to launch.")
 
 	// Server prune flags
-	ServerPrune.Flags().StringP("name", "n", "", "Search by server name")
-	ServerPrune.Flags().String("host", "", "Search by hostname")
-	ServerPrune.Flags().StringArrayP("status", "s", nil, "Search by server status")
-	ServerPrune.Flags().BoolP("wait", "w", false, "等待虚拟删除完成")
-	ServerPrune.Flags().BoolP("yes", "y", false, "所有问题自动回答'是'")
-
-	// compute service
-	csList.Flags().String("binary", "", "Search by binary")
-	csList.Flags().String("host", "", "Search by hostname")
-	csList.Flags().StringArrayP("state", "s", nil, "Search by server status")
-	csList.Flags().BoolP("long", "l", false, "List additional fields in output")
-	computeService.AddCommand(csList)
+	serverPrune.Flags().StringP("name", "n", "", "Search by server name")
+	serverPrune.Flags().String("host", "", "Search by hostname")
+	serverPrune.Flags().StringArrayP("status", "s", nil, "Search by server status")
+	serverPrune.Flags().BoolP("wait", "w", false, "等待虚拟删除完成")
+	serverPrune.Flags().BoolP("yes", "y", false, "所有问题自动回答'是'")
 
 	Server.AddCommand(
-		ServerList, ServerShow, ServerCreate, ServerDelete, ServerSet,
-		ServerPrune)
-
-	Compute.AddCommand(computeService)
+		serverList, serverShow, serverCreate, serverDelete, serverSet,
+		serverPrune)
 }
