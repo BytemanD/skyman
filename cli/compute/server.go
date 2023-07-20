@@ -44,6 +44,26 @@ var serverList = &cobra.Command{
 		verbose, _ := cmd.Flags().GetBool("verbose")
 		servers := client.Compute.ServerListDetails(query)
 
+		dataTable := cli.DataListTable{
+			ShortHeaders: []string{
+				"Id", "Name", "Status", "TaskState", "PowerState", "Addresses"},
+			LongHeaders: []string{
+				"AZ", "Host", "InstanceName", "Flavor:Name"},
+			HeaderLabel: map[string]string{
+				"InstanceName": "Instance Name",
+				"TaskState":    "Task State",
+				"PowerState":   "Power State",
+				"Addresses":    "Networks",
+			},
+		}
+		if verbose {
+			dataTable.LongHeaders = append(dataTable.LongHeaders,
+				"Flavor:ram", "Flavor:vcpus", "Image")
+		}
+		for _, item := range servers {
+			dataTable.Items = append(dataTable.Items, item)
+		}
+
 		imageMap := map[string]imageLib.Image{}
 		if long && verbose {
 			for i, server := range servers {
@@ -58,7 +78,8 @@ var serverList = &cobra.Command{
 				servers[i].Image.Name = imageMap[server.Image.Id].Name
 			}
 		}
-		servers.Print(long, verbose)
+		dataTable.Print(long)
+		// servers.Print(long, verbose)
 	},
 }
 var serverShow = &cobra.Command{
