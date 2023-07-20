@@ -160,54 +160,6 @@ func (server Server) Print() {
 	tableWriter.Render()
 }
 
-func (servers Servers) Print(long bool, verbose bool) {
-	header := table.Row{
-		"ID", "Name", "Status", "Task State", "Power State", "Networks",
-	}
-	var networksJoinSep string
-	if long {
-		header = append(header, "AZ", "Host", "Instance Name", "Flavor:Name")
-		if verbose {
-			header = append(header, "Flavor:ram")
-			header = append(header, "Flavor:vcpus")
-			header = append(header, "Image")
-		}
-		networksJoinSep = "\n"
-	} else {
-		networksJoinSep = "; "
-	}
-	tableWriter := table.NewWriter()
-
-	for _, server := range servers {
-		row := table.Row{
-			server.Id, server.Name, server.Status,
-			server.GetTaskState(), server.GetPowerState(),
-			strings.Join(server.GetNetworks(), networksJoinSep),
-		}
-		if long {
-			row = append(row, server.AZ, server.Host, server.InstanceName, server.Flavor.OriginalName)
-			if verbose {
-				row = append(row, server.Flavor.Ram, server.Flavor.Vcpus)
-				if server.Image.Name != "" {
-					row = append(row, server.Image.Name)
-				} else {
-					row = append(row, server.Image.Id)
-				}
-			}
-		}
-		tableWriter.SortBy([]table.SortBy{
-			{Name: "Name", Mode: table.Asc},
-		})
-		tableWriter.AppendRow(row)
-	}
-
-	// tableWriter.SetStyle(table.StyleLight)
-	tableWriter.AppendHeader(header)
-	tableWriter.Style().Format.Header = text.FormatDefault
-	tableWriter.SetOutputMirror(os.Stdout)
-	tableWriter.Render()
-}
-
 type Service struct {
 	common.Resource
 	Zone           string `json:"zone"`
@@ -252,52 +204,9 @@ type Hypervisor struct {
 	VcpusUsed    int    `json:"vcpus_used"`
 	MemoryMB     int    `json:"memory_mb"`
 	MemoryMBUsed int    `json:"memory_mb_used"`
-
-	Servers []HypervisorServer
+	Servers      []HypervisorServer
 }
 type Hypervisors []Hypervisor
-
-func (hypervisors Hypervisors) PrintTable(long bool, withServers bool) {
-	header := table.Row{
-		"ID", "Hostname", "Host IP", "Status", "State",
-	}
-	if long {
-		header = append(header, "Type", "Version", "VCPUs", "VCPUs Used",
-			"MemoryMB", "MemoryMB Used")
-	}
-	if withServers {
-		header = append(header, "Servers")
-	}
-	tableWriter := table.NewWriter()
-
-	for _, hypervisor := range hypervisors {
-		row := table.Row{
-			hypervisor.Id, hypervisor.Hostname, hypervisor.HostIp,
-			hypervisor.Status, hypervisor.State,
-		}
-		if long {
-			row = append(row, hypervisor.Type, hypervisor.Version,
-				hypervisor.Vcpus, hypervisor.VcpusUsed,
-				hypervisor.MemoryMB, hypervisor.MemoryMBUsed)
-		}
-		if withServers {
-			servers := []string{}
-			for _, server := range hypervisor.Servers {
-				servers = append(servers, server.Name)
-			}
-			row = append(row, strings.Join(servers, ", "))
-		}
-		tableWriter.AppendRow(row)
-	}
-	tableWriter.SortBy([]table.SortBy{
-		{Name: "Name", Mode: table.Asc},
-	})
-	// tableWriter.SetStyle(table.StyleLight)
-	tableWriter.AppendHeader(header)
-	tableWriter.Style().Format.Header = text.FormatDefault
-	tableWriter.SetOutputMirror(os.Stdout)
-	tableWriter.Render()
-}
 
 type keypair struct {
 	Name        string `json:"name"`
