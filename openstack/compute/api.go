@@ -121,6 +121,30 @@ func (client ComputeClientV2) ServiceList(query netUrl.Values) Services {
 	client.List("os-services", query, client.BaseHeaders, &body)
 	return body.Services
 }
+func (client ComputeClientV2) ServerAction(action string, id string,
+	params interface{},
+) error {
+	actionBody := map[string]interface{}{action: params}
+	body, _ := json.Marshal(actionBody)
+	err := client.Create(fmt.Sprintf("%s/%s/action", "servers", id), body,
+		client.BaseHeaders, nil)
+	return err
+}
+func (client ComputeClientV2) ServerStop(id string) error {
+	return client.ServerAction("os-stop", id, nil)
+}
+func (client ComputeClientV2) ServerStart(id string) error {
+	return client.ServerAction("os-start", id, nil)
+}
+func (client ComputeClientV2) ServerReboot(id string, hard bool) error {
+	actionBody := map[string]string{}
+	if hard {
+		actionBody["type"] = "HARD"
+	} else {
+		actionBody["type"] = "SOFT"
+	}
+	return client.ServerAction("reboot", id, actionBody)
+}
 
 // flavor api
 func (client ComputeClientV2) FlavorList(query netUrl.Values) (Flavors, error) {
@@ -129,7 +153,7 @@ func (client ComputeClientV2) FlavorList(query netUrl.Values) (Flavors, error) {
 	return body.Flavors, nil
 }
 func (client ComputeClientV2) FlavorListDetail(query netUrl.Values) (Flavors, error) {
-	body := map[string]Flavors{"flavors": Flavors{}}
+	body := map[string]Flavors{"flavors": {}}
 	err := client.List("flavors/detail", query, client.BaseHeaders, &body)
 	if err != nil {
 		return nil, err
@@ -156,9 +180,7 @@ func (client ComputeClientV2) HypervisorList(query netUrl.Values) (Hypervisors, 
 	return body["hypervisors"], nil
 }
 func (client ComputeClientV2) HypervisorListDetail(query netUrl.Values) (Hypervisors, error) {
-	body := map[string]Hypervisors{
-		"hypervisors": Hypervisors{},
-	}
+	body := map[string]Hypervisors{"hypervisors": {}}
 	err := client.List("os-hypervisors/detail", query, client.BaseHeaders, &body)
 	if err != nil {
 		return nil, err
@@ -168,7 +190,7 @@ func (client ComputeClientV2) HypervisorListDetail(query netUrl.Values) (Hypervi
 
 // keypair api
 func (client ComputeClientV2) KeypairList(query netUrl.Values) ([]Keypair, error) {
-	body := map[string][]Keypair{"keypairs": []Keypair{}}
+	body := map[string][]Keypair{"keypairs": {}}
 	err := client.List("os-keypairs", query, client.BaseHeaders, &body)
 	if err != nil {
 		return nil, err

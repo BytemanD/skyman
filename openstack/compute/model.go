@@ -7,9 +7,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/BytemanD/stackcrud/openstack/common"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
+
+	"github.com/BytemanD/stackcrud/openstack/common"
 )
 
 type Flavor struct {

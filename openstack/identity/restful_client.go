@@ -59,7 +59,7 @@ func (client RestfuleClient) Delete(resource string, id string, headers map[stri
 func (client RestfuleClient) Create(resource string, body []byte, headers map[string]string,
 	obj interface{},
 ) error {
-	req, err := http.NewRequest("DELETE", client.getUrl(resource), bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", client.getUrl(resource), bytes.NewBuffer(body))
 	if err != nil {
 		return err
 	}
