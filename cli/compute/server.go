@@ -269,6 +269,64 @@ var serverPrune = &cobra.Command{
 		client.Compute.ServerPrune(query, yes, wait)
 	},
 }
+var serverStop = &cobra.Command{
+	Use:   "stop <server> [<server> ...]",
+	Short: "Stop server(s)",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(_ *cobra.Command, args []string) {
+		client, err := cli.GetClient()
+		if err != nil {
+			logging.Fatal("get openstack client failed %s", err)
+		}
+		for _, id := range args {
+			err := client.Compute.ServerStop(id)
+			if err != nil {
+				logging.Error("Reqeust to stop server failed, %v", err)
+			} else {
+				fmt.Printf("Requested to stop server: %s\n", id)
+			}
+		}
+	},
+}
+var serverStart = &cobra.Command{
+	Use:   "start <server> [<server> ...]",
+	Short: "Start server(s)",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(_ *cobra.Command, args []string) {
+		client, err := cli.GetClient()
+		if err != nil {
+			logging.Fatal("get openstack client failed %s", err)
+		}
+		for _, id := range args {
+			err := client.Compute.ServerStart(id)
+			if err != nil {
+				logging.Error("Reqeust to start server failed, %v", err)
+			} else {
+				fmt.Printf("Requested to start server: %s\n", id)
+			}
+		}
+	},
+}
+var serverReboot = &cobra.Command{
+	Use:   "reboot <server> [<server> ...]",
+	Short: "reboot server(s)",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client, err := cli.GetClient()
+		if err != nil {
+			logging.Fatal("get openstack client failed %s", err)
+		}
+		hard, _ := cmd.Flags().GetBool("hard")
+		for _, id := range args {
+			err := client.Compute.ServerReboot(id, hard)
+			if err != nil {
+				logging.Error("Reqeust to reboot server failed, %v", err)
+			} else {
+				fmt.Printf("Requested to reboot server: %s\n", id)
+			}
+		}
+	},
+}
 
 func init() {
 	// Server list flags
@@ -290,6 +348,10 @@ func init() {
 	serverCreate.Flags().Uint16("min", 1, "Minimum number of servers to launch.")
 	serverCreate.Flags().Uint16("max", 1, "Maximum number of servers to launch.")
 
+	// server reboot flags
+
+	serverReboot.Flags().Bool("hard", false, "Perform a hard reboot")
+
 	// Server prune flags
 	serverPrune.Flags().StringP("name", "n", "", "Search by server name")
 	serverPrune.Flags().String("host", "", "Search by hostname")
@@ -298,6 +360,6 @@ func init() {
 	serverPrune.Flags().BoolP("yes", "y", false, "所有问题自动回答'是'")
 
 	Server.AddCommand(
-		serverList, serverShow, serverCreate, serverDelete, serverSet,
-		serverPrune)
+		serverList, serverShow, serverCreate, serverDelete, serverPrune,
+		serverSet, serverStop, serverStart, serverReboot)
 }
