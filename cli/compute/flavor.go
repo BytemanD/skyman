@@ -47,7 +47,7 @@ var flavorList = &cobra.Command{
 		}
 		dataTable := cli.DataListTable{
 			ShortHeaders: []string{
-				"ID", "Name", "Vcpus", "Ram", "Disk", "Ephemeral", "IsPublic"},
+				"Id", "Name", "Vcpus", "Ram", "Disk", "Ephemeral", "IsPublic"},
 			LongHeaders: []string{
 				"Swap", "RXTXFactor", "ExtraSpecs"},
 			HeaderLabel: map[string]string{
@@ -56,6 +56,12 @@ var flavorList = &cobra.Command{
 				"ExtraSpecs": "Extra Specs",
 			},
 			SortBy: []table.SortBy{{Name: "Name", Mode: table.Asc}},
+			Slots: map[string]func(item interface{}) interface{}{
+				"ExtraSpecs": func(item interface{}) interface{} {
+					p, _ := (item).(compute.Flavor)
+					return strings.Join(p.ExtraSpecs.GetList(), "\n")
+				},
+			},
 		}
 		if long {
 			for i, flavor := range filteredFlavors {

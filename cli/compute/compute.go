@@ -38,7 +38,7 @@ var csList = &cobra.Command{
 		services := client.Compute.ServiceList(query)
 		dataTable := cli.DataListTable{
 			ShortHeaders: []string{
-				"ID", "Binary", "Host", "Zone", "Status", "State", "UpdatedAt"},
+				"Id", "Binary", "Host", "Zone", "Status", "State", "UpdatedAt"},
 			LongHeaders: []string{
 				"DisabledReason", "ForcedDown"},
 			HeaderLabel: map[string]string{
