@@ -6,7 +6,9 @@ type Token struct {
 	ExpiresAt string    `json:"expires_at"`
 	Name      bool      `json:"name"`
 	Catalogs  []Catalog `json:"catalog"`
-	tokenId   string
+	TokenId   string
+	Project   Project
+	User      User
 }
 type Catalog struct {
 	Type      string     `json:"type"`
@@ -42,7 +44,6 @@ func (token *RespToken) GetCatalogByType(serviceType string) *Catalog {
 	}
 	return &Catalog{}
 }
-
 func (token *Token) GetEndpoints(option OptionCatalog) []Endpoint {
 	endpoints := []Endpoint{}
 

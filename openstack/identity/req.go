@@ -1,13 +1,15 @@
 package identity
 
 type Domain struct {
+	Id   string `json:"id"`
 	Name string `json:"name"`
 }
 
 type User struct {
-	Domain   Domain `json:"domain"`
+	Id       string `json:"id,omitempty"`
 	Name     string `json:"name"`
 	Password string `json:"password"`
+	Domain   Domain `json:"domain"`
 }
 
 type Password struct {
@@ -20,15 +22,16 @@ type Identity struct {
 }
 
 type Project struct {
-	Domain Domain `json:"domain"`
-	Name   string `json:"name"`
+	Id     string `json:"id,omitempty"`
+	Name   string `json:"name,omitempty"`
+	Domain Domain `json:"domain,omitempty"`
 }
 type Scope struct {
-	Project Project `json:"project"`
+	Project Project `json:"project,omitempty"`
 }
 type Auth struct {
-	Identity Identity `json:"identity"`
-	Scope    Scope    `json:"scope"`
+	Identity Identity `json:"identity,omitempty"`
+	Scope    Scope    `json:"scope,omitempty"`
 }
 
 type AuthBody struct {

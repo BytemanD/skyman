@@ -11,6 +11,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 
 	"github.com/BytemanD/stackcrud/cli/compute"
+	"github.com/BytemanD/stackcrud/cli/identity"
 	"github.com/BytemanD/stackcrud/cli/image"
 	"github.com/BytemanD/stackcrud/cli/storage"
 	"github.com/BytemanD/stackcrud/common"
@@ -51,6 +52,8 @@ func main() {
 
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "显示Debug信息")
 	rootCmd.PersistentFlags().StringP("conf", "c", "", "配置文件")
+
+	rootCmd.AddCommand(identity.Token)
 
 	rootCmd.AddCommand(compute.Server)
 	rootCmd.AddCommand(compute.Flavor)
