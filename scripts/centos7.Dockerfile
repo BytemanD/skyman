@@ -2,15 +2,14 @@ FROM 93s63uis.mirror.aliyuncs.com/library/centos:7.8.2003 as Stackcrud-Centos7-B
 
 # Install golang
 RUN yum install -y wget
-RUN wget -q https://golang.google.cn/dl/go1.17.8.linux-amd64.tar.gz
-RUN tar -xzf go1.17.8.linux-amd64.tar.gz -C /usr/local/
+RUN wget -q https://golang.google.cn/dl/go1.19.11.linux-amd64.tar.gz
+RUN tar -xzf go1.19.11.linux-amd64.tar.gz -C /usr/local/
 RUN cp /usr/local/go/bin/* /usr/bin/
 RUN go version
 
 # Install required packages
 RUN yum install -y git
 RUN yum install -y rpm-build rpmdevtools
-
 
 # Build project
 FROM Stackcrud-Centos7-Base as Stackcrud-Centos7-Builder
