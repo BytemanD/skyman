@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/BytemanD/easygo/pkg/global/gitutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -32,23 +34,23 @@ func main() {
 		Version: getVersion(),
 		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 			debug, _ := cmd.Flags().GetBool("debug")
-			conf, _ := cmd.Flags().GetStringArray("conf")
-			level := logging.INFO
-			if debug {
-				level = logging.DEBUG
+			conf, _ := cmd.Flags().GetString("conf")
+			if err := common.LoadConfig(conf); err != nil {
+				fmt.Printf("load config failed, %v\n", err)
+				os.Exit(1)
 			}
-			logging.BasicConfig(logging.LogConfig{Level: level})
-			if err := common.LoadConf(conf); err != nil {
-				logging.Error("load config faield, %v", err)
-			}
-			if !debug && common.CONF.Debug {
+
+			if debug || common.CONF.Debug {
 				logging.BasicConfig(logging.LogConfig{Level: logging.DEBUG})
+			} else {
+				logging.BasicConfig(logging.LogConfig{Level: logging.INFO})
 			}
+			logging.Debug("load config file from %s", viper.ConfigFileUsed())
 		},
 	}
 
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "显示Debug信息")
-	rootCmd.PersistentFlags().StringArrayP("conf", "c", common.CONF_FILES, "配置文件")
+	rootCmd.PersistentFlags().StringP("conf", "c", "", "配置文件")
 
 	rootCmd.AddCommand(compute.Server)
 	rootCmd.AddCommand(compute.Flavor)
