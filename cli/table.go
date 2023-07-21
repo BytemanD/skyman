@@ -9,6 +9,56 @@ import (
 )
 
 // TODO: move to easygo
+
+type Field struct {
+	Name string
+	Text string
+}
+
+type DataTable struct {
+	ShortFields []Field
+	LongFields  []Field
+	Item        interface{}
+	Slots       map[string]func(item interface{}) interface{}
+	Title       string
+}
+
+func (dataTable DataTable) Print(long bool) {
+	tableWriter := table.NewWriter()
+	tableWriter.Style().Format.Header = text.FormatDefault
+	tableWriter.SetOutputMirror(os.Stdout)
+
+	headerRow := table.Row{"Field", "Value"}
+	fields := dataTable.ShortFields
+	if long {
+		fields = append(fields, dataTable.LongFields...)
+	}
+	tableWriter.AppendHeader(headerRow)
+	reflectValue := reflect.ValueOf(dataTable.Item)
+	for _, field := range fields {
+		var (
+			fieldValue interface{}
+			fieldLabel string
+		)
+		if field.Text == "" {
+			fieldLabel = field.Name
+		} else {
+			fieldLabel = field.Text
+		}
+		if _, ok := dataTable.Slots[field.Name]; ok {
+			fieldValue = dataTable.Slots[field.Name](dataTable.Item)
+		} else {
+			fieldValue = reflectValue.FieldByName(field.Name)
+		}
+		tableWriter.AppendRow(table.Row{fieldLabel, fieldValue})
+	}
+	if dataTable.Title != "" {
+		tableWriter.SetTitle(dataTable.Title)
+		tableWriter.Style().Title.Align = text.AlignCenter
+	}
+	tableWriter.Render()
+}
+
 type DataListTable struct {
 	ShortHeaders  []string
 	LongHeaders   []string

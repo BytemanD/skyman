@@ -42,6 +42,10 @@ type V3AuthClient struct {
 	session           common.Session
 }
 
+func (client *V3AuthClient) GetToken() Token {
+	return client.token
+}
+
 func (client V3AuthClient) Request(req *http.Request) (*common.Response, error) {
 	req.Header.Set("User-Agent", "go-stackcurd")
 	if err := client.rejectToken(req); err != nil {
@@ -65,10 +69,10 @@ func (client *V3AuthClient) getTokenId() (string, error) {
 			return "", nil
 		}
 	}
-	return client.token.tokenId, nil
+	return client.token.TokenId, nil
 }
 func (client V3AuthClient) isTokenExpired() bool {
-	if client.token.tokenId == "" {
+	if client.token.TokenId == "" {
 		return true
 	}
 	if client.expiredAt.Before(time.Now()) {
@@ -92,7 +96,7 @@ func (client *V3AuthClient) TokenIssue() error {
 	}
 	var resToken RespToken
 	json.Unmarshal(resp.Body, &resToken)
-	resToken.Token.tokenId = resp.GetHeader("X-Subject-Token")
+	resToken.Token.TokenId = resp.GetHeader("X-Subject-Token")
 	client.token = resToken.Token
 	client.expiredAt = time.Now().Add(time.Second * time.Duration(client.TokenExpireSecond))
 	return nil
