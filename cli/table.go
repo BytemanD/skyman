@@ -17,6 +17,7 @@ type DataListTable struct {
 	SortBy        []table.SortBy
 	ColumnConfigs []table.ColumnConfig
 	Slots         map[string]func(item interface{}) interface{}
+	Title         string
 }
 
 func (dataTable DataListTable) Print(long bool) {
@@ -53,6 +54,10 @@ func (dataTable DataListTable) Print(long bool) {
 			row = append(row, value)
 		}
 		tableWriter.AppendRow(row)
+	}
+	if dataTable.Title != "" {
+		tableWriter.SetTitle(dataTable.Title)
+		tableWriter.Style().Title.Align = text.AlignCenter
 	}
 	tableWriter.SortBy(dataTable.SortBy)
 	tableWriter.SetColumnConfigs(dataTable.ColumnConfigs)

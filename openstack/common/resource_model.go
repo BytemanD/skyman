@@ -9,4 +9,7 @@ type Resource struct {
 	UpdatedAt   string `json:"updated_at,omitempty"`
 	Created     string `json:"created,omitempty"`
 	Updated     string `json:"updated,omitempty"`
+	ProjectId   string `json:"project_id,omitempty"`
+	TenantId    string `json:"tenant_id,omitempty"`
+	UserId      string `json:"user_id,omitempty"`
 }
