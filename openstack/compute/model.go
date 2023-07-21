@@ -220,3 +220,24 @@ type Keypair struct {
 	Keypair keypair `json:"keypair"`
 }
 type Keypairs []Keypair
+
+type InstanceAction struct {
+	common.Resource
+	Action       string                `json:"action"`
+	InstanceUUID string                `json:"instance_uuid"`
+	Message      string                `json:"message"`
+	RequestId    string                `json:"request_id"`
+	StartTime    string                `json:"start_time"`
+	Events       []InstanceActionEvent `json:"events"`
+}
+type InstanceActionEvent struct {
+	Event      string `json:"event"`
+	StartTime  string `json:"start_time"`
+	FinishTime string `json:"finish_time"`
+	Host       string `json:"host"`
+	HostId     string `json:"hostId"`
+	Result     string `json:"result"`
+	Traceback  string `json:"traceback"`
+}
+type InstanceActions []InstanceAction
+type InstanceActionEvents []InstanceActionEvent

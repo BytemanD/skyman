@@ -146,6 +146,28 @@ func (client ComputeClientV2) ServerReboot(id string, hard bool) error {
 	return client.ServerAction("reboot", id, actionBody)
 }
 
+// server action api
+func (client ComputeClientV2) ServerActionList(id string) ([]InstanceAction, error) {
+	body := map[string][]InstanceAction{"instanceActions": {}}
+	err := client.List(fmt.Sprintf("servers/%s/os-instance-actions", id), nil, client.BaseHeaders, &body)
+	if err != nil {
+		return nil, err
+	}
+	return body["instanceActions"], nil
+}
+func (client ComputeClientV2) ServerActionShow(id string, requestId string) (
+	*InstanceAction, error,
+) {
+	body := map[string]InstanceAction{"instanceAction": InstanceAction{}}
+	err := client.List(fmt.Sprintf("servers/%s/os-instance-actions/%s", id, requestId),
+		nil, client.BaseHeaders, &body)
+	if err != nil {
+		return nil, err
+	}
+	instanceAction := body["instanceAction"]
+	return &instanceAction, nil
+}
+
 // flavor api
 func (client ComputeClientV2) FlavorList(query netUrl.Values) (Flavors, error) {
 	body := FlavorsBody{}
