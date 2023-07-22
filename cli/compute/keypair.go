@@ -13,10 +13,7 @@ var keypairList = &cobra.Command{
 	Use:   "list",
 	Short: "List keypairs",
 	Run: func(cmd *cobra.Command, _ []string) {
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
+		client := cli.GetClient()
 		keypairs, err := client.Compute.KeypairList(nil)
 		if err != nil {
 			logging.Fatal("%s", err)

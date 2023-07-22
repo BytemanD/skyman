@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack"
 	"github.com/BytemanD/stackcrud/openstack/identity"
@@ -22,14 +23,17 @@ func getAuthClient() (*identity.V3AuthClient, error) {
 	return authClient, nil
 }
 
-func GetClient() (*openstack.OpenstackClient, error) {
+func GetClient() *openstack.OpenstackClient {
 	authClient, err := getAuthClient()
 	if err != nil {
-		return nil, err
+		logging.Fatal("get auth client failed %s", err)
 	}
 	client, err := openstack.GetClientWithAuthToken(authClient)
 	if err == nil {
 		client.Compute.UpdateVersion()
 	}
-	return client, err
+	if err != nil {
+		logging.Fatal("get openstack client failed %s", err)
+	}
+	return client
 }

@@ -22,11 +22,7 @@ var serverList = &cobra.Command{
 	Use:   "list",
 	Short: "List servers",
 	Run: func(cmd *cobra.Command, _ []string) {
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
-
+		client := cli.GetClient()
 		query := url.Values{}
 		name, _ := cmd.Flags().GetString("name")
 		host, _ := cmd.Flags().GetString("host")
@@ -113,10 +109,8 @@ var serverShow = &cobra.Command{
 	Short: "Show server details",
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
+		client := cli.GetClient()
+
 		nameOrId := args[0]
 		server, err := client.Compute.ServerShow(nameOrId)
 		if err != nil {
@@ -159,10 +153,8 @@ var serverCreate = &cobra.Command{
 			)
 
 		}
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
+		client := cli.GetClient()
+
 		flavor, _ := cmd.Flags().GetString("flavor")
 		image, _ := cmd.Flags().GetString("image")
 		volumeBoot, _ := cmd.Flags().GetBool("volume-boot")
@@ -226,10 +218,7 @@ var serverDelete = &cobra.Command{
 	Short: "Delete server(s)",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
+		client := cli.GetClient()
 
 		for _, id := range args {
 			err := client.Compute.ServerDelete(id)
@@ -262,10 +251,8 @@ var serverPrune = &cobra.Command{
 		for _, status := range statusList {
 			query.Add("status", status)
 		}
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
+		client := cli.GetClient()
+
 		client.Compute.ServerPrune(query, yes, wait)
 	},
 }
@@ -274,10 +261,7 @@ var serverStop = &cobra.Command{
 	Short: "Stop server(s)",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
+		client := cli.GetClient()
 		for _, id := range args {
 			err := client.Compute.ServerStop(id)
 			if err != nil {
@@ -293,10 +277,7 @@ var serverStart = &cobra.Command{
 	Short: "Start server(s)",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
+		client := cli.GetClient()
 		for _, id := range args {
 			err := client.Compute.ServerStart(id)
 			if err != nil {
@@ -309,13 +290,10 @@ var serverStart = &cobra.Command{
 }
 var serverReboot = &cobra.Command{
 	Use:   "reboot <server> [<server> ...]",
-	Short: "reboot server(s)",
+	Short: "Reboot server(s)",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
+		client := cli.GetClient()
 		hard, _ := cmd.Flags().GetBool("hard")
 		for _, id := range args {
 			err := client.Compute.ServerReboot(id, hard)
@@ -323,6 +301,108 @@ var serverReboot = &cobra.Command{
 				logging.Error("Reqeust to reboot server failed, %v", err)
 			} else {
 				fmt.Printf("Requested to reboot server: %s\n", id)
+			}
+		}
+	},
+}
+var serverPause = &cobra.Command{
+	Use:   "pause <server> [<server> ...]",
+	Short: "Pause server(s)",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+
+		for _, id := range args {
+			err := client.Compute.ServerPause(id)
+			if err != nil {
+				logging.Error("Reqeust to pause server failed, %v", err)
+			} else {
+				fmt.Printf("Requested to pause server: %s\n", id)
+			}
+		}
+	},
+}
+var serverUnpause = &cobra.Command{
+	Use:   "unpause <server> [<server> ...]",
+	Short: "Unpause server(s)",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+
+		for _, id := range args {
+			err := client.Compute.ServerUnpause(id)
+			if err != nil {
+				logging.Error("Reqeust to unpause server failed, %v", err)
+			} else {
+				fmt.Printf("Requested to unpause server: %s\n", id)
+			}
+		}
+	},
+}
+var serverShelve = &cobra.Command{
+	Use:   "shelve <server> [<server> ...]",
+	Short: "Shelve server(s)",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+
+		for _, id := range args {
+			err := client.Compute.ServerShelve(id)
+			if err != nil {
+				logging.Error("Reqeust to shelve server failed, %v", err)
+			} else {
+				fmt.Printf("Requested to shelve server: %s\n", id)
+			}
+		}
+	},
+}
+var serverUnshelve = &cobra.Command{
+	Use:   "unshelve <server> [<server> ...]",
+	Short: "Unshelve server(s)",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+
+		for _, id := range args {
+			err := client.Compute.ServerShelve(id)
+			if err != nil {
+				logging.Error("Reqeust to unshelve server failed, %v", err)
+			} else {
+				fmt.Printf("Requested to unshelve server: %s\n", id)
+			}
+		}
+	},
+}
+var serverSuspend = &cobra.Command{
+	Use:   "suspend <server> [<server> ...]",
+	Short: "Suspend server(s)",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+
+		for _, id := range args {
+			err := client.Compute.ServerSuspend(id)
+			if err != nil {
+				logging.Error("Reqeust to susppend server failed, %v", err)
+			} else {
+				fmt.Printf("Requested to susppend server: %s\n", id)
+			}
+		}
+	},
+}
+var serverResume = &cobra.Command{
+	Use:   "resume <server> [<server> ...]",
+	Short: "Resume server(s)",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+
+		for _, id := range args {
+			err := client.Compute.ServerResume(id)
+			if err != nil {
+				logging.Error("Reqeust to resume server failed, %v", err)
+			} else {
+				fmt.Printf("Requested to resume server: %s\n", id)
 			}
 		}
 	},
@@ -361,5 +441,7 @@ func init() {
 
 	Server.AddCommand(
 		serverList, serverShow, serverCreate, serverDelete, serverPrune,
-		serverSet, serverStop, serverStart, serverReboot)
+		serverSet, serverStop, serverStart, serverReboot,
+		serverPause, serverUnpause, serverShelve, serverUnshelve,
+		serverSuspend, serverResume)
 }
