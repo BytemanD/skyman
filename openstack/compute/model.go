@@ -163,13 +163,13 @@ func (server Server) Print() {
 
 type Service struct {
 	common.Resource
-	Zone           string `json:"zone"`
-	Host           string `json:"host"`
-	Binary         string `json:"binary"`
-	Status         string `json:"status"`
-	State          string `json:"state"`
-	DisabledReason string `json:"disabled_reason"`
-	ForcedDown     bool   `json:"forced_down"`
+	Zone           string `json:"zone,omitempty"`
+	Host           string `json:"host,omitempty"`
+	Binary         string `json:"binary,omitempty"`
+	Status         string `json:"status,omitempty"`
+	State          string `json:"state,omitempty"`
+	DisabledReason string `json:"disabled_reason,omitempty"`
+	ForcedDown     bool   `json:"forced_down,omitempty"`
 }
 
 type Services []Service
