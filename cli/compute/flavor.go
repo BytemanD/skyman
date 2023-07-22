@@ -18,10 +18,7 @@ var flavorList = &cobra.Command{
 	Use:   "list",
 	Short: "List flavors",
 	Run: func(cmd *cobra.Command, _ []string) {
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
+		client := cli.GetClient()
 
 		query := url.Values{}
 		public, _ := cmd.Flags().GetBool("public")

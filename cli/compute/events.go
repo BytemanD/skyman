@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
 	"github.com/spf13/cobra"
 )
@@ -16,10 +15,7 @@ var actionList = &cobra.Command{
 	Short: "List server actions",
 	Args:  cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
+		client := cli.GetClient()
 		long, _ := cmd.Flags().GetBool("long")
 		actions, err := client.Compute.ServerActionList(args[0])
 		if err != nil {
@@ -48,10 +44,7 @@ var actionShow = &cobra.Command{
 	Short: "Show server action",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
+		client := cli.GetClient()
 		long, _ := cmd.Flags().GetBool("long")
 		id := args[0]
 		requestId := args[1]

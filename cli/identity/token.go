@@ -1,7 +1,6 @@
 package identity
 
 import (
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/stackcrud/cli"
@@ -15,12 +14,9 @@ var tokenIssue = &cobra.Command{
 	Short: "Issue new token",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
-		token := client.Identity.GetToken()
+		client := cli.GetClient()
 
+		token := client.Identity.GetToken()
 		dataTable := cli.DataTable{
 			Item: token,
 			ShortFields: []cli.Field{

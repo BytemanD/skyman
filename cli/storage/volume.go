@@ -17,10 +17,7 @@ var VolumeList = &cobra.Command{
 	Use:   "list",
 	Short: "List volumes",
 	Run: func(cmd *cobra.Command, _ []string) {
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
+		client := cli.GetClient()
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
@@ -59,10 +56,7 @@ var VolumeShow = &cobra.Command{
 	Short: "Show volume",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
+		client := cli.GetClient()
 		idOrName := args[0]
 		volume, err := client.Storage.VolumeShow(idOrName)
 		if err != nil {

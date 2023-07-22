@@ -6,7 +6,6 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
 )
 
@@ -17,10 +16,7 @@ var csList = &cobra.Command{
 	Use:   "list",
 	Short: "List compute services",
 	Run: func(cmd *cobra.Command, _ []string) {
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
+		client := cli.GetClient()
 
 		client.Compute.UpdateVersion()
 		query := url.Values{}

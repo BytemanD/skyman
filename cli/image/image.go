@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -17,10 +16,7 @@ var ImageList = &cobra.Command{
 	Use:   "list",
 	Short: "List images",
 	Run: func(cmd *cobra.Command, _ []string) {
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
+		client := cli.GetClient()
 
 		long, _ := cmd.Flags().GetBool("long")
 		// human, _ := cmd.Flags().GetBool("human")
@@ -55,10 +51,7 @@ var ImageShow = &cobra.Command{
 	Short: "Show image",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client, err := cli.GetClient()
-		if err != nil {
-			logging.Fatal("get openstack client failed %s", err)
-		}
+		client := cli.GetClient()
 
 		id := args[0]
 		human, _ := cmd.Flags().GetBool("human")

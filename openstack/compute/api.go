@@ -145,6 +145,24 @@ func (client ComputeClientV2) ServerReboot(id string, hard bool) error {
 	}
 	return client.ServerAction("reboot", id, actionBody)
 }
+func (client ComputeClientV2) ServerPause(id string) error {
+	return client.ServerAction("pause", id, nil)
+}
+func (client ComputeClientV2) ServerUnpause(id string) error {
+	return client.ServerAction("unpause", id, nil)
+}
+func (client ComputeClientV2) ServerShelve(id string) error {
+	return client.ServerAction("unshelve", id, nil)
+}
+func (client ComputeClientV2) ServerUnshelve(id string) error {
+	return client.ServerAction("unshelve", id, nil)
+}
+func (client ComputeClientV2) ServerSuspend(id string) error {
+	return client.ServerAction("suspend", id, nil)
+}
+func (client ComputeClientV2) ServerResume(id string) error {
+	return client.ServerAction("resume", id, nil)
+}
 
 // server action api
 func (client ComputeClientV2) ServerActionList(id string) ([]InstanceAction, error) {
@@ -158,7 +176,7 @@ func (client ComputeClientV2) ServerActionList(id string) ([]InstanceAction, err
 func (client ComputeClientV2) ServerActionShow(id string, requestId string) (
 	*InstanceAction, error,
 ) {
-	body := map[string]InstanceAction{"instanceAction": InstanceAction{}}
+	body := map[string]InstanceAction{"instanceAction": {}}
 	err := client.List(fmt.Sprintf("servers/%s/os-instance-actions/%s", id, requestId),
 		nil, client.BaseHeaders, &body)
 	if err != nil {
