@@ -116,11 +116,87 @@ func (client ComputeClientV2) WaitServerDeleted(id string) {
 	}
 }
 
+// service api
 func (client ComputeClientV2) ServiceList(query netUrl.Values) Services {
 	body := ServicesBody{}
 	client.List("os-services", query, client.BaseHeaders, &body)
 	return body.Services
 }
+func (client ComputeClientV2) ServiceAction(action string, host string, binary string) *Service {
+	req := Service{Binary: binary, Host: host}
+	reqBody, _ := json.Marshal(req)
+	body := map[string]Service{"service": {}}
+	client.Put("os-services/"+action, reqBody, client.BaseHeaders, &body)
+	service := body["service"]
+	return &service
+}
+func (client ComputeClientV2) ServiceUpdate(id string, update map[string]interface{}) (*Service, error) {
+	reqBody, _ := json.Marshal(update)
+	body := map[string]Service{"service": {}}
+
+	if err := client.Put("os-services/"+id, reqBody, client.BaseHeaders, &body); err != nil {
+		return nil, err
+	}
+	reqService := body["service"]
+	return &reqService, nil
+}
+func (client ComputeClientV2) ServiceGetByHostBinary(host string, binary string) (*Service, error) {
+	query := netUrl.Values{"host": []string{host}, "binary": []string{binary}}
+	services := client.ServiceList(query)
+	if len(services) == 0 {
+		return nil, fmt.Errorf("service %s:%s not found", host, binary)
+	}
+	return &services[0], nil
+}
+func (client ComputeClientV2) ServiceUp(host string, binary string) (*Service, error) {
+	if client.MicroVersionLargeThen(2.53) {
+		service, err := client.ServiceGetByHostBinary(host, binary)
+		if err != nil {
+			return nil, err
+		}
+		return client.ServiceUpdate(service.Id,
+			map[string]interface{}{"forced_down": false})
+	}
+	return client.ServiceAction("up", host, binary), nil
+}
+func (client ComputeClientV2) ServiceDown(host string, binary string) (*Service, error) {
+	if client.MicroVersionLargeThen(2.53) {
+		service, err := client.ServiceGetByHostBinary(host, binary)
+		if err != nil {
+			return nil, err
+		}
+		return client.ServiceUpdate(service.Id, map[string]interface{}{"forced_down": true})
+	}
+	return client.ServiceAction("down", host, binary), nil
+}
+func (client ComputeClientV2) ServiceEnable(host string, binary string) (*Service, error) {
+	if client.MicroVersionLargeThen(2.53) {
+		service, err := client.ServiceGetByHostBinary(host, binary)
+		if err != nil {
+			return nil, err
+		}
+		return client.ServiceUpdate(service.Id, map[string]interface{}{"status": "enabled"})
+	}
+	return client.ServiceAction("enable", host, binary), nil
+}
+func (client ComputeClientV2) ServiceDisable(host string, binary string,
+	reason string,
+) (*Service, error) {
+	if client.MicroVersionLargeThen(2.53) {
+		service, err := client.ServiceGetByHostBinary(host, binary)
+		if err != nil {
+			return nil, err
+		}
+		body := map[string]interface{}{"status": "disabled"}
+		if reason != "" {
+			body["disabled_reason"] = reason
+		}
+		return client.ServiceUpdate(service.Id, body)
+	}
+	return client.ServiceAction("disable", host, binary), nil
+}
+
+// server api
 func (client ComputeClientV2) ServerAction(action string, id string,
 	params interface{},
 ) error {

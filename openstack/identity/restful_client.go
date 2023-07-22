@@ -47,6 +47,15 @@ func (client RestfuleClient) Show(resource string, id string, headers map[string
 	updateHeaders(req, headers)
 	return client.doRequest(req, obj)
 }
+func (client RestfuleClient) Put(resource string, body []byte, headers map[string]string, obj interface{},
+) error {
+	req, err := http.NewRequest("PUT", client.getUrl(resource), bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+	updateHeaders(req, headers)
+	return client.doRequest(req, obj)
+}
 func (client RestfuleClient) Delete(resource string, id string, headers map[string]string) error {
 	req, err := http.NewRequest("DELETE", client.getUrl(resource, id), nil)
 	if err != nil {
