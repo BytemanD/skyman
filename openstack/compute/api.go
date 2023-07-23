@@ -316,7 +316,7 @@ func (client ComputeClientV2) KeypairList(query netUrl.Values) ([]Keypair, error
 
 // server volumes api
 
-func (client ComputeClientV2) SesrverAttachmentList(id string) ([]VolumeAttachment, error) {
+func (client ComputeClientV2) ServerVolumeList(id string) ([]VolumeAttachment, error) {
 	body := map[string][]VolumeAttachment{"volumeAttachments": {}}
 	err := client.List(
 		fmt.Sprintf("servers/%s/os-volume_attachments", id),
@@ -326,7 +326,7 @@ func (client ComputeClientV2) SesrverAttachmentList(id string) ([]VolumeAttachme
 	}
 	return body["volumeAttachments"], nil
 }
-func (client ComputeClientV2) ServerAttachmentAdd(id string, volumeId string) (*VolumeAttachment, error) {
+func (client ComputeClientV2) ServerVolumeAdd(id string, volumeId string) (*VolumeAttachment, error) {
 	data := map[string]map[string]string{
 		"volumeAttachment": {"volumeId": volumeId}}
 	reqBody, _ := json.Marshal(data)
@@ -338,9 +338,49 @@ func (client ComputeClientV2) ServerAttachmentAdd(id string, volumeId string) (*
 	}
 	return respBody["volumeAttachment"], nil
 }
-func (client ComputeClientV2) ServerAttachmentDelete(id string, volumeId string) error {
+func (client ComputeClientV2) ServerVolumeDelete(id string, volumeId string) error {
 	return client.Delete(
 		fmt.Sprintf("servers/%s/os-volume_attachments", id),
 		volumeId, client.BaseHeaders)
 
+}
+func (client ComputeClientV2) ServerInterfaceList(id string) ([]InterfaceAttachment, error) {
+	body := map[string][]InterfaceAttachment{"interfaceAttachments": {}}
+	err := client.List(
+		fmt.Sprintf("servers/%s/os-interface", id),
+		nil, client.BaseHeaders, &body)
+	if err != nil {
+		return nil, err
+	}
+	return body["interfaceAttachments"], nil
+}
+
+func (client ComputeClientV2) ServerAddNet(id string, netId string) (*InterfaceAttachment, error) {
+	data := map[string]string{"net_id": netId}
+	reqBody, _ := json.Marshal(map[string]interface{}{"interfaceAttachment": data})
+
+	body := map[string]*InterfaceAttachment{"interfaceAttachment": {}}
+	err := client.Create(fmt.Sprintf("servers/%s/os-interface", id),
+		reqBody, client.BaseHeaders, &body)
+	if err != nil {
+		return nil, err
+	}
+	return body["interfaceAttachment"], nil
+}
+func (client ComputeClientV2) ServerAddPort(id string, portId string) (*InterfaceAttachment, error) {
+	data := map[string]string{"port_id": portId}
+	reqBody, _ := json.Marshal(map[string]interface{}{"interfaceAttachment": data})
+
+	body := map[string]*InterfaceAttachment{"interfaceAttachment": {}}
+	err := client.Create(fmt.Sprintf("servers/%s/os-interface", id),
+		reqBody, client.BaseHeaders, &body)
+	if err != nil {
+		return nil, err
+	}
+	return body["interfaceAttachment"], nil
+}
+
+func (client ComputeClientV2) ServerInterfaceDetach(id string, portId string) error {
+	return client.Delete(
+		fmt.Sprintf("servers/%s/os-interface", id), portId, client.BaseHeaders)
 }
