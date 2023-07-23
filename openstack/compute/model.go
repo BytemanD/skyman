@@ -277,3 +277,19 @@ type Console struct {
 	Url      string `json:"url"`
 	Protocol string `json:"protocol"`
 }
+
+type Migration struct {
+	Id                int    `json:"id"`
+	OldInstanceTypeId int    `json:"old_instance_type_id"`
+	NewInstanceTypeId int    `json:"new_instance_type_id"`
+	InstanceUUID      string `json:"instance_uuid"`
+	MigrationType     string `json:"migration_type"`
+	Status            string `json:"status"`
+	DestCompute       string `json:"dest_compute"`
+	DestNode          string `json:"dest_node"`
+	DestHost          string `json:"dest_host"`
+	SourceCompute     string `json:"source_compute"`
+	SourceNode        string `json:"source_node"`
+	CreatedAt         string `json:"created_at,omitempty"`
+	UpdatedAt         string `json:"updated_at,omitempty"`
+}

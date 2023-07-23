@@ -54,7 +54,16 @@ var BaseColorFormatter ColorFormater
 
 func init() {
 	BaseColorFormatter = ColorFormater{
-		Green: []string{"enabled", "up", "true", "yes", "success"},
-		Red:   []string{"disabled", "down", "false", "no", "failed", "error"},
+		Green: []string{
+			"enabled", "up", "true", "yes", "success", "active", "ACTIVE",
+			"Running",
+		},
+		Yellow: []string{
+			"SHUTOFF", "ShutDown", "Unknown",
+		},
+		Red: []string{
+			"disabled", "down", "false", "no", "failed", "error",
+			"ERROR",
+		},
 	}
 }

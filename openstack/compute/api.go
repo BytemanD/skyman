@@ -429,3 +429,11 @@ func (client ComputeClientV2) ServerInterfaceDetach(id string, portId string) er
 	return client.Delete(
 		fmt.Sprintf("servers/%s/os-interface", id), portId, client.BaseHeaders)
 }
+
+// migration api
+
+func (client ComputeClientV2) MigrationList(query netUrl.Values) ([]Migration, error) {
+	respBody := map[string][]Migration{"migrations": []Migration{}}
+	client.List("os-migrations", query, client.BaseHeaders, &respBody)
+	return respBody["migrations"], nil
+}
