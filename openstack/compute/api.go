@@ -239,6 +239,19 @@ func (client ComputeClientV2) ServerSuspend(id string) error {
 func (client ComputeClientV2) ServerResume(id string) error {
 	return client.ServerAction("resume", id, nil, nil)
 }
+func (client ComputeClientV2) ServerResize(id string, flavorRef string) error {
+	data := map[string]interface{}{
+		"flavorRef": flavorRef,
+	}
+	return client.ServerAction("resize", id, data, nil)
+}
+
+// TODO: more params
+func (client ComputeClientV2) ServerRebuild(id string) error {
+	data := map[string]interface{}{}
+	return client.ServerAction("rebuild", id, data, nil)
+}
+
 func (client ComputeClientV2) ServerConsoleLog(id string, length uint) (*ConsoleLog, error) {
 	params := map[string]interface{}{}
 	if length != 0 {
@@ -433,7 +446,7 @@ func (client ComputeClientV2) ServerInterfaceDetach(id string, portId string) er
 // migration api
 
 func (client ComputeClientV2) MigrationList(query netUrl.Values) ([]Migration, error) {
-	respBody := map[string][]Migration{"migrations": []Migration{}}
+	respBody := map[string][]Migration{"migrations": {}}
 	client.List("os-migrations", query, client.BaseHeaders, &respBody)
 	return respBody["migrations"], nil
 }
