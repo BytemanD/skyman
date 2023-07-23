@@ -313,3 +313,34 @@ func (client ComputeClientV2) KeypairList(query netUrl.Values) ([]Keypair, error
 	}
 	return body["keypairs"], nil
 }
+
+// server volumes api
+
+func (client ComputeClientV2) SesrverAttachmentList(id string) ([]VolumeAttachment, error) {
+	body := map[string][]VolumeAttachment{"volumeAttachments": {}}
+	err := client.List(
+		fmt.Sprintf("servers/%s/os-volume_attachments", id),
+		nil, client.BaseHeaders, &body)
+	if err != nil {
+		return nil, err
+	}
+	return body["volumeAttachments"], nil
+}
+func (client ComputeClientV2) ServerAttachmentAdd(id string, volumeId string) (*VolumeAttachment, error) {
+	data := map[string]map[string]string{
+		"volumeAttachment": {"volumeId": volumeId}}
+	reqBody, _ := json.Marshal(data)
+	respBody := map[string]*VolumeAttachment{"volumeAttachment": {}}
+	err := client.Create(fmt.Sprintf("servers/%s/os-volume_attachments", id),
+		reqBody, client.BaseHeaders, &respBody)
+	if err != nil {
+		return nil, err
+	}
+	return respBody["volumeAttachment"], nil
+}
+func (client ComputeClientV2) ServerAttachmentDelete(id string, volumeId string) error {
+	return client.Delete(
+		fmt.Sprintf("servers/%s/os-volume_attachments", id),
+		volumeId, client.BaseHeaders)
+
+}
