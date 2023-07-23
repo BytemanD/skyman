@@ -61,6 +61,7 @@ func main() {
 	rootCmd.AddCommand(compute.Keypair)
 	rootCmd.AddCommand(compute.Compute)
 	rootCmd.AddCommand(compute.Console)
+	rootCmd.AddCommand(compute.Migration)
 
 	rootCmd.AddCommand(image.Image)
 

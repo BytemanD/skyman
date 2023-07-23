@@ -70,7 +70,7 @@ var serverList = &cobra.Command{
 			Slots: map[string]func(item interface{}) interface{}{
 				"PowerState": func(item interface{}) interface{} {
 					p, _ := (item).(compute.Server)
-					return p.GetPowerState()
+					return cli.BaseColorFormatter.Format(p.GetPowerState())
 				},
 				"Addresses": func(item interface{}) interface{} {
 					p, _ := (item).(compute.Server)
@@ -91,6 +91,10 @@ var serverList = &cobra.Command{
 				"Image": func(item interface{}) interface{} {
 					p, _ := (item).(compute.Server)
 					return p.Image.Name
+				},
+				"Status": func(item interface{}) interface{} {
+					p, _ := item.(compute.Server)
+					return cli.BaseColorFormatter.Format(p.Status)
 				},
 			},
 		}
