@@ -241,3 +241,11 @@ type InstanceActionEvent struct {
 }
 type InstanceActions []InstanceAction
 type InstanceActionEvents []InstanceActionEvent
+
+type VolumeAttachment struct {
+	Id                  string `json:"id"`
+	Device              string `json:"device"`
+	ServerId            string `json:"serverId"`
+	VolumeId            string `json:"volumeId"`
+	DeleteOnTermination bool   `json:"delete_on_termination,omitempty"`
+}
