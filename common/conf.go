@@ -43,7 +43,7 @@ func LoadConfig(configFile string) error {
 	} else {
 		viper.SetConfigName("stackcrud.yaml")
 		viper.AddConfigPath("./etc")
-		viper.AddConfigPath("/etc/stackcurd")
+		viper.AddConfigPath("/etc/stackcrud")
 	}
 	err := viper.ReadInConfig()
 	if err != nil {
