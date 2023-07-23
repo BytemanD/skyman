@@ -60,6 +60,7 @@ func main() {
 	rootCmd.AddCommand(compute.Hypervisor)
 	rootCmd.AddCommand(compute.Keypair)
 	rootCmd.AddCommand(compute.Compute)
+	rootCmd.AddCommand(compute.Console)
 
 	rootCmd.AddCommand(image.Image)
 
