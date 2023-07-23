@@ -249,3 +249,22 @@ type VolumeAttachment struct {
 	VolumeId            string `json:"volumeId"`
 	DeleteOnTermination bool   `json:"delete_on_termination,omitempty"`
 }
+type InterfaceAttachment struct {
+	MacAddr   string    `json:"mac_addr"`
+	NetId     string    `json:"net_id"`
+	PortId    string    `json:"port_id"`
+	PortState string    `json:"port_state"`
+	FixedIps  []FixedIp `json:"fixed_ips"`
+}
+type FixedIp struct {
+	IpAddress string `json:"ip_address"`
+	SubnetId  string `json:"subnet_id"`
+}
+
+func (attachment InterfaceAttachment) GetIPAddresses() []string {
+	addresses := []string{}
+	for _, fixedIp := range attachment.FixedIps {
+		addresses = append(addresses, fixedIp.IpAddress)
+	}
+	return addresses
+}
