@@ -411,6 +411,36 @@ var serverResume = &cobra.Command{
 		}
 	},
 }
+var serverResize = &cobra.Command{
+	Use:   "resize <server> <flavor>",
+	Short: "Resize server",
+	Args:  cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+
+		err := client.Compute.ServerResize(args[0], args[1])
+		if err != nil {
+			logging.Error("Reqeust to resize server failed, %v", err)
+		} else {
+			fmt.Printf("Requested to resize server: %s\n", args[0])
+		}
+	},
+}
+var serverRebuild = &cobra.Command{
+	Use:   "rebuild <server>",
+	Short: "Rebuild server",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+
+		err := client.Compute.ServerRebuild(args[0])
+		if err != nil {
+			logging.Error("Reqeust to rebuild server failed, %v", err)
+		} else {
+			fmt.Printf("Requested to rebuild server: %s\n", args[0])
+		}
+	},
+}
 
 func init() {
 	// Server list flags
@@ -447,5 +477,5 @@ func init() {
 		serverList, serverShow, serverCreate, serverDelete, serverPrune,
 		serverSet, serverStop, serverStart, serverReboot,
 		serverPause, serverUnpause, serverShelve, serverUnshelve,
-		serverSuspend, serverResume)
+		serverSuspend, serverResume, serverResize, serverRebuild)
 }
