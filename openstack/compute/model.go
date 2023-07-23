@@ -268,3 +268,12 @@ func (attachment InterfaceAttachment) GetIPAddresses() []string {
 	}
 	return addresses
 }
+
+type ConsoleLog struct {
+	Output string `json:"output"`
+}
+type Console struct {
+	Type     string `json:"type"`
+	Url      string `json:"url"`
+	Protocol string `json:"protocol"`
+}

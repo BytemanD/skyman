@@ -149,7 +149,7 @@ func (client ComputeClientV2) ServiceGetByHostBinary(host string, binary string)
 	return &services[0], nil
 }
 func (client ComputeClientV2) ServiceUp(host string, binary string) (*Service, error) {
-	if client.MicroVersionLargeThen(2.53) {
+	if client.MicroVersionLargeEqual("2.53") {
 		service, err := client.ServiceGetByHostBinary(host, binary)
 		if err != nil {
 			return nil, err
@@ -160,7 +160,7 @@ func (client ComputeClientV2) ServiceUp(host string, binary string) (*Service, e
 	return client.ServiceAction("up", host, binary), nil
 }
 func (client ComputeClientV2) ServiceDown(host string, binary string) (*Service, error) {
-	if client.MicroVersionLargeThen(2.53) {
+	if client.MicroVersionLargeEqual("2.53") {
 		service, err := client.ServiceGetByHostBinary(host, binary)
 		if err != nil {
 			return nil, err
@@ -170,7 +170,7 @@ func (client ComputeClientV2) ServiceDown(host string, binary string) (*Service,
 	return client.ServiceAction("down", host, binary), nil
 }
 func (client ComputeClientV2) ServiceEnable(host string, binary string) (*Service, error) {
-	if client.MicroVersionLargeThen(2.53) {
+	if client.MicroVersionLargeEqual("2.53") {
 		service, err := client.ServiceGetByHostBinary(host, binary)
 		if err != nil {
 			return nil, err
@@ -182,7 +182,7 @@ func (client ComputeClientV2) ServiceEnable(host string, binary string) (*Servic
 func (client ComputeClientV2) ServiceDisable(host string, binary string,
 	reason string,
 ) (*Service, error) {
-	if client.MicroVersionLargeThen(2.53) {
+	if client.MicroVersionLargeEqual("2.53") {
 		service, err := client.ServiceGetByHostBinary(host, binary)
 		if err != nil {
 			return nil, err
@@ -198,19 +198,19 @@ func (client ComputeClientV2) ServiceDisable(host string, binary string,
 
 // server api
 func (client ComputeClientV2) ServerAction(action string, id string,
-	params interface{},
+	params interface{}, obj interface{},
 ) error {
 	actionBody := map[string]interface{}{action: params}
 	body, _ := json.Marshal(actionBody)
 	err := client.Create(fmt.Sprintf("%s/%s/action", "servers", id), body,
-		client.BaseHeaders, nil)
+		client.BaseHeaders, obj)
 	return err
 }
 func (client ComputeClientV2) ServerStop(id string) error {
-	return client.ServerAction("os-stop", id, nil)
+	return client.ServerAction("os-stop", id, nil, nil)
 }
 func (client ComputeClientV2) ServerStart(id string) error {
-	return client.ServerAction("os-start", id, nil)
+	return client.ServerAction("os-start", id, nil, nil)
 }
 func (client ComputeClientV2) ServerReboot(id string, hard bool) error {
 	actionBody := map[string]string{}
@@ -219,25 +219,70 @@ func (client ComputeClientV2) ServerReboot(id string, hard bool) error {
 	} else {
 		actionBody["type"] = "SOFT"
 	}
-	return client.ServerAction("reboot", id, actionBody)
+	return client.ServerAction("reboot", id, actionBody, nil)
 }
 func (client ComputeClientV2) ServerPause(id string) error {
-	return client.ServerAction("pause", id, nil)
+	return client.ServerAction("pause", id, nil, nil)
 }
 func (client ComputeClientV2) ServerUnpause(id string) error {
-	return client.ServerAction("unpause", id, nil)
+	return client.ServerAction("unpause", id, nil, nil)
 }
 func (client ComputeClientV2) ServerShelve(id string) error {
-	return client.ServerAction("unshelve", id, nil)
+	return client.ServerAction("unshelve", id, nil, nil)
 }
 func (client ComputeClientV2) ServerUnshelve(id string) error {
-	return client.ServerAction("unshelve", id, nil)
+	return client.ServerAction("unshelve", id, nil, nil)
 }
 func (client ComputeClientV2) ServerSuspend(id string) error {
-	return client.ServerAction("suspend", id, nil)
+	return client.ServerAction("suspend", id, nil, nil)
 }
 func (client ComputeClientV2) ServerResume(id string) error {
-	return client.ServerAction("resume", id, nil)
+	return client.ServerAction("resume", id, nil, nil)
+}
+func (client ComputeClientV2) ServerConsoleLog(id string, length uint) (*ConsoleLog, error) {
+	params := map[string]interface{}{}
+	if length != 0 {
+		params["length"] = length
+	}
+	body := ConsoleLog{}
+	err := client.ServerAction("os-getConsoleOutput", id, params, &body)
+	if err != nil {
+		return nil, err
+	}
+	return &body, nil
+}
+func (client ComputeClientV2) getVNCConsole(id string, consoleType string) (*Console, error) {
+	params := map[string]interface{}{"type": consoleType}
+	respBody := map[string]*Console{"console": {}}
+	err := client.ServerAction("os-getVNCConsole", id, params, &respBody)
+	if err != nil {
+		return nil, err
+	}
+	return respBody["console"], nil
+}
+func (client ComputeClientV2) getRemoteConsole(id string, protocol string, consoleType string) (*Console, error) {
+	params := map[string]interface{}{
+		"remote_console": map[string]interface{}{
+			"protocol": protocol,
+			"type":     consoleType,
+		},
+	}
+	repBody, _ := json.Marshal(params)
+	respBody := map[string]*Console{"console": {}}
+	err := client.Create(fmt.Sprintf("servers/%s/remote-consoles", id),
+		repBody, client.BaseHeaders, &respBody)
+	if err != nil {
+		return nil, err
+	}
+	return respBody["remote_console"], nil
+}
+
+func (client ComputeClientV2) ServerConsoleUrl(id string, consoleType string) (*Console, error) {
+	if client.MicroVersionLargeEqual("2.6") {
+		// TODO: do not set "vnc" directly
+		return client.getRemoteConsole(id, "vnc", consoleType)
+	}
+	return client.getVNCConsole(id, consoleType)
 }
 
 // server action api

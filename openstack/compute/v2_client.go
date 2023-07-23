@@ -2,6 +2,7 @@ package compute
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/BytemanD/stackcrud/openstack/identity"
 )
@@ -20,14 +21,28 @@ type ComputeClientV2 struct {
 	BaseHeaders  map[string]string
 }
 
-func (client *ComputeClientV2) GetMicroVersion() float64 {
-	migroVersion, _ := strconv.ParseFloat(client.MicroVersion.Version, 64)
-	return migroVersion
+type microVersion struct {
+	Version      int
+	MicroVersion int
 }
 
-func (client *ComputeClientV2) MicroVersionLargeThen(version float64) bool {
-	microVersion := client.GetMicroVersion()
-	return (microVersion) >= version
+func getMicroVersion(vertionStr string) microVersion {
+	versionList := strings.Split(vertionStr, ".")
+	v, _ := strconv.Atoi(versionList[0])
+	micro, _ := strconv.Atoi(versionList[1])
+	return microVersion{Version: v, MicroVersion: micro}
+}
+
+func (client *ComputeClientV2) MicroVersionLargeEqual(version string) bool {
+	clientVersion := getMicroVersion(client.MicroVersion.Version)
+	otherVersion := getMicroVersion(version)
+	if clientVersion.Version > otherVersion.Version {
+		return true
+	} else if clientVersion.Version == otherVersion.Version {
+		return clientVersion.MicroVersion >= otherVersion.MicroVersion
+	} else {
+		return false
+	}
 }
 
 // X-OpenStack-Nova-API-Version
