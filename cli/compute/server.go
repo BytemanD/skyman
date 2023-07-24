@@ -426,6 +426,38 @@ var serverResize = &cobra.Command{
 		}
 	},
 }
+var serverMigrate = &cobra.Command{
+	Use:   "migrate <server>",
+	Short: "Migrate server",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		live, _ := cmd.Flags().GetBool("live")
+		host, _ := cmd.Flags().GetString("host")
+		blockMigrate, _ := cmd.Flags().GetBool("block-migrate")
+		var err error
+		if live {
+			if host == "" {
+				err = client.Compute.ServerLiveMigrate(args[0], blockMigrate)
+			} else {
+				err = client.Compute.ServerLiveMigrateTo(args[0], blockMigrate, host)
+			}
+		} else {
+			if host == "" {
+				err = client.Compute.ServerMigrate(args[0])
+			} else {
+				err = client.Compute.ServerMigrateTo(args[0], host)
+			}
+		}
+
+		if err != nil {
+			logging.Error("Reqeust to migrate server failed, %v", err)
+		} else {
+			fmt.Printf("Requested to migrate server: %s\n", args[0])
+		}
+	},
+}
+
 var serverRebuild = &cobra.Command{
 	Use:   "rebuild <server>",
 	Short: "Rebuild server",
@@ -466,6 +498,11 @@ func init() {
 
 	serverReboot.Flags().Bool("hard", false, "Perform a hard reboot")
 
+	// server migrate flags
+	serverMigrate.Flags().Bool("live", false, "Migrate running server.")
+	serverMigrate.Flags().String("host", "", "Destination host name.")
+	serverMigrate.Flags().Bool("block-migrate", false, "True in case of block_migration.")
+
 	// Server prune flags
 	serverPrune.Flags().StringP("name", "n", "", "Search by server name")
 	serverPrune.Flags().String("host", "", "Search by hostname")
@@ -477,5 +514,6 @@ func init() {
 		serverList, serverShow, serverCreate, serverDelete, serverPrune,
 		serverSet, serverStop, serverStart, serverReboot,
 		serverPause, serverUnpause, serverShelve, serverUnshelve,
-		serverSuspend, serverResume, serverResize, serverRebuild)
+		serverSuspend, serverResume, serverResize, serverRebuild,
+		serverMigrate)
 }

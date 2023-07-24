@@ -245,6 +245,30 @@ func (client ComputeClientV2) ServerResize(id string, flavorRef string) error {
 	}
 	return client.ServerAction("resize", id, data, nil)
 }
+func (client ComputeClientV2) ServerMigrate(id string) error {
+	return client.ServerAction("migrate", id, nil, nil)
+}
+func (client ComputeClientV2) ServerMigrateTo(id string, host string) error {
+	data := map[string]interface{}{
+		"host": host,
+	}
+	return client.ServerAction("migrate", id, data, nil)
+}
+
+func (client ComputeClientV2) ServerLiveMigrate(id string, blockMigrate bool) error {
+	data := map[string]interface{}{
+		"block_migration": blockMigrate,
+		"host":            nil,
+	}
+	return client.ServerAction("os-migrateLive", id, data, nil)
+}
+func (client ComputeClientV2) ServerLiveMigrateTo(id string, blockMigrate bool, host string) error {
+	data := map[string]interface{}{
+		"block_migration": blockMigrate,
+		"host":            host,
+	}
+	return client.ServerAction("os-migrateLive", id, data, nil)
+}
 
 // TODO: more params
 func (client ComputeClientV2) ServerRebuild(id string) error {
