@@ -14,7 +14,7 @@ import (
 
 var Volume = &cobra.Command{Use: "volume"}
 
-var VolumeList = &cobra.Command{
+var volumeList = &cobra.Command{
 	Use:   "list",
 	Short: "List volumes",
 	Run: func(cmd *cobra.Command, _ []string) {
@@ -50,7 +50,7 @@ var VolumeList = &cobra.Command{
 	},
 }
 
-var VolumeShow = &cobra.Command{
+var volumeShow = &cobra.Command{
 	Use:   "show <id or name>",
 	Short: "Show volume",
 	Args:  cobra.ExactArgs(1),
@@ -76,10 +76,58 @@ var VolumeShow = &cobra.Command{
 		printVolume(*volume)
 	},
 }
+var volumeDelete = &cobra.Command{
+	// TODO: support volume id or name
+	Use:   "delete <volume id> [<volume id> ...]",
+	Short: "Delete volume",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+
+		for _, volumeId := range args {
+			err := client.Storage.VolumeDelete(volumeId)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			} else {
+				fmt.Printf("Requested to delete volume %s\n", volumeId)
+			}
+		}
+	},
+}
+var volumePrune = &cobra.Command{
+	// TODO: support volume id or name
+	Use:   "prune",
+	Short: "Prune volume(s)",
+	Args:  cobra.NoArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		name, _ := cmd.Flags().GetString("name")
+		yes, _ := cmd.Flags().GetBool("yes")
+		statusList, _ := cmd.Flags().GetStringArray("status")
+
+		query := url.Values{}
+		if name != "" {
+			query.Set("name", name)
+		}
+		for _, status := range statusList {
+			query.Add("status", status)
+		}
+		client := cli.GetClient()
+		client.Storage.VolumePrune(query, yes, false)
+
+	},
+}
 
 func init() {
-	VolumeList.Flags().BoolP("long", "l", false, "List additional fields in output")
-	VolumeList.Flags().StringP("name", "n", "", "Search by volume name")
+	volumeList.Flags().BoolP("long", "l", false, "List additional fields in output")
+	volumeList.Flags().StringP("name", "n", "", "Search by volume name")
 
-	Volume.AddCommand(VolumeList, VolumeShow)
+	volumePrune.Flags().StringP("name", "n", "", "Search by volume name")
+	volumePrune.Flags().StringArrayP("status", "s", nil, "Search by server status")
+	volumePrune.Flags().BoolP("yes", "y", false, "所有问题自动回答'是'")
+
+	Volume.AddCommand(
+		volumeList, volumeShow,
+		volumeDelete, volumePrune,
+	)
 }
