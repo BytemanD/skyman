@@ -4,8 +4,8 @@ import (
 	"net/url"
 )
 
-func (client ImageClientV2) ImageList(query url.Values) Images {
-	body := map[string]Images{"images": Images{}}
+func (client ImageClientV2) ImageList(query url.Values) []Image {
+	body := map[string][]Image{"images": {}}
 	client.List("images", query, nil, &body)
 	return body["images"]
 }

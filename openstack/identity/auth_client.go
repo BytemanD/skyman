@@ -134,18 +134,18 @@ func (client V3AuthClient) GetEndpointFromCatalog(serviceType string, endpointIn
 }
 
 // 获取认证客户端
-func GetV3AuthClient(authUrl string, user map[string]string, project map[string]string, regionName string) (*V3AuthClient, error) {
+func GetV3AuthClient(authUrl string, user User, project Project, regionName string) (*V3AuthClient, error) {
 	if authUrl == "" {
 		return nil, fmt.Errorf("authUrl is missing")
 	}
 
 	client := V3AuthClient{
 		AuthUrl:           authUrl,
-		Username:          user["name"],
-		Password:          user["password"],
-		UserDomainName:    user["domainName"],
-		ProjectName:       project["name"],
-		ProjectDomainName: project["domainName"],
+		Username:          user.Name,
+		Password:          user.Password,
+		UserDomainName:    user.Domain.Name,
+		ProjectName:       project.Name,
+		ProjectDomainName: project.Domain.Name,
 		RegionName:        regionName,
 		TokenExpireSecond: DEFAULT_TOKEN_EXPIRE_SECOND,
 	}

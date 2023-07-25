@@ -40,9 +40,7 @@ var ImageList = &cobra.Command{
 				{Number: 4, Align: text.AlignRight},
 			},
 		}
-		for _, hypervisor := range images {
-			dataTable.Items = append(dataTable.Items, hypervisor)
-		}
+		dataTable.AddItems(images)
 		dataTable.Print(long)
 	},
 }

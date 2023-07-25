@@ -30,8 +30,7 @@ func getAuthClient() (*identity.V3AuthClient, error) {
 	return authClient, nil
 }
 
-func GetClient(authUrl string, user map[string]string,
-	project map[string]string, regionName string,
+func GetClient(authUrl string, user identity.User, project identity.Project, regionName string,
 ) (*OpenstackClient, error) {
 	authClient, err := identity.GetV3AuthClient(authUrl, user, project, regionName)
 	if err != nil {

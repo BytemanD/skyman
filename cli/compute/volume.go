@@ -13,7 +13,7 @@ import (
 
 var Volume = &cobra.Command{Use: "volume"}
 
-func printVolumeAttachments(attachments []compute.VolumeAttachment) {
+func printVolumeAttachments(items []compute.VolumeAttachment) {
 	dataTable := cli.DataListTable{
 		ShortHeaders: []string{"Id", "VolumeId", "Device"},
 		HeaderLabel: map[string]string{
@@ -24,9 +24,7 @@ func printVolumeAttachments(attachments []compute.VolumeAttachment) {
 			{Name: "Device", Mode: table.Asc},
 		},
 	}
-	for _, item := range attachments {
-		dataTable.Items = append(dataTable.Items, item)
-	}
+	dataTable.AddItems(items)
 	dataTable.Print(false)
 }
 
@@ -38,7 +36,7 @@ var volumeList = &cobra.Command{
 		client := cli.GetClient()
 		attachments, err := client.Compute.ServerVolumeList(args[0])
 		if err != nil {
-			fmt.Printf("%s\v", err)
+			fmt.Println(err)
 			os.Exit(1)
 		}
 		printVolumeAttachments(attachments)

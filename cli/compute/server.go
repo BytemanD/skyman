@@ -3,6 +3,7 @@ package compute
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -21,6 +22,7 @@ var Server = &cobra.Command{Use: "server"}
 var serverList = &cobra.Command{
 	Use:   "list",
 	Short: "List servers",
+	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 		client := cli.GetClient()
 		query := url.Values{}
@@ -102,9 +104,7 @@ var serverList = &cobra.Command{
 			dataTable.LongHeaders = append(dataTable.LongHeaders,
 				"Flavor:ram", "Flavor:vcpus", "Image")
 		}
-		for _, item := range servers {
-			dataTable.Items = append(dataTable.Items, item)
-		}
+		dataTable.AddItems(servers)
 		dataTable.Print(long)
 	},
 }
@@ -121,19 +121,19 @@ var serverShow = &cobra.Command{
 			servers := client.Compute.ServerListDetailsByName(nameOrId)
 			if len(servers) > 1 {
 				fmt.Printf("Found multy severs named %s\n", nameOrId)
+				os.Exit(1)
 			} else if len(servers) == 1 {
 				server = &servers[0]
 			} else {
 				fmt.Println(err)
+				os.Exit(1)
 			}
 		}
-		if server != nil {
-			server.Print()
-		}
+		printServer(*server)
 	},
 }
 var serverCreate = &cobra.Command{
-	Use:   "create",
+	Use:   "create [server name]",
 	Short: "Create server(s)",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.MaximumNArgs(1)(cmd, args); err != nil {
@@ -204,10 +204,15 @@ var serverCreate = &cobra.Command{
 		}
 		server, err := client.Compute.ServerCreate(createOption)
 		if err != nil {
-			logging.Fatal("create server faield, %s", err)
+			fmt.Println(err)
+			os.Exit(1)
 		}
-		server, _ = client.Compute.ServerShow(server.Id)
-		server.Print()
+		server, err = client.Compute.ServerShow(server.Id)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		printServer(*server)
 	},
 }
 var serverSet = &cobra.Command{

@@ -11,10 +11,10 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
-func (client ComputeClientV2) ServerList(query netUrl.Values) Servers {
-	serversBody := ServersBody{}
+func (client ComputeClientV2) ServerList(query netUrl.Values) []Server {
+	serversBody := map[string][]Server{"servers": {}}
 	client.List("servers", query, client.BaseHeaders, &serversBody)
-	return serversBody.Servers
+	return serversBody["servers"]
 }
 func (client ComputeClientV2) ServerListDetails(query netUrl.Values) Servers {
 	serversBody := ServersBody{}
@@ -117,10 +117,10 @@ func (client ComputeClientV2) WaitServerDeleted(id string) {
 }
 
 // service api
-func (client ComputeClientV2) ServiceList(query netUrl.Values) Services {
-	body := ServicesBody{}
+func (client ComputeClientV2) ServiceList(query netUrl.Values) []Service {
+	body := map[string][]Service{"services": {}}
 	client.List("os-services", query, client.BaseHeaders, &body)
-	return body.Services
+	return body["services"]
 }
 func (client ComputeClientV2) ServiceAction(action string, host string, binary string) *Service {
 	req := Service{Binary: binary, Host: host}

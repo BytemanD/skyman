@@ -70,6 +70,12 @@ type DataListTable struct {
 	Title         string
 }
 
+func (dataTable *DataListTable) AddItems(items interface{}) {
+	value := reflect.ValueOf(items)
+	for i := 0; i < value.Len(); i++ {
+		dataTable.Items = append(dataTable.Items, value.Index(i).Interface())
+	}
+}
 func (dataTable DataListTable) Print(long bool) {
 	tableWriter := table.NewWriter()
 	tableWriter.Style().Format.Header = text.FormatDefault

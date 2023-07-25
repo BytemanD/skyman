@@ -1,6 +1,9 @@
 package common
 
-import "github.com/spf13/viper"
+import (
+	"github.com/BytemanD/stackcrud/openstack/identity"
+	"github.com/spf13/viper"
+)
 
 var CONF_FILES = []string{
 	"etc/stackcrud.yaml",
@@ -19,11 +22,11 @@ type ConfGroup struct {
 	Server Server `yaml:"server"`
 }
 type Auth struct {
-	Url             string            `yaml:"url"`
-	RegionName      string            `yaml:"regionName"`
-	User            map[string]string `yaml:"user"`
-	Project         map[string]string `yaml:"project"`
-	TokenExpireTime int               `yaml:"tokenExpireTime"`
+	Url             string           `yaml:"url"`
+	RegionName      string           `yaml:"regionName"`
+	User            identity.User    `yaml:"user"`
+	Project         identity.Project `yaml:"project"`
+	TokenExpireTime int              `yaml:"tokenExpireTime"`
 }
 
 type Server struct {
