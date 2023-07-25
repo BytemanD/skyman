@@ -88,7 +88,6 @@ var volumeDelete = &cobra.Command{
 			err := client.Storage.VolumeDelete(volumeId)
 			if err != nil {
 				fmt.Println(err)
-				os.Exit(1)
 			} else {
 				fmt.Printf("Requested to delete volume %s\n", volumeId)
 			}
@@ -117,6 +116,29 @@ var volumePrune = &cobra.Command{
 
 	},
 }
+var volumeCreate = &cobra.Command{
+	Use:   "create <name>",
+	Short: "Create volume",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		size, _ := cmd.Flags().GetUint("size")
+
+		params := map[string]interface{}{
+			"name": args[0],
+		}
+		if size > 0 {
+			params["size"] = size
+		}
+
+		client := cli.GetClient()
+		volume, err := client.Storage.VolumeCreate(params)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		printVolume(*volume)
+	},
+}
 
 func init() {
 	volumeList.Flags().BoolP("long", "l", false, "List additional fields in output")
@@ -126,8 +148,10 @@ func init() {
 	volumePrune.Flags().StringArrayP("status", "s", nil, "Search by server status")
 	volumePrune.Flags().BoolP("yes", "y", false, "所有问题自动回答'是'")
 
+	volumeCreate.Flags().Uint("size", 0, "Volume size")
+
 	Volume.AddCommand(
-		volumeList, volumeShow,
+		volumeList, volumeShow, volumeCreate,
 		volumeDelete, volumePrune,
 	)
 }

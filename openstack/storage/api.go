@@ -1,6 +1,9 @@
 package storage
 
-import "net/url"
+import (
+	"encoding/json"
+	"net/url"
+)
 
 func (client StorageClientV2) VolumeList(query url.Values) []Volume {
 	body := map[string][]Volume{"volumes": {}}
@@ -26,6 +29,17 @@ func (client StorageClientV2) VolumeShow(id string) (*Volume, error) {
 	body := map[string]*Volume{"volume": {}}
 	err := client.Show("volumes", id, client.BaseHeaders, &body)
 	return body["volume"], err
+}
+func (client StorageClientV2) VolumeCreate(params map[string]interface{}) (*Volume, error) {
+
+	data := map[string]interface{}{"volume": params}
+	body, _ := json.Marshal(data)
+	respBody := map[string]*Volume{"volume": {}}
+	err := client.Create("volumes", body, client.BaseHeaders, &respBody)
+	if err != nil {
+		return nil, err
+	}
+	return respBody["volume"], nil
 }
 func (client StorageClientV2) VolumeDelete(id string) error {
 	return client.Delete("volumes", id, client.BaseHeaders)
