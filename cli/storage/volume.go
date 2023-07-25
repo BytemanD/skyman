@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -64,15 +65,15 @@ var VolumeShow = &cobra.Command{
 			volumes := client.Storage.VolumeListDetailByName(idOrName)
 			if len(volumes) > 1 {
 				fmt.Printf("Found multi volumes named %s\n", idOrName)
+				os.Exit(1)
 			} else if len(volumes) == 1 {
 				volume = &volumes[0]
 			} else {
 				fmt.Println(err)
+				os.Exit(1)
 			}
 		}
-		if volume != nil {
-			volume.PrintTable()
-		}
+		printVolume(*volume)
 	},
 }
 

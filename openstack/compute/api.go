@@ -12,24 +12,24 @@ import (
 )
 
 func (client ComputeClientV2) ServerList(query netUrl.Values) []Server {
-	serversBody := map[string][]Server{"servers": {}}
-	client.List("servers", query, client.BaseHeaders, &serversBody)
-	return serversBody["servers"]
+	body := map[string][]Server{"servers": {}}
+	client.List("servers", query, client.BaseHeaders, &body)
+	return body["servers"]
 }
-func (client ComputeClientV2) ServerListDetails(query netUrl.Values) Servers {
-	serversBody := ServersBody{}
-	client.List("servers/detail", query, client.BaseHeaders, &serversBody)
-	return serversBody.Servers
+func (client ComputeClientV2) ServerListDetails(query netUrl.Values) []Server {
+	body := map[string][]Server{"servers": {}}
+	client.List("servers/detail", query, client.BaseHeaders, &body)
+	return body["servers"]
 }
-func (client ComputeClientV2) ServerListDetailsByName(name string) Servers {
+func (client ComputeClientV2) ServerListDetailsByName(name string) []Server {
 	query := url.Values{}
 	query.Set("name", name)
 	return client.ServerListDetails(query)
 }
 func (client ComputeClientV2) ServerShow(id string) (*Server, error) {
-	serverBody := ServerBody{}
-	err := client.Show("servers", id, client.BaseHeaders, &serverBody)
-	return serverBody.Server, err
+	body := map[string]*Server{"server": {}}
+	err := client.Show("servers", id, client.BaseHeaders, &body)
+	return body["server"], err
 }
 
 func (client ComputeClientV2) ServerDelete(id string) error {
@@ -60,16 +60,15 @@ func (client ComputeClientV2) ServerCreate(options ServerOpt) (*Server, error) {
 	if options.Networks == nil {
 		options.Networks = "none"
 	}
-
-	body, _ := json.Marshal(ServeCreaterBody{Server: options})
-	serverBody := ServerBody{}
-	var createErr error
+	repBody, _ := json.Marshal(map[string]ServerOpt{"server": options})
+	serverBody := map[string]*Server{"server": {}}
+	var err error
 	if options.BlockDeviceMappingV2 != nil {
-		createErr = client.Create("os-volumes_boot", body, client.BaseHeaders, &serverBody)
+		err = client.Create("os-volumes_boot", repBody, client.BaseHeaders, &serverBody)
 	} else {
-		createErr = client.Create("servers", body, client.BaseHeaders, &serverBody)
+		err = client.Create("servers", repBody, client.BaseHeaders, &serverBody)
 	}
-	return serverBody.Server, createErr
+	return serverBody["server"], err
 }
 func (client ComputeClientV2) WaitServerCreate(options ServerOpt) (*Server, error) {
 	server, err := client.ServerCreate(options)
@@ -345,10 +344,10 @@ func (client ComputeClientV2) ServerActionShow(id string, requestId string) (
 }
 
 // flavor api
-func (client ComputeClientV2) FlavorList(query netUrl.Values) (Flavors, error) {
-	body := FlavorsBody{}
+func (client ComputeClientV2) FlavorList(query netUrl.Values) ([]Flavor, error) {
+	body := map[string][]Flavor{"volumes": {}}
 	client.List("flavors", query, client.BaseHeaders, &body)
-	return body.Flavors, nil
+	return body["flavors"], nil
 }
 func (client ComputeClientV2) FlavorListDetail(query netUrl.Values) (Flavors, error) {
 	body := map[string]Flavors{"flavors": {}}
@@ -359,14 +358,14 @@ func (client ComputeClientV2) FlavorListDetail(query netUrl.Values) (Flavors, er
 	return body["flavors"], nil
 }
 func (client ComputeClientV2) FlavorExtraSpecsList(flavorId string) (ExtraSpecs, error) {
-	body := ExtraSpecsBody{}
+	body := map[string]ExtraSpecs{"extra_specs": {}}
 	err := client.List(
 		fmt.Sprintf("flavors/%s/os-extra_specs", flavorId), nil, client.BaseHeaders,
 		&body)
 	if err != nil {
 		return nil, err
 	}
-	return body.ExtraSpecs, nil
+	return body["extra_specs"], nil
 }
 
 // hypervisor api

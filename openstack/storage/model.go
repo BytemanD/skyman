@@ -2,11 +2,6 @@ package storage
 
 import (
 	"fmt"
-	"os"
-	"strings"
-
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 
 	"github.com/BytemanD/stackcrud/openstack/common"
 )
@@ -54,17 +49,10 @@ type Volume struct {
 	GroupId             string            `json:"group_id"`
 	TaskStatus          string            `json:"task_status"`
 	VolumeImageMetadata map[string]string `json:"volume_image_metadata"`
+	TenantId            string            `json:"os-vol-tenant-attr:tenant_id,omitempty"`
 }
 
 type Volumes []Volume
-
-type VolumesBody struct {
-	Volumes Volumes `json:"volumes"`
-}
-
-type VolumeBody struct {
-	Volume *Volume `json:"volume"`
-}
 
 func (volume Volume) GetAttachmentList() []string {
 	attachmentList := []string{}
@@ -92,33 +80,4 @@ func (volume Volume) GetImageMetadataList() []string {
 		metadataList = append(metadataList, fmt.Sprintf("%s=%s", k, v))
 	}
 	return metadataList
-}
-func (volume Volume) PrintTable() {
-	header := table.Row{"Property", "Value"}
-	tableWriter := table.NewWriter()
-	// Use reject
-	tableWriter.AppendRows([]table.Row{
-		{"Id", volume.Id}, {"name", volume.Name},
-		{"description", volume.Description},
-		{"status", volume.Status},
-		{"task_status", volume.TaskStatus},
-		{"size", volume.Size},
-		{"bootable", volume.Bootable},
-		{"attachments", strings.Join(volume.GetAttachmentList(), "\n")},
-		{"volume_type", volume.VolumeType},
-		{"metadata", strings.Join(volume.GetMetadataList(), "\n")},
-		{"availability_zone", volume.AvailabilityZone},
-		{"host", volume.Host},
-		{"multiattach", volume.Multiattach},
-		{"group_id", volume.GroupId},
-		{"source_volid", volume.SourceVolid},
-		{"volume_image_metadata", strings.Join(volume.GetImageMetadataList(), "\n")},
-
-		{"created", volume.CreatedAt},
-		{"updated", volume.UpdatedAt},
-	})
-	tableWriter.AppendHeader(header)
-	tableWriter.Style().Format.Header = text.FormatDefault
-	tableWriter.SetOutputMirror(os.Stdout)
-	tableWriter.Render()
 }

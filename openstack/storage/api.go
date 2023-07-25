@@ -2,15 +2,15 @@ package storage
 
 import "net/url"
 
-func (client StorageClientV2) VolumeList(query url.Values) Volumes {
-	body := VolumesBody{}
+func (client StorageClientV2) VolumeList(query url.Values) []Volume {
+	body := map[string][]Volume{"volumes": {}}
 	client.List("volumes", query, nil, &body)
-	return body.Volumes
+	return body["volumes"]
 }
 func (client StorageClientV2) VolumeListDetail(query url.Values) Volumes {
-	body := VolumesBody{}
+	body := map[string][]Volume{"volumes": {}}
 	client.List("volumes/detail", query, nil, &body)
-	return body.Volumes
+	return body["volumes"]
 }
 func (client StorageClientV2) VolumeListDetailByName(name string) Volumes {
 	query := url.Values{}
@@ -18,9 +18,9 @@ func (client StorageClientV2) VolumeListDetailByName(name string) Volumes {
 	return client.VolumeListDetail(query)
 }
 func (client StorageClientV2) VolumeShow(id string) (*Volume, error) {
-	body := VolumeBody{}
+	body := map[string]*Volume{"volume": {}}
 	err := client.Show("volumes", id, client.BaseHeaders, &body)
-	return body.Volume, err
+	return body["volume"], err
 }
 
 // func (client CinderClientV2) VolumeListByName(name string) []Volumes {
