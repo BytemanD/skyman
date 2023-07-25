@@ -2,6 +2,12 @@
 function logInfo() {
     echo `date "+%F %T" ` "INFO:" $@ 1>&2
 }
+function logError() {
+    echo `date "+%F %T" ` "ERROR:" $@ 1>&2
+}
+function logWarn() {
+    echo `date "+%F %T" ` "WARN:" $@ 1>&2
+}
 function goBuild(){
     logInfo "获取版本"
     version=$(go run cmd/stackcrud.go -v |awk '{print $3}')
@@ -10,8 +16,19 @@ function goBuild(){
     fi
     mkdir -p dist
     logInfo "开始编译, 版本: ${version}"
-    go build  -ldflags "-X main.Version=${version}" -o dist/ cmd/stackcrud.go
+    go build  -ldflags "-X main.Version=${version} -s -w" -o dist/ cmd/stackcrud.go
+    if [[ $? -ne 0 ]]; then
+        logError "编译失败"
+        exit 1
+    fi
     logInfo "编译成功"
+    which upx > /dev/null 2>&1
+    if [[ $? -eq 0 ]]; then
+        logInfo "检测到工具 upx, 压缩可执行文件"
+        upx -q dist/stackcrud > /dev/null
+    else
+        logWarn "upx未安装, 不压缩可执行文件"
+    fi
 }
 
 function rpmBuild() {
