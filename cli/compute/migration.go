@@ -23,6 +23,8 @@ var migrationList = &cobra.Command{
 		status, _ := cmd.Flags().GetString("status")
 		host, _ := cmd.Flags().GetString("host")
 		instance, _ := cmd.Flags().GetString("instance")
+		long, _ := cmd.Flags().GetBool("long")
+
 		if status != "" {
 			query.Set("status", status)
 		}
@@ -66,10 +68,7 @@ var migrationList = &cobra.Command{
 				},
 			},
 		}
-		for _, item := range migrations {
-			dataTable.Items = append(dataTable.Items, item)
-		}
-		long, _ := cmd.Flags().GetBool("long")
+		dataTable.AddItems(migrations)
 		dataTable.Print(long)
 	},
 }

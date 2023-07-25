@@ -36,7 +36,7 @@ var VolumeList = &cobra.Command{
 			Slots: map[string]func(item interface{}) interface{}{
 				"Attachments": func(item interface{}) interface{} {
 					obj, _ := (item).(storage.Volume)
-					return strings.Join(obj.GetMetadataList(), "\n")
+					return strings.Join(obj.GetAttachmentList(), "\n")
 				},
 				"Metadata": func(item interface{}) interface{} {
 					obj, _ := (item).(storage.Volume)
@@ -44,9 +44,7 @@ var VolumeList = &cobra.Command{
 				},
 			},
 		}
-		for _, item := range volumes {
-			dataTable.Items = append(dataTable.Items, item)
-		}
+		dataTable.AddItems(volumes)
 		dataTable.Print(long)
 	},
 }

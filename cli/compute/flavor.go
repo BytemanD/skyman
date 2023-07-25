@@ -32,7 +32,7 @@ var flavorList = &cobra.Command{
 		if err != nil {
 			logging.Fatal("%s", err)
 		}
-		filteredFlavors := compute.Flavors{}
+		filteredFlavors := []compute.Flavor{}
 		if name != "" {
 			for _, flavor := range flavors {
 				if strings.Contains(flavor.Name, name) {

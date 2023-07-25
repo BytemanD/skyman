@@ -32,9 +32,7 @@ var actionList = &cobra.Command{
 				"User Id":    "UserId",
 			},
 		}
-		for _, action := range actions {
-			dataTable.Items = append(dataTable.Items, action)
-		}
+		dataTable.AddItems(actions)
 		dataTable.Print(long)
 	},
 }
@@ -65,11 +63,11 @@ var actionShow = &cobra.Command{
 		// trace
 		tracbackMap := map[string]string{}
 		for _, item := range action.Events {
-			dataTable.Items = append(dataTable.Items, item)
 			if item.Traceback != "" {
 				tracbackMap[item.Event] = item.Traceback
 			}
 		}
+		dataTable.AddItems(action.Events)
 		dataTable.Print(long)
 		if long {
 			for k, v := range tracbackMap {

@@ -30,9 +30,7 @@ func printinterfaceAttachments(items []compute.InterfaceAttachment) {
 			},
 		},
 	}
-	for _, item := range items {
-		dataTable.Items = append(dataTable.Items, item)
-	}
+	dataTable.AddItems(items)
 	dataTable.Print(false)
 }
 

@@ -43,9 +43,7 @@ var hypervisorList = &cobra.Command{
 				"VcpusUsed":    "VCPUs Used",
 				"MemoryMBUsed": "MemoryMB Used"},
 		}
-		for _, hypervisor := range hypervisors {
-			dataTable.Items = append(dataTable.Items, hypervisor)
-		}
+		dataTable.AddItems(hypervisors)
 		dataTable.Print(long)
 	},
 }

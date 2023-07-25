@@ -70,7 +70,7 @@ func (volume Volume) GetAttachmentList() []string {
 	attachmentList := []string{}
 	for _, attachment := range volume.Attachments {
 		attachmentList = append(attachmentList,
-			fmt.Sprintf("%s -> %s", attachment.ServerId, attachment.Device),
+			fmt.Sprintf("%s @ %s", attachment.Device, attachment.ServerId),
 		)
 	}
 	return attachmentList

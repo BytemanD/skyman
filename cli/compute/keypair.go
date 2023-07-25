@@ -21,9 +21,7 @@ var keypairList = &cobra.Command{
 		dataTable := cli.DataListTable{
 			ShortHeaders: []string{"Name", "Type", "Fingerprint"},
 		}
-		for _, keypair := range keypairs {
-			dataTable.Items = append(dataTable.Items, keypair.Keypair)
-		}
+		dataTable.AddItems(keypairs)
 		dataTable.Print(false)
 	},
 }

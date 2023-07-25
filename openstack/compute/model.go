@@ -3,12 +3,8 @@ package compute
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"sort"
 	"strings"
-
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 
 	"github.com/BytemanD/stackcrud/openstack/common"
 )
@@ -19,14 +15,20 @@ type Flavor struct {
 	OriginalName string            `json:"original_name"`
 	Ram          int               `json:"ram"`
 	Vcpus        int               `json:"vcpus"`
-	Disk         int               `json:"disk"`
-	Swap         int               `json:"swap"`
-	RXTXFactor   float32           `json:"rxtx_factor"`
-	ExtraSpecs   ExtraSpecs        `json:"extra_specs"`
-	IsPublic     bool              `json:"os-flavor-access:is_public"`
-	Ephemeral    int               `json:"OS-FLV-DISABLED:ephemeral"`
-	Disabled     map[string]string `json:"OS-FLV-DISABLED:disabled"`
+	Disk         int               `json:"disk,omitempty"`
+	Swap         int               `json:"swap,omitempty"`
+	RXTXFactor   float32           `json:"rxtx_factor,omitempty"`
+	ExtraSpecs   ExtraSpecs        `json:"extra_specs,omitempty"`
+	IsPublic     bool              `json:"os-flavor-access:is_public,omitempty"`
+	Ephemeral    int               `json:"OS-FLV-DISABLED:ephemeral,omitempty"`
+	Disabled     map[string]string `json:"OS-FLV-DISABLED:disabled,omitempty"`
 }
+
+func (flavor Flavor) Marshal() string {
+	flavorMarshal, _ := json.Marshal(flavor)
+	return string(flavorMarshal)
+}
+
 type ExtraSpecs map[string]string
 
 type ExtraSpecsBody struct {
@@ -45,6 +47,11 @@ type Fault struct {
 	Message string `json:"message"`
 	Code    int    `json:"code"`
 	Details string `json:"details"`
+}
+
+func (fault *Fault) Marshal() string {
+	faltMarshal, _ := json.Marshal(fault)
+	return string(faltMarshal)
 }
 
 type Server struct {
@@ -120,45 +127,6 @@ func (server Server) GetFlavorExtraSpecsString() string {
 func (server Server) GetFaultString() string {
 	fault, _ := json.Marshal(server.Fault)
 	return string(fault)
-}
-
-func (server Server) Print() {
-	header := table.Row{"Property", "Value"}
-
-	tableWriter := table.NewWriter()
-	tableWriter.AppendHeader(header)
-	tableWriter.AppendRows([]table.Row{
-		{"Id", server.Id}, {"name", server.Name},
-		{"description", server.Description},
-
-		{"flavor:original_name", server.Flavor.OriginalName},
-		{"flavor:ram", server.Flavor.Ram},
-		{"flavor:vcpus", server.Flavor.Vcpus},
-		{"flavor:disk", server.Flavor.Disk},
-		{"flavor:swap", server.Flavor.Swap},
-		{"flavor:extra_specs", server.GetFlavorExtraSpecsString()},
-
-		{"image", server.Image.Id},
-
-		{"availability_zone  ", server.AZ}, {"host", server.Host},
-
-		{"status", server.Status}, {"task_state", server.TaskState},
-		{"power_state", server.PowerState}, {"vm_state", server.VmState},
-
-		{"root_bdm_type", server.RootBdmType},
-
-		{"created", server.Created}, {"updated", server.Updated},
-		{"terminated_at", server.TerminatedAt}, {"launched_at", server.LaunchedAt},
-
-		{"user_id", server.UserId},
-		{"fault:code", server.Fault.Code},
-		{"fault:message", server.Fault.Message},
-		{"fault:details", server.Fault.Details},
-	})
-	// tableWriter.SetStyle(table.StyleLight)
-	tableWriter.Style().Format.Header = text.FormatDefault
-	tableWriter.SetOutputMirror(os.Stdout)
-	tableWriter.Render()
 }
 
 type Service struct {

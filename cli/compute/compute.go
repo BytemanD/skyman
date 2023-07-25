@@ -80,9 +80,7 @@ var csList = &cobra.Command{
 				},
 			},
 		}
-		for _, service := range services {
-			dataTable.Items = append(dataTable.Items, service)
-		}
+		dataTable.AddItems(services)
 		dataTable.Print(long)
 	},
 }
