@@ -27,6 +27,8 @@ func GetStorageClientV2(authClient identity.V3AuthClient) (*StorageClientV2, err
 			V3AuthClient: authClient,
 			Endpoint:     endpoint,
 		},
-		BaseHeaders: map[string]string{},
+		BaseHeaders: map[string]string{
+			"Content-Type": "application/json",
+		},
 	}, nil
 }

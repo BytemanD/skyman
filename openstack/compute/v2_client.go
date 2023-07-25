@@ -72,7 +72,9 @@ func GetComputeClientV2(authClient identity.V3AuthClient) (*ComputeClientV2, err
 			V3AuthClient: authClient,
 			Endpoint:     endpoint,
 		},
-		BaseHeaders: map[string]string{},
+		BaseHeaders: map[string]string{
+			"Content-Type": "application/json",
+		},
 	}
 	return &computeClient, nil
 }
