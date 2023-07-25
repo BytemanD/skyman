@@ -3,6 +3,7 @@ package image
 import (
 	"fmt"
 	"net/url"
+	"os"
 
 	"github.com/BytemanD/stackcrud/cli"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -58,15 +59,15 @@ var ImageShow = &cobra.Command{
 			images := client.Image.ImageListByName(id)
 			if len(images) > 1 {
 				fmt.Printf("Found multi images named %s\n", id)
+				os.Exit(1)
 			} else if len(images) == 1 {
 				image = &images[0]
 			} else if len(images) > 1 {
 				fmt.Println(err)
+				os.Exit(1)
 			}
 		}
-		if image != nil {
-			image.PrintTable(human)
-		}
+		printImage(*image, human)
 	},
 }
 

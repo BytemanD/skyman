@@ -2,10 +2,6 @@ package image
 
 import (
 	"fmt"
-	"os"
-
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 
 	"github.com/BytemanD/stackcrud/openstack/common"
 )
@@ -48,37 +44,9 @@ type Image struct {
 	OSHashValue     string   `json:"os_hash_value,omitempty"`
 	Schema          string   `json:"schema,omitempty"`
 }
-type Images []Image
 
-type ImageBody Image
-
-func (image Image) PrintTable(human bool) {
-	header := table.Row{"Property", "Value"}
-	tableWriter := table.NewWriter()
-	// Use reject
-	tableWriter.AppendRows([]table.Row{
-		{"Id", image.Id}, {"name", image.Name}, {"description", image.Description},
-
-		{"direct_url", image.DirectUrl},
-		{"checksum", image.Checksum},
-		{"status", image.Status},
-		{"disk_format", image.DiskFormat},
-		{"container_format", image.ContainerFormat},
-		{"size", image.Size},
-		{"virtual_size", image.VirtualSize},
-		{"process_info", image.ProcessInfo},
-		{"peojected", image.Protected},
-		{"os_hash_algo", image.OSHashAlgo},
-		{"os_hash_value", image.OSHashValue},
-		{"tags", image.Tags},
-		{"owner", image.Owner},
-		{"shema", image.Schema},
-
-		{"created", image.CreatedAt},
-		{"updated", image.UpdatedAt},
-	})
-	tableWriter.AppendHeader(header)
-	tableWriter.Style().Format.Header = text.FormatDefault
-	tableWriter.SetOutputMirror(os.Stdout)
-	tableWriter.Render()
+func (img Image) HumanSize() string {
+	return humanSize(img.Size)
 }
+
+type Images []Image

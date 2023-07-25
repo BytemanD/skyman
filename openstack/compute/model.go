@@ -31,10 +31,6 @@ func (flavor Flavor) Marshal() string {
 
 type ExtraSpecs map[string]string
 
-type ExtraSpecsBody struct {
-	ExtraSpecs ExtraSpecs `json:"extra_specs"`
-}
-
 func (extraSpecs ExtraSpecs) GetList() []string {
 	properties := []string{}
 	for k, v := range extraSpecs {
@@ -86,17 +82,8 @@ type Address struct {
 	Addr    string `json:"addr"`
 	Type    string `json:"OS-EXT-IPS:type"`
 }
-type ServerBody struct {
-	Server *Server `json:"server"`
-}
-type Servers []Server
-type ServersBody struct {
-	Servers Servers `json:"servers"`
-}
 
-type ServeCreaterBody struct {
-	Server ServerOpt `json:"server"`
-}
+type Servers []Server
 
 func (server *Server) GetPowerState() string {
 	return POWER_STATE[server.PowerState]
@@ -141,20 +128,8 @@ type Service struct {
 }
 
 type Services []Service
-type ServiceBody struct {
-	Service Service `json:"service"`
-}
-type ServicesBody struct {
-	Services Services `json:"services"`
-}
 
 type Flavors []Flavor
-type FlavorBody struct {
-	Flavor Flavor `json:"flavor"`
-}
-type FlavorsBody struct {
-	Flavors Flavors `json:"flavors"`
-}
 
 type HypervisorServer struct {
 	Name string `json:"name"`
