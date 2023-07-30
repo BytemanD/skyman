@@ -102,7 +102,6 @@ var flavorCreate = &cobra.Command{
 			return fmt.Errorf("invalid ram %s, %v", args[2], err)
 		}
 		properties, _ := cmd.Flags().GetStringArray("property")
-		logging.Info("properties: %v", properties)
 		for _, property := range properties {
 			kv := strings.Split(property, "=")
 			if len(kv) != 2 {
@@ -157,43 +156,41 @@ var flavorCreate = &cobra.Command{
 var flavorCopy = &cobra.Command{
 	Use:   "copy <flavor id> <new flavor name>",
 	Short: "Copy flavor",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.ExactArgs(2)(cmd, args); err != nil {
+			return err
+		}
+		properties, _ := cmd.Flags().GetStringArray("set")
+		for _, property := range properties {
+			kv := strings.Split(property, "=")
+			if len(kv) != 2 {
+				return fmt.Errorf("invalid property '%s', it must be format: key1=value1", property)
+			}
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		flavorId := args[0]
 		newName := args[1]
 		newId, _ := cmd.Flags().GetString("id")
+		vcpus, _ := cmd.Flags().GetUint("vcpus")
+		ram, _ := cmd.Flags().GetUint("ram")
+		disk, _ := cmd.Flags().GetUint("disk")
+		swap, _ := cmd.Flags().GetUint("swap")
+		ephemeral, _ := cmd.Flags().GetUint("ephemeral")
+		rxtxFactor, _ := cmd.Flags().GetFloat32("rxtx-factor")
+		setProperties, _ := cmd.Flags().GetStringArray("set")
+		unSetProperties, _ := cmd.Flags().GetStringArray("unset")
 
 		client := cli.GetClient()
 
-		logging.Info("Show flavor")
-		flavor, err := client.Compute.FlavorShow(flavorId)
+		newFlavor, err := client.Compute.FlavorCopy(flavorId, newName, newId,
+			int(vcpus), int(ram), int(disk), int(swap), int(ephemeral), rxtxFactor,
+			getExtraSpecsMap(setProperties), unSetProperties,
+		)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("Copy flavor faield, %v", err)
 			os.Exit(1)
-		}
-		flavor.Name = newName
-		flavor.Id = newId
-
-		logging.Info("Show flavor extra specs")
-		extraSpecs, err := client.Compute.FlavorExtraSpecsList(flavorId)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		logging.Info("Create new flavor")
-		newFlavor, err := client.Compute.FlavorCreate(*flavor)
-		if err != nil {
-			fmt.Printf("create flavor failed, %v", err)
-			os.Exit(1)
-		}
-		if len(extraSpecs) != 0 {
-			logging.Info("Set new flavor extra specs")
-			_, err = client.Compute.FlavorExtraSpecsCreate(newFlavor.Id, extraSpecs)
-			if err != nil {
-				fmt.Printf("set flavor extra specs failed, %v", err)
-				os.Exit(1)
-			}
-			newFlavor.ExtraSpecs = extraSpecs
 		}
 		printFlavor(*newFlavor)
 	},
@@ -215,6 +212,15 @@ func init() {
 		"Property to add for this flavor (repeat option to set multiple properties)")
 
 	flavorCopy.Flags().String("id", "", "New flavor ID, creates a UUID if empty")
-
+	flavorCopy.Flags().Uint("vcpus", 0, "Number of vcpus")
+	flavorCopy.Flags().Uint("ram", 0, "Memory size in MB")
+	flavorCopy.Flags().Uint("disk", 0, "Disk size in GB")
+	flavorCopy.Flags().Uint("swap", 0, "Swap space size in MB")
+	flavorCopy.Flags().Uint("ephemeral", 0, "Swap space size in MB")
+	flavorCopy.Flags().Float32("rxtx-factor", 0, "RX/TX factor")
+	flavorCopy.Flags().StringArray("set", []string{},
+		"Set property to for new flavor (repeat option to set multiple properties)")
+	flavorCopy.Flags().StringArray("unset", []string{},
+		"Unset property for new flavor (repeat option to set multiple properties)")
 	Flavor.AddCommand(flavorList, flavorCreate, flavorCopy)
 }
