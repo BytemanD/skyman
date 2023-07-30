@@ -345,9 +345,20 @@ func (client ComputeClientV2) ServerActionShow(id string, requestId string) (
 
 // flavor api
 func (client ComputeClientV2) FlavorList(query netUrl.Values) ([]Flavor, error) {
-	body := map[string][]Flavor{"volumes": {}}
+	body := map[string][]Flavor{"flavors": {}}
 	client.List("flavors", query, client.BaseHeaders, &body)
 	return body["flavors"], nil
+}
+
+// flavor api
+func (client ComputeClientV2) FlavorCreate(flavor Flavor) (*Flavor, error) {
+	reqBody, _ := json.Marshal(map[string]Flavor{"flavor": flavor})
+	respBody := map[string]*Flavor{"flavor": {}}
+	err := client.Create("flavors", reqBody, client.BaseHeaders, &respBody)
+	if err != nil {
+		return nil, err
+	}
+	return respBody["flavor"], nil
 }
 func (client ComputeClientV2) FlavorListDetail(query netUrl.Values) (Flavors, error) {
 	body := map[string]Flavors{"flavors": {}}
@@ -366,6 +377,25 @@ func (client ComputeClientV2) FlavorExtraSpecsList(flavorId string) (ExtraSpecs,
 		return nil, err
 	}
 	return body["extra_specs"], nil
+}
+func (client ComputeClientV2) FlavorShow(flavorId string) (*Flavor, error) {
+	body := map[string]*Flavor{"flavor": {}}
+	err := client.Show("flavors", flavorId, client.BaseHeaders, &body)
+	if err != nil {
+		return nil, err
+	}
+	return body["flavor"], nil
+}
+func (client ComputeClientV2) FlavorExtraSpecsCreate(flavorId string, extraSpecs map[string]string) (ExtraSpecs, error) {
+	repBody, _ := json.Marshal(map[string]ExtraSpecs{"extra_specs": extraSpecs})
+	respBody := map[string]ExtraSpecs{"extra_specs": {}}
+	err := client.Create(
+		fmt.Sprintf("flavors/%s/os-extra_specs", flavorId), repBody,
+		client.BaseHeaders, &respBody)
+	if err != nil {
+		return nil, err
+	}
+	return respBody["extra_specs"], nil
 }
 
 // hypervisor api

@@ -10,18 +10,18 @@ import (
 )
 
 type Flavor struct {
-	Id           string            `json:"id"`
-	Name         string            `json:"name"`
-	OriginalName string            `json:"original_name"`
-	Ram          int               `json:"ram"`
-	Vcpus        int               `json:"vcpus"`
-	Disk         int               `json:"disk,omitempty"`
-	Swap         int               `json:"swap,omitempty"`
-	RXTXFactor   float32           `json:"rxtx_factor,omitempty"`
-	ExtraSpecs   ExtraSpecs        `json:"extra_specs,omitempty"`
-	IsPublic     bool              `json:"os-flavor-access:is_public,omitempty"`
-	Ephemeral    int               `json:"OS-FLV-DISABLED:ephemeral,omitempty"`
-	Disabled     map[string]string `json:"OS-FLV-DISABLED:disabled,omitempty"`
+	Id           string     `json:"id,omitempty"`
+	Name         string     `json:"name"`
+	OriginalName string     `json:"original_name,omitempty"`
+	Ram          int        `json:"ram"`
+	Vcpus        int        `json:"vcpus"`
+	Disk         int        `json:"disk"`
+	Swap         int        `json:"swap"`
+	RXTXFactor   float32    `json:"rxtx_factor,omitempty"`
+	ExtraSpecs   ExtraSpecs `json:"extra_specs,omitempty"`
+	IsPublic     bool       `json:"os-flavor-access:is_public"`
+	Ephemeral    int        `json:"OS-FLV-DISABLED:ephemeral,omitempty"`
+	Disabled     bool       `json:"OS-FLV-DISABLED:disabled,omitempty"`
 }
 
 func (flavor Flavor) Marshal() string {
