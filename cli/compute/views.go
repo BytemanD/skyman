@@ -1,6 +1,8 @@
 package compute
 
 import (
+	"strings"
+
 	"github.com/BytemanD/stackcrud/cli"
 	"github.com/BytemanD/stackcrud/openstack/compute"
 )
@@ -63,6 +65,39 @@ func printServer(server compute.Server) {
 			"Fault:details": func(item interface{}) interface{} {
 				p, _ := item.(compute.Server)
 				return p.Fault.Details
+			},
+		},
+	}
+	dataTable.Print(false)
+}
+func printFlavor(server compute.Flavor) {
+	dataTable := cli.DataTable{
+		Item: server,
+		ShortFields: []cli.Field{
+			{Name: "Id"}, {Name: "Name"},
+			{Name: "Vcpus"}, {Name: "Ram"}, {Name: "Disk"}, {Name: "Swap"},
+			{Name: "RXTXFactor"},
+			{Name: "OS-FLV-EXT-DATA:ephemeral"},
+			{Name: "os-flavor-access:is_public"},
+			{Name: "OS-FLV-DISABLED:disabled"},
+			{Name: "ExtraSpecs"},
+		},
+		Slots: map[string]func(item interface{}) interface{}{
+			"os-flavor-access:is_public": func(item interface{}) interface{} {
+				p, _ := item.(compute.Flavor)
+				return p.IsPublic
+			},
+			"OS-FLV-EXT-DATA:ephemeral": func(item interface{}) interface{} {
+				p, _ := item.(compute.Flavor)
+				return p.Ephemeral
+			},
+			"OS-FLV-DISABLED:disabled": func(item interface{}) interface{} {
+				p, _ := item.(compute.Flavor)
+				return p.Disabled
+			},
+			"ExtraSpecs": func(item interface{}) interface{} {
+				p, _ := item.(compute.Flavor)
+				return strings.Join(p.ExtraSpecs.GetList(), "\n")
 			},
 		},
 	}
