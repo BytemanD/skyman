@@ -560,3 +560,15 @@ func (client ComputeClientV2) MigrationList(query netUrl.Values) ([]Migration, e
 	client.List("os-migrations", query, client.BaseHeaders, &respBody)
 	return respBody["migrations"], nil
 }
+
+// availability zone api
+func (client ComputeClientV2) AZList(query netUrl.Values) (AvailabilityZone, error) {
+	respBody := map[string]AvailabilityZone{"availabilityZoneInfo": {}}
+	client.List("os-availability-zone", query, client.BaseHeaders, &respBody)
+	return respBody["availabilityZoneInfo"], nil
+}
+func (client ComputeClientV2) AZListDetail(query netUrl.Values) ([]AvailabilityZone, error) {
+	respBody := map[string][]AvailabilityZone{"availabilityZoneInfo": {}}
+	client.List("os-availability-zone/detail", query, client.BaseHeaders, &respBody)
+	return respBody["availabilityZoneInfo"], nil
+}

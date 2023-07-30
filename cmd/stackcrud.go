@@ -62,6 +62,7 @@ func main() {
 	rootCmd.AddCommand(compute.Compute)
 	rootCmd.AddCommand(compute.Console)
 	rootCmd.AddCommand(compute.Migration)
+	rootCmd.AddCommand(compute.AZ)
 
 	rootCmd.AddCommand(image.Image)
 

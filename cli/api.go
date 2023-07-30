@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 
@@ -37,4 +38,12 @@ func GetClient() *openstack.OpenstackClient {
 		logging.Fatal("get openstack client failed %s", err)
 	}
 	return client
+}
+
+func ExitIfError(err error) {
+	if err == nil {
+		return
+	}
+	fmt.Println(err)
+	os.Exit(1)
 }

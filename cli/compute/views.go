@@ -103,3 +103,62 @@ func printFlavor(server compute.Flavor) {
 	}
 	dataTable.Print(false)
 }
+
+type AZHost struct {
+	ZoneName         string
+	ZoneState        string
+	HostName         string
+	ServiceName      string
+	ServiceAvailable string
+	ServiceStatus    string
+	ServiceUpdatedAt string
+}
+
+func printAZInfo(azList []compute.AvailabilityZone) {
+	azHostList := []AZHost{}
+	for _, az := range azList {
+		for hostName, services := range az.Hosts {
+			for serviceName, service := range services {
+				azHost := AZHost{
+					ZoneName:         az.ZoneName,
+					ServiceName:      serviceName,
+					HostName:         hostName,
+					ServiceUpdatedAt: service.UpdatedAt,
+				}
+				if az.ZoneState.Available {
+					azHost.ZoneState = cli.BaseColorFormatter.Format("available")
+				} else {
+					azHost.ZoneState = cli.BaseColorFormatter.Format("disabled")
+				}
+				if service.Active {
+					azHost.ServiceStatus = cli.BaseColorFormatter.Format("enabled")
+				} else {
+					azHost.ServiceStatus = cli.BaseColorFormatter.Format("disabled")
+				}
+				if service.Available {
+					azHost.ServiceAvailable = cli.BaseColorFormatter.Format(":)")
+				} else {
+					azHost.ServiceAvailable = cli.BaseColorFormatter.Format("XXX")
+				}
+				azHostList = append(azHostList, azHost)
+			}
+		}
+	}
+
+	table := cli.DataListTable{
+		ShortHeaders: []string{"ZoneName", "ZoneState", "HostName", "ServiceName",
+			"ServiceStatus", "ServiceAvailable", "ServiceUpdatedAt"},
+		HeaderLabel: map[string]string{
+			"ZoneName":         "Zone Name",
+			"ZoneState":        "Zone State",
+			"HostName":         "Host Name",
+			"ServiceName":      "Service Name",
+			"ServiceAvailable": "Service Available",
+			"ServiceStatus":    "Service Status",
+			"ServiceUpdatedAt": "Updated At",
+		},
+		Slots: map[string]func(item interface{}) interface{}{},
+	}
+	table.AddItems(azHostList)
+	table.Print(false)
+}

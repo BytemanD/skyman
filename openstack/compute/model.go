@@ -236,3 +236,20 @@ type Migration struct {
 	CreatedAt         string `json:"created_at,omitempty"`
 	UpdatedAt         string `json:"updated_at,omitempty"`
 }
+
+type ZoneState struct {
+	Available bool `json:"available"`
+}
+type ServiceState struct {
+	Available bool   `json:"available"`
+	Active    bool   `json:"active"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+type AZHost map[string]ServiceState
+
+type AvailabilityZone struct {
+	ZoneName  string            `json:"zoneName"`
+	ZoneState ZoneState         `json:"zoneState"`
+	Hosts     map[string]AZHost `json:"hosts,omitempty"`
+}
