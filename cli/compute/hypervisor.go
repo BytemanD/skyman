@@ -38,10 +38,6 @@ var hypervisorList = &cobra.Command{
 			LongHeaders: []string{
 				"Type", "Version", "Vcpus", "VcpusUsed",
 				"MemoryMB", "MemoryMBUsed"},
-			HeaderLabel: map[string]string{
-				"HostIp":       "Host IP",
-				"VcpusUsed":    "VCPUs Used",
-				"MemoryMBUsed": "MemoryMB Used"},
 		}
 		dataTable.AddItems(hypervisors)
 		dataTable.Print(long)

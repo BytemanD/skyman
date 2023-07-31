@@ -31,9 +31,6 @@ var volumeList = &cobra.Command{
 			ShortHeaders: []string{
 				"Id", "Name", "Status", "Size", "Bootable", "Attachments"},
 			LongHeaders: []string{"VolumeType", "Metadata"},
-			HeaderLabel: map[string]string{
-				"VolumeType": "Volume Type",
-			},
 			Slots: map[string]func(item interface{}) interface{}{
 				"Attachments": func(item interface{}) interface{} {
 					obj, _ := (item).(storage.Volume)

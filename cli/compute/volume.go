@@ -16,10 +16,7 @@ var Volume = &cobra.Command{Use: "volume"}
 func printVolumeAttachments(items []compute.VolumeAttachment) {
 	dataTable := cli.DataListTable{
 		ShortHeaders: []string{"Id", "VolumeId", "Device"},
-		HeaderLabel: map[string]string{
-			"Id":       "Attachment Id",
-			"VolumeId": "Volume Id",
-		},
+		HeaderLabel:  map[string]string{"Id": "Attachment Id"},
 		SortBy: []table.SortBy{
 			{Name: "Device", Mode: table.Asc},
 		},

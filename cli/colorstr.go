@@ -16,15 +16,6 @@ func GetYellowText(text string) string {
 	return fmt.Sprintf("\033[1;33;40m%s\033[0m", text)
 }
 
-func GreenOrRed(text string, greenStrs ...string) string {
-	for _, str := range greenStrs {
-		if text == str {
-			return GetGreenText(text)
-		}
-	}
-	return GetRedText(text)
-}
-
 type ColorFormater struct {
 	Green  []string
 	Yellow []string

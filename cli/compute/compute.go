@@ -61,22 +61,17 @@ var csList = &cobra.Command{
 				"Id", "Binary", "Host", "Zone", "Status", "State", "UpdatedAt"},
 			LongHeaders: []string{
 				"DisabledReason", "ForcedDown"},
-			HeaderLabel: map[string]string{
-				"UpdatedAt":      "Update At",
-				"DisabledReason": "Disabled Reason",
-				"ForcedDown":     "Forced Down",
-			},
 			SortBy: []table.SortBy{
 				{Name: "Name", Mode: table.Asc},
 			},
 			Slots: map[string]func(item interface{}) interface{}{
 				"Status": func(item interface{}) interface{} {
 					p, _ := (item).(compute.Service)
-					return cli.GreenOrRed(p.Status, "enabled")
+					return cli.BaseColorFormatter.Format(p.Status)
 				},
 				"State": func(item interface{}) interface{} {
 					p, _ := item.(compute.Service)
-					return cli.GreenOrRed(p.State, "up")
+					return cli.BaseColorFormatter.Format(p.Status)
 				},
 			},
 		}

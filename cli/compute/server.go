@@ -62,13 +62,8 @@ var serverList = &cobra.Command{
 				"Id", "Name", "Status", "TaskState", "PowerState", "Addresses"},
 			LongHeaders: []string{
 				"AZ", "Host", "InstanceName", "Flavor:Name"},
-			HeaderLabel: map[string]string{
-				"InstanceName": "Instance Name",
-				"TaskState":    "Task State",
-				"PowerState":   "Power State",
-				"Addresses":    "Networks",
-			},
-			SortBy: []table.SortBy{{Name: "Name", Mode: table.Asc}},
+			HeaderLabel: map[string]string{"Addresses": "Networks"},
+			SortBy:      []table.SortBy{{Name: "Name", Mode: table.Asc}},
 			Slots: map[string]func(item interface{}) interface{}{
 				"PowerState": func(item interface{}) interface{} {
 					p, _ := (item).(compute.Server)

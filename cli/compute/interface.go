@@ -16,13 +16,7 @@ var serverInterface = &cobra.Command{Use: "interface"}
 func printinterfaceAttachments(items []compute.InterfaceAttachment) {
 	dataTable := cli.DataListTable{
 		ShortHeaders: []string{"PortState", "PortId", "NetId", "FixedIps", "MacAddr"},
-		HeaderLabel: map[string]string{
-			"PortState": "Port State",
-			"PortId":    "Port Id",
-			"NetId":     "Net Id",
-			"FixedIps":  "IP Addresses",
-			"MacAddr":   "Mac Addr",
-		},
+		HeaderLabel:  map[string]string{"FixedIps": "IP Addresses"},
 		Slots: map[string]func(item interface{}) interface{}{
 			"FixedIps": func(item interface{}) interface{} {
 				attachment, _ := item.(compute.InterfaceAttachment)

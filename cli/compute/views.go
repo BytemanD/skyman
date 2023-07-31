@@ -148,16 +148,8 @@ func printAZInfo(azList []compute.AvailabilityZone) {
 	table := cli.DataListTable{
 		ShortHeaders: []string{"ZoneName", "ZoneState", "HostName", "ServiceName",
 			"ServiceStatus", "ServiceAvailable", "ServiceUpdatedAt"},
-		HeaderLabel: map[string]string{
-			"ZoneName":         "Zone Name",
-			"ZoneState":        "Zone State",
-			"HostName":         "Host Name",
-			"ServiceName":      "Service Name",
-			"ServiceAvailable": "Service Available",
-			"ServiceStatus":    "Service Status",
-			"ServiceUpdatedAt": "Updated At",
-		},
-		Slots: map[string]func(item interface{}) interface{}{},
+		HeaderLabel: map[string]string{"ServiceUpdatedAt": "Updated At"},
+		Slots:       map[string]func(item interface{}) interface{}{},
 	}
 	table.AddItems(azHostList)
 	table.Print(false)

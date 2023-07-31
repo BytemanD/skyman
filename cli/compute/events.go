@@ -25,12 +25,6 @@ var actionList = &cobra.Command{
 		dataTable := cli.DataListTable{
 			ShortHeaders: []string{"Action", "RequestId", "StartTime", "Message"},
 			LongHeaders:  []string{"ProjectId", "UserId"},
-			HeaderLabel: map[string]string{
-				"RequestId":  "Request Id",
-				"Start Time": "Start Time",
-				"Project Id": "ProjectId",
-				"User Id":    "UserId",
-			},
 		}
 		dataTable.AddItems(actions)
 		dataTable.Print(long)
@@ -55,10 +49,6 @@ var actionShow = &cobra.Command{
 			Title:        fmt.Sprintf("Action: %s", action.Action),
 			ShortHeaders: []string{"Event", "StartTime", "FinishTime", "Result"},
 			LongHeaders:  []string{"Host"},
-			HeaderLabel: map[string]string{
-				"StartTime":  "Start Time",
-				"FinishTime": "Start Time",
-			},
 		}
 		// trace
 		tracbackMap := map[string]string{}

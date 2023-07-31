@@ -7,10 +7,12 @@ auth:
   user:
     name: admin
     password: admin123
-    domainName: Default
+    domain:
+      name: Default
   project:
     name: admin
-    domainName: Default
+    domain:
+      name: Default
 
 server:
   flavor:

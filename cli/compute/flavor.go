@@ -59,12 +59,8 @@ var flavorList = &cobra.Command{
 				"Id", "Name", "Vcpus", "Ram", "Disk", "Ephemeral", "IsPublic"},
 			LongHeaders: []string{
 				"Swap", "RXTXFactor", "ExtraSpecs"},
-			HeaderLabel: map[string]string{
-				"IsPublic":   "Is Public",
-				"RXTXFactor": "RXTX Factor",
-				"ExtraSpecs": "Extra Specs",
-			},
-			SortBy: []table.SortBy{{Name: "Name", Mode: table.Asc}},
+			HeaderLabel: map[string]string{"RXTXFactor": "RXTX Factor"},
+			SortBy:      []table.SortBy{{Name: "Name", Mode: table.Asc}},
 			Slots: map[string]func(item interface{}) interface{}{
 				"ExtraSpecs": func(item interface{}) interface{} {
 					p, _ := (item).(compute.Flavor)

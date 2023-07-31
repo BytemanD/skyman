@@ -49,16 +49,9 @@ var migrationList = &cobra.Command{
 				"CreatedAt", "UpdatedAt"},
 			HeaderLabel: map[string]string{
 				"MigrationType":     "Type",
-				"SourceNode":        "Source Node",
-				"SourceCompute":     "Source Compute",
-				"DestNode":          "Dest Node",
-				"DestCompute":       "Deest Compute",
-				"DestHost":          "Dest Host",
 				"InstanceUUID":      "Instance UUID",
 				"OldInstanceTypeId": "Old Flavor",
 				"NewInstanceTypeId": "New Flavor",
-				"CreatedAt":         "Created At",
-				"UpdatedAt":         "Updated At",
 			},
 			SortBy: []table.SortBy{{Name: "Id", Mode: table.Asc}},
 			Slots: map[string]func(item interface{}) interface{}{

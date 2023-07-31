@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/openstack/image"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
@@ -20,7 +21,7 @@ var ImageList = &cobra.Command{
 		client := cli.GetClient()
 
 		long, _ := cmd.Flags().GetBool("long")
-		// human, _ := cmd.Flags().GetBool("human")
+		human, _ := cmd.Flags().GetBool("human")
 		name, _ := cmd.Flags().GetString("name")
 		query := url.Values{}
 		if name != "" {
@@ -31,15 +32,19 @@ var ImageList = &cobra.Command{
 			ShortHeaders: []string{"Id", "Name", "Status", "Size"},
 			LongHeaders: []string{
 				"DiskFormat", "ContainerFormat", "Visibility", "Protected"},
-			HeaderLabel: map[string]string{
-				"DiskFormat":      "Disk Format",
-				"ContainerFormat": "Container Format"},
 			SortBy: []table.SortBy{
 				{Name: "Name", Mode: table.Asc},
 			},
 			ColumnConfigs: []table.ColumnConfig{
 				{Number: 4, Align: text.AlignRight},
 			},
+			Slots: map[string]func(item interface{}) interface{}{},
+		}
+		if human {
+			dataTable.Slots["Size"] = func(item interface{}) interface{} {
+				p, _ := item.(image.Image)
+				return p.HumanSize()
+			}
 		}
 		dataTable.AddItems(images)
 		dataTable.Print(long)

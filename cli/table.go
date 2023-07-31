@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"os"
 	"reflect"
 
@@ -82,7 +83,14 @@ func (dataTable DataListTable) Print(long bool) {
 	tableWriter.SetStyle(table.StyleLight)
 
 	tableWriter.Style().Format.Header = text.FormatDefault
+	tableWriter.Style().Color.Header = text.Colors{text.FgBlue}
+	tableWriter.Style().Color.Border = text.Colors{text.FgBlue}
+	tableWriter.Style().Color.Separator = text.Colors{text.FgBlue}
 	tableWriter.Style().Options.SeparateRows = dataTable.StyleSeparateRows
+
+	tableWriter.SortBy(dataTable.SortBy)
+	tableWriter.SetColumnConfigs(dataTable.ColumnConfigs)
+
 	tableWriter.SetOutputMirror(os.Stdout)
 
 	headerRow := table.Row{}
@@ -95,7 +103,7 @@ func (dataTable DataListTable) Print(long bool) {
 		if _, ok := dataTable.HeaderLabel[header]; ok {
 			title = dataTable.HeaderLabel[header]
 		} else {
-			title = header
+			title = splitTitle(header)
 		}
 		headerRow = append(headerRow, title)
 	}
@@ -119,7 +127,19 @@ func (dataTable DataListTable) Print(long bool) {
 		tableWriter.SetTitle(dataTable.Title)
 		tableWriter.Style().Title.Align = text.AlignCenter
 	}
-	tableWriter.SortBy(dataTable.SortBy)
-	tableWriter.SetColumnConfigs(dataTable.ColumnConfigs)
+
 	tableWriter.Render()
+	fmt.Printf("Total items: %d\n", len(dataTable.Items))
+}
+
+func splitTitle(s string) string {
+	newStr := ""
+	for _, c := range s {
+		if c < 91 {
+			newStr += " " + string(c)
+		} else {
+			newStr += string(c)
+		}
+	}
+	return newStr
 }
