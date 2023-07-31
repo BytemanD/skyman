@@ -1,10 +1,13 @@
 package compute
 
 import (
+	"fmt"
+	"os"
 	"strings"
 
 	"github.com/BytemanD/stackcrud/cli"
 	"github.com/BytemanD/stackcrud/openstack/compute"
+	"github.com/jedib0t/go-pretty/v6/list"
 )
 
 func printServer(server compute.Server) {
@@ -121,8 +124,8 @@ func printAZInfo(azList []compute.AvailabilityZone) {
 			for serviceName, service := range services {
 				azHost := AZHost{
 					ZoneName:         az.ZoneName,
-					ServiceName:      serviceName,
 					HostName:         hostName,
+					ServiceName:      serviceName,
 					ServiceUpdatedAt: service.UpdatedAt,
 				}
 				if az.ZoneState.Available {
@@ -153,4 +156,47 @@ func printAZInfo(azList []compute.AvailabilityZone) {
 	}
 	table.AddItems(azHostList)
 	table.Print(false)
+}
+func printAZInfoTree(azList []compute.AvailabilityZone) {
+	tw := list.NewWriter()
+	tw.SetOutputMirror(os.Stdout)
+	tw.SetStyle(list.StyleConnectedRounded)
+
+	for _, az := range azList {
+		var zoneState string
+		if az.ZoneState.Available {
+			zoneState = cli.BaseColorFormatter.Format("available")
+		} else {
+			zoneState = cli.BaseColorFormatter.Format("disabled")
+		}
+		tw.AppendItem(fmt.Sprintf("%s %v", az.ZoneName, zoneState))
+		tw.Indent()
+		for hostName, services := range az.Hosts {
+			tw.AppendItem(hostName)
+			tw.Indent()
+			for serviceName, service := range services {
+				var (
+					serviceStatus    string
+					serviceAvailable string
+				)
+				if service.Active {
+					serviceStatus = cli.BaseColorFormatter.Format("enabled")
+				} else {
+					serviceStatus = cli.BaseColorFormatter.Format("disabled")
+				}
+				if service.Available {
+					serviceAvailable = cli.BaseColorFormatter.Format(":)")
+				} else {
+					serviceAvailable = cli.BaseColorFormatter.Format("XXX")
+				}
+				tw.AppendItem(
+					fmt.Sprintf("%-20s %-10s %s", serviceName, serviceStatus, serviceAvailable),
+				)
+			}
+			tw.UnIndent()
+		}
+		tw.UnIndent()
+	}
+
+	tw.Render()
 }
