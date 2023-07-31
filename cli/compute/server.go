@@ -100,6 +100,9 @@ var serverList = &cobra.Command{
 				},
 			},
 		}
+		if long {
+			dataTable.StyleSeparateRows = true
+		}
 		if verbose {
 			dataTable.LongHeaders = append(dataTable.LongHeaders,
 				"Flavor:ram", "Flavor:vcpus", "Image")

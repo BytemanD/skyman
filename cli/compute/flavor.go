@@ -31,7 +31,6 @@ var flavorList = &cobra.Command{
 	Short: "List flavors",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-
 		query := url.Values{}
 		public, _ := cmd.Flags().GetBool("public")
 		if public {
@@ -81,6 +80,7 @@ var flavorList = &cobra.Command{
 				}
 				filteredFlavors[i].ExtraSpecs = extraSpecs
 			}
+			dataTable.StyleSeparateRows = true
 		}
 		for _, flavor := range filteredFlavors {
 			dataTable.Items = append(dataTable.Items, flavor)

@@ -45,6 +45,9 @@ var volumeList = &cobra.Command{
 				},
 			},
 		}
+		if long {
+			dataTable.StyleSeparateRows = true
+		}
 		dataTable.AddItems(volumes)
 		dataTable.Print(long)
 	},

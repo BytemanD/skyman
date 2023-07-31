@@ -60,14 +60,15 @@ func (dataTable DataTable) Print(long bool) {
 }
 
 type DataListTable struct {
-	ShortHeaders  []string
-	LongHeaders   []string
-	HeaderLabel   map[string]string
-	Items         []interface{}
-	SortBy        []table.SortBy
-	ColumnConfigs []table.ColumnConfig
-	Slots         map[string]func(item interface{}) interface{}
-	Title         string
+	ShortHeaders      []string
+	LongHeaders       []string
+	HeaderLabel       map[string]string
+	Items             []interface{}
+	SortBy            []table.SortBy
+	ColumnConfigs     []table.ColumnConfig
+	Slots             map[string]func(item interface{}) interface{}
+	Title             string
+	StyleSeparateRows bool
 }
 
 func (dataTable *DataListTable) AddItems(items interface{}) {
@@ -78,7 +79,10 @@ func (dataTable *DataListTable) AddItems(items interface{}) {
 }
 func (dataTable DataListTable) Print(long bool) {
 	tableWriter := table.NewWriter()
+	tableWriter.SetStyle(table.StyleLight)
+
 	tableWriter.Style().Format.Header = text.FormatDefault
+	tableWriter.Style().Options.SeparateRows = dataTable.StyleSeparateRows
 	tableWriter.SetOutputMirror(os.Stdout)
 
 	headerRow := table.Row{}
