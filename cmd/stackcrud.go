@@ -13,6 +13,7 @@ import (
 	"github.com/BytemanD/stackcrud/cli/compute"
 	"github.com/BytemanD/stackcrud/cli/identity"
 	"github.com/BytemanD/stackcrud/cli/image"
+	"github.com/BytemanD/stackcrud/cli/networking"
 	"github.com/BytemanD/stackcrud/cli/storage"
 	"github.com/BytemanD/stackcrud/common"
 )
@@ -55,18 +56,13 @@ func main() {
 
 	rootCmd.AddCommand(identity.Token)
 
-	rootCmd.AddCommand(compute.Server)
-	rootCmd.AddCommand(compute.Flavor)
-	rootCmd.AddCommand(compute.Hypervisor)
-	rootCmd.AddCommand(compute.Keypair)
-	rootCmd.AddCommand(compute.Compute)
-	rootCmd.AddCommand(compute.Console)
-	rootCmd.AddCommand(compute.Migration)
-	rootCmd.AddCommand(compute.AZ)
-
-	rootCmd.AddCommand(image.Image)
-
-	rootCmd.AddCommand(storage.Volume)
+	rootCmd.AddCommand(compute.Server, compute.Flavor, compute.Hypervisor,
+		compute.Keypair, compute.Compute, compute.Console,
+		compute.Migration, compute.AZ,
+		image.Image,
+		storage.Volume,
+		networking.Router, networking.Network, networking.Port,
+	)
 
 	rootCmd.Execute()
 }

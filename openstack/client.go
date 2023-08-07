@@ -6,14 +6,16 @@ import (
 	"github.com/BytemanD/stackcrud/openstack/compute"
 	"github.com/BytemanD/stackcrud/openstack/identity"
 	"github.com/BytemanD/stackcrud/openstack/image"
+	"github.com/BytemanD/stackcrud/openstack/networking"
 	"github.com/BytemanD/stackcrud/openstack/storage"
 )
 
 type OpenstackClient struct {
-	Identity identity.V3AuthClient
-	Compute  compute.ComputeClientV2
-	Image    image.ImageClientV2
-	Storage  storage.StorageClientV2
+	Identity   identity.V3AuthClient
+	Compute    compute.ComputeClientV2
+	Image      image.ImageClientV2
+	Storage    storage.StorageClientV2
+	Networking networking.NeutronClientV2
 }
 
 func getAuthClient() (*identity.V3AuthClient, error) {
@@ -52,10 +54,15 @@ func GetClientWithAuthToken(authClient *identity.V3AuthClient) (*OpenstackClient
 	if err != nil {
 		return nil, err
 	}
+	networkingClient, err := networking.GetNeutronClientV2(*authClient)
+	if err != nil {
+		return nil, err
+	}
 	return &OpenstackClient{
-		Identity: *authClient,
-		Compute:  *computeClient,
-		Image:    *imageClient,
-		Storage:  *storageClient,
+		Identity:   *authClient,
+		Compute:    *computeClient,
+		Image:      *imageClient,
+		Storage:    *storageClient,
+		Networking: *networkingClient,
 	}, nil
 }

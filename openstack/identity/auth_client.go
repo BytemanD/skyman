@@ -20,6 +20,7 @@ const (
 	TYPE_VOLUME_V3 string = "volumev3"
 	TYPE_IDENTITY  string = "identity"
 	TYPE_IMAGE     string = "image"
+	TYPE_NETWORK   string = "network"
 
 	INTERFACE_PUBLIC   string = "public"
 	INTERFACE_ADMIN    string = "admin"
