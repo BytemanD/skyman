@@ -84,6 +84,23 @@ var flavorList = &cobra.Command{
 		dataTable.Print(long)
 	},
 }
+var flavorDelete = &cobra.Command{
+	Use:   "delete <flavor1> [flavor2 ...]",
+	Short: "Delete flavor(s)",
+
+	Args: cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		for _, flavorId := range args {
+			err := client.Compute.FlavorDelete(flavorId)
+			if err != nil {
+				logging.Error("Delete flavor %s failed, %v", flavorId, err)
+			} else {
+				fmt.Printf("Delete flavor success: %s\n", flavorId)
+			}
+		}
+	},
+}
 var flavorCreate = &cobra.Command{
 	Use:   "create <name> <vcpus> <ram>",
 	Short: "Create flavor",
@@ -218,5 +235,6 @@ func init() {
 		"Set property to for new flavor (repeat option to set multiple properties)")
 	flavorCopy.Flags().StringArray("unset", []string{},
 		"Unset property for new flavor (repeat option to set multiple properties)")
-	Flavor.AddCommand(flavorList, flavorCreate, flavorCopy)
+	Flavor.AddCommand(flavorList, flavorCreate, flavorDelete,
+		flavorCopy)
 }

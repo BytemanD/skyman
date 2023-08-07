@@ -3,8 +3,10 @@ package compute
 import (
 	"fmt"
 	"net/url"
+	"sync"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/jedib0t/go-pretty/v6/progress"
 )
 
 func (client ComputeClientV2) ServerPrune(query url.Values, yes bool, waitDeleted bool) {
@@ -35,12 +37,103 @@ func (client ComputeClientV2) ServerPrune(query url.Values, yes bool, waitDelete
 			}
 		}
 	}
-	logging.Info("开始删除虚拟机")
-	for _, server := range servers {
-		logging.Info("删除虚拟机 %s(%s)", server.Id, server.Name)
-		client.ServerDelete(server.Id)
+	wg := sync.WaitGroup{}
+	workers := make(chan struct{}, 1)
+	wg.Add(len(servers))
+	pw := progress.NewWriter()
+	tracker := progress.Tracker{Total: int64(len(servers))}
+	pw.AppendTracker(&tracker)
+	pw.SetAutoStop(true)
+
+	go pw.Render()
+
+	deleteFunc := func(s Server) {
+		// logging.Info("删除虚拟机 %s(%s)", s.Id, s.Name)
+		// tracker.UpdateMessage(fmt.Sprintf("deleting %s %s", s.Id, s.Name))
+		tracker.UpdateMessage(fmt.Sprintf("Increment %d", tracker.Value()))
+		client.ServerDelete(s.Id)
 		if waitDeleted {
-			client.WaitServerDeleted(server.Id)
+			client.WaitServerDeleted(s.Id)
+		}
+		<-workers
+		tracker.Increment(1)
+		if tracker.Value() >= tracker.Total {
+			logging.Info("0000000")
+			tracker.MarkAsDone()
 		}
 	}
+
+	logging.Info("开始删除虚拟机")
+	for _, server := range servers {
+		workers <- struct{}{}
+		go deleteFunc(server)
+	}
+	for !tracker.IsDone() {
+
+	}
+	if tracker.IsDone() {
+		tracker.Increment(1)
+		logging.Info("2222222222222")
+		// pw.Stop()
+	}
+	logging.Info("333333333")
+	wg.Wait()
+}
+
+func (client ComputeClientV2) FlavorCopy(flavorId string, newName string, newId string,
+	newVcpus int, newRam int, newDisk int, newSwap int,
+	newEphemeral int, newRxtxFactor float32, setProperties map[string]string,
+	unsetProperties []string) (*Flavor, error) {
+
+	logging.Info("Show flavor")
+	flavor, err := client.FlavorShow(flavorId)
+	if err != nil {
+		return nil, err
+	}
+	flavor.Name = newName
+	flavor.Id = newId
+	if newVcpus != 0 {
+		flavor.Vcpus = newVcpus
+	}
+	if newRam != 0 {
+		flavor.Ram = int(newRam)
+	}
+	if newDisk != 0 {
+		flavor.Disk = newDisk
+	}
+	if newSwap != 0 {
+		flavor.Swap = newSwap
+	}
+	if newEphemeral != 0 {
+		flavor.Ephemeral = newEphemeral
+	}
+	if newRxtxFactor != 0 {
+		flavor.RXTXFactor = newRxtxFactor
+	}
+	logging.Info("Show flavor extra specs")
+	extraSpecs, err := client.FlavorExtraSpecsList(flavorId)
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range setProperties {
+		extraSpecs[k] = v
+	}
+	for _, k := range unsetProperties {
+		delete(extraSpecs, k)
+	}
+	logging.Info("Create new flavor")
+	newFlavor, err := client.FlavorCreate(*flavor)
+	if err != nil {
+		return nil, fmt.Errorf("create flavor failed, %v", err)
+	}
+	if len(extraSpecs) != 0 {
+		logging.Info("Set new flavor extra specs")
+		_, err = client.FlavorExtraSpecsCreate(newFlavor.Id, extraSpecs)
+		if err != nil {
+			return nil, fmt.Errorf("set flavor extra specs failed, %v", err)
+		}
+		newFlavor.ExtraSpecs = extraSpecs
+	}
+
+	return newFlavor, nil
 }

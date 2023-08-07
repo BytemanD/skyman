@@ -83,11 +83,10 @@ func (dataTable DataListTable) Print(long bool) {
 	tableWriter.SetStyle(table.StyleLight)
 
 	tableWriter.Style().Format.Header = text.FormatDefault
-	tableWriter.Style().Color.Header = text.Colors{text.FgBlue}
+	tableWriter.Style().Color.Header = text.Colors{text.FgBlue, text.Bold}
 	tableWriter.Style().Color.Border = text.Colors{text.FgBlue}
 	tableWriter.Style().Color.Separator = text.Colors{text.FgBlue}
 	tableWriter.Style().Options.SeparateRows = dataTable.StyleSeparateRows
-
 	tableWriter.SortBy(dataTable.SortBy)
 	tableWriter.SetColumnConfigs(dataTable.ColumnConfigs)
 

@@ -397,62 +397,8 @@ func (client ComputeClientV2) FlavorExtraSpecsCreate(flavorId string, extraSpecs
 	}
 	return respBody["extra_specs"], nil
 }
-func (client ComputeClientV2) FlavorCopy(flavorId string, newName string, newId string,
-	newVcpus int, newRam int, newDisk int, newSwap int,
-	newEphemeral int, newRxtxFactor float32, setProperties map[string]string,
-	unsetProperties []string) (*Flavor, error) {
-
-	logging.Info("Show flavor")
-	flavor, err := client.FlavorShow(flavorId)
-	if err != nil {
-		return nil, err
-	}
-	flavor.Name = newName
-	flavor.Id = newId
-	if newVcpus != 0 {
-		flavor.Vcpus = newVcpus
-	}
-	if newRam != 0 {
-		flavor.Ram = int(newRam)
-	}
-	if newDisk != 0 {
-		flavor.Disk = newDisk
-	}
-	if newSwap != 0 {
-		flavor.Swap = newSwap
-	}
-	if newEphemeral != 0 {
-		flavor.Ephemeral = newEphemeral
-	}
-	if newRxtxFactor != 0 {
-		flavor.RXTXFactor = newRxtxFactor
-	}
-	logging.Info("Show flavor extra specs")
-	extraSpecs, err := client.FlavorExtraSpecsList(flavorId)
-	if err != nil {
-		return nil, err
-	}
-	for k, v := range setProperties {
-		extraSpecs[k] = v
-	}
-	for _, k := range unsetProperties {
-		delete(extraSpecs, k)
-	}
-	logging.Info("Create new flavor")
-	newFlavor, err := client.FlavorCreate(*flavor)
-	if err != nil {
-		return nil, fmt.Errorf("create flavor failed, %v", err)
-	}
-	if len(extraSpecs) != 0 {
-		logging.Info("Set new flavor extra specs")
-		_, err = client.FlavorExtraSpecsCreate(newFlavor.Id, extraSpecs)
-		if err != nil {
-			return nil, fmt.Errorf("set flavor extra specs failed, %v", err)
-		}
-		newFlavor.ExtraSpecs = extraSpecs
-	}
-
-	return newFlavor, nil
+func (client ComputeClientV2) FlavorDelete(flavorId string) error {
+	return client.Delete("flavors", flavorId, client.BaseHeaders)
 }
 
 // hypervisor api
