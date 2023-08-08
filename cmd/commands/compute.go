@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"net/url"
 
 	"github.com/spf13/cobra"
@@ -63,10 +64,20 @@ var ServerSet = &cobra.Command{
 	},
 }
 var ServerDelete = &cobra.Command{
-	Use:   "delete",
+	Use:   "delete <server1> [server2 ...]",
 	Short: "Delete server",
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		logging.Info("list servers")
+		computeClient := getComputeClient()
+		for _, id := range args {
+			err := computeClient.ServerDelete(id)
+			if err != nil {
+				logging.Error("Reqeust to delete server failed, %v", err)
+			} else {
+				fmt.Printf("Requested to delete server: %s\n", id)
+			}
+
+		}
 	},
 }
 
