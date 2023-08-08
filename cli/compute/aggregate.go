@@ -18,6 +18,8 @@ var aggList = &cobra.Command{
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 		long, _ := cmd.Flags().GetBool("long")
+		name, _ := cmd.Flags().GetString("name")
+
 		client := cli.GetClient()
 		aggregates, err := client.Compute.AggregateList(nil)
 		cli.ExitIfError(err)
@@ -37,7 +39,18 @@ var aggList = &cobra.Command{
 				},
 			},
 		}
-		dataTable.AddItems(aggregates)
+		filteredAggs := []compute.Aggregate{}
+		if name != "" {
+			for _, agg := range aggregates {
+				if !strings.Contains(agg.Name, name) {
+					continue
+				}
+				filteredAggs = append(filteredAggs, agg)
+			}
+		} else {
+			filteredAggs = aggregates
+		}
+		dataTable.AddItems(filteredAggs)
 		dataTable.Print(long)
 	},
 }
@@ -51,7 +64,6 @@ var aggShow = &cobra.Command{
 		client := cli.GetClient()
 		aggregate, err := client.Compute.AggregateShow(agg)
 		cli.ExitIfError(err)
-
 		dataTable := cli.DataTable{
 			Item: *aggregate,
 			ShortFields: []cli.Field{
@@ -78,6 +90,7 @@ var aggShow = &cobra.Command{
 
 func init() {
 	aggList.Flags().BoolP("long", "l", false, "List additional fields in output")
+	aggList.Flags().String("name", "", "List By aggregate name")
 
 	Aggregate.AddCommand(aggList, aggShow)
 }
