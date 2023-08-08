@@ -1,6 +1,9 @@
 package compute
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type Flavor struct {
 	Id           string            `json:"id"`
@@ -8,12 +11,14 @@ type Flavor struct {
 	OriginalName string            `json:"original_name"`
 	Ram          int               `json:"ram"`
 	Vcpus        int               `json:"vcpus"`
+	Disk         int               `json:"disk"`
+	Swap         int               `json:"swap"`
 	ExtraSpecs   map[string]string `json:"extra_specs"`
 }
 
 type Fault struct {
 	Message string `json:"message"`
-	Code    string `json:"code"`
+	Code    int    `json:"code"`
 	Details string `json:"details"`
 }
 
@@ -27,11 +32,21 @@ type Server struct {
 	Host         string               `json:"OS-EXT-SRV-ATTR:host"`
 	AZ           string               `json:"OS-EXT-AZ:availability_zone"`
 	Flavor       Flavor               `json:"flavor"`
+	Image        Image                `json:"image"`
 	Fault        Fault                `json:"fault"`
 	Addresses    map[string][]Address `json:"addresses"`
 	InstanceName string               `json:"OS-EXT-SRV-ATTR:instance_name"`
+	ConfigDriver string               `json:"config_drive"`
+	Created      string               `json:"created"`
+	Updated      string               `json:"updated"`
+	TerminatedAt string               `json:"OS-SRV-USG:terminated_at"`
+	LaunchedAt   string               `json:"OS-SRV-USG:launched_at"`
+	UserId       string               `json:"user_id"`
+	Description  string               `json:"description"`
 }
-
+type Image struct {
+	Id string `json:"id"`
+}
 type Address struct {
 	MacAddr string `json:"OS-EXT-IPS-MAC:mac_addr"`
 	Version int    `json:"version"`
@@ -67,4 +82,12 @@ func (server *Server) GetNetworks() []string {
 		}
 	}
 	return networks
+}
+func (server Server) GetFlavorExtraSpecsString() string {
+	extraSpecs, _ := json.Marshal(server.Flavor.ExtraSpecs)
+	return string(extraSpecs)
+}
+func (server Server) GetFaultString() string {
+	fault, _ := json.Marshal(server.Fault)
+	return string(fault)
 }

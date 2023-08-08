@@ -38,7 +38,6 @@ func main() {
 			if err := common.LoadConf(conf); err != nil {
 				logging.Error("load config faield, %v", err)
 			}
-
 			if !debug && common.CONF.Debug {
 				logging.BasicConfig(logging.LogConfig{Level: logging.DEBUG})
 			}
