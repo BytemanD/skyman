@@ -39,8 +39,9 @@ type Server struct {
 	Image            string `yaml:"image"`
 	Network          string `yaml:"network"`
 	VolumeBoot       bool   `yaml:"volumeBoot"`
-	VolumeSize       int    `yaml:"volumeSize"`
+	VolumeSize       uint16 `yaml:"volumeSize"`
 	AvailabilityZone string `yaml:"availabilityZone"`
+	NamePrefix       string `yaml:"namePrefix"`
 }
 
 func fileExists(path string) bool {
