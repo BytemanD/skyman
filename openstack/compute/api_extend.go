@@ -14,7 +14,10 @@ func (client ComputeClientV2) ServerPrune(query url.Values, yes bool, waitDelete
 		query.Set("status", "error")
 	}
 	logging.Info("查询虚拟机: %v", query)
-	servers := client.ServerList(query)
+	servers, err := client.ServerList(query)
+	if err != nil {
+		logging.Fatal("query servers failed, %s", err)
+	}
 	logging.Info("需要清理的虚拟机数量: %d\n", len(servers))
 	if len(servers) == 0 {
 		return

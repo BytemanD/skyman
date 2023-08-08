@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -29,6 +30,7 @@ var serverList = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		host, _ := cmd.Flags().GetString("host")
 		statusList, _ := cmd.Flags().GetStringArray("status")
+		all, _ := cmd.Flags().GetBool("all")
 
 		if name != "" {
 			query.Set("name", name)
@@ -36,13 +38,20 @@ var serverList = &cobra.Command{
 		if host != "" {
 			query.Set("host", host)
 		}
+		if all {
+			query.Set("all_tenants", strconv.FormatBool(all))
+		}
 		for _, status := range statusList {
 			query.Add("status", status)
 		}
 
 		long, _ := cmd.Flags().GetBool("long")
 		verbose, _ := cmd.Flags().GetBool("verbose")
-		servers := client.Compute.ServerListDetails(query)
+		servers, err := client.Compute.ServerListDetails(query)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 		imageMap := map[string]imageLib.Image{}
 		if long && verbose {
 			for i, server := range servers {
@@ -116,7 +125,7 @@ var serverShow = &cobra.Command{
 		nameOrId := args[0]
 		server, err := client.Compute.ServerShow(nameOrId)
 		if err != nil {
-			servers := client.Compute.ServerListDetailsByName(nameOrId)
+			servers, err := client.Compute.ServerListDetailsByName(nameOrId)
 			if len(servers) > 1 {
 				fmt.Printf("Found multy severs named %s\n", nameOrId)
 				os.Exit(1)
@@ -481,6 +490,7 @@ func init() {
 	// Server list flags
 	serverList.Flags().StringP("name", "n", "", "Search by server name")
 	serverList.Flags().String("host", "", "Search by hostname")
+	serverList.Flags().BoolP("all", "a", false, "Display servers from all tenants")
 	serverList.Flags().StringArrayP("status", "s", nil, "Search by server status")
 	serverList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	serverList.Flags().BoolP("verbose", "v", false, "List verbose fields in output")

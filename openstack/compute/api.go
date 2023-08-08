@@ -11,17 +11,23 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
-func (client ComputeClientV2) ServerList(query netUrl.Values) []Server {
+func (client ComputeClientV2) ServerList(query netUrl.Values) ([]Server, error) {
 	body := map[string][]Server{"servers": {}}
-	client.List("servers", query, client.BaseHeaders, &body)
-	return body["servers"]
+	err := client.List("servers", query, client.BaseHeaders, &body)
+	if err != nil {
+		return nil, err
+	}
+	return body["servers"], nil
 }
-func (client ComputeClientV2) ServerListDetails(query netUrl.Values) []Server {
+func (client ComputeClientV2) ServerListDetails(query netUrl.Values) ([]Server, error) {
 	body := map[string][]Server{"servers": {}}
-	client.List("servers/detail", query, client.BaseHeaders, &body)
-	return body["servers"]
+	err := client.List("servers/detail", query, client.BaseHeaders, &body)
+	if err != nil {
+		return nil, err
+	}
+	return body["servers"], nil
 }
-func (client ComputeClientV2) ServerListDetailsByName(name string) []Server {
+func (client ComputeClientV2) ServerListDetailsByName(name string) ([]Server, error) {
 	query := url.Values{}
 	query.Set("name", name)
 	return client.ServerListDetails(query)
