@@ -31,6 +31,7 @@ var serverList = &cobra.Command{
 		host, _ := cmd.Flags().GetString("host")
 		statusList, _ := cmd.Flags().GetStringArray("status")
 		all, _ := cmd.Flags().GetBool("all")
+		dsc, _ := cmd.Flags().GetBool("dsc")
 
 		if name != "" {
 			query.Set("name", name)
@@ -72,7 +73,10 @@ var serverList = &cobra.Command{
 			LongHeaders: []string{
 				"AZ", "Host", "InstanceName", "Flavor:Name"},
 			HeaderLabel: map[string]string{"Addresses": "Networks"},
-			SortBy:      []table.SortBy{{Name: "Name", Mode: table.Asc}},
+			SortBy: []table.SortBy{
+				{Name: "Name", Mode: table.Asc},
+				{Name: "Id", Mode: table.Asc},
+			},
 			Slots: map[string]func(item interface{}) interface{}{
 				"PowerState": func(item interface{}) interface{} {
 					p, _ := (item).(compute.Server)
@@ -103,6 +107,10 @@ var serverList = &cobra.Command{
 					return cli.BaseColorFormatter.Format(p.Status)
 				},
 			},
+		}
+		if dsc {
+			dataTable.SortBy[0].Mode = table.Dsc
+			dataTable.SortBy[1].Mode = table.Dsc
 		}
 		if long {
 			dataTable.StyleSeparateRows = true
@@ -494,6 +502,7 @@ func init() {
 	serverList.Flags().StringArrayP("status", "s", nil, "Search by server status")
 	serverList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	serverList.Flags().BoolP("verbose", "v", false, "List verbose fields in output")
+	serverList.Flags().Bool("dsc", false, "Sort name by dsc")
 	// Server create flags
 	serverCreate.Flags().StringP("flavor", "f", "", "Create server with this flavor")
 	serverCreate.Flags().StringP("image", "i", "", "Create server with this image")

@@ -139,7 +139,7 @@ func (dataTable DataListTable) Print(long bool) {
 func splitTitle(s string) string {
 	newStr := ""
 	for _, c := range s {
-		if c < 91 {
+		if c < 91 && newStr != "" {
 			newStr += " " + string(c)
 		} else {
 			newStr += string(c)
