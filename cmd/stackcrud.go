@@ -27,7 +27,7 @@ func main() {
 		Use:     "stackcurd",
 		Short:   "Golang Openstack Client",
 		Version: getVersion(),
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 			debug, _ := cmd.Flags().GetBool("debug")
 			conf, _ := cmd.Flags().GetStringArray("conf")
 			level := logging.INFO
