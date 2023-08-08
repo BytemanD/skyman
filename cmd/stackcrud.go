@@ -58,7 +58,7 @@ func main() {
 
 	rootCmd.AddCommand(compute.Server, compute.Flavor, compute.Hypervisor,
 		compute.Keypair, compute.Compute, compute.Console,
-		compute.Migration, compute.AZ,
+		compute.Migration, compute.AZ, compute.Aggregate,
 		image.Image,
 		storage.Volume,
 		networking.Router, networking.Network, networking.Port,

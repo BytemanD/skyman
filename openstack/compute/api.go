@@ -524,3 +524,16 @@ func (client ComputeClientV2) AZListDetail(query netUrl.Values) ([]AvailabilityZ
 	client.List("os-availability-zone/detail", query, client.BaseHeaders, &respBody)
 	return respBody["availabilityZoneInfo"], nil
 }
+func (client ComputeClientV2) AggregateList(query netUrl.Values) ([]Aggregate, error) {
+	respBody := map[string][]Aggregate{"aggregates": []Aggregate{}}
+	client.List("os-aggregates", query, client.BaseHeaders, &respBody)
+	return respBody["aggregates"], nil
+}
+func (client ComputeClientV2) AggregateShow(aggregate string) (*Aggregate, error) {
+	respBody := map[string]*Aggregate{"aggregate": {}}
+	err := client.Show("os-aggregates", aggregate, client.BaseHeaders, &respBody)
+	if err != nil {
+		return nil, err
+	}
+	return respBody["aggregate"], nil
+}

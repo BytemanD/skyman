@@ -26,7 +26,12 @@ type DataTable struct {
 
 func (dataTable DataTable) Print(long bool) {
 	tableWriter := table.NewWriter()
+	tableWriter.SetStyle(table.StyleLight)
+
 	tableWriter.Style().Format.Header = text.FormatDefault
+	tableWriter.Style().Color.Header = text.Colors{text.FgBlue, text.Bold}
+	tableWriter.Style().Color.Border = text.Colors{text.FgBlue}
+	tableWriter.Style().Color.Separator = text.Colors{text.FgBlue}
 	tableWriter.SetOutputMirror(os.Stdout)
 
 	headerRow := table.Row{"Field", "Value"}
@@ -42,7 +47,7 @@ func (dataTable DataTable) Print(long bool) {
 			fieldLabel string
 		)
 		if field.Text == "" {
-			fieldLabel = field.Name
+			fieldLabel = splitTitle(field.Name)
 		} else {
 			fieldLabel = field.Text
 		}

@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/openstack/common"
 )
 
@@ -252,4 +253,32 @@ type AvailabilityZone struct {
 	ZoneName  string            `json:"zoneName"`
 	ZoneState ZoneState         `json:"zoneState"`
 	Hosts     map[string]AZHost `json:"hosts,omitempty"`
+}
+type Aggregate struct {
+	Id               int               `json:"id"`
+	Name             string            `json:"name"`
+	AvailabilityZone string            `json:"availability_zone"`
+	Deleted          bool              `json:"deleted"`
+	Hosts            []string          `json:"hosts,omitempty"`
+	Metadata         map[string]string `json:"metadata,omitempty"`
+	CreatedAt        string            `json:"created_at,omitempty"`
+	UpdatedAt        string            `json:"updated_at,omitempty"`
+	DeletedAt        string            `json:"deleted_at,omitempty"`
+}
+
+func (agg Aggregate) GetMetadataList() []string {
+	metadataList := []string{}
+	for k, v := range agg.Metadata {
+		metadataList = append(metadataList, fmt.Sprintf("%s=%s", k, v))
+	}
+	return metadataList
+}
+
+func (agg Aggregate) MarshalMetadata() string {
+	data, err := json.Marshal(agg.Metadata)
+	if err != nil {
+		logging.Warning("marshal metadata failed, %s", err)
+		return ""
+	}
+	return string(data)
 }
