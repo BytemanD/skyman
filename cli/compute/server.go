@@ -441,13 +441,40 @@ var serverResize = &cobra.Command{
 	Short: "Resize server",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
+		wait, _ := cmd.Flags().GetBool("wait")
 		client := cli.GetClient()
 
-		err := client.Compute.ServerResize(args[0], args[1])
+		flavor, err := client.Compute.FlavorShow(args[1])
 		if err != nil {
-			logging.Error("Reqeust to resize server failed, %v", err)
+			logging.Fatal("Get flavor %s failed, %v", args[1], err)
+		}
+
+		err = client.Compute.ServerResize(args[0], args[1])
+		if err != nil {
+			logging.Fatal("Reqeust to resize server failed, %v", err)
 		} else {
 			fmt.Printf("Requested to resize server: %s\n", args[0])
+		}
+
+		if wait {
+			for {
+				server, err := client.Compute.ServerShow(args[0])
+				if err != nil {
+					logging.Fatal("Get server %s failed, %v", args[0], err)
+				}
+				logging.Info("实例状态: status=%s, task_state=%s, power_state=%s",
+					server.Status, server.TaskState, server.GetPowerState())
+				if server.TaskState != "" {
+					time.Sleep(time.Second * 2)
+					continue
+				}
+				if server.Flavor.OriginalName == flavor.Name {
+					logging.Info("resize 成功")
+				} else {
+					logging.Fatal("resize 失败")
+				}
+				break
+			}
 		}
 	},
 }
@@ -529,6 +556,8 @@ func init() {
 	serverMigrate.Flags().Bool("live", false, "Migrate running server.")
 	serverMigrate.Flags().String("host", "", "Destination host name.")
 	serverMigrate.Flags().Bool("block-migrate", false, "True in case of block_migration.")
+
+	serverResize.Flags().BoolP("wait", "w", false, "Wait server resize completed")
 
 	// Server prune flags
 	serverPrune.Flags().StringP("name", "n", "", "Search by server name")
