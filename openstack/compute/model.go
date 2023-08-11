@@ -116,6 +116,10 @@ func (server Server) GetFaultString() string {
 	fault, _ := json.Marshal(server.Fault)
 	return string(fault)
 }
+func (server Server) AllStatus() string {
+	return fmt.Sprintf("status=%s, task_state=%s, power_state=%s",
+		server.Status, server.TaskState, server.GetPowerState())
+}
 
 type Service struct {
 	common.Resource

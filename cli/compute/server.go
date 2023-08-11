@@ -462,8 +462,7 @@ var serverResize = &cobra.Command{
 				if err != nil {
 					logging.Fatal("Get server %s failed, %v", args[0], err)
 				}
-				logging.Info("实例状态: status=%s, task_state=%s, power_state=%s",
-					server.Status, server.TaskState, server.GetPowerState())
+				logging.Info("实例状态: %s", server.AllStatus())
 				if server.TaskState != "" {
 					time.Sleep(time.Second * 2)
 					continue

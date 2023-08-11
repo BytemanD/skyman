@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/BytemanD/stackcrud/cli"
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
+
+	"github.com/BytemanD/stackcrud/cli"
 )
 
 var serverAction = &cobra.Command{Use: "action"}
@@ -25,6 +27,9 @@ var actionList = &cobra.Command{
 		dataTable := cli.DataListTable{
 			ShortHeaders: []string{"Action", "RequestId", "StartTime", "Message"},
 			LongHeaders:  []string{"ProjectId", "UserId"},
+			SortBy: []table.SortBy{
+				{Name: "Start Time", Mode: table.Asc},
+			},
 		}
 		dataTable.AddItems(actions)
 		dataTable.Print(long)

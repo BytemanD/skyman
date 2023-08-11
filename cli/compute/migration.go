@@ -23,6 +23,7 @@ var migrationList = &cobra.Command{
 		status, _ := cmd.Flags().GetString("status")
 		host, _ := cmd.Flags().GetString("host")
 		instance, _ := cmd.Flags().GetString("instance")
+		migration_type, _ := cmd.Flags().GetString("type")
 		long, _ := cmd.Flags().GetBool("long")
 
 		if status != "" {
@@ -34,7 +35,9 @@ var migrationList = &cobra.Command{
 		if instance != "" {
 			query.Set("instance_uuid", instance)
 		}
-
+		if migration_type != "" {
+			query.Set("migration_type", migration_type)
+		}
 		migrations, err := client.Compute.MigrationList(query)
 		if err != nil {
 			logging.Fatal("%s", err)
@@ -71,6 +74,7 @@ func init() {
 	migrationList.Flags().String("host", "", "List migration matched by host")
 	migrationList.Flags().String("status", "", "List migration matched by status")
 	migrationList.Flags().String("instance", "", "List migration matched by instance uuid")
+	migrationList.Flags().String("type", "", "List migration matched by migration type")
 
 	migrationList.Flags().BoolP("long", "l", false, "List additional fields in output")
 
