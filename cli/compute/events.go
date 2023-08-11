@@ -47,7 +47,7 @@ var actionShow = &cobra.Command{
 		}
 		dataTable := cli.DataListTable{
 			Title:        fmt.Sprintf("Action: %s", action.Action),
-			ShortHeaders: []string{"Event", "StartTime", "FinishTime", "Result"},
+			ShortHeaders: []string{"Event", "Host", "StartTime", "FinishTime", "Result"},
 			LongHeaders:  []string{"Host"},
 		}
 		// trace

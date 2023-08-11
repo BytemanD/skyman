@@ -71,8 +71,13 @@ var serverList = &cobra.Command{
 			ShortHeaders: []string{
 				"Id", "Name", "Status", "TaskState", "PowerState", "Addresses"},
 			LongHeaders: []string{
-				"AZ", "Host", "InstanceName", "Flavor:Name"},
-			HeaderLabel: map[string]string{"Addresses": "Networks"},
+				"AZ", "Host", "InstanceName", "Flavor:name"},
+			HeaderLabel: map[string]string{
+				"Addresses": "Networks", "AZ": "AZ",
+				"Flavor:name":  "Flavor:name",
+				"Flavor:ram":   "Flavor:ram",
+				"Flavor:vcpus": "Flavor:vcpus",
+			},
 			SortBy: []table.SortBy{
 				{Name: "Name", Mode: table.Asc},
 				{Name: "Id", Mode: table.Asc},
@@ -86,7 +91,7 @@ var serverList = &cobra.Command{
 					p, _ := (item).(compute.Server)
 					return strings.Join(p.GetNetworks(), "\n")
 				},
-				"Flavor:Name": func(item interface{}) interface{} {
+				"Flavor:name": func(item interface{}) interface{} {
 					p, _ := (item).(compute.Server)
 					return p.Flavor.OriginalName
 				},
