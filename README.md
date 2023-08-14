@@ -53,3 +53,31 @@ Use "stackcurd [command] --help" for more information about a command.
 ```bash
 rpm -ivh dist/stackcrud-<版本>-1.x86_64.rpm
 ```
+
+## 支持的命令
+
+```bash
+stackcurd aggregate list/show
+stackcurd az list
+stackcurd compute service list/enable/disable/up/down
+stackcurd console log/url
+stackcurd action list/show
+stackcurd flavor list/create/delete/copy
+stackcurd hypervisor list
+stackcurd keypair list
+stackcurd migration list
+stackcurd server list/show/create/delete/prune
+stackcurd server stop/start/reboot/pause/unpause
+stackcurd server shelve/unshelve/suspend/resume
+stackcurd server resize/migrate/rebuild
+stackcurd server interface list/attach-port/attach-net/detach
+stackcurd server volume list/attach/detach
+
+stackcurd image list
+
+stackcurd volume list/show/delete/prune
+
+stackcurd network list
+stackcurd router list
+stackcurd port list
+```

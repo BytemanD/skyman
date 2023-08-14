@@ -10,6 +10,7 @@ import (
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
@@ -175,48 +176,35 @@ var serverCreate = &cobra.Command{
 				"%s%s", common.CONF.Server.NamePrefix,
 				time.Now().Format("2006-01-02_15:04:05"),
 			)
-
 		}
 		client := cli.GetClient()
 
-		flavor, _ := cmd.Flags().GetString("flavor")
-		image, _ := cmd.Flags().GetString("image")
 		volumeBoot, _ := cmd.Flags().GetBool("volume-boot")
 		volumeSize, _ := cmd.Flags().GetUint16("volume-size")
-		az, _ := cmd.Flags().GetString("az")
 
 		min, _ := cmd.Flags().GetUint16("min")
 		max, _ := cmd.Flags().GetUint16("max")
 
-		if flavor == "" {
-			flavor = common.CONF.Server.Flavor
-		}
-		if image == "" {
-			image = common.CONF.Server.Image
-		}
 		if volumeSize <= 0 {
 			volumeSize = common.CONF.Server.VolumeSize
 		}
 		if !volumeBoot {
 			volumeBoot = common.CONF.Server.VolumeBoot
 		}
-		if az == "" {
-			az = common.CONF.Server.AvailabilityZone
-		}
+
 		createOption := compute.ServerOpt{
 			Name:             name,
-			Flavor:           flavor,
-			Image:            image,
-			AvailabilityZone: az,
+			Flavor:           common.CONF.Server.Flavor,
+			AvailabilityZone: common.CONF.Server.AvailabilityZone,
 			MinCount:         min,
 			MaxCount:         max,
 		}
 		if !volumeBoot {
-			createOption.Image = image
+			createOption.Image = common.CONF.Server.Image
 		} else {
 			createOption.BlockDeviceMappingV2 = []compute.BlockDeviceMappingV2{
 				{
-					UUID: image, VolumeSize: volumeSize,
+					UUID: common.CONF.Server.Image, VolumeSize: volumeSize,
 					SourceType: "image", DestinationType: "volume",
 					DeleteOnTemination: true,
 				},
@@ -546,6 +534,10 @@ func init() {
 	serverCreate.Flags().String("az", "", "Select an availability zone for the server.")
 	serverCreate.Flags().Uint16("min", 1, "Minimum number of servers to launch.")
 	serverCreate.Flags().Uint16("max", 1, "Maximum number of servers to launch.")
+
+	viper.BindPFlag("server.flavor", serverCreate.Flags().Lookup("flavor"))
+	viper.BindPFlag("server.image", serverCreate.Flags().Lookup("image"))
+	viper.BindPFlag("server.availabilityZone", serverCreate.Flags().Lookup("az"))
 
 	// server reboot flags
 
