@@ -14,7 +14,7 @@ func printServer(server compute.Server) {
 	dataTable := cli.DataTable{
 		Item: server,
 		ShortFields: []cli.Field{
-			{Name: "Id"}, {Name: "Description"},
+			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 			{Name: "Flavor:original_name", Text: "Flavor:original_name"},
 			{Name: "Flavor:ram", Text: "Flavor:ram"},
 			{Name: "Flavor:vcpus", Text: "Flavor:vcpus"},

@@ -58,10 +58,6 @@ func (client ComputeClientV2) ServerCreate(options ServerOpt) (*Server, error) {
 	if options.Flavor == "" {
 		return nil, fmt.Errorf("flavor is empty")
 	}
-	if options.Image == "" ||
-		(len(options.BlockDeviceMappingV2) > 0 && options.BlockDeviceMappingV2[0].UUID == "") {
-		return nil, fmt.Errorf("image is empty")
-	}
 
 	if options.Networks == nil {
 		options.Networks = "none"

@@ -120,6 +120,9 @@ func (server Server) AllStatus() string {
 	return fmt.Sprintf("status=%s, task_state=%s, power_state=%s",
 		server.Status, server.TaskState, server.GetPowerState())
 }
+func (server Server) InResize() bool {
+	return server.Status == "VERIFY_RESIZE" || server.Status == "RESIZE"
+}
 
 type Service struct {
 	common.Resource

@@ -204,10 +204,16 @@ var serverCreate = &cobra.Command{
 		} else {
 			createOption.BlockDeviceMappingV2 = []compute.BlockDeviceMappingV2{
 				{
-					UUID: common.CONF.Server.Image, VolumeSize: volumeSize,
+					UUID:       common.CONF.Server.Image,
+					VolumeSize: volumeSize,
 					SourceType: "image", DestinationType: "volume",
 					DeleteOnTemination: true,
 				},
+			}
+		}
+		if common.CONF.Server.Network != "" {
+			createOption.Networks = []compute.ServerOptNetwork{
+				{UUID: common.CONF.Server.Network},
 			}
 		}
 		server, err := client.Compute.ServerCreate(createOption)
@@ -451,7 +457,7 @@ var serverResize = &cobra.Command{
 					logging.Fatal("Get server %s failed, %v", args[0], err)
 				}
 				logging.Info("实例状态: %s", server.AllStatus())
-				if server.TaskState != "" {
+				if server.TaskState != "" || server.InResize() {
 					time.Sleep(time.Second * 2)
 					continue
 				}

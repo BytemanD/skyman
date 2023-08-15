@@ -8,7 +8,10 @@ type BlockDeviceMappingV2 struct {
 	DestinationType    string `json:"destination_type"`
 	DeleteOnTemination bool   `json:"delete_on_termination"`
 }
-
+type ServerOptNetwork struct {
+	UUID   string `json:"uuid,omitempty"`
+	PortId string `json:"port_id,omitempty"`
+}
 type ServerOpt struct {
 	Flavor               string                 `json:"flavorRef,omitempty"`
 	Image                string                 `json:"imageRef,omitempty"`
