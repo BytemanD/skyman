@@ -388,6 +388,18 @@ func (client ComputeClientV2) FlavorShow(flavorId string) (*Flavor, error) {
 	}
 	return body["flavor"], nil
 }
+func (client ComputeClientV2) FlavorShowWithExtraSpecs(flavorId string) (*Flavor, error) {
+	flavor, err := client.FlavorShow(flavorId)
+	if err != nil {
+		return nil, err
+	}
+	extraSpecs, err := client.FlavorExtraSpecsList(flavorId)
+	if err != nil {
+		return nil, err
+	}
+	flavor.ExtraSpecs = extraSpecs
+	return flavor, nil
+}
 func (client ComputeClientV2) FlavorExtraSpecsCreate(flavorId string, extraSpecs map[string]string) (ExtraSpecs, error) {
 	repBody, _ := json.Marshal(map[string]ExtraSpecs{"extra_specs": extraSpecs})
 	respBody := map[string]ExtraSpecs{"extra_specs": {}}

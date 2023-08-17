@@ -12,6 +12,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/openstack/common"
 	"github.com/BytemanD/stackcrud/openstack/compute"
 )
 
@@ -84,6 +85,24 @@ var flavorList = &cobra.Command{
 		dataTable.Print(long)
 	},
 }
+var flavorShow = &cobra.Command{
+	Use:   "show <flavor id>",
+	Short: "Show flavor",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		flavorId := args[0]
+		flavor, err := client.Compute.FlavorShowWithExtraSpecs(flavorId)
+		if err != nil {
+			if httpError, ok := err.(*common.HttpError); ok {
+				logging.Fatal("Show flavor %s failed, %s", flavorId, httpError.Message)
+			} else {
+				logging.Fatal("Show flavor %s failed, %v", flavorId, err)
+			}
+		}
+		printFlavor(*flavor)
+	},
+}
 var flavorDelete = &cobra.Command{
 	Use:   "delete <flavor1> [flavor2 ...]",
 	Short: "Delete flavor(s)",
@@ -94,7 +113,11 @@ var flavorDelete = &cobra.Command{
 		for _, flavorId := range args {
 			err := client.Compute.FlavorDelete(flavorId)
 			if err != nil {
-				logging.Error("Delete flavor %s failed, %v", flavorId, err)
+				if httpError, ok := err.(*common.HttpError); ok {
+					logging.Fatal("Delete flavor %s failed, %s", flavorId, httpError.Message)
+				} else {
+					logging.Fatal("Delete flavor %s failed, %v", flavorId, err)
+				}
 			} else {
 				fmt.Printf("Delete flavor success: %s\n", flavorId)
 			}
@@ -235,6 +258,6 @@ func init() {
 		"Set property to for new flavor (repeat option to set multiple properties)")
 	flavorCopy.Flags().StringArray("unset", []string{},
 		"Unset property for new flavor (repeat option to set multiple properties)")
-	Flavor.AddCommand(flavorList, flavorCreate, flavorDelete,
+	Flavor.AddCommand(flavorList, flavorShow, flavorCreate, flavorDelete,
 		flavorCopy)
 }

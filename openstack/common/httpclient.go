@@ -2,8 +2,7 @@ package common
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -18,6 +17,7 @@ type BaseResponse interface {
 
 type Response struct {
 	Status  int
+	Reason  string
 	Body    []byte
 	Headers http.Header
 }
@@ -43,14 +43,15 @@ func (session Session) Request(req *http.Request) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	content, _ := ioutil.ReadAll(resp.Body)
+	content, _ := io.ReadAll(resp.Body)
 	defer resp.Body.Close()
 
+	logging.Debug("Resp: status code: %d, body: %s", resp.StatusCode, content)
 	response := Response{
 		Body:    content,
 		Status:  resp.StatusCode,
+		Reason:  resp.Status,
 		Headers: resp.Header}
-	logging.Debug("Resp: status: %s, body: %s", resp.Status, content)
 	return &response, response.JudgeStatus()
 }
 
@@ -92,25 +93,21 @@ func (client Session) UrlJoin(path []string) string {
 // }
 
 type HttpError struct {
-	Code   int
-	Reason string
+	Status  int
+	Reason  string
+	Message string
 }
 
 func (err *HttpError) Error() string {
-	return fmt.Sprintf("%d %s", err.Code, err.Reason)
+	return err.Reason
 }
 
 func (resp *Response) JudgeStatus() error {
 	switch {
 	case resp.Status < 400:
 		return nil
-	case resp.Status == 400:
-		return fmt.Errorf("BadRequest")
-	case resp.Status == 404:
-		return fmt.Errorf("%d NotFound", resp.Status)
-	case resp.Status == 500:
-		return fmt.Errorf("BadRequest")
 	default:
-		return fmt.Errorf("ErrorCode %d", resp.Status)
+		return &HttpError{Status: resp.Status, Reason: resp.Reason,
+			Message: resp.BodyString()}
 	}
 }

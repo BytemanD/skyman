@@ -62,3 +62,8 @@ func (token *Token) GetEndpoints(option OptionCatalog) []Endpoint {
 	}
 	return endpoints
 }
+
+type HttpException struct {
+	Status  int
+	Message string
+}

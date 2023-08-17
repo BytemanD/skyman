@@ -82,10 +82,10 @@ func printFlavor(server compute.Flavor) {
 		ShortFields: []cli.Field{
 			{Name: "Id"}, {Name: "Name"},
 			{Name: "Vcpus"}, {Name: "Ram"}, {Name: "Disk"}, {Name: "Swap"},
-			{Name: "RXTXFactor"},
-			{Name: "OS-FLV-EXT-DATA:ephemeral"},
-			{Name: "os-flavor-access:is_public"},
-			{Name: "OS-FLV-DISABLED:disabled"},
+			{Name: "RXTXFactor", Text: "RXTXFactor"},
+			{Name: "OS-FLV-EXT-DATA:ephemeral", Text: "OS-FLV-EXT-DATA:ephemeral"},
+			{Name: "os-flavor-access:is_public", Text: "os-flavor-access:is_public"},
+			{Name: "OS-FLV-DISABLED:disabled", Text: "OS-FLV-DISABLED:disabled"},
 			{Name: "ExtraSpecs"},
 		},
 		Slots: map[string]func(item interface{}) interface{}{
