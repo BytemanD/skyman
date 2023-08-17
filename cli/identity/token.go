@@ -16,7 +16,7 @@ var tokenIssue = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 
-		token := client.Identity.GetToken()
+		token := client.AuthClient.GetToken()
 		dataTable := cli.DataTable{
 			Item: token,
 			ShortFields: []cli.Field{

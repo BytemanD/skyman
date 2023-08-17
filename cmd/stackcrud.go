@@ -56,7 +56,9 @@ func main() {
 
 	rootCmd.AddCommand(identity.Token)
 
-	rootCmd.AddCommand(compute.Server, compute.Flavor, compute.Hypervisor,
+	rootCmd.AddCommand(
+		identity.Service, identity.Endpoint,
+		compute.Server, compute.Flavor, compute.Hypervisor,
 		compute.Keypair, compute.Compute, compute.Console,
 		compute.Migration, compute.AZ, compute.Aggregate,
 		image.Image,

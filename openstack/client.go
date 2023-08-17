@@ -11,7 +11,8 @@ import (
 )
 
 type OpenstackClient struct {
-	Identity   identity.V3AuthClient
+	AuthClient identity.V3AuthClient
+	Identity   identity.IdentityClientV3
 	Compute    compute.ComputeClientV2
 	Image      image.ImageClientV2
 	Storage    storage.StorageClientV2
@@ -42,6 +43,8 @@ func GetClient(authUrl string, user identity.User, project identity.Project, reg
 }
 
 func GetClientWithAuthToken(authClient *identity.V3AuthClient) (*OpenstackClient, error) {
+	identityClient, err := identity.GetIdentityClientV3(*authClient)
+
 	computeClient, err := compute.GetComputeClientV2(*authClient)
 	if err != nil {
 		return nil, err
@@ -59,7 +62,8 @@ func GetClientWithAuthToken(authClient *identity.V3AuthClient) (*OpenstackClient
 		return nil, err
 	}
 	return &OpenstackClient{
-		Identity:   *authClient,
+		AuthClient: *authClient,
+		Identity:   *identityClient,
 		Compute:    *computeClient,
 		Image:      *imageClient,
 		Storage:    *storageClient,

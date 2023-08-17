@@ -103,11 +103,6 @@ func (client *V3AuthClient) TokenIssue() error {
 	return nil
 }
 
-// func (client *V3AuthClient) ServiceList() (*common.Response, error) {
-// 	url := fmt.Sprintf("%s%s", client.AuthUrl, "/services")
-// 	return client.Get(url, nil, map[string]string{})
-// }
-
 //	func (client *V3AuthClient) UserList() (*common.Response, error) {
 //		url := fmt.Sprintf("%s%s", client.AuthUrl, "/users")
 //		return client.Get(url, nil, map[string]string{})

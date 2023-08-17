@@ -17,14 +17,6 @@ type Catalog struct {
 	Endpoints []Endpoint `json:"endpoints"`
 }
 
-type Endpoint struct {
-	Url       string `json:"url"`
-	Interface string `json:"interface"`
-	Region    string `json:"region"`
-	RegionId  string `json:"region_id"`
-	Id        string `json:"id"`
-}
-
 type RespToken struct {
 	Token Token `json:"token"`
 }
