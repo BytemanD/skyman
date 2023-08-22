@@ -104,10 +104,6 @@ func (client *V3AuthClient) TokenIssue() error {
 	return nil
 }
 
-//	func (client *V3AuthClient) UserList() (*common.Response, error) {
-//		url := fmt.Sprintf("%s%s", client.AuthUrl, "/users")
-//		return client.Get(url, nil, map[string]string{})
-//	}
 func (client *V3AuthClient) SetTokenExpireSecond(second int) {
 	client.TokenExpireSecond = second
 }

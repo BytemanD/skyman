@@ -30,7 +30,7 @@ func (client ComputeClientV2) ServerPrune(query url.Values, yes bool, waitDelete
 		}
 		for {
 			fmt.Printf("是否删除[yes/no]: ")
-			fmt.Scanf("%s %d %f", &confirm)
+			fmt.Scanln(&confirm)
 			if confirm == "yes" || confirm == "y" {
 				break
 			} else if confirm == "no" || confirm == "n" {
@@ -61,7 +61,6 @@ func (client ComputeClientV2) ServerPrune(query url.Values, yes bool, waitDelete
 		<-workers
 		tracker.Increment(1)
 		if tracker.Value() >= tracker.Total {
-			logging.Info("0000000")
 			tracker.MarkAsDone()
 		}
 	}
@@ -76,10 +75,9 @@ func (client ComputeClientV2) ServerPrune(query url.Values, yes bool, waitDelete
 	}
 	if tracker.IsDone() {
 		tracker.Increment(1)
-		logging.Info("2222222222222")
+		logging.Info("")
 		// pw.Stop()
 	}
-	logging.Info("333333333")
 	wg.Wait()
 }
 

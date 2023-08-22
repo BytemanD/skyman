@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/howeyc/gopass"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -15,6 +16,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
 	"github.com/BytemanD/stackcrud/common"
+	openstackCommon "github.com/BytemanD/stackcrud/openstack/common"
 	"github.com/BytemanD/stackcrud/openstack/compute"
 	imageLib "github.com/BytemanD/stackcrud/openstack/image"
 )
@@ -229,13 +231,7 @@ var serverCreate = &cobra.Command{
 		printServer(*server)
 	},
 }
-var serverSet = &cobra.Command{
-	Use:   "set",
-	Short: "Set server properties",
-	Run: func(_ *cobra.Command, _ []string) {
-		logging.Info("list servers")
-	},
-}
+var serverSet = &cobra.Command{Use: "set"}
 var serverDelete = &cobra.Command{
 	Use:   "delete <server1> [server2 ...]",
 	Short: "Delete server(s)",
@@ -518,6 +514,49 @@ var serverRebuild = &cobra.Command{
 		}
 	},
 }
+var serverSetPassword = &cobra.Command{
+	Use:   "password <server>",
+	Short: "set password for server",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		user, _ := cmd.Flags().GetString("user")
+		server, err := client.Compute.ServerShow(args[0])
+		if err != nil {
+			logging.Fatal("show server %s failed, %v", args[0], err)
+		}
+		var (
+			newPasswd []byte
+			again     []byte
+		)
+		for {
+			fmt.Printf("New password: ")
+			newPasswd, _ = gopass.GetPasswd()
+			if string(newPasswd) == "" {
+				logging.Error("Password is empty.")
+				continue
+			}
+
+			fmt.Printf("Again: ")
+			again, _ = gopass.GetPasswd()
+			if string(again) == string(newPasswd) {
+				break
+			}
+			logging.Fatal("Passwords do not match.")
+		}
+		err = client.Compute.ServerSetPassword(server.Id, string(newPasswd), user)
+		if err != nil {
+			if httpError, ok := err.(*openstackCommon.HttpError); ok {
+				logging.Fatal("set password failed, %s, %s",
+					httpError.Reason, httpError.Message)
+			} else {
+				logging.Fatal("set password failed, %v", err)
+			}
+		} else {
+			fmt.Println("Reqeust to set password successs")
+		}
+	},
+}
 
 func init() {
 	// Server list flags
@@ -562,6 +601,10 @@ func init() {
 	serverPrune.Flags().StringArrayP("status", "s", nil, "Search by server status")
 	serverPrune.Flags().BoolP("wait", "w", false, "等待虚拟删除完成")
 	serverPrune.Flags().BoolP("yes", "y", false, "所有问题自动回答'是'")
+
+	serverSetPassword.Flags().String("user", "", "User name")
+
+	serverSet.AddCommand(serverSetPassword)
 
 	Server.AddCommand(
 		serverList, serverShow, serverCreate, serverDelete, serverPrune,

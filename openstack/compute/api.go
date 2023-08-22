@@ -512,6 +512,15 @@ func (client ComputeClientV2) ServerInterfaceDetach(id string, portId string) er
 	return client.Delete(
 		fmt.Sprintf("servers/%s/os-interface", id), portId, client.BaseHeaders)
 }
+func (client ComputeClientV2) ServerSetPassword(id string, password string, user string) error {
+	data := map[string]interface{}{
+		"adminPass": password,
+	}
+	if user != "" {
+		data["userName"] = user
+	}
+	return client.ServerAction("changePassword", id, data, nil)
+}
 
 // migration api
 
