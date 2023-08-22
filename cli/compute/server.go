@@ -1,6 +1,7 @@
 package compute
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/url"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/BytemanD/easygo/pkg/fileutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
 	"github.com/BytemanD/stackcrud/common"
@@ -186,13 +188,7 @@ var serverCreate = &cobra.Command{
 
 		min, _ := cmd.Flags().GetUint16("min")
 		max, _ := cmd.Flags().GetUint16("max")
-
-		if volumeSize <= 0 {
-			volumeSize = common.CONF.Server.VolumeSize
-		}
-		if !volumeBoot {
-			volumeBoot = common.CONF.Server.VolumeBoot
-		}
+		userDataFile, _ := cmd.Flags().GetString("user-data")
 
 		createOption := compute.ServerOpt{
 			Name:             name,
@@ -201,9 +197,20 @@ var serverCreate = &cobra.Command{
 			MinCount:         min,
 			MaxCount:         max,
 		}
-		if !volumeBoot {
-			createOption.Image = common.CONF.Server.Image
-		} else {
+
+		if userDataFile != "" {
+			content, err := fileutils.ReadAll(userDataFile)
+			if err != nil {
+				logging.Fatal("read user data %s failed, %v", userDataFile, err)
+			}
+			encodedContent := base64.StdEncoding.EncodeToString([]byte(content))
+			createOption.UserData = encodedContent
+		}
+
+		if volumeSize <= 0 {
+			volumeSize = common.CONF.Server.VolumeSize
+		}
+		if volumeBoot || common.CONF.Server.VolumeBoot {
 			createOption.BlockDeviceMappingV2 = []compute.BlockDeviceMappingV2{
 				{
 					UUID:       common.CONF.Server.Image,
@@ -212,6 +219,8 @@ var serverCreate = &cobra.Command{
 					DeleteOnTemination: true,
 				},
 			}
+		} else {
+			createOption.Image = common.CONF.Server.Image
 		}
 		if common.CONF.Server.Network != "" {
 			createOption.Networks = []compute.ServerOptNetwork{
@@ -579,6 +588,7 @@ func init() {
 	serverCreate.Flags().String("az", "", "Select an availability zone for the server.")
 	serverCreate.Flags().Uint16("min", 1, "Minimum number of servers to launch.")
 	serverCreate.Flags().Uint16("max", 1, "Maximum number of servers to launch.")
+	serverCreate.Flags().String("user-data", "", "user data file to pass to be exposed by the metadata server.")
 
 	viper.BindPFlag("server.flavor", serverCreate.Flags().Lookup("flavor"))
 	viper.BindPFlag("server.image", serverCreate.Flags().Lookup("image"))

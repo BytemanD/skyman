@@ -37,8 +37,21 @@ func (resp Response) BodyUnmarshal(object interface{}) error {
 type Session struct {
 }
 
+func getSafeHeaders(headers http.Header) http.Header {
+	safeHeaders := http.Header{}
+	for k, v := range headers {
+		if k == "X-Auth-Token" {
+			safeHeaders[k] = []string{"******"}
+		} else {
+			safeHeaders[k] = v
+		}
+	}
+	return safeHeaders
+}
+
 func (session Session) Request(req *http.Request) (*Response, error) {
-	logging.Debug("Req: %s %s with headers: %v, body: %v", req.Method, req.URL, req.Header, req.Body)
+	logging.Debug("Req: %s %s with headers: %v, body: %v", req.Method, req.URL,
+		getSafeHeaders(req.Header), req.Body)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err

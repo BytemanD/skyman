@@ -38,8 +38,8 @@ cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3f
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/BytemanD/easygo/pkg v0.0.3 h1:56k2/xjCUVDkXE95tIq7NKevOi54RmlXoVG2gqTE8r8=
-github.com/BytemanD/easygo/pkg v0.0.3/go.mod h1:aoGuZJ2O0Nbl9PpFow/VZPh6DnVqYA82nBBi/S5mceU=
+github.com/BytemanD/easygo/pkg v0.0.5 h1:JRH8Y4P5+HXPAkBdLcG+wPfAKI/r4nNaVBI/O8skF7U=
+github.com/BytemanD/easygo/pkg v0.0.5/go.mod h1:aoGuZJ2O0Nbl9PpFow/VZPh6DnVqYA82nBBi/S5mceU=
 github.com/PuerkitoBio/goquery v1.8.1/go.mod h1:Q8ICL1kNUJ2sXGoAhPGUdYDJvgQgHzJsnnd3H7Ho5jQ=
 github.com/andybalholm/cascadia v1.3.1/go.mod h1:R4bJ1UQfqADjvDa4P6HZHLh/3OxWWEqc0Sk8XGwHqvA=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
