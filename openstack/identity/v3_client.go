@@ -27,14 +27,3 @@ func GetIdentityClientV3(authClient V3AuthClient) (*IdentityClientV3, error) {
 		BaseHeaders: map[string]string{"Content-Type": "application/json"},
 	}, nil
 }
-
-// func (client IdentityClientV3) ServiceList() (*common.Response, error) {
-// 	url := fmt.Sprintf("%s%s", client.AuthUrl, "/services")
-// 	client.List("services")
-// 	return client.Get(url, nil, map[string]string{})
-// }
-
-// func (client *V3AuthClient) UserList() (*common.Response, error) {
-// 	url := fmt.Sprintf("%s%s", client.AuthUrl, "/users")
-// 	return client.Get(url, nil, map[string]string{})
-// }

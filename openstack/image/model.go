@@ -50,8 +50,3 @@ func (img Image) HumanSize() string {
 }
 
 type Images []Image
-
-type ImagesResp struct {
-	Images []Image `json:"images,omitempty"`
-	Next   string  `json:"next,omitempty"`
-}

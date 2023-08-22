@@ -7,16 +7,22 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
-func min(num1 int, num2 int) int {
-	if num1 <= num2 {
-		return num1
-	} else {
-		return num2
+type ImagesResp struct {
+	Images []Image `json:"images,omitempty"`
+	Next   string  `json:"next,omitempty"`
+}
+
+func min(numbers ...int) int {
+	minNumber := numbers[0]
+	for _, number := range numbers[1:] {
+		if number < minNumber {
+			minNumber = number
+		}
 	}
+	return minNumber
 }
 
 func (client ImageClientV2) ImageList(query url.Values, total int) []Image {
-	// body := map[string]interface{}{"images": []Image{}, "next": ""}
 	images := []Image{}
 	limit := 0
 	if query.Get("limit") != "" {

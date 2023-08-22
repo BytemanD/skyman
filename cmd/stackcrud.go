@@ -58,6 +58,7 @@ func main() {
 
 	rootCmd.AddCommand(
 		identity.Service, identity.Endpoint,
+		identity.User, identity.Project,
 		compute.Server, compute.Flavor, compute.Hypervisor,
 		compute.Keypair, compute.Compute, compute.Console,
 		compute.Migration, compute.AZ, compute.Aggregate,

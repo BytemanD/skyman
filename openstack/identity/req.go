@@ -6,10 +6,15 @@ type Domain struct {
 }
 
 type User struct {
-	Id       string `json:"id,omitempty"`
-	Name     string `json:"name"`
-	Password string `json:"password"`
-	Domain   Domain `json:"domain"`
+	Id          string `json:"id,omitempty"`
+	Name        string `json:"name"`
+	Password    string `json:"password"`
+	Project     string `json:"project,omitempty"`
+	Description string `json:"description,omitempty"`
+	Email       string `json:"email,omitempty"`
+	Enabled     bool   `json:"enabled,omitempty"`
+	Domain      Domain `json:"domain"`
+	DomainId    string `json:"domain_id,omitempty"`
 }
 
 type Password struct {
@@ -22,9 +27,12 @@ type Identity struct {
 }
 
 type Project struct {
-	Id     string `json:"id,omitempty"`
-	Name   string `json:"name,omitempty"`
-	Domain Domain `json:"domain,omitempty"`
+	Id          string `json:"id,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Domain      Domain `json:"domain,omitempty"`
+	Description string `json:"description,omitempty"`
+	Enabled     bool   `json:"enabled,omitempty"`
+	DomainId    string `json:"domain_id,omitempty"`
 }
 type Scope struct {
 	Project Project `json:"project,omitempty"`
@@ -49,4 +57,9 @@ func GetAuthReqBody(username string, password string, project_name string) AuthB
 	authBody.Auth.Scope.Project.Domain.Name = "default"
 
 	return authBody
+}
+
+type RoleAssigment struct {
+	Scope Scope `json:"scope,omitempty"`
+	User  User  `json:"user,omitempty"`
 }

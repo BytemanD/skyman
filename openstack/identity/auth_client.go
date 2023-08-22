@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -124,6 +125,8 @@ func (client V3AuthClient) GetEndpointFromCatalog(serviceType string, endpointIn
 	})
 	if (len(endpoints)) == 0 {
 		return "", fmt.Errorf("endpoints not found")
+	} else if strings.HasSuffix(endpoints[0].Url, "/") {
+		return endpoints[0].Url[:len(endpoints[0].Url)-1], nil
 	} else {
 		return endpoints[0].Url, nil
 	}
