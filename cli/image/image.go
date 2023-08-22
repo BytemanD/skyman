@@ -17,17 +17,24 @@ var Image = &cobra.Command{Use: "image"}
 var ImageList = &cobra.Command{
 	Use:   "list",
 	Short: "List images",
+	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 		client := cli.GetClient()
 
 		long, _ := cmd.Flags().GetBool("long")
 		human, _ := cmd.Flags().GetBool("human")
 		name, _ := cmd.Flags().GetString("name")
+		limit, _ := cmd.Flags().GetInt("limit")
+		pageSize, _ := cmd.Flags().GetUint("page-size")
+
 		query := url.Values{}
 		if name != "" {
 			query.Set("name", name)
 		}
-		images := client.Image.ImageList(query)
+		if pageSize != 0 {
+			query.Set("limit", fmt.Sprintf("%d", pageSize))
+		}
+		images := client.Image.ImageList(query, limit)
 		dataTable := cli.DataListTable{
 			ShortHeaders: []string{"Id", "Name", "Status", "Size"},
 			LongHeaders: []string{
@@ -79,6 +86,8 @@ var ImageShow = &cobra.Command{
 func init() {
 	ImageList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	ImageList.Flags().StringP("name", "n", "", "Search by image name")
+	ImageList.Flags().Uint("page-size", 0, "Number of images to request in each paginated request")
+	ImageList.Flags().Int("limit", 0, "Maximum number of images to get")
 
 	Image.PersistentFlags().Bool("human", false, "Human size")
 
