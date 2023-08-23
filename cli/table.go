@@ -83,6 +83,11 @@ func (dataTable *DataListTable) AddItems(items interface{}) {
 		dataTable.Items = append(dataTable.Items, value.Index(i).Interface())
 	}
 }
+func (dataTable *DataListTable) CleanItems() {
+	if len(dataTable.Items) > 0 {
+		dataTable.Items = []interface{}{}
+	}
+}
 func (dataTable DataListTable) Print(long bool) {
 	tableWriter := table.NewWriter()
 	tableWriter.SetStyle(table.StyleLight)

@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"os/exec"
 
 	"github.com/howeyc/gopass"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -53,25 +54,9 @@ var serverList = &cobra.Command{
 
 		long, _ := cmd.Flags().GetBool("long")
 		verbose, _ := cmd.Flags().GetBool("verbose")
-		servers, err := client.Compute.ServerListDetails(query)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		imageMap := map[string]imageLib.Image{}
-		if long && verbose {
-			for i, server := range servers {
-				if _, ok := imageMap[server.Image.Id]; !ok {
-					image, err := client.Image.ImageShow(server.Image.Id)
-					if err != nil {
-						logging.Warning("get image %s faield, %s", server.Image.Id, err)
-					} else {
-						imageMap[server.Image.Id] = *image
-					}
-				}
-				servers[i].Image.Name = imageMap[server.Image.Id].Name
-			}
-		}
+		watch, _ := cmd.Flags().GetBool("watch")
+		watchInterval, _ := cmd.Flags().GetUint16("watch-interval")
+
 		dataTable := cli.DataListTable{
 			ShortHeaders: []string{
 				"Id", "Name", "Status", "TaskState", "PowerState", "Addresses"},
@@ -129,8 +114,42 @@ var serverList = &cobra.Command{
 			dataTable.LongHeaders = append(dataTable.LongHeaders,
 				"Flavor:ram", "Flavor:vcpus", "Image")
 		}
-		dataTable.AddItems(servers)
-		dataTable.Print(long)
+
+		imageMap := map[string]imageLib.Image{}
+		for {
+			servers, err := client.Compute.ServerListDetails(query)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			if long && verbose {
+				for i, server := range servers {
+					if _, ok := imageMap[server.Image.Id]; !ok {
+						image, err := client.Image.ImageShow(server.Image.Id)
+						if err != nil {
+							logging.Warning("get image %s faield, %s", server.Image.Id, err)
+						} else {
+							imageMap[server.Image.Id] = *image
+						}
+					}
+					servers[i].Image.Name = imageMap[server.Image.Id].Name
+				}
+			}
+			dataTable.CleanItems()
+			dataTable.AddItems(servers)
+			if watch {
+				cmd := exec.Command("clear")
+				cmd.Stdout = os.Stdout
+				cmd.Run()
+				var timeNow = time.Now().Format("2006-01-02 15:04:05")
+				fmt.Printf("Every %ds\tNow: %s\n", watchInterval, timeNow)
+			}
+			dataTable.Print(long)
+			if ! watch {
+				break
+			}
+			time.Sleep(time.Second * time.Duration(watchInterval))
+		}
 	},
 }
 var serverShow = &cobra.Command{
@@ -576,6 +595,8 @@ func init() {
 	serverList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	serverList.Flags().BoolP("verbose", "v", false, "List verbose fields in output")
 	serverList.Flags().Bool("dsc", false, "Sort name by dsc")
+	serverList.Flags().Bool("watch", false, "List loop")
+	serverList.Flags().Uint16P("watch-interval", "i", 2, "Loop interval")
 	// Server create flags
 	serverCreate.Flags().StringP("flavor", "f", "", "Create server with this flavor")
 	serverCreate.Flags().StringP("image", "i", "", "Create server with this image")
