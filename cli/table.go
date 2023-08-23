@@ -9,7 +9,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 )
 
-// TODO: move to easygo
+// TODO: use easygo
 
 type Field struct {
 	Name string

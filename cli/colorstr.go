@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-// TODO: move to easygo
+// TODO: use easygo
 
 func GetRedText(text string) string {
 	return fmt.Sprintf("\033[1;31;40m%s\033[0m", text)
