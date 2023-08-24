@@ -94,7 +94,7 @@ func (client *V3AuthClient) TokenIssue() error {
 	}
 	resp, err := client.session.Request(req)
 	if err != nil {
-		return fmt.Errorf("token issue failed, %v %v", resp.BodyString(), err)
+		return fmt.Errorf("token issue failed, %v", err)
 	}
 	var resToken RespToken
 	json.Unmarshal(resp.Body, &resToken)

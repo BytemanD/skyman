@@ -71,7 +71,7 @@ var csList = &cobra.Command{
 				},
 				"State": func(item interface{}) interface{} {
 					p, _ := item.(compute.Service)
-					return cli.BaseColorFormatter.Format(p.Status)
+					return cli.BaseColorFormatter.Format(p.State)
 				},
 			},
 		}

@@ -2,6 +2,8 @@
 
 package identity
 
+import "strings"
+
 const DEFAULT_TOKEN_EXPIRE_SECOND = 3600
 
 type IdentityClientV3 struct {
@@ -18,6 +20,9 @@ func GetIdentityClientV3(authClient V3AuthClient) (*IdentityClientV3, error) {
 		TYPE_IDENTITY, INTERFACE_PUBLIC, authClient.RegionName)
 	if err != nil {
 		return nil, err
+	}
+	if !strings.HasPrefix(endpoint, "/v3") {
+		endpoint += "/v3"
 	}
 	return &IdentityClientV3{
 		RestfuleClient: RestfuleClient{
