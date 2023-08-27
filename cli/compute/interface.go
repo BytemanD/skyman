@@ -8,13 +8,14 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/compute"
 )
 
 var serverInterface = &cobra.Command{Use: "interface"}
 
 func printinterfaceAttachments(items []compute.InterfaceAttachment) {
-	dataTable := cli.DataListTable{
+	dataListTable := common.DataListTable{
 		ShortHeaders: []string{"PortState", "PortId", "NetId", "FixedIps", "MacAddr"},
 		HeaderLabel:  map[string]string{"FixedIps": "IP Addresses"},
 		Slots: map[string]func(item interface{}) interface{}{
@@ -24,8 +25,8 @@ func printinterfaceAttachments(items []compute.InterfaceAttachment) {
 			},
 		},
 	}
-	dataTable.AddItems(items)
-	dataTable.Print(false)
+	dataListTable.AddItems(items)
+	common.PrintDataListTable(dataListTable, false)
 }
 
 var interfaceList = &cobra.Command{

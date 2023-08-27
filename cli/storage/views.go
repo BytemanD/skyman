@@ -3,14 +3,14 @@ package storage
 import (
 	"strings"
 
-	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/storage"
 )
 
 func printVolume(volume storage.Volume) {
-	dataTable := cli.DataTable{
+	dataTable := common.DataTable{
 		Item: volume,
-		ShortFields: []cli.Field{
+		ShortFields: []common.Field{
 			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 			{Name: "Status"}, {Name: "TaskStatus"},
 			{Name: "Size"}, {Name: "Bootable"},

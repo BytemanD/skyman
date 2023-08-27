@@ -15,8 +15,14 @@ var (
 	CONF_FILE string
 )
 
+var (
+	FORMAT_TABLE_LIGHT = "table-light"
+	FORMAT_TABLE       = "table"
+)
+
 type ConfGroup struct {
-	Debug bool `yaml:"debug"`
+	Debug  bool   `yaml:"debug"`
+	Format string `yaml:"format"`
 
 	Auth   Auth   `yaml:"auth"`
 	Server Server `yaml:"server"`

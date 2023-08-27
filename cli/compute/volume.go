@@ -8,21 +8,22 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/compute"
 )
 
 var Volume = &cobra.Command{Use: "volume"}
 
 func printVolumeAttachments(items []compute.VolumeAttachment) {
-	dataTable := cli.DataListTable{
+	dataListTable := common.DataListTable{
 		ShortHeaders: []string{"Id", "VolumeId", "Device"},
 		HeaderLabel:  map[string]string{"Id": "Attachment Id"},
 		SortBy: []table.SortBy{
 			{Name: "Device", Mode: table.Asc},
 		},
 	}
-	dataTable.AddItems(items)
-	dataTable.Print(false)
+	dataListTable.AddItems(items)
+	common.PrintDataListTable(dataListTable, false)
 }
 
 var volumeList = &cobra.Command{

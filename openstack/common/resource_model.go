@@ -1,10 +1,10 @@
 package common
 
 type Resource struct {
-	Id          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Status      string `json:"status"`
+	Id          string `json:"id,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	Status      string `json:"status,omitempty"`
 	CreatedAt   string `json:"created_at,omitempty"`
 	UpdatedAt   string `json:"updated_at,omitempty"`
 	Created     string `json:"created,omitempty"`

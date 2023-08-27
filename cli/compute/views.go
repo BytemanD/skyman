@@ -5,15 +5,15 @@ import (
 	"os"
 	"strings"
 
-	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/compute"
 	"github.com/jedib0t/go-pretty/v6/list"
 )
 
 func printServer(server compute.Server) {
-	dataTable := cli.DataTable{
+	dataTable := common.DataTable{
 		Item: server,
-		ShortFields: []cli.Field{
+		ShortFields: []common.Field{
 			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 			{Name: "Flavor:original_name", Text: "Flavor:original_name"},
 			{Name: "Flavor:ram", Text: "Flavor:ram"},
@@ -77,9 +77,9 @@ func printServer(server compute.Server) {
 	dataTable.Print(false)
 }
 func printFlavor(server compute.Flavor) {
-	dataTable := cli.DataTable{
+	dataTable := common.DataTable{
 		Item: server,
-		ShortFields: []cli.Field{
+		ShortFields: []common.Field{
 			{Name: "Id"}, {Name: "Name"},
 			{Name: "Vcpus"}, {Name: "Ram"}, {Name: "Disk"}, {Name: "Swap"},
 			{Name: "RXTXFactor", Text: "RXTXFactor"},
@@ -132,33 +132,33 @@ func printAZInfo(azList []compute.AvailabilityZone) {
 					ServiceUpdatedAt: service.UpdatedAt,
 				}
 				if az.ZoneState.Available {
-					azHost.ZoneState = cli.BaseColorFormatter.Format("available")
+					azHost.ZoneState = common.BaseColorFormatter.Format("available")
 				} else {
-					azHost.ZoneState = cli.BaseColorFormatter.Format("disabled")
+					azHost.ZoneState = common.BaseColorFormatter.Format("disabled")
 				}
 				if service.Active {
-					azHost.ServiceStatus = cli.BaseColorFormatter.Format("enabled")
+					azHost.ServiceStatus = common.BaseColorFormatter.Format("enabled")
 				} else {
-					azHost.ServiceStatus = cli.BaseColorFormatter.Format("disabled")
+					azHost.ServiceStatus = common.BaseColorFormatter.Format("disabled")
 				}
 				if service.Available {
-					azHost.ServiceAvailable = cli.BaseColorFormatter.Format(":)")
+					azHost.ServiceAvailable = common.BaseColorFormatter.Format(":)")
 				} else {
-					azHost.ServiceAvailable = cli.BaseColorFormatter.Format("XXX")
+					azHost.ServiceAvailable = common.BaseColorFormatter.Format("XXX")
 				}
 				azHostList = append(azHostList, azHost)
 			}
 		}
 	}
 
-	table := cli.DataListTable{
+	table := common.DataListTable{
 		ShortHeaders: []string{"ZoneName", "ZoneState", "HostName", "ServiceName",
 			"ServiceStatus", "ServiceAvailable", "ServiceUpdatedAt"},
 		HeaderLabel: map[string]string{"ServiceUpdatedAt": "Updated At"},
 		Slots:       map[string]func(item interface{}) interface{}{},
 	}
 	table.AddItems(azHostList)
-	table.Print(false)
+	common.PrintDataListTable(table, false)
 }
 func printAZInfoTree(azList []compute.AvailabilityZone) {
 	tw := list.NewWriter()
@@ -168,9 +168,9 @@ func printAZInfoTree(azList []compute.AvailabilityZone) {
 	for _, az := range azList {
 		var zoneState string
 		if az.ZoneState.Available {
-			zoneState = cli.BaseColorFormatter.Format("available")
+			zoneState = common.BaseColorFormatter.Format("available")
 		} else {
-			zoneState = cli.BaseColorFormatter.Format("disabled")
+			zoneState = common.BaseColorFormatter.Format("disabled")
 		}
 		tw.AppendItem(fmt.Sprintf("%s %v", az.ZoneName, zoneState))
 		tw.Indent()
@@ -183,14 +183,14 @@ func printAZInfoTree(azList []compute.AvailabilityZone) {
 					serviceAvailable string
 				)
 				if service.Active {
-					serviceStatus = cli.BaseColorFormatter.Format("enabled")
+					serviceStatus = common.BaseColorFormatter.Format("enabled")
 				} else {
-					serviceStatus = cli.BaseColorFormatter.Format("disabled")
+					serviceStatus = common.BaseColorFormatter.Format("disabled")
 				}
 				if service.Available {
-					serviceAvailable = cli.BaseColorFormatter.Format(":)")
+					serviceAvailable = common.BaseColorFormatter.Format(":)")
 				} else {
-					serviceAvailable = cli.BaseColorFormatter.Format("XXX")
+					serviceAvailable = common.BaseColorFormatter.Format("XXX")
 				}
 				tw.AppendItem(
 					fmt.Sprintf("%-20s %-10s %s", serviceName, serviceStatus, serviceAvailable),

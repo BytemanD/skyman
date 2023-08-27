@@ -12,15 +12,15 @@ import (
 
 type Flavor struct {
 	Id           string     `json:"id,omitempty"`
-	Name         string     `json:"name"`
+	Name         string     `json:"name,omitempty"`
 	OriginalName string     `json:"original_name,omitempty"`
-	Ram          int        `json:"ram"`
-	Vcpus        int        `json:"vcpus"`
-	Disk         int        `json:"disk"`
-	Swap         int        `json:"swap"`
+	Ram          int        `json:"ram,omitempty"`
+	Vcpus        int        `json:"vcpus,omitempty"`
+	Disk         int        `json:"disk,omitempty"`
+	Swap         int        `json:"swap,omitempty"`
 	RXTXFactor   float32    `json:"rxtx_factor,omitempty"`
 	ExtraSpecs   ExtraSpecs `json:"extra_specs,omitempty"`
-	IsPublic     bool       `json:"os-flavor-access:is_public"`
+	IsPublic     bool       `json:"os-flavor-access:is_public,omitempty"`
 	Ephemeral    int        `json:"OS-FLV-DISABLED:ephemeral,omitempty"`
 	Disabled     bool       `json:"OS-FLV-DISABLED:disabled,omitempty"`
 }
@@ -41,9 +41,9 @@ func (extraSpecs ExtraSpecs) GetList() []string {
 }
 
 type Fault struct {
-	Message string `json:"message"`
-	Code    int    `json:"code"`
-	Details string `json:"details"`
+	Message string `json:"message,omitempty"`
+	Code    int    `json:"code,omitempty"`
+	Details string `json:"details,omitempty"`
 }
 
 func (fault *Fault) Marshal() string {
@@ -53,29 +53,29 @@ func (fault *Fault) Marshal() string {
 
 type Server struct {
 	common.Resource
-	Status       string               `json:"status"`
-	TaskState    string               `json:"OS-EXT-STS:task_state"`
-	PowerState   int                  `json:"OS-EXT-STS:power_state"`
-	VmState      string               `json:"OS-EXT-STS:vm_state"`
-	Host         string               `json:"OS-EXT-SRV-ATTR:host"`
-	AZ           string               `json:"OS-EXT-AZ:availability_zone"`
-	Flavor       Flavor               `json:"flavor"`
-	Image        Image                `json:"image"`
-	Fault        Fault                `json:"fault"`
-	Addresses    map[string][]Address `json:"addresses"`
-	InstanceName string               `json:"OS-EXT-SRV-ATTR:instance_name"`
-	ConfigDriver string               `json:"config_drive"`
-	Created      string               `json:"created"`
-	Updated      string               `json:"updated"`
-	TerminatedAt string               `json:"OS-SRV-USG:terminated_at"`
-	LaunchedAt   string               `json:"OS-SRV-USG:launched_at"`
-	UserId       string               `json:"user_id"`
-	Description  string               `json:"description"`
-	RootBdmType  string               `json:"root_bdm_type"`
+	Status       string               `json:"status,omitempty"`
+	TaskState    string               `json:"OS-EXT-STS:task_state,omitempty"`
+	PowerState   int                  `json:"OS-EXT-STS:power_state,omitempty"`
+	VmState      string               `json:"OS-EXT-STS:vm_state,omitempty"`
+	Host         string               `json:"OS-EXT-SRV-ATTR:host,omitempty"`
+	AZ           string               `json:"OS-EXT-AZ:availability_zone,omitempty"`
+	Flavor       Flavor               `json:"flavor,omitempty"`
+	Image        Image                `json:"image,omitempty"`
+	Fault        Fault                `json:"fault,omitempty"`
+	Addresses    map[string][]Address `json:"addresses,omitempty"`
+	InstanceName string               `json:"OS-EXT-SRV-ATTR:instance_name,omitempty"`
+	ConfigDriver string               `json:"config_drive,omitempty"`
+	Created      string               `json:"created,omitempty"`
+	Updated      string               `json:"updated,omitempty"`
+	TerminatedAt string               `json:"OS-SRV-USG:terminated_at,omitempty"`
+	LaunchedAt   string               `json:"OS-SRV-USG:launched_at,omitempty"`
+	UserId       string               `json:"user_id,omitempty"`
+	Description  string               `json:"description,omitempty"`
+	RootBdmType  string               `json:"root_bdm_type,omitempty"`
 }
 type Image struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Id   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 type Address struct {
 	MacAddr string `json:"OS-EXT-IPS-MAC:mac_addr"`

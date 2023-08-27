@@ -4,6 +4,7 @@ import (
 	"net/url"
 
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
@@ -24,7 +25,7 @@ var routerList = &cobra.Command{
 			query.Set("name", name)
 		}
 		routers := client.Networking.RouterList(query)
-		dataTable := cli.DataListTable{
+		dataListTable := common.DataListTable{
 			ShortHeaders: []string{"Id", "Name", "Status", "AdminStateUp", "Distributed", "HA"},
 			LongHeaders:  []string{"Routes", "ExternalGatewayinfo"},
 			SortBy: []table.SortBy{
@@ -37,8 +38,8 @@ var routerList = &cobra.Command{
 			Slots: map[string]func(item interface{}) interface{}{},
 		}
 
-		dataTable.AddItems(routers)
-		dataTable.Print(long)
+		dataListTable.AddItems(routers)
+		common.PrintDataListTable(dataListTable, long)
 	},
 }
 

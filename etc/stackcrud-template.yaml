@@ -1,4 +1,6 @@
 debug: false
+# 输出格式，可选值: default, table, table-light, json, yaml
+format: default
 
 # 认证信息
 auth:

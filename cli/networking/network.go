@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/networking"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -32,7 +33,7 @@ var networkList = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		dataTable := cli.DataListTable{
+		dataListTable := common.DataListTable{
 			ShortHeaders: []string{"Id", "Name", "Status", "AdminStateUp", "Subnets"},
 			LongHeaders: []string{
 				"Shared", "NetworkType", "AvailabilityZones"},
@@ -49,11 +50,12 @@ var networkList = &cobra.Command{
 				},
 			},
 		}
-		dataTable.AddItems(networks)
+		dataListTable.AddItems(networks)
 		if long {
-			dataTable.StyleSeparateRows = true
+			dataListTable.StyleSeparateRows = true
 		}
-		dataTable.Print(long)
+		common.PrintDataListTable(dataListTable, long)
+
 	},
 }
 

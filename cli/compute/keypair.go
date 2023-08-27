@@ -5,6 +5,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 )
 
 var Keypair = &cobra.Command{Use: "keypair"}
@@ -18,11 +19,11 @@ var keypairList = &cobra.Command{
 		if err != nil {
 			logging.Fatal("%s", err)
 		}
-		dataTable := cli.DataListTable{
+		dataListTable := common.DataListTable{
 			ShortHeaders: []string{"Name", "Type", "Fingerprint"},
 		}
-		dataTable.AddItems(keypairs)
-		dataTable.Print(false)
+		dataListTable.AddItems(keypairs)
+		common.PrintDataListTable(dataListTable, false)
 	},
 }
 

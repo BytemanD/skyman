@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/networking"
 )
 
@@ -41,7 +42,7 @@ var portList = &cobra.Command{
 			query.Set("router_id", router)
 		}
 		ports := client.Networking.PortList(query)
-		dataTable := cli.DataListTable{
+		dataListTable := common.DataListTable{
 			ShortHeaders: []string{"Id", "Name", "Status", "MACAddress",
 				"FixedIps", "DeviceOwner"},
 			LongHeaders: []string{"SecurityGroups"},
@@ -62,7 +63,7 @@ var portList = &cobra.Command{
 			},
 		}
 		if !long {
-			dataTable.Slots["FixedIps"] = func(item interface{}) interface{} {
+			dataListTable.Slots["FixedIps"] = func(item interface{}) interface{} {
 				p, _ := item.(networking.Port)
 				ips := []string{}
 				for _, fixedIp := range p.FixedIps {
@@ -71,7 +72,7 @@ var portList = &cobra.Command{
 				return strings.Join(ips, ", ")
 			}
 		} else {
-			dataTable.Slots["FixedIps"] = func(item interface{}) interface{} {
+			dataListTable.Slots["FixedIps"] = func(item interface{}) interface{} {
 				p, _ := item.(networking.Port)
 				ips := []string{}
 				for _, fixedIp := range p.FixedIps {
@@ -83,10 +84,10 @@ var portList = &cobra.Command{
 			}
 		}
 		if long {
-			dataTable.StyleSeparateRows = true
+			dataListTable.StyleSeparateRows = true
 		}
-		dataTable.AddItems(ports)
-		dataTable.Print(long)
+		dataListTable.AddItems(ports)
+		common.PrintDataListTable(dataListTable, long)
 	},
 }
 

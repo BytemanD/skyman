@@ -35,14 +35,13 @@ func main() {
 		Short:   "Golang Openstack Client",
 		Version: getVersion(),
 		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
-			debug, _ := cmd.Flags().GetBool("debug")
 			conf, _ := cmd.Flags().GetString("conf")
 			if err := common.LoadConfig(conf); err != nil {
 				fmt.Printf("load config failed, %v\n", err)
 				os.Exit(1)
 			}
 
-			if debug || common.CONF.Debug {
+			if common.CONF.Debug {
 				logging.BasicConfig(logging.LogConfig{Level: logging.DEBUG})
 			} else {
 				logging.BasicConfig(logging.LogConfig{Level: logging.INFO})
@@ -53,6 +52,11 @@ func main() {
 
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "显示Debug信息")
 	rootCmd.PersistentFlags().StringP("conf", "c", "", "配置文件")
+	rootCmd.PersistentFlags().String("format", "default",
+		fmt.Sprintf("格式, 支持的格式: %v", common.GetOutputFormats()))
+
+	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
+	viper.BindPFlag("format", rootCmd.PersistentFlags().Lookup("format"))
 
 	rootCmd.AddCommand(identity.Token)
 

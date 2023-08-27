@@ -8,6 +8,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/storage"
 	"github.com/spf13/cobra"
 )
@@ -27,7 +28,7 @@ var volumeList = &cobra.Command{
 			query.Set("name", name)
 		}
 		volumes := client.Storage.VolumeListDetail(query)
-		dataTable := cli.DataListTable{
+		dataListTable := common.DataListTable{
 			ShortHeaders: []string{
 				"Id", "Name", "Status", "Size", "Bootable", "Attachments"},
 			LongHeaders: []string{"VolumeType", "Metadata"},
@@ -43,10 +44,11 @@ var volumeList = &cobra.Command{
 			},
 		}
 		if long {
-			dataTable.StyleSeparateRows = true
+			dataListTable.StyleSeparateRows = true
 		}
-		dataTable.AddItems(volumes)
-		dataTable.Print(long)
+		dataListTable.AddItems(volumes)
+		common.PrintDataListTable(dataListTable, long)
+
 	},
 }
 

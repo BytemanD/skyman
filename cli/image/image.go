@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/image"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -35,7 +36,7 @@ var ImageList = &cobra.Command{
 			query.Set("limit", fmt.Sprintf("%d", pageSize))
 		}
 		images := client.Image.ImageList(query, limit)
-		dataTable := cli.DataListTable{
+		dataListTable := common.DataListTable{
 			ShortHeaders: []string{"Id", "Name", "Status", "Size"},
 			LongHeaders: []string{
 				"DiskFormat", "ContainerFormat", "Visibility", "Protected"},
@@ -48,13 +49,13 @@ var ImageList = &cobra.Command{
 			Slots: map[string]func(item interface{}) interface{}{},
 		}
 		if human {
-			dataTable.Slots["Size"] = func(item interface{}) interface{} {
+			dataListTable.Slots["Size"] = func(item interface{}) interface{} {
 				p, _ := item.(image.Image)
 				return p.HumanSize()
 			}
 		}
-		dataTable.AddItems(images)
-		dataTable.Print(long)
+		dataListTable.AddItems(images)
+		common.PrintDataListTable(dataListTable, long)
 	},
 }
 var ImageShow = &cobra.Command{

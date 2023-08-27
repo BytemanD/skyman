@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/identity"
 )
 
@@ -17,9 +18,9 @@ var tokenIssue = &cobra.Command{
 		client := cli.GetClient()
 
 		token := client.AuthClient.GetToken()
-		dataTable := cli.DataTable{
+		dataTable := common.DataTable{
 			Item: token,
-			ShortFields: []cli.Field{
+			ShortFields: []common.Field{
 				{Name: "ExpiresAt", Text: "Expires At"},
 				{Name: "TokenId", Text: "Id"},
 				{Name: "ProjectId", Text: "Project Id"},

@@ -8,6 +8,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 )
 
 var Service = &cobra.Command{Use: "service"}
@@ -32,13 +33,13 @@ var serviceList = &cobra.Command{
 		if err != nil {
 			logging.Fatal("get services failed, %s", err)
 		}
-		dataTable := cli.DataListTable{
+		dataListTable := common.DataListTable{
 			ShortHeaders: []string{"Id", "Name", "Type", "Enabled"},
 			LongHeaders:  []string{"Description"},
 			SortBy:       []table.SortBy{{Name: "Name", Mode: table.Asc}},
 		}
-		dataTable.AddItems(services)
-		dataTable.Print(long)
+		dataListTable.AddItems(services)
+		common.PrintDataListTable(dataListTable, long)
 	},
 }
 

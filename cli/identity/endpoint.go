@@ -9,6 +9,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/identity"
 )
 
@@ -51,7 +52,7 @@ var endpointList = &cobra.Command{
 		if err != nil {
 			logging.Fatal("get services failed, %s", err)
 		}
-		dataTable := cli.DataListTable{
+		dataListTable := common.DataListTable{
 			ShortHeaders: []string{"Id", "RegionId", "ServiceName", "Interface", "Url"},
 			SortBy:       []table.SortBy{{Name: "Region"}, {Name: "Service Name"}},
 			Slots: map[string]func(item interface{}) interface{}{
@@ -65,8 +66,8 @@ var endpointList = &cobra.Command{
 				},
 			},
 		}
-		dataTable.AddItems(services)
-		dataTable.Print(long)
+		dataListTable.AddItems(services)
+		common.PrintDataListTable(dataListTable, long)
 	},
 }
 

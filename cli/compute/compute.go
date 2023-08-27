@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/compute"
 )
 
@@ -16,9 +17,9 @@ var Compute = &cobra.Command{Use: "compute"}
 var computeService = &cobra.Command{Use: "service"}
 
 func printServiceTable(item interface{}) {
-	dataTable := cli.DataTable{
+	dataTable := common.DataTable{
 		Item: item,
-		ShortFields: []cli.Field{
+		ShortFields: []common.Field{
 			{Name: "Id"}, {Name: "Binary"}, {Name: "Host"},
 			{Name: "Status"}, {Name: "State"},
 			{Name: "ForcedDown", Text: "Forced Down"},
@@ -27,11 +28,11 @@ func printServiceTable(item interface{}) {
 		Slots: map[string]func(item interface{}) interface{}{
 			"Status": func(item interface{}) interface{} {
 				p, _ := (item).(compute.Service)
-				return cli.BaseColorFormatter.Format(p.Status)
+				return common.BaseColorFormatter.Format(p.Status)
 			},
 			"State": func(item interface{}) interface{} {
 				p, _ := item.(compute.Service)
-				return cli.BaseColorFormatter.Format(p.State)
+				return common.BaseColorFormatter.Format(p.State)
 			},
 		},
 	}
@@ -56,7 +57,7 @@ var csList = &cobra.Command{
 			query.Set("host", host)
 		}
 		services := client.Compute.ServiceList(query)
-		dataTable := cli.DataListTable{
+		dataTable := common.DataListTable{
 			ShortHeaders: []string{
 				"Id", "Binary", "Host", "Zone", "Status", "State", "UpdatedAt"},
 			LongHeaders: []string{
@@ -64,19 +65,10 @@ var csList = &cobra.Command{
 			SortBy: []table.SortBy{
 				{Name: "Name", Mode: table.Asc},
 			},
-			Slots: map[string]func(item interface{}) interface{}{
-				"Status": func(item interface{}) interface{} {
-					p, _ := (item).(compute.Service)
-					return cli.BaseColorFormatter.Format(p.Status)
-				},
-				"State": func(item interface{}) interface{} {
-					p, _ := item.(compute.Service)
-					return cli.BaseColorFormatter.Format(p.State)
-				},
-			},
+			AutoFormat: []string{"Status", "State"},
 		}
 		dataTable.AddItems(services)
-		dataTable.Print(long)
+		common.PrintDataListTable(dataTable, long)
 	},
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 )
 
 var Console = &cobra.Command{Use: "console"}
@@ -52,9 +53,9 @@ var consoleUrl = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		dataTable := cli.DataTable{
+		dataTable := common.DataTable{
 			Item:        *console,
-			ShortFields: []cli.Field{{Name: "Type"}, {Name: "Url"}},
+			ShortFields: []common.Field{{Name: "Type"}, {Name: "Url"}},
 		}
 		dataTable.Print(false)
 	},

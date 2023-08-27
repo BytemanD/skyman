@@ -1,15 +1,20 @@
-package cli
+package common
 
 import (
 	"fmt"
 	"os"
 	"reflect"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 // TODO: use easygo
+
+var (
+	STYLE_LIGHT = "light"
+)
 
 type Field struct {
 	Name string
@@ -22,16 +27,19 @@ type DataTable struct {
 	Item        interface{}
 	Slots       map[string]func(item interface{}) interface{}
 	Title       string
+	Style       string
 }
 
 func (dataTable DataTable) Print(long bool) {
 	tableWriter := table.NewWriter()
-	tableWriter.SetStyle(table.StyleLight)
+	if dataTable.Style == STYLE_LIGHT {
+		tableWriter.SetStyle(table.StyleLight)
+		tableWriter.Style().Color.Header = text.Colors{text.FgBlue, text.Bold}
+		tableWriter.Style().Color.Border = text.Colors{text.FgBlue}
+		tableWriter.Style().Color.Separator = text.Colors{text.FgBlue}
+	}
 
 	tableWriter.Style().Format.Header = text.FormatDefault
-	tableWriter.Style().Color.Header = text.Colors{text.FgBlue, text.Bold}
-	tableWriter.Style().Color.Border = text.Colors{text.FgBlue}
-	tableWriter.Style().Color.Separator = text.Colors{text.FgBlue}
 	tableWriter.SetOutputMirror(os.Stdout)
 
 	headerRow := table.Row{"Field", "Value"}
@@ -71,10 +79,12 @@ type DataListTable struct {
 	HeaderLabel       map[string]string
 	Items             []interface{}
 	SortBy            []table.SortBy
+	AutoFormat        []string
 	ColumnConfigs     []table.ColumnConfig
 	Slots             map[string]func(item interface{}) interface{}
 	Title             string
 	StyleSeparateRows bool
+	Style             string
 }
 
 func (dataTable *DataListTable) AddItems(items interface{}) {
@@ -88,14 +98,19 @@ func (dataTable *DataListTable) CleanItems() {
 		dataTable.Items = []interface{}{}
 	}
 }
+func (dataTable *DataListTable) SetStyleLight() {
+	dataTable.Style = STYLE_LIGHT
+}
 func (dataTable DataListTable) Print(long bool) {
 	tableWriter := table.NewWriter()
-	tableWriter.SetStyle(table.StyleLight)
+	if dataTable.Style == STYLE_LIGHT {
+		tableWriter.SetStyle(table.StyleLight)
+		tableWriter.Style().Color.Header = text.Colors{text.FgBlue, text.Bold}
+		tableWriter.Style().Color.Border = text.Colors{text.FgBlue}
+		tableWriter.Style().Color.Separator = text.Colors{text.FgBlue}
+	}
 
 	tableWriter.Style().Format.Header = text.FormatDefault
-	tableWriter.Style().Color.Header = text.Colors{text.FgBlue, text.Bold}
-	tableWriter.Style().Color.Border = text.Colors{text.FgBlue}
-	tableWriter.Style().Color.Separator = text.Colors{text.FgBlue}
 	tableWriter.Style().Options.SeparateRows = dataTable.StyleSeparateRows
 	tableWriter.SortBy(dataTable.SortBy)
 	tableWriter.SetColumnConfigs(dataTable.ColumnConfigs)
@@ -128,6 +143,11 @@ func (dataTable DataListTable) Print(long bool) {
 			} else {
 				value = reflectValue.FieldByName(name)
 			}
+			for _, s := range dataTable.AutoFormat {
+				if s == name {
+					value = dataTable.FormatString(fmt.Sprint(value))
+				}
+			}
 			row = append(row, value)
 		}
 		tableWriter.AppendRow(row)
@@ -141,14 +161,26 @@ func (dataTable DataListTable) Print(long bool) {
 	fmt.Printf("Total items: %d\n", len(dataTable.Items))
 }
 
-func splitTitle(s string) string {
-	newStr := ""
-	for _, c := range s {
-		if c < 91 && newStr != "" {
-			newStr += " " + string(c)
-		} else {
-			newStr += string(c)
-		}
+func (dataTable DataListTable) PrintJson() {
+	output, err := GetIndentJson(dataTable.Items)
+	if err != nil {
+		logging.Fatal("print json failed, %s", err)
 	}
-	return newStr
+	fmt.Println(output)
+}
+
+func (dataTable DataListTable) PrintYaml() {
+	output, err := GetYaml(dataTable.Items)
+	if err != nil {
+		logging.Fatal("print json failed, %s", err)
+	}
+	fmt.Println(output)
+}
+
+func (dataTable DataListTable) FormatString(s string) string {
+	if dataTable.Style == STYLE_LIGHT {
+		return BaseColorFormatter.Format(s)
+	} else {
+		return s
+	}
 }

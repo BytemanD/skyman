@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 )
 
 var serverAction = &cobra.Command{Use: "action"}
@@ -24,7 +25,7 @@ var actionList = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		dataTable := cli.DataListTable{
+		dataTable := common.DataListTable{
 			ShortHeaders: []string{"Action", "RequestId", "StartTime", "Message"},
 			LongHeaders:  []string{"ProjectId", "UserId"},
 			SortBy: []table.SortBy{
@@ -32,7 +33,7 @@ var actionList = &cobra.Command{
 			},
 		}
 		dataTable.AddItems(actions)
-		dataTable.Print(long)
+		common.PrintDataListTable(dataTable, long)
 	},
 }
 
@@ -50,7 +51,7 @@ var actionShow = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		dataTable := cli.DataListTable{
+		dataTable := common.DataListTable{
 			Title:        fmt.Sprintf("Action: %s", action.Action),
 			ShortHeaders: []string{"Event", "Host", "StartTime", "FinishTime", "Result"},
 			LongHeaders:  []string{"Host"},
@@ -63,7 +64,7 @@ var actionShow = &cobra.Command{
 			}
 		}
 		dataTable.AddItems(action.Events)
-		dataTable.Print(long)
+		common.PrintDataListTable(dataTable, long)
 		if long {
 			for k, v := range tracbackMap {
 				fmt.Printf("Event %s tracback:\n", k)

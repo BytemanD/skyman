@@ -1,14 +1,14 @@
 package image
 
 import (
-	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/image"
 )
 
 func printImage(img image.Image, human bool) {
-	dataTable := cli.DataTable{
+	dataTable := common.DataTable{
 		Item: img,
-		ShortFields: []cli.Field{
+		ShortFields: []common.Field{
 			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 			{Name: "Checksum"},
 			{Name: "Schema"},

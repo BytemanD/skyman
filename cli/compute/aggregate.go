@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/compute"
 )
 
@@ -24,7 +25,7 @@ var aggList = &cobra.Command{
 		aggregates, err := client.Compute.AggregateList(nil)
 		cli.ExitIfError(err)
 
-		dataTable := cli.DataListTable{
+		dataTable := common.DataListTable{
 			ShortHeaders: []string{"Id", "Name", "AvailabilityZone"},
 			LongHeaders:  []string{"HostNum", "Metadata"},
 			SortBy:       []table.SortBy{{Name: "Name", Mode: table.Asc}},
@@ -51,7 +52,7 @@ var aggList = &cobra.Command{
 			filteredAggs = aggregates
 		}
 		dataTable.AddItems(filteredAggs)
-		dataTable.Print(long)
+		common.PrintDataListTable(dataTable, long)
 	},
 }
 var aggShow = &cobra.Command{
@@ -64,9 +65,9 @@ var aggShow = &cobra.Command{
 		client := cli.GetClient()
 		aggregate, err := client.Compute.AggregateShow(agg)
 		cli.ExitIfError(err)
-		dataTable := cli.DataTable{
+		dataTable := common.DataTable{
 			Item: *aggregate,
-			ShortFields: []cli.Field{
+			ShortFields: []common.Field{
 				{Name: "Id"}, {Name: "Name"}, {Name: "AvailabilityZone"},
 				{Name: "Hosts"}, {Name: "Metadata"},
 				{Name: "CreatedAt"}, {Name: "UpdatedAt"},

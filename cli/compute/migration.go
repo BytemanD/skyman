@@ -8,7 +8,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
-	"github.com/BytemanD/stackcrud/openstack/compute"
+	"github.com/BytemanD/stackcrud/common"
 )
 
 var Migration = &cobra.Command{Use: "migration"}
@@ -42,7 +42,7 @@ var migrationList = &cobra.Command{
 		if err != nil {
 			logging.Fatal("%s", err)
 		}
-		dataTable := cli.DataListTable{
+		dataListTable := common.DataListTable{
 			ShortHeaders: []string{
 				"Id", "MigrationType", "Status", "SourceNode", "SourceCompute",
 				"DestNode", "DestCompute", "InstanceUUID",
@@ -56,16 +56,11 @@ var migrationList = &cobra.Command{
 				"OldInstanceTypeId": "Old Flavor",
 				"NewInstanceTypeId": "New Flavor",
 			},
-			SortBy: []table.SortBy{{Name: "Id", Mode: table.Asc}},
-			Slots: map[string]func(item interface{}) interface{}{
-				"Status": func(item interface{}) interface{} {
-					p, _ := item.(compute.Migration)
-					return cli.BaseColorFormatter.Format(p.Status)
-				},
-			},
+			SortBy:     []table.SortBy{{Name: "Id", Mode: table.Asc}},
+			AutoFormat: []string{"Status"},
 		}
-		dataTable.AddItems(migrations)
-		dataTable.Print(long)
+		dataListTable.AddItems(migrations)
+		common.PrintDataListTable(dataListTable, long)
 	},
 }
 

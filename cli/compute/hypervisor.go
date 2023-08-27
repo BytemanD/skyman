@@ -7,6 +7,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 )
 
 var Hypervisor = &cobra.Command{Use: "hypervisor"}
@@ -32,15 +33,16 @@ var hypervisorList = &cobra.Command{
 		if err != nil {
 			logging.Fatal("%s", err)
 		}
-		dataTable := cli.DataListTable{
+		dataListTable := common.DataListTable{
 			ShortHeaders: []string{
 				"Id", "Hostname", "HostIp", "Status", "State"},
 			LongHeaders: []string{
 				"Type", "Version", "Vcpus", "VcpusUsed",
 				"MemoryMB", "MemoryMBUsed"},
 		}
-		dataTable.AddItems(hypervisors)
-		dataTable.Print(long)
+		dataListTable.AddItems(hypervisors)
+		dataListTable.Print(long)
+		common.PrintDataListTable(dataListTable, long)
 	},
 }
 

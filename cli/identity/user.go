@@ -7,6 +7,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 )
 
 var User = &cobra.Command{Use: "user"}
@@ -21,7 +22,7 @@ var userList = &cobra.Command{
 
 		client := cli.GetClient()
 
-		dataTable := cli.DataListTable{
+		dataListTable := common.DataListTable{
 			ShortHeaders: []string{"Id", "Name"},
 			LongHeaders:  []string{"Project", "DomainId", "Description", "Email", "Enabled"},
 			SortBy:       []table.SortBy{{Name: "Region"}, {Name: "Service Name"}},
@@ -31,15 +32,15 @@ var userList = &cobra.Command{
 			if err != nil {
 				logging.Fatal("get users failed, %s", err)
 			}
-			dataTable.AddItems(users)
+			dataListTable.AddItems(users)
 		} else {
 			users, err := client.Identity.UserListByProjectId(project)
 			if err != nil {
 				logging.Fatal("get users failed, %s", err)
 			}
-			dataTable.AddItems(users)
+			dataListTable.AddItems(users)
 		}
-		dataTable.Print(long)
+		common.PrintDataListTable(dataListTable, long)
 	},
 }
 

@@ -12,6 +12,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
+	libCommon "github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/common"
 	"github.com/BytemanD/stackcrud/openstack/compute"
 )
@@ -55,7 +56,7 @@ var flavorList = &cobra.Command{
 		} else {
 			filteredFlavors = flavors
 		}
-		dataTable := cli.DataListTable{
+		dataListTable := libCommon.DataListTable{
 			ShortHeaders: []string{
 				"Id", "Name", "Vcpus", "Ram", "Disk", "Ephemeral", "IsPublic"},
 			LongHeaders: []string{
@@ -77,12 +78,12 @@ var flavorList = &cobra.Command{
 				}
 				filteredFlavors[i].ExtraSpecs = extraSpecs
 			}
-			dataTable.StyleSeparateRows = true
+			dataListTable.StyleSeparateRows = true
 		}
 		for _, flavor := range filteredFlavors {
-			dataTable.Items = append(dataTable.Items, flavor)
+			dataListTable.Items = append(dataListTable.Items, flavor)
 		}
-		dataTable.Print(long)
+		libCommon.PrintDataListTable(dataListTable, long)
 	},
 }
 var flavorShow = &cobra.Command{

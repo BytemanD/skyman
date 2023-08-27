@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
-	"os/exec"
 
 	"github.com/howeyc/gopass"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -57,7 +57,7 @@ var serverList = &cobra.Command{
 		watch, _ := cmd.Flags().GetBool("watch")
 		watchInterval, _ := cmd.Flags().GetUint16("watch-interval")
 
-		dataTable := cli.DataListTable{
+		dataTable := common.DataListTable{
 			ShortHeaders: []string{
 				"Id", "Name", "Status", "TaskState", "PowerState", "Addresses"},
 			LongHeaders: []string{
@@ -72,10 +72,11 @@ var serverList = &cobra.Command{
 				{Name: "Name", Mode: table.Asc},
 				{Name: "Id", Mode: table.Asc},
 			},
+			AutoFormat: []string{"PowerState", "State", "Status"},
 			Slots: map[string]func(item interface{}) interface{}{
 				"PowerState": func(item interface{}) interface{} {
 					p, _ := (item).(compute.Server)
-					return cli.BaseColorFormatter.Format(p.GetPowerState())
+					return p.GetPowerState()
 				},
 				"Addresses": func(item interface{}) interface{} {
 					p, _ := (item).(compute.Server)
@@ -97,11 +98,10 @@ var serverList = &cobra.Command{
 					p, _ := (item).(compute.Server)
 					return p.Image.Name
 				},
-				"Status": func(item interface{}) interface{} {
-					p, _ := item.(compute.Server)
-					return cli.BaseColorFormatter.Format(p.Status)
-				},
 			},
+		}
+		if common.CONF.Format == "table-light" {
+			dataTable.SetStyleLight()
 		}
 		if dsc {
 			dataTable.SortBy[0].Mode = table.Dsc
@@ -144,8 +144,8 @@ var serverList = &cobra.Command{
 				var timeNow = time.Now().Format("2006-01-02 15:04:05")
 				fmt.Printf("Every %ds\tNow: %s\n", watchInterval, timeNow)
 			}
-			dataTable.Print(long)
-			if ! watch {
+			common.PrintDataListTable(dataTable, long)
+			if !watch {
 				break
 			}
 			time.Sleep(time.Second * time.Duration(watchInterval))
