@@ -24,6 +24,7 @@ var hypervisorList = &cobra.Command{
 
 		query := url.Values{}
 		if withServers {
+			// TODO
 			query.Set("with_servers", "true")
 		}
 		if name != "" {
@@ -33,16 +34,20 @@ var hypervisorList = &cobra.Command{
 		if err != nil {
 			logging.Fatal("%s", err)
 		}
-		dataListTable := common.DataListTable{
-			ShortHeaders: []string{
-				"Id", "Hostname", "HostIp", "Status", "State"},
-			LongHeaders: []string{
-				"Type", "Version", "Vcpus", "VcpusUsed",
-				"MemoryMB", "MemoryMBUsed"},
+		pt := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"}, {Name: "Hostname"}, {Name: "HostIp"},
+				{Name: "Status", AutoColor: true}, {Name: "State", AutoColor: true},
+			},
+			LongColumns: []common.Column{
+				{Name: "Type"}, {Name: "Version"},
+				{Name: "Vcpus"}, {Name: "VcpusUsed"},
+				{Name: "MemoryMB", Text: "Memory(MB)"},
+				{Name: "MemoryMBUsed", Text: "MemoryUsed(MB)"},
+			},
 		}
-		dataListTable.AddItems(hypervisors)
-		dataListTable.Print(long)
-		common.PrintDataListTable(dataListTable, long)
+		pt.AddItems(hypervisors)
+		common.PrintPrettyTable(pt, long)
 	},
 }
 

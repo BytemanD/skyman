@@ -22,23 +22,26 @@ type ColorFormater struct {
 	Red    []string
 }
 
+func containsText(stringList []string, s string) bool {
+	for _, str := range stringList {
+		if s == str {
+			return true
+		}
+	}
+	return false
+}
+
 func (cf ColorFormater) Format(text string) string {
-	for _, str := range cf.Green {
-		if text == str {
-			return GetGreenText(text)
-		}
+	switch {
+	case containsText(cf.Green, text):
+		return GetGreenText(text)
+	case containsText(cf.Yellow, text):
+		return GetYellowText(text)
+	case containsText(cf.Red, text):
+		return GetRedText(text)
+	default:
+		return text
 	}
-	for _, str := range cf.Yellow {
-		if text == str {
-			return GetYellowText(text)
-		}
-	}
-	for _, str := range cf.Red {
-		if text == str {
-			return GetRedText(text)
-		}
-	}
-	return text
 }
 
 var BaseColorFormatter ColorFormater

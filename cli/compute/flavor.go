@@ -7,13 +7,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
-	libCommon "github.com/BytemanD/stackcrud/common"
-	"github.com/BytemanD/stackcrud/openstack/common"
+	"github.com/BytemanD/stackcrud/common"
+	openstackCommon "github.com/BytemanD/stackcrud/openstack/common"
 	"github.com/BytemanD/stackcrud/openstack/compute"
 )
 
@@ -56,21 +55,25 @@ var flavorList = &cobra.Command{
 		} else {
 			filteredFlavors = flavors
 		}
-		dataListTable := libCommon.DataListTable{
-			ShortHeaders: []string{
-				"Id", "Name", "Vcpus", "Ram", "Disk", "Ephemeral", "IsPublic"},
-			LongHeaders: []string{
-				"Swap", "RXTXFactor", "ExtraSpecs"},
-			HeaderLabel: map[string]string{"RXTXFactor": "RXTX Factor"},
-			SortBy:      []table.SortBy{{Name: "Name", Mode: table.Asc}},
-			Slots: map[string]func(item interface{}) interface{}{
-				"ExtraSpecs": func(item interface{}) interface{} {
-					p, _ := (item).(compute.Flavor)
-					return strings.Join(p.ExtraSpecs.GetList(), "\n")
+		pt := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"}, {Name: "Name"},
+				{Name: "Vcpus"}, {Name: "Ram"}, {Name: "Disk"},
+				{Name: "Ephemeral"}, {Name: "IsPublic"},
+			},
+			LongColumns: []common.Column{
+				{Name: "Swap"}, {Name: "RXTXFactor", Text: "RXTX Factor"},
+				{Name: "ExtraSpecs",
+					Slot: func(item interface{}) interface{} {
+						p, _ := item.(compute.Flavor)
+						return strings.Join(p.ExtraSpecs.GetList(), "\n")
+					},
 				},
 			},
 		}
+
 		if long {
+			pt.StyleSeparateRows = true
 			for i, flavor := range filteredFlavors {
 				extraSpecs, err := client.Compute.FlavorExtraSpecsList(flavor.Id)
 				if err != nil {
@@ -78,12 +81,9 @@ var flavorList = &cobra.Command{
 				}
 				filteredFlavors[i].ExtraSpecs = extraSpecs
 			}
-			dataListTable.StyleSeparateRows = true
 		}
-		for _, flavor := range filteredFlavors {
-			dataListTable.Items = append(dataListTable.Items, flavor)
-		}
-		libCommon.PrintDataListTable(dataListTable, long)
+		pt.AddItems(filteredFlavors)
+		common.PrintPrettyTable(pt, long)
 	},
 }
 var flavorShow = &cobra.Command{
@@ -95,7 +95,7 @@ var flavorShow = &cobra.Command{
 		flavorId := args[0]
 		flavor, err := client.Compute.FlavorShowWithExtraSpecs(flavorId)
 		if err != nil {
-			if httpError, ok := err.(*common.HttpError); ok {
+			if httpError, ok := err.(*openstackCommon.HttpError); ok {
 				logging.Fatal("Show flavor %s failed, %s", flavorId, httpError.Message)
 			} else {
 				logging.Fatal("Show flavor %s failed, %v", flavorId, err)
@@ -114,7 +114,7 @@ var flavorDelete = &cobra.Command{
 		for _, flavorId := range args {
 			err := client.Compute.FlavorDelete(flavorId)
 			if err != nil {
-				if httpError, ok := err.(*common.HttpError); ok {
+				if httpError, ok := err.(*openstackCommon.HttpError); ok {
 					logging.Fatal("Delete flavor %s failed, %s", flavorId, httpError.Message)
 				} else {
 					logging.Fatal("Delete flavor %s failed, %v", flavorId, err)
