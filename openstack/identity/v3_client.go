@@ -2,7 +2,9 @@
 
 package identity
 
-import "strings"
+import (
+	"strings"
+)
 
 const DEFAULT_TOKEN_EXPIRE_SECOND = 3600
 
@@ -21,7 +23,7 @@ func GetIdentityClientV3(authClient V3AuthClient) (*IdentityClientV3, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !strings.HasPrefix(endpoint, "/v3") {
+	if !strings.HasSuffix(endpoint, "/v3") {
 		endpoint += "/v3"
 	}
 	return &IdentityClientV3{
