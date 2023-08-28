@@ -91,6 +91,41 @@ var portList = &cobra.Command{
 		common.PrintDataListTable(dataListTable, long)
 	},
 }
+var portShow = &cobra.Command{
+	Use:   "show <port>",
+	Short: "Show port",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		port, err := client.Networking.PortShow(args[0])
+		if err != nil {
+			common.LogError(err, "show port failed", true)
+		}
+		table := common.DataTable{
+			Item: *port,
+			ShortFields: []common.Field{
+				{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
+				{Name: "MACAddress", Text: "MAC Address"},
+				{Name: "BindingVnicType"},
+				{Name: "BindingVifType"},
+				{Name: "BindingDetails",
+					Slot: func(item interface{}) interface{} {
+						p, _ := item.(networking.Port)
+						return p.MarshalVifDetails()
+					},
+				},
+				{Name: "BindingHostId"},
+				{Name: "FixedIps"},
+				{Name: "DeviceOwner"}, {Name: "DeviceId"},
+				{Name: "QosPolicyId"}, {Name: "SecurityGroups"},
+				{Name: "RevsionNumber"},
+				{Name: "ProjectId"},
+				{Name: "CreatedAt"}, {Name: "UpdatedAt"},
+			},
+		}
+		table.Print(false)
+	},
+}
 var portDelete = &cobra.Command{
 	Use:   "delete <port> [port ...]",
 	Short: "Delete port(s)",
@@ -113,5 +148,5 @@ func init() {
 	portList.Flags().String("network", "", "Search by network")
 	portList.Flags().String("server", "", "Search by server")
 
-	Port.AddCommand(portList, portDelete)
+	Port.AddCommand(portList, portShow, portDelete)
 }

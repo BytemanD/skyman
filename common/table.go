@@ -19,15 +19,17 @@ var (
 type Field struct {
 	Name string
 	Text string
+	Slot func(item interface{}) interface{}
 }
 
 type DataTable struct {
 	ShortFields []Field
 	LongFields  []Field
 	Item        interface{}
-	Slots       map[string]func(item interface{}) interface{}
-	Title       string
-	Style       string
+	// 废弃，使用 Field.Slot
+	Slots map[string]func(item interface{}) interface{}
+	Title string
+	Style string
 }
 
 func (dataTable DataTable) Print(long bool) {
@@ -59,7 +61,9 @@ func (dataTable DataTable) Print(long bool) {
 		} else {
 			fieldLabel = field.Text
 		}
-		if _, ok := dataTable.Slots[field.Name]; ok {
+		if field.Slot != nil {
+			fieldValue = field.Slot(dataTable.Item)
+		} else if _, ok := dataTable.Slots[field.Name]; ok {
 			fieldValue = dataTable.Slots[field.Name](dataTable.Item)
 		} else {
 			fieldValue = reflectValue.FieldByName(field.Name)

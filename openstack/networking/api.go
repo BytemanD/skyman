@@ -16,12 +16,12 @@ func (client NeutronClientV2) RouterListByName(name string) []Router {
 	return client.RouterList(query)
 }
 func (client NeutronClientV2) RouterShow(id string) (*Router, error) {
-	router := Router{}
-	err := client.Show("routers", id, client.BaseHeaders, &router)
+	resp := map[string]*Router{"router": {}}
+	err := client.Show("routers", id, client.BaseHeaders, &resp)
 	if err != nil {
 		return nil, err
 	}
-	return &router, nil
+	return resp["router"], nil
 }
 func (client NeutronClientV2) RouterDelete(id string) error {
 	err := client.Delete("routers", id, client.BaseHeaders)
@@ -46,12 +46,12 @@ func (client NeutronClientV2) NetworkListByName(name string) ([]Network, error) 
 	return client.NetworkList(query)
 }
 func (client NeutronClientV2) NetworkShow(id string) (*Network, error) {
-	network := Network{}
-	err := client.Show("networks", id, client.BaseHeaders, &network)
+	resp := map[string]*Network{"network": {}}
+	err := client.Show("networks", id, client.BaseHeaders, &resp)
 	if err != nil {
 		return nil, err
 	}
-	return &network, nil
+	return resp["network"], nil
 }
 func (client NeutronClientV2) NetworkDelete(id string) error {
 	err := client.Delete("networks", id, client.BaseHeaders)
@@ -73,12 +73,12 @@ func (client NeutronClientV2) PortListByName(name string) []Port {
 	return client.PortList(query)
 }
 func (client NeutronClientV2) PortShow(id string) (*Port, error) {
-	port := Port{}
-	err := client.Show("ports", id, client.BaseHeaders, &port)
+	resp := map[string]*Port{"port": {}}
+	err := client.Show("ports", id, client.BaseHeaders, &resp)
 	if err != nil {
 		return nil, err
 	}
-	return &port, nil
+	return resp["port"], nil
 }
 func (client NeutronClientV2) PortDelete(id string) error {
 	err := client.Delete("ports", id, client.BaseHeaders)

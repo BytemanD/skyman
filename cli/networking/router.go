@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/stackcrud/cli"
-	"github.com/BytemanD/stackcrud/common"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
+
+	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
+	"github.com/BytemanD/stackcrud/openstack/networking"
 )
 
 var Router = &cobra.Command{Use: "router"}
@@ -44,6 +46,37 @@ var routerList = &cobra.Command{
 		common.PrintDataListTable(dataListTable, long)
 	},
 }
+var routerShow = &cobra.Command{
+	Use:   "show <router>",
+	Short: "Show router",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		router, err := client.Networking.RouterShow(args[0])
+		if err != nil {
+			common.LogError(err, "show router failed", true)
+		}
+		table := common.DataTable{
+			Item: *router,
+			ShortFields: []common.Field{
+				{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
+				{Name: "AdminStateUp"},
+				{Name: "Distributed"}, {Name: "HA", Text: "HA"},
+				{Name: "AdminStateUp"},
+				{Name: "ExternalGatewayinfo",
+					Slot: func(item interface{}) interface{} {
+						p, _ := item.(networking.Router)
+						return p.MarshalExternalGatewayInfo()
+					}},
+				{Name: "AvailabilityZones"},
+				{Name: "RevsionNumber"},
+				{Name: "ProjectId"},
+				{Name: "CreatedAt"},
+			},
+		}
+		table.Print(false)
+	},
+}
 var routerDelete = &cobra.Command{
 	Use:   "delete <router> [router ...]",
 	Short: "Delete router(s)",
@@ -62,7 +95,7 @@ var routerDelete = &cobra.Command{
 
 func init() {
 	routerList.Flags().BoolP("long", "l", false, "List additional fields in output")
-	routerList.Flags().StringP("name", "n", "", "Search by port name")
+	routerList.Flags().StringP("name", "n", "", "Search by router name")
 
-	Router.AddCommand(routerList, routerDelete)
+	Router.AddCommand(routerList, routerShow, routerDelete)
 }

@@ -73,10 +73,37 @@ var networkDelete = &cobra.Command{
 		}
 	},
 }
+var networkShow = &cobra.Command{
+	Use:   "show <network>",
+	Short: "Show network",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		network, err := client.Networking.NetworkShow(args[0])
+		if err != nil {
+			common.LogError(err, "show network failed", true)
+		}
+		table := common.DataTable{
+			Item: *network,
+			ShortFields: []common.Field{
+				{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
+				{Name: "NetworkType"},
+				{Name: "PhysicalNetwork"},
+				{Name: "Status"}, {Name: "AdminStateUp"},
+				{Name: "Shared"}, {Name: "Subnets"},
+				{Name: "Mtu"},
+				{Name: "ProjectId"},
+				{Name: "AvailabilityZones"},
+				{Name: "CreatedAt"},
+			},
+		}
+		table.Print(false)
+	},
+}
 
 func init() {
 	networkList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	networkList.Flags().StringP("name", "n", "", "Search by router name")
 
-	Network.AddCommand(networkList, networkDelete)
+	Network.AddCommand(networkList, networkShow, networkDelete)
 }
