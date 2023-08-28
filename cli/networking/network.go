@@ -97,7 +97,7 @@ var networkShow = &cobra.Command{
 				{Name: "CreatedAt"},
 			},
 		}
-		table.Print(false)
+		common.PrintDataTable(table)
 	},
 }
 

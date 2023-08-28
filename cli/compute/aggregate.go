@@ -84,8 +84,7 @@ var aggShow = &cobra.Command{
 				},
 			},
 		}
-
-		dataTable.Print(false)
+		common.PrintDataTable(dataTable)
 	},
 }
 

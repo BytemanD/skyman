@@ -14,7 +14,7 @@ import (
 func GetIndentJson(v interface{}) (string, error) {
 	jsonBytes, _ := json.Marshal(v)
 	var buffer bytes.Buffer
-	json.Indent(&buffer, jsonBytes, "", "  ")
+	json.Indent(&buffer, jsonBytes, "", "    ")
 	return buffer.String(), nil
 }
 func GetYaml(v interface{}) (string, error) {

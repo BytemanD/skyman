@@ -123,7 +123,7 @@ var portShow = &cobra.Command{
 				{Name: "CreatedAt"}, {Name: "UpdatedAt"},
 			},
 		}
-		table.Print(false)
+		common.PrintDataTable(table)
 	},
 }
 var portDelete = &cobra.Command{

@@ -76,6 +76,21 @@ func (dataTable DataTable) Print(long bool) {
 	}
 	tableWriter.Render()
 }
+func (dt DataTable) PrintJson() {
+	output, err := GetIndentJson(dt.Item)
+	if err != nil {
+		logging.Fatal("print json failed, %s", err)
+	}
+	fmt.Println(output)
+}
+
+func (dt DataTable) PrintYaml() {
+	output, err := GetYaml(dt.Item)
+	if err != nil {
+		logging.Fatal("print json failed, %s", err)
+	}
+	fmt.Println(output)
+}
 
 type DataListTable struct {
 	ShortHeaders      []string

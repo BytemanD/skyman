@@ -74,7 +74,7 @@ var routerShow = &cobra.Command{
 				{Name: "CreatedAt"},
 			},
 		}
-		table.Print(false)
+		common.PrintDataTable(table)
 	},
 }
 var routerDelete = &cobra.Command{

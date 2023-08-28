@@ -37,5 +37,5 @@ func printVolume(volume storage.Volume) {
 			},
 		},
 	}
-	dataTable.Print(false)
+	common.PrintDataTable(dataTable)
 }

@@ -637,12 +637,12 @@ var serverRegionLiveMigrate = &cobra.Command{
 			}
 			if dryRun {
 				table := common.DataTable{
+					Item: migrateResp,
 					ShortFields: []common.Field{
 						{Name: "AllowLiveMigrate"}, {Name: "Reason"},
 					},
 				}
-				table.Item = migrateResp
-				table.Print(false)
+				common.PrintDataTable(table)
 			}
 		}
 		if migrateErr != nil {
@@ -747,7 +747,7 @@ func init() {
 	serverMigrate.Flags().Bool("live", false, "Migrate running server.")
 	serverMigrate.Flags().String("host", "", "Destination host name.")
 	serverMigrate.Flags().Bool("block-migrate", false, "True in case of block_migration.")
-	
+
 	// server resize flags
 	serverResize.Flags().BoolP("wait", "w", false, "Wait server resize completed")
 

@@ -36,7 +36,7 @@ func printServiceTable(item interface{}) {
 			},
 		},
 	}
-	dataTable.Print(false)
+	common.PrintDataTable(dataTable)
 }
 
 var csList = &cobra.Command{

@@ -47,3 +47,19 @@ func PrintPrettyTable(table PrettyTable, long bool) {
 			GetOutputFormats())
 	}
 }
+func PrintDataTable(table DataTable) {
+	switch CONF.Format {
+	case TABLE, "default", "":
+		table.Print(true)
+	case TABLE_LIGHT:
+		table.Style = STYLE_LIGHT
+		table.Print(true)
+	case JSON:
+		table.PrintJson()
+	case YAML:
+		table.PrintYaml()
+	default:
+		logging.Fatal("invalid output format: %s, valid formats: %v", CONF.Format,
+			GetOutputFormats())
+	}
+}

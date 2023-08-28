@@ -36,5 +36,5 @@ func printImage(img image.Image, human bool) {
 			},
 		},
 	}
-	dataTable.Print(false)
+	common.PrintDataTable(dataTable)
 }

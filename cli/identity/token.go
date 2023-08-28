@@ -37,7 +37,7 @@ var tokenIssue = &cobra.Command{
 				},
 			},
 		}
-		dataTable.Print(false)
+		common.PrintDataTable(dataTable)
 	},
 }
 

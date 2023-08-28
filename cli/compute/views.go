@@ -74,7 +74,7 @@ func printServer(server compute.Server) {
 			},
 		},
 	}
-	dataTable.Print(false)
+	common.PrintDataTable(dataTable)
 }
 func printFlavor(server compute.Flavor) {
 	dataTable := common.DataTable{
@@ -107,7 +107,7 @@ func printFlavor(server compute.Flavor) {
 			},
 		},
 	}
-	dataTable.Print(false)
+	common.PrintDataTable(dataTable)
 }
 
 type AZHost struct {

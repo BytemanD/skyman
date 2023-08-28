@@ -57,7 +57,7 @@ var consoleUrl = &cobra.Command{
 			Item:        *console,
 			ShortFields: []common.Field{{Name: "Type"}, {Name: "Url"}},
 		}
-		dataTable.Print(false)
+		common.PrintDataTable(dataTable)
 	},
 }
 
