@@ -52,8 +52,8 @@ func main() {
 
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "显示Debug信息")
 	rootCmd.PersistentFlags().StringP("conf", "c", "", "配置文件")
-	rootCmd.PersistentFlags().String("format", "default",
-		fmt.Sprintf("格式, 支持的格式: %v", common.GetOutputFormats()))
+	rootCmd.PersistentFlags().StringP("format", "f", "default",
+		fmt.Sprintf("格式, 支持的格式: %s", common.GetOutputFormats()))
 
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	viper.BindPFlag("format", rootCmd.PersistentFlags().Lookup("format"))

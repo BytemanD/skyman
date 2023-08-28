@@ -344,6 +344,35 @@ func (client ComputeClientV2) ServerActionShow(id string, requestId string) (
 	instanceAction := body["instanceAction"]
 	return &instanceAction, nil
 }
+func (client ComputeClientV2) serverRegionLiveMigrate(id string, destRegion string, blockMigrate bool, dryRun bool, destHost string) (*RegionMigrateResp, error) {
+	data := map[string]interface{}{
+		"region":          destRegion,
+		"block_migration": blockMigrate,
+		"dry_run":         dryRun,
+	}
+	if destHost != "" {
+		data["host"] = destHost
+	}
+	resp := RegionMigrateResp{}
+	err := client.ServerAction("os-migrateLive-region", id, data, &resp)
+	if err != nil {
+		return &resp, err
+	}
+	return &resp, nil
+}
+func (client ComputeClientV2) ServerRegionLiveMigrate(id string, destRegion string, dryRun bool) (*RegionMigrateResp, error) {
+	return client.serverRegionLiveMigrate(id, destRegion, true, dryRun, "")
+}
+func (client ComputeClientV2) ServerRegionLiveMigrateTo(id string, destRegion string, dryRun bool, destHost string) (*RegionMigrateResp, error) {
+	return client.serverRegionLiveMigrate(id, destRegion, true, dryRun, destHost)
+}
+func (client ComputeClientV2) ServerMigrationList(id string, query url.Values) ([]Migration, error) {
+	respBody := map[string][]Migration{"migrations": {}}
+	client.List(fmt.Sprintf("servers/%s/migrations", id), query, client.BaseHeaders, &respBody)
+	return respBody["migrations"], nil
+}
+
+// http://szbcec.vip.cmss:8774/v2.1/servers/6b785423-1d17-4756-86a5-123a7280a81e/migrations?status=all&latest=True
 
 // flavor api
 func (client ComputeClientV2) FlavorList(query netUrl.Values) ([]Flavor, error) {

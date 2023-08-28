@@ -585,6 +585,112 @@ var serverSetPassword = &cobra.Command{
 		}
 	},
 }
+var serverRegion = &cobra.Command{Use: "region"}
+var serverRegionLiveMigrate = &cobra.Command{
+	Use:   "migrate <server> <dest region>",
+	Short: "Migrate server to another region",
+	Args:  cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		serverId := args[0]
+		destRegion := args[1]
+		live, _ := cmd.Flags().GetBool("live")
+		host, _ := cmd.Flags().GetString("host")
+
+		dryRun, _ := cmd.Flags().GetBool("dry-run")
+
+		if !live {
+			logging.Fatal("Only support live migrate now, please use option --live")
+		}
+		client := cli.GetClient()
+		var (
+			migrateErr  error
+			migrateResp compute.RegionMigrateResp
+		)
+		if live {
+			if host == "" {
+				resp, err := client.Compute.ServerRegionLiveMigrate(serverId, destRegion, dryRun)
+				migrateResp = *resp
+				migrateErr = err
+			} else {
+				resp, err := client.Compute.ServerRegionLiveMigrateTo(serverId, destRegion, dryRun, host)
+				migrateResp = *resp
+				migrateErr = err
+			}
+			if dryRun {
+				table := common.DataTable{
+					ShortFields: []common.Field{
+						{Name: "AllowLiveMigrate"}, {Name: "Reason"},
+					},
+				}
+				table.Item = migrateResp
+				table.Print(false)
+			}
+		}
+		if migrateErr != nil {
+			logging.Fatal("Reqeust to migrate server failed, %v", migrateErr)
+		} else {
+			fmt.Printf("Requested to migrate server: %s\n", args[0])
+		}
+	},
+}
+var serverMigration = &cobra.Command{Use: "migration"}
+var serverMigrationList = &cobra.Command{
+	Use:   "list <server>",
+	Short: "List server migrations",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		serverId := args[0]
+		status, _ := cmd.Flags().GetString("status")
+
+		latest, _ := cmd.Flags().GetBool("latest")
+		long, _ := cmd.Flags().GetBool("long")
+		watch, _ := cmd.Flags().GetBool("watch")
+		watchInterval, _ := cmd.Flags().GetUint16("watch-interval")
+		migrateType, _ := cmd.Flags().GetString("type")
+
+		query := url.Values{}
+		if status != "" {
+			query.Set("status", status)
+		}
+		if latest {
+			query.Set("latest", "true")
+		}
+		if migrateType != "" {
+			query.Set("type", migrateType)
+		}
+		client := cli.GetClient()
+		table := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"}, {Name: "Status"},
+				{Name: "SourceNode"}, {Name: "SourceCompute"},
+				{Name: "DestNode"}, {Name: "DestCompute"},
+			},
+			LongColumns: []common.Column{
+				{Name: "DestHost"}, {Name: "CreatedAt"}, {Name: "UpdatedAt"},
+			},
+		}
+		for {
+			migrations, err := client.Compute.ServerMigrationList(serverId, query)
+			if err != nil {
+				logging.Fatal("Reqeust to list server migration failed, %v", err)
+			}
+			table.CleanItems()
+			table.AddItems(migrations)
+			if watch {
+				cmd := exec.Command("clear")
+				cmd.Stdout = os.Stdout
+				cmd.Run()
+				var timeNow = time.Now().Format("2006-01-02 15:04:05")
+				fmt.Printf("Every %ds\tNow: %s\n", watchInterval, timeNow)
+			}
+			common.PrintPrettyTable(table, long)
+			if !watch {
+				break
+			}
+			time.Sleep(time.Second * time.Duration(watchInterval))
+		}
+	},
+}
 
 func init() {
 	// Server list flags
@@ -598,7 +704,7 @@ func init() {
 	serverList.Flags().Bool("watch", false, "List loop")
 	serverList.Flags().Uint16P("watch-interval", "i", 2, "Loop interval")
 	// Server create flags
-	serverCreate.Flags().StringP("flavor", "f", "", "Create server with this flavor")
+	serverCreate.Flags().String("flavor", "", "Create server with this flavor")
 	serverCreate.Flags().StringP("image", "i", "", "Create server with this image")
 	serverCreate.Flags().StringP("nic", "n", "",
 		"Create a NIC on the server. NIC format:\n"+
@@ -616,7 +722,6 @@ func init() {
 	viper.BindPFlag("server.availabilityZone", serverCreate.Flags().Lookup("az"))
 
 	// server reboot flags
-
 	serverReboot.Flags().Bool("hard", false, "Perform a hard reboot")
 
 	// server migrate flags
@@ -624,7 +729,25 @@ func init() {
 	serverMigrate.Flags().String("host", "", "Destination host name.")
 	serverMigrate.Flags().Bool("block-migrate", false, "True in case of block_migration.")
 
+	// server resize flags
 	serverResize.Flags().BoolP("wait", "w", false, "Wait server resize completed")
+
+	// server region migrate flags
+	serverRegionLiveMigrate.Flags().Bool("live", false, "Migrate running server.")
+	serverRegionLiveMigrate.Flags().String("host", "", "Destination host name.")
+	// serverRegionLiveMigrate.Flags().Bool("block-migrate", false, "True in case of block_migration.")
+	serverRegionLiveMigrate.Flags().Bool("dry-run", false, "True in case of dry run.")
+	serverRegion.AddCommand(serverRegionLiveMigrate)
+
+	// server migrations flags
+	serverMigrationList.Flags().String("status", "", "List migration matched by status")
+	serverMigrationList.Flags().String("type", "", "List migration matched by type")
+	serverMigrationList.Flags().Bool("latest", false, "List latest migrations")
+	serverMigrationList.Flags().Bool("watch", false, "List additional fields in output")
+	serverMigrationList.Flags().Uint16P("watch-interval", "i", 2, "Loop interval")
+	serverMigrationList.Flags().BoolP("long", "l", false, "List loop")
+
+	serverMigration.AddCommand(serverMigrationList)
 
 	// Server prune flags
 	serverPrune.Flags().StringP("name", "n", "", "Search by server name")
@@ -642,5 +765,7 @@ func init() {
 		serverSet, serverStop, serverStart, serverReboot,
 		serverPause, serverUnpause, serverShelve, serverUnshelve,
 		serverSuspend, serverResume, serverResize, serverRebuild,
-		serverMigrate)
+		serverMigrate,
+		serverMigration,
+		serverRegion)
 }

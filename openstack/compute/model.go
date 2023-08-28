@@ -289,3 +289,8 @@ func (agg Aggregate) MarshalMetadata() string {
 	}
 	return string(data)
 }
+
+type RegionMigrateResp struct {
+	AllowLiveMigrate bool   `json:"allow_live_migrate"`
+	Reason           string `json:"reason"`
+}
