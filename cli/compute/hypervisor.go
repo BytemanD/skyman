@@ -43,7 +43,7 @@ var hypervisorList = &cobra.Command{
 				{Name: "Type"}, {Name: "Version"},
 				{Name: "Vcpus"}, {Name: "VcpusUsed"},
 				{Name: "MemoryMB", Text: "Memory(MB)"},
-				{Name: "MemoryMBUsed", Text: "MemoryUsed(MB)"},
+				{Name: "MemoryMBUsed", Text: "Memory Used(MB)"},
 			},
 		}
 		pt.AddItems(hypervisors)

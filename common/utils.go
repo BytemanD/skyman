@@ -3,8 +3,12 @@ package common
 import (
 	"bytes"
 	"encoding/json"
+	"os"
 
 	"gopkg.in/yaml.v3"
+	"github.com/BytemanD/stackcrud/openstack/common"
+
+	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
 func GetIndentJson(v interface{}) (string, error) {
@@ -27,6 +31,17 @@ func GetYaml(v interface{}) (string, error) {
 	}
 	return string(yamlBytes), nil
 }
+func LogError(err error, message string, exit bool){
+	if httpError, ok := err.(*common.HttpError); ok {
+		logging.Error("%s, %s, %s", message, httpError.Reason, httpError.Message)
+	} else {
+		logging.Error("%s, %v", message, err)
+	}
+	if exit{
+		os.Exit(1)
+	}
+}
+
 func splitTitle(s string) string {
 	newStr := ""
 	for _, c := range s {

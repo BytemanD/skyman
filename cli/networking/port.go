@@ -9,6 +9,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
 	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/networking"
@@ -90,6 +91,21 @@ var portList = &cobra.Command{
 		common.PrintDataListTable(dataListTable, long)
 	},
 }
+var portDelete = &cobra.Command{
+	Use:   "delete <port> [port ...]",
+	Short: "Delete port(s)",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		for _, port := range args {
+			fmt.Printf("Reqeust to delete port %s\n", port)
+			err := client.Networking.PortDelete(port)
+			if err != nil {
+				logging.Error("Delete port %s failed, %s", port, err)
+			}
+		}
+	},
+}
 
 func init() {
 	portList.Flags().BoolP("long", "l", false, "List additional fields in output")
@@ -97,5 +113,5 @@ func init() {
 	portList.Flags().String("network", "", "Search by network")
 	portList.Flags().String("server", "", "Search by server")
 
-	Port.AddCommand(portList)
+	Port.AddCommand(portList, portDelete)
 }

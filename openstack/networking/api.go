@@ -23,6 +23,13 @@ func (client NeutronClientV2) RouterShow(id string) (*Router, error) {
 	}
 	return &router, nil
 }
+func (client NeutronClientV2) RouterDelete(id string) error {
+	err := client.Delete("routers", id, client.BaseHeaders)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 // network api
 func (client NeutronClientV2) NetworkList(query url.Values) ([]Network, error) {
@@ -46,6 +53,13 @@ func (client NeutronClientV2) NetworkShow(id string) (*Network, error) {
 	}
 	return &network, nil
 }
+func (client NeutronClientV2) NetworkDelete(id string) error {
+	err := client.Delete("networks", id, client.BaseHeaders)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 // port api
 func (client NeutronClientV2) PortList(query url.Values) []Port {
@@ -65,4 +79,11 @@ func (client NeutronClientV2) PortShow(id string) (*Port, error) {
 		return nil, err
 	}
 	return &port, nil
+}
+func (client NeutronClientV2) PortDelete(id string) error {
+	err := client.Delete("ports", id, client.BaseHeaders)
+	if err != nil {
+		return err
+	}
+	return nil
 }

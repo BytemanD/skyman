@@ -90,7 +90,6 @@ var interfaceDetach = &cobra.Command{
 }
 
 func init() {
-	// compute service
 	serverInterface.AddCommand(
 		interfaceList, interfaceAttachNet, interfaceAttachPort,
 		interfaceDetach)

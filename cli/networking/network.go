@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
 	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/networking"
@@ -55,7 +56,21 @@ var networkList = &cobra.Command{
 			dataListTable.StyleSeparateRows = true
 		}
 		common.PrintDataListTable(dataListTable, long)
-
+	},
+}
+var networkDelete = &cobra.Command{
+	Use:   "delete <network> [network ...]",
+	Short: "Delete network(s)",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		for _, net := range args {
+			fmt.Printf("Reqeust to delete network %s\n", net)
+			err := client.Networking.NetworkDelete(net)
+			if err != nil {
+				logging.Error("Delete network %s failed, %s", net, err)
+			}
+		}
 	},
 }
 
@@ -63,5 +78,5 @@ func init() {
 	networkList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	networkList.Flags().StringP("name", "n", "", "Search by router name")
 
-	Network.AddCommand(networkList)
+	Network.AddCommand(networkList, networkDelete)
 }

@@ -542,6 +542,25 @@ var serverRebuild = &cobra.Command{
 		}
 	},
 }
+
+var serverEvacuate = &cobra.Command{
+	Use:   "evacuate <server>",
+	Short: "Evacuate server",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		password, _ := cmd.Flags().GetString("password")
+		host, _ := cmd.Flags().GetString("host")
+		force, _ := cmd.Flags().GetBool("force")
+
+		err := client.Compute.ServerEvacuate(args[0], password, host, force)
+		if err != nil {
+			common.LogError(err, "Reqeust to evacuate server failed", true)
+		} else {
+			fmt.Printf("Requested to evacuate server: %s\n", args[0])
+		}
+	},
+}
 var serverSetPassword = &cobra.Command{
 	Use:   "password <server>",
 	Short: "set password for server",
@@ -728,9 +747,14 @@ func init() {
 	serverMigrate.Flags().Bool("live", false, "Migrate running server.")
 	serverMigrate.Flags().String("host", "", "Destination host name.")
 	serverMigrate.Flags().Bool("block-migrate", false, "True in case of block_migration.")
-
+	
 	// server resize flags
 	serverResize.Flags().BoolP("wait", "w", false, "Wait server resize completed")
+
+	// server evacuate flags
+	serverEvacuate.Flags().Bool("force", false, "Force to not verify the scheduler if a host is provided.")
+	serverEvacuate.Flags().String("host", "", "Destination host name.")
+	serverEvacuate.Flags().String("password", "", "Set the provided admin password on the evacuated server.")
 
 	// server region migrate flags
 	serverRegionLiveMigrate.Flags().Bool("live", false, "Migrate running server.")
@@ -765,7 +789,7 @@ func init() {
 		serverSet, serverStop, serverStart, serverReboot,
 		serverPause, serverUnpause, serverShelve, serverUnshelve,
 		serverSuspend, serverResume, serverResize, serverRebuild,
-		serverMigrate,
+		serverEvacuate, serverMigrate,
 		serverMigration,
 		serverRegion)
 }

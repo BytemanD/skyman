@@ -1,8 +1,10 @@
 package networking
 
 import (
+	"fmt"
 	"net/url"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
 	"github.com/BytemanD/stackcrud/common"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -42,10 +44,25 @@ var routerList = &cobra.Command{
 		common.PrintDataListTable(dataListTable, long)
 	},
 }
+var routerDelete = &cobra.Command{
+	Use:   "delete <router> [router ...]",
+	Short: "Delete router(s)",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		for _, router := range args {
+			fmt.Printf("Reqeust to delete router %s\n", router)
+			err := client.Networking.RouterDelete(router)
+			if err != nil {
+				logging.Error("Delete router %s failed, %s", router, err)
+			}
+		}
+	},
+}
 
 func init() {
 	routerList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	routerList.Flags().StringP("name", "n", "", "Search by port name")
 
-	Router.AddCommand(routerList)
+	Router.AddCommand(routerList, routerDelete)
 }

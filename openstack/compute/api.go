@@ -277,6 +277,19 @@ func (client ComputeClientV2) ServerRebuild(id string) error {
 	return client.ServerAction("rebuild", id, data, nil)
 }
 
+func (client ComputeClientV2) ServerEvacuate(id string, password string, host string, force bool) error {
+	data := map[string]interface{}{}
+	if password != "" {
+		data["password"] = password
+	}
+	if host != "" {
+		data["host"] = password
+	}
+	if force {
+		data["force"] = force
+	}
+	return client.ServerAction("evacuate", id, data, nil)
+}
 func (client ComputeClientV2) ServerConsoleLog(id string, length uint) (*ConsoleLog, error) {
 	params := map[string]interface{}{}
 	if length != 0 {
