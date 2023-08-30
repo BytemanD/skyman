@@ -31,14 +31,14 @@ var routerList = &cobra.Command{
 		routers := client.Networking.RouterList(query)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
+				{Name: "Id"}, {Name: "Name", Sort: true},
+				{Name: "Status", AutoColor: true},
 				{Name: "AdminStateUp", AutoColor: true}, {Name: "Distributed"},
 				{Name: "HA", Text: "HA"},
 			},
 			LongColumns: []common.Column{
 				{Name: "Routes"}, {Name: "ExternalGatewayinfo"},
 			},
-			SortBy:        []table.SortBy{{Name: "Name", Mode: table.Asc}},
 			ColumnConfigs: []table.ColumnConfig{{Number: 4, Align: text.AlignRight}},
 		}
 		pt.AddItems(routers)

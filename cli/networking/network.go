@@ -36,7 +36,8 @@ var networkList = &cobra.Command{
 		}
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
+				{Name: "Id"}, {Name: "Name", Sort: true},
+				{Name: "Status", AutoColor: true},
 				{Name: "AdminStateUp", AutoColor: true},
 				{Name: "Subnets", Slot: func(item interface{}) interface{} {
 					p, _ := item.(networking.Network)
@@ -47,9 +48,6 @@ var networkList = &cobra.Command{
 			LongColumns: []common.Column{
 				{Name: "Shared"}, {Name: "NetworkType"},
 				{Name: "AvailabilityZones"},
-			},
-			SortBy: []table.SortBy{
-				{Name: "Name", Mode: table.Asc},
 			},
 			ColumnConfigs: []table.ColumnConfig{
 				{Number: 4, Align: text.AlignRight},

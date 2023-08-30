@@ -1,7 +1,6 @@
 package identity
 
 import (
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -30,7 +29,6 @@ var userList = &cobra.Command{
 				{Name: "Project"}, {Name: "DomainId"},
 				{Name: "Description"}, {Name: "Email"},
 			},
-			SortBy: []table.SortBy{{Name: "Region"}, {Name: "Service Name"}},
 		}
 
 		if project == "" {

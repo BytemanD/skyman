@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/stackcrud/cli"
@@ -27,14 +26,11 @@ var actionList = &cobra.Command{
 		}
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
-				{Name: "Action"}, {Name: "RequestId"}, {Name: "StartTime"},
+				{Name: "Action"}, {Name: "RequestId"}, {Name: "StartTime", Sort: true},
 				{Name: "Message"},
 			},
 			LongColumns: []common.Column{
 				{Name: "ProjectId"}, {Name: "UserId"},
-			},
-			SortBy: []table.SortBy{
-				{Name: "Start Time", Mode: table.Asc},
 			},
 		}
 		pt.AddItems(actions)
@@ -60,14 +56,11 @@ var actionShow = &cobra.Command{
 			Title: fmt.Sprintf("Action: %s", action.Action),
 			ShortColumns: []common.Column{
 				{Name: "Event"}, {Name: "Host"},
-				{Name: "StartTime"}, {Name: "FinishTime"},
+				{Name: "StartTime", Sort: true}, {Name: "FinishTime"},
 				{Name: "Result", AutoColor: true},
 			},
 			LongColumns: []common.Column{
 				{Name: "ProjectId"}, {Name: "UserId"},
-			},
-			SortBy: []table.SortBy{
-				{Name: "Start Time", Mode: table.Asc},
 			},
 		}
 		// trace

@@ -45,7 +45,8 @@ var portList = &cobra.Command{
 		ports := client.Networking.PortList(query)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
+				{Name: "Id"}, {Name: "Name", Sort: true},
+				{Name: "Status", AutoColor: true},
 				{Name: "MACAddress", Text: "MAC Address"},
 				{Name: "FixedIps", Slot: func(item interface{}) interface{} {
 					p, _ := item.(networking.Port)
@@ -71,7 +72,6 @@ var portList = &cobra.Command{
 					return strings.Join(p.SecurityGroups, "\n")
 				}},
 			},
-			SortBy:        []table.SortBy{{Name: "Name", Mode: table.Asc}},
 			ColumnConfigs: []table.ColumnConfig{{Number: 4, Align: text.AlignRight}},
 		}
 		pt.AddItems(ports)

@@ -3,7 +3,6 @@ package compute
 import (
 	"strings"
 
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/stackcrud/cli"
@@ -27,7 +26,7 @@ var aggList = &cobra.Command{
 		dataTable := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"},
-				{Name: "Name"},
+				{Name: "Name", Sort: true},
 				{Name: "AvailabilityZone"},
 			},
 			LongColumns: []common.Column{
@@ -40,7 +39,6 @@ var aggList = &cobra.Command{
 					return p.MarshalMetadata()
 				}},
 			},
-			SortBy: []table.SortBy{{Name: "Name", Mode: table.Asc}},
 		}
 		filteredAggs := []compute.Aggregate{}
 		if name != "" {

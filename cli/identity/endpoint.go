@@ -3,7 +3,6 @@ package identity
 import (
 	"net/url"
 
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -54,8 +53,8 @@ var endpointList = &cobra.Command{
 		}
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "RegionId"},
-				{Name: "ServiceName", Slot: func(item interface{}) interface{} {
+				{Name: "Id"}, {Name: "RegionId", Sort: true},
+				{Name: "ServiceName", Sort: true, Slot: func(item interface{}) interface{} {
 					p, _ := item.(identity.Endpoint)
 					if _, ok := serviceMap[p.ServiceId]; !ok {
 						service, _ := client.Identity.ServiceShow(p.ServiceId)
@@ -65,7 +64,6 @@ var endpointList = &cobra.Command{
 				}},
 				{Name: "Interface"}, {Name: "Url"},
 			},
-			SortBy: []table.SortBy{{Name: "Region"}, {Name: "Service Name"}},
 		}
 		pt.AddItems(services)
 		common.PrintPrettyTable(pt, long)

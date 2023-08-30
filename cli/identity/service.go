@@ -3,7 +3,6 @@ package identity
 import (
 	"net/url"
 
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -35,13 +34,12 @@ var serviceList = &cobra.Command{
 		}
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name"}, {Name: "Type"},
+				{Name: "Id"}, {Name: "Name", Sort: true}, {Name: "Type"},
 				{Name: "Enabled", AutoColor: true},
 			},
 			LongColumns: []common.Column{
 				{Name: "Description"},
 			},
-			SortBy: []table.SortBy{{Name: "Name", Mode: table.Asc}},
 		}
 		pt.AddItems(services)
 		common.PrintPrettyTable(pt, long)

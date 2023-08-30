@@ -59,7 +59,7 @@ var serverList = &cobra.Command{
 
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
+				{Name: "Id"}, {Name: "Name", Sort: true}, {Name: "Status", AutoColor: true},
 				{Name: "TaskState"},
 				{Name: "PowerState", AutoColor: true, Slot: func(item interface{}) interface{} {
 					p, _ := (item).(compute.Server)
@@ -77,14 +77,9 @@ var serverList = &cobra.Command{
 					return p.Flavor.OriginalName
 				}},
 			},
-			SortBy: []table.SortBy{
-				{Name: "Name", Mode: table.Asc},
-				{Name: "Id", Mode: table.Asc},
-			},
 		}
 		if dsc {
-			pt.SortBy[0].Mode = table.Dsc
-			pt.SortBy[1].Mode = table.Dsc
+			pt.ShortColumns[1].SortMode = table.Dsc
 		}
 		if long {
 			pt.StyleSeparateRows = true

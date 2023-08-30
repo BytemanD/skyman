@@ -3,7 +3,6 @@ package compute
 import (
 	"net/url"
 
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -44,7 +43,7 @@ var migrationList = &cobra.Command{
 		}
 		dataListTable := common.PrettyTable{
 			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "MigrationType", Text: "Type"},
+				{Name: "Id", Sort: true}, {Name: "MigrationType", Text: "Type"},
 				{Name: "Status", AutoColor: true},
 				{Name: "SourceNode"},
 				{Name: "DestNode"}, {Name: "DestCompute"},
@@ -57,7 +56,6 @@ var migrationList = &cobra.Command{
 				{Name: "SourceRegion"}, {Name: "DestRegion"},
 				{Name: "CreatedAt"}, {Name: "UpdatedAt"},
 			},
-			SortBy: []table.SortBy{{Name: "Id", Mode: table.Asc}},
 		}
 		dataListTable.AddItems(migrations)
 		common.PrintPrettyTable(dataListTable, long)

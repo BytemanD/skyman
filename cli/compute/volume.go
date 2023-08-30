@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/stackcrud/cli"
@@ -18,9 +17,8 @@ func printVolumeAttachments(items []compute.VolumeAttachment) {
 	pt := common.PrettyTable{
 		ShortColumns: []common.Column{
 			{Name: "Id", Text: "Attachment Id"},
-			{Name: "VolumeId"}, {Name: "Device"},
+			{Name: "VolumeId"}, {Name: "Device", Sort: true},
 		},
-		SortBy: []table.SortBy{{Name: "Device", Mode: table.Asc}},
 	}
 	pt.AddItems(items)
 	common.PrintPrettyTable(pt, false)

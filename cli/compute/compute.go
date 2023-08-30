@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/stackcrud/cli"
@@ -64,9 +63,6 @@ var csList = &cobra.Command{
 			},
 			LongColumns: []common.Column{
 				{Name: "DisabledReason"}, {Name: "ForcedDown"},
-			},
-			SortBy: []table.SortBy{
-				{Name: "Name", Mode: table.Asc},
 			},
 		}
 		dataTable.AddItems(services)

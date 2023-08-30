@@ -38,7 +38,8 @@ var ImageList = &cobra.Command{
 		images := client.Image.ImageList(query, limit)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
+				{Name: "Id"}, {Name: "Name", Sort: true},
+				{Name: "Status", AutoColor: true},
 				{Name: "Size", Slot: func(item interface{}) interface{} {
 					p, _ := item.(image.Image)
 					if human {
@@ -52,7 +53,6 @@ var ImageList = &cobra.Command{
 				{Name: "DiskFormat"}, {Name: "ContainerFormat"},
 				{Name: "Visibility"}, {Name: "Protected"},
 			},
-			SortBy:        []table.SortBy{{Name: "Name", Mode: table.Asc}},
 			ColumnConfigs: []table.ColumnConfig{{Number: 4, Align: text.AlignRight}},
 		}
 

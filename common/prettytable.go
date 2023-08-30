@@ -16,6 +16,8 @@ type Column struct {
 	// 只有 Table.Style 等于 light 是才会生效
 	AutoColor bool
 	Slot      func(item interface{}) interface{}
+	Sort      bool
+	SortMode  table.SortMode
 }
 
 type PrettyTable struct {
@@ -23,7 +25,6 @@ type PrettyTable struct {
 	ShortColumns      []Column
 	LongColumns       []Column
 	Items             []interface{}
-	SortBy            []table.SortBy
 	ColumnConfigs     []table.ColumnConfig
 	Style             string
 	StyleSeparateRows bool
@@ -56,7 +57,7 @@ func (pt *PrettyTable) getTableWriter() table.Writer {
 		}
 		pt.tableWriter.Style().Format.Header = text.FormatDefault
 		pt.tableWriter.Style().Options.SeparateRows = pt.StyleSeparateRows
-		pt.tableWriter.SortBy(pt.SortBy)
+
 		pt.tableWriter.SetColumnConfigs(pt.ColumnConfigs)
 		pt.tableWriter.SetOutputMirror(os.Stdout)
 	}
@@ -65,7 +66,13 @@ func (pt *PrettyTable) getTableWriter() table.Writer {
 func (pt *PrettyTable) ReInit() {
 	pt.tableWriter = nil
 }
-
+func (pt PrettyTable) getSortName(column Column) string {
+	if column.Text != "" {
+		return column.Text
+	} else {
+		return column.Name
+	}
+}
 func (pt PrettyTable) Print(long bool) {
 	tableWriter := pt.getTableWriter()
 
@@ -74,6 +81,7 @@ func (pt PrettyTable) Print(long bool) {
 	if long {
 		columns = append(columns, pt.LongColumns...)
 	}
+	sortBy := []table.SortBy{}
 	for _, column := range columns {
 		var title string
 		if column.Text == "" {
@@ -81,10 +89,13 @@ func (pt PrettyTable) Print(long bool) {
 		} else {
 			title = column.Text
 		}
+		if column.Sort {
+			sortBy = append(sortBy,
+				table.SortBy{Name: pt.getSortName(column), Mode: column.SortMode})
+		}
 		headerRow = append(headerRow, title)
 	}
 	tableWriter.AppendHeader(headerRow)
-
 	for _, item := range pt.Items {
 		reflectValue := reflect.ValueOf(item)
 		row := table.Row{}
@@ -106,7 +117,8 @@ func (pt PrettyTable) Print(long bool) {
 		tableWriter.SetTitle(pt.Title)
 		tableWriter.Style().Title.Align = text.AlignCenter
 	}
-
+	// TODO: 当前只能按Columns 顺序排序
+	tableWriter.SortBy(sortBy)
 	tableWriter.Render()
 	fmt.Printf("Total items: %d\n", len(pt.Items))
 }
