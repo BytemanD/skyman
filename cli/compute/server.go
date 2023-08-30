@@ -57,62 +57,53 @@ var serverList = &cobra.Command{
 		watch, _ := cmd.Flags().GetBool("watch")
 		watchInterval, _ := cmd.Flags().GetUint16("watch-interval")
 
-		dataTable := common.DataListTable{
-			ShortHeaders: []string{
-				"Id", "Name", "Status", "TaskState", "PowerState", "Addresses"},
-			LongHeaders: []string{
-				"AZ", "Host", "InstanceName", "Flavor:name"},
-			HeaderLabel: map[string]string{
-				"Addresses": "Networks", "AZ": "AZ",
-				"Flavor:name":  "Flavor:name",
-				"Flavor:ram":   "Flavor:ram",
-				"Flavor:vcpus": "Flavor:vcpus",
+		pt := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
+				{Name: "TaskState"},
+				{Name: "PowerState", AutoColor: true, Slot: func(item interface{}) interface{} {
+					p, _ := (item).(compute.Server)
+					return p.GetPowerState()
+				}},
+				{Name: "Addresses", Text: "Networks", Slot: func(item interface{}) interface{} {
+					p, _ := (item).(compute.Server)
+					return strings.Join(p.GetNetworks(), "\n")
+				}},
+			},
+			LongColumns: []common.Column{
+				{Name: "AZ"}, {Name: "Host"}, {Name: "InstanceName"},
+				{Name: "Flavor:name", Text: "Flavor:name", Slot: func(item interface{}) interface{} {
+					p, _ := (item).(compute.Server)
+					return p.Flavor.OriginalName
+				}},
 			},
 			SortBy: []table.SortBy{
 				{Name: "Name", Mode: table.Asc},
 				{Name: "Id", Mode: table.Asc},
 			},
-			AutoFormat: []string{"PowerState", "State", "Status"},
-			Slots: map[string]func(item interface{}) interface{}{
-				"PowerState": func(item interface{}) interface{} {
-					p, _ := (item).(compute.Server)
-					return p.GetPowerState()
-				},
-				"Addresses": func(item interface{}) interface{} {
-					p, _ := (item).(compute.Server)
-					return strings.Join(p.GetNetworks(), "\n")
-				},
-				"Flavor:name": func(item interface{}) interface{} {
-					p, _ := (item).(compute.Server)
-					return p.Flavor.OriginalName
-				},
-				"Flavor:ram": func(item interface{}) interface{} {
-					p, _ := (item).(compute.Server)
-					return p.Flavor.Ram
-				},
-				"Flavor:vcpus": func(item interface{}) interface{} {
-					p, _ := (item).(compute.Server)
-					return p.Flavor.Vcpus
-				},
-				"Image": func(item interface{}) interface{} {
-					p, _ := (item).(compute.Server)
-					return p.Image.Name
-				},
-			},
-		}
-		if common.CONF.Format == "table-light" {
-			dataTable.SetStyleLight()
 		}
 		if dsc {
-			dataTable.SortBy[0].Mode = table.Dsc
-			dataTable.SortBy[1].Mode = table.Dsc
+			pt.SortBy[0].Mode = table.Dsc
+			pt.SortBy[1].Mode = table.Dsc
 		}
 		if long {
-			dataTable.StyleSeparateRows = true
+			pt.StyleSeparateRows = true
 		}
 		if verbose {
-			dataTable.LongHeaders = append(dataTable.LongHeaders,
-				"Flavor:ram", "Flavor:vcpus", "Image")
+			pt.LongColumns = append(pt.LongColumns,
+				common.Column{Name: "Flavor:ram", Slot: func(item interface{}) interface{} {
+					p, _ := (item).(compute.Server)
+					return p.Flavor.Ram
+				}},
+				common.Column{Name: "Flavor:vcpus", Slot: func(item interface{}) interface{} {
+					p, _ := (item).(compute.Server)
+					return p.Flavor.Vcpus
+				}},
+				common.Column{Name: "Image:ram", Slot: func(item interface{}) interface{} {
+					p, _ := (item).(compute.Server)
+					return p.Image.Name
+				}},
+			)
 		}
 
 		imageMap := map[string]imageLib.Image{}
@@ -135,8 +126,8 @@ var serverList = &cobra.Command{
 					servers[i].Image.Name = imageMap[server.Image.Id].Name
 				}
 			}
-			dataTable.CleanItems()
-			dataTable.AddItems(servers)
+			pt.CleanItems()
+			pt.AddItems(servers)
 			if watch {
 				cmd := exec.Command("clear")
 				cmd.Stdout = os.Stdout
@@ -144,7 +135,7 @@ var serverList = &cobra.Command{
 				var timeNow = time.Now().Format("2006-01-02 15:04:05")
 				fmt.Printf("Every %ds\tNow: %s\n", watchInterval, timeNow)
 			}
-			common.PrintDataListTable(dataTable, long)
+			common.PrintPrettyTable(pt, long)
 			if !watch {
 				break
 			}
@@ -680,7 +671,7 @@ var serverMigrationList = &cobra.Command{
 		client := cli.GetClient()
 		table := common.PrettyTable{
 			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Status"},
+				{Name: "Id"}, {Name: "Status", AutoColor: true},
 				{Name: "SourceNode"}, {Name: "SourceCompute"},
 				{Name: "DestNode"}, {Name: "DestCompute"},
 			},

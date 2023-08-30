@@ -28,27 +28,30 @@ var volumeList = &cobra.Command{
 			query.Set("name", name)
 		}
 		volumes := client.Storage.VolumeListDetail(query)
-		dataListTable := common.DataListTable{
-			ShortHeaders: []string{
-				"Id", "Name", "Status", "Size", "Bootable", "Attachments"},
-			LongHeaders: []string{"VolumeType", "Metadata"},
-			Slots: map[string]func(item interface{}) interface{}{
-				"Attachments": func(item interface{}) interface{} {
+		table := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"},
+				{Name: "Name"},
+				{Name: "Status", AutoColor: true},
+				{Name: "Size"},
+				{Name: "Bootable"},
+				{Name: "Attachments", Slot: func(item interface{}) interface{} {
 					obj, _ := (item).(storage.Volume)
 					return strings.Join(obj.GetAttachmentList(), "\n")
-				},
-				"Metadata": func(item interface{}) interface{} {
+				}},
+			},
+			LongColumns: []common.Column{
+				{Name: "Metadata", Slot: func(item interface{}) interface{} {
 					obj, _ := (item).(storage.Volume)
 					return strings.Join(obj.GetMetadataList(), "\n")
-				},
+				}},
 			},
 		}
+		table.AddItems(volumes)
 		if long {
-			dataListTable.StyleSeparateRows = true
+			table.StyleSeparateRows = true
 		}
-		dataListTable.AddItems(volumes)
-		common.PrintDataListTable(dataListTable, long)
-
+		common.PrintPrettyTable(table, long)
 	},
 }
 
@@ -150,8 +153,8 @@ func init() {
 	volumePrune.Flags().StringArrayP("status", "s", nil, "Search by server status")
 	volumePrune.Flags().BoolP("yes", "y", false, "所有问题自动回答'是'")
 
-	volumeCreate.Flags().Uint("size", 0, "Volume size")
-
+	volumeCreate.Flags().Uint("size", 0, "Volume size (GB)")
+	volumeCreate.MarkFlagRequired("size")
 	Volume.AddCommand(
 		volumeList, volumeShow, volumeCreate,
 		volumeDelete, volumePrune,

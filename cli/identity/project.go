@@ -1,7 +1,6 @@
 package identity
 
 import (
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -24,13 +23,17 @@ var projectList = &cobra.Command{
 		if err != nil {
 			logging.Fatal("get users failed, %s", err)
 		}
-		dataListTable := common.DataListTable{
-			ShortHeaders: []string{"Id", "Name"},
-			LongHeaders:  []string{"DomainId", "Description", "Enabled"},
-			SortBy:       []table.SortBy{{Name: "Region"}, {Name: "Service Name"}},
+		pt := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"}, {Name: "Name"},
+				{Name: "Enabled", AutoColor: true},
+			},
+			LongColumns: []common.Column{
+				{Name: "DomainId"}, {Name: "Description"},
+			},
 		}
-		dataListTable.AddItems(services)
-		common.PrintDataListTable(dataListTable, long)
+		pt.AddItems(services)
+		common.PrintPrettyTable(pt, long)
 	},
 }
 

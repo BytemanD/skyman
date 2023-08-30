@@ -6,6 +6,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
 	"github.com/BytemanD/stackcrud/common"
+	"github.com/BytemanD/stackcrud/openstack/compute"
 )
 
 var Keypair = &cobra.Command{Use: "keypair"}
@@ -19,11 +20,24 @@ var keypairList = &cobra.Command{
 		if err != nil {
 			logging.Fatal("%s", err)
 		}
-		dataListTable := common.DataListTable{
-			ShortHeaders: []string{"Name", "Type", "Fingerprint"},
+		pt := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Name", Slot: func(item interface{}) interface{} {
+					p, _ := item.(compute.Keypair)
+					return p.Keypair.Name
+				}},
+				{Name: "Type", Slot: func(item interface{}) interface{} {
+					p, _ := item.(compute.Keypair)
+					return p.Keypair.Type
+				}},
+				{Name: "Fingerprint", Slot: func(item interface{}) interface{} {
+					p, _ := item.(compute.Keypair)
+					return p.Keypair.Fingerprint
+				}},
+			},
 		}
-		dataListTable.AddItems(keypairs)
-		common.PrintDataListTable(dataListTable, false)
+		pt.AddItems(keypairs)
+		common.PrintPrettyTable(pt, false)
 	},
 }
 

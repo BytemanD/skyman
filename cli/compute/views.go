@@ -15,63 +15,63 @@ func printServer(server compute.Server) {
 		Item: server,
 		ShortFields: []common.Field{
 			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
-			{Name: "Flavor:original_name", Text: "Flavor:original_name"},
-			{Name: "Flavor:ram", Text: "Flavor:ram"},
-			{Name: "Flavor:vcpus", Text: "Flavor:vcpus"},
-			{Name: "Flavor:disk", Text: "Flavor:disk"},
-			{Name: "Flavor:swap", Text: "Flavor:swap"},
-			{Name: "Flavor:extra_specs", Text: "Flavor:extra_specs"},
-			{Name: "Image"},
+			{Name: "Flavor:original_name", Text: "Flavor:original_name",
+				Slot: func(item interface{}) interface{} {
+					p, _ := item.(compute.Server)
+					return p.Flavor.OriginalName
+				}},
+			{Name: "Flavor:ram", Text: "Flavor:ram",
+				Slot: func(item interface{}) interface{} {
+					p, _ := item.(compute.Server)
+					return p.Flavor.Ram
+				}},
+			{Name: "Flavor:vcpus", Text: "Flavor:vcpus",
+				Slot: func(item interface{}) interface{} {
+					p, _ := item.(compute.Server)
+					return p.Flavor.Vcpus
+				}},
+			{Name: "Flavor:disk", Text: "Flavor:disk",
+				Slot: func(item interface{}) interface{} {
+					p, _ := item.(compute.Server)
+					return p.Flavor.Disk
+				}},
+			{Name: "Flavor:swap", Text: "Flavor:swap",
+				Slot: func(item interface{}) interface{} {
+					p, _ := item.(compute.Server)
+					return p.Flavor.Swap
+				}},
+			{Name: "Flavor:extra_specs", Text: "Flavor:extra_specs",
+				Slot: func(item interface{}) interface{} {
+					p, _ := item.(compute.Server)
+					return p.GetFlavorExtraSpecsString()
+
+				}},
+			{Name: "Image",
+				Slot: func(item interface{}) interface{} {
+					p, _ := item.(compute.Server)
+					return p.Image.Id
+				}},
 			{Name: "AZ", Text: "AZ"}, {Name: "Host"},
 			{Name: "Status"}, {Name: "TaskState"}, {Name: "PowerState"},
 			{Name: "RootBdmType"},
 			{Name: "Created"}, {Name: "Updated"},
 			{Name: "UserId"}, {Name: "LaunchedAt"},
 
-			{Name: "Fault:code"}, {Name: "Fault:message"},
-			{Name: "Fault:details"},
-		},
-		Slots: map[string]func(item interface{}) interface{}{
-			"Flavor:original_name": func(item interface{}) interface{} {
-				p, _ := item.(compute.Server)
-				return p.Flavor.OriginalName
-			},
-			"Flavor:ram": func(item interface{}) interface{} {
-				p, _ := item.(compute.Server)
-				return p.Flavor.Ram
-			},
-			"Flavor:vcpus": func(item interface{}) interface{} {
-				p, _ := item.(compute.Server)
-				return p.Flavor.Vcpus
-			},
-			"Flavor:disk": func(item interface{}) interface{} {
-				p, _ := item.(compute.Server)
-				return p.Flavor.Disk
-			},
-			"Flavor:swap": func(item interface{}) interface{} {
-				p, _ := item.(compute.Server)
-				return p.Flavor.Swap
-			},
-			"Flavor:extra_specs": func(item interface{}) interface{} {
-				p, _ := item.(compute.Server)
-				return p.GetFlavorExtraSpecsString()
-			},
-			"Image": func(item interface{}) interface{} {
-				p, _ := item.(compute.Server)
-				return p.Image.Id
-			},
-			"Fault:code": func(item interface{}) interface{} {
-				p, _ := item.(compute.Server)
-				return p.Fault.Code
-			},
-			"Fault:message": func(item interface{}) interface{} {
-				p, _ := item.(compute.Server)
-				return p.Fault.Message
-			},
-			"Fault:details": func(item interface{}) interface{} {
-				p, _ := item.(compute.Server)
-				return p.Fault.Details
-			},
+			{Name: "Fault:code",
+				Slot: func(item interface{}) interface{} {
+					p, _ := item.(compute.Server)
+					return p.Fault.Code
+				}},
+			{Name: "Fault:message",
+				Slot: func(item interface{}) interface{} {
+					p, _ := item.(compute.Server)
+					return p.Fault.Message
+				}},
+			{Name: "Fault:details",
+				Slot: func(item interface{}) interface{} {
+					p, _ := item.(compute.Server)
+					return p.Fault.Details
+				}},
 		},
 	}
 	common.PrintDataTable(dataTable)
@@ -83,28 +83,25 @@ func printFlavor(server compute.Flavor) {
 			{Name: "Id"}, {Name: "Name"},
 			{Name: "Vcpus"}, {Name: "Ram"}, {Name: "Disk"}, {Name: "Swap"},
 			{Name: "RXTXFactor", Text: "RXTXFactor"},
-			{Name: "OS-FLV-EXT-DATA:ephemeral", Text: "OS-FLV-EXT-DATA:ephemeral"},
-			{Name: "os-flavor-access:is_public", Text: "os-flavor-access:is_public"},
-			{Name: "OS-FLV-DISABLED:disabled", Text: "OS-FLV-DISABLED:disabled"},
-			{Name: "ExtraSpecs"},
-		},
-		Slots: map[string]func(item interface{}) interface{}{
-			"os-flavor-access:is_public": func(item interface{}) interface{} {
-				p, _ := item.(compute.Flavor)
-				return p.IsPublic
-			},
-			"OS-FLV-EXT-DATA:ephemeral": func(item interface{}) interface{} {
-				p, _ := item.(compute.Flavor)
-				return p.Ephemeral
-			},
-			"OS-FLV-DISABLED:disabled": func(item interface{}) interface{} {
-				p, _ := item.(compute.Flavor)
-				return p.Disabled
-			},
-			"ExtraSpecs": func(item interface{}) interface{} {
+			{Name: "OS-FLV-EXT-DATA:ephemeral", Text: "OS-FLV-EXT-DATA:ephemeral",
+				Slot: func(item interface{}) interface{} {
+					p, _ := item.(compute.Flavor)
+					return p.Ephemeral
+				}},
+			{Name: "os-flavor-access:is_public", Text: "os-flavor-access:is_public",
+				Slot: func(item interface{}) interface{} {
+					p, _ := item.(compute.Flavor)
+					return p.IsPublic
+				}},
+			{Name: "OS-FLV-DISABLED:disabled", Text: "OS-FLV-DISABLED:disabled",
+				Slot: func(item interface{}) interface{} {
+					p, _ := item.(compute.Flavor)
+					return p.Disabled
+				}},
+			{Name: "ExtraSpecs", Slot: func(item interface{}) interface{} {
 				p, _ := item.(compute.Flavor)
 				return strings.Join(p.ExtraSpecs.GetList(), "\n")
-			},
+			}},
 		},
 	}
 	common.PrintDataTable(dataTable)
@@ -132,33 +129,35 @@ func printAZInfo(azList []compute.AvailabilityZone) {
 					ServiceUpdatedAt: service.UpdatedAt,
 				}
 				if az.ZoneState.Available {
-					azHost.ZoneState = common.BaseColorFormatter.Format("available")
+					azHost.ZoneState = "available"
 				} else {
-					azHost.ZoneState = common.BaseColorFormatter.Format("disabled")
+					azHost.ZoneState = "disabled"
 				}
 				if service.Active {
-					azHost.ServiceStatus = common.BaseColorFormatter.Format("enabled")
+					azHost.ServiceStatus = "enabled"
 				} else {
-					azHost.ServiceStatus = common.BaseColorFormatter.Format("disabled")
+					azHost.ServiceStatus = "disabled"
 				}
 				if service.Available {
-					azHost.ServiceAvailable = common.BaseColorFormatter.Format(":)")
+					azHost.ServiceAvailable = ":)"
 				} else {
-					azHost.ServiceAvailable = common.BaseColorFormatter.Format("XXX")
+					azHost.ServiceAvailable = "XXX"
 				}
 				azHostList = append(azHostList, azHost)
 			}
 		}
 	}
 
-	table := common.DataListTable{
-		ShortHeaders: []string{"ZoneName", "ZoneState", "HostName", "ServiceName",
-			"ServiceStatus", "ServiceAvailable", "ServiceUpdatedAt"},
-		HeaderLabel: map[string]string{"ServiceUpdatedAt": "Updated At"},
-		Slots:       map[string]func(item interface{}) interface{}{},
+	pt := common.PrettyTable{
+		ShortColumns: []common.Column{
+			{Name: "ZoneName"}, {Name: "ZoneState", AutoColor: true}, {Name: "HostName"},
+			{Name: "ServiceName"}, {Name: "ServiceStatus", AutoColor: true},
+			{Name: "ServiceAvailable", AutoColor: true},
+			{Name: "ServiceUpdatedAt", Text: "Updated At"},
+		},
 	}
-	table.AddItems(azHostList)
-	common.PrintDataListTable(table, false)
+	pt.AddItems(azHostList)
+	common.PrintPrettyTable(pt, false)
 }
 func printAZInfoTree(azList []compute.AvailabilityZone) {
 	tw := list.NewWriter()

@@ -52,22 +52,23 @@ var endpointList = &cobra.Command{
 		if err != nil {
 			logging.Fatal("get services failed, %s", err)
 		}
-		dataListTable := common.DataListTable{
-			ShortHeaders: []string{"Id", "RegionId", "ServiceName", "Interface", "Url"},
-			SortBy:       []table.SortBy{{Name: "Region"}, {Name: "Service Name"}},
-			Slots: map[string]func(item interface{}) interface{}{
-				"ServiceName": func(item interface{}) interface{} {
+		pt := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"}, {Name: "RegionId"},
+				{Name: "ServiceName", Slot: func(item interface{}) interface{} {
 					p, _ := item.(identity.Endpoint)
 					if _, ok := serviceMap[p.ServiceId]; !ok {
 						service, _ := client.Identity.ServiceShow(p.ServiceId)
 						serviceMap[p.ServiceId] = *service
 					}
 					return serviceMap[p.ServiceId].Name
-				},
+				}},
+				{Name: "Interface"}, {Name: "Url"},
 			},
+			SortBy: []table.SortBy{{Name: "Region"}, {Name: "Service Name"}},
 		}
-		dataListTable.AddItems(services)
-		common.PrintDataListTable(dataListTable, long)
+		pt.AddItems(services)
+		common.PrintPrettyTable(pt, long)
 	},
 }
 

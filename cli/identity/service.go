@@ -33,13 +33,18 @@ var serviceList = &cobra.Command{
 		if err != nil {
 			logging.Fatal("get services failed, %s", err)
 		}
-		dataListTable := common.DataListTable{
-			ShortHeaders: []string{"Id", "Name", "Type", "Enabled"},
-			LongHeaders:  []string{"Description"},
-			SortBy:       []table.SortBy{{Name: "Name", Mode: table.Asc}},
+		pt := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"}, {Name: "Name"}, {Name: "Type"},
+				{Name: "Enabled", AutoColor: true},
+			},
+			LongColumns: []common.Column{
+				{Name: "Description"},
+			},
+			SortBy: []table.SortBy{{Name: "Name", Mode: table.Asc}},
 		}
-		dataListTable.AddItems(services)
-		common.PrintDataListTable(dataListTable, long)
+		pt.AddItems(services)
+		common.PrintPrettyTable(pt, long)
 	},
 }
 

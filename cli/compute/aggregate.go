@@ -24,21 +24,23 @@ var aggList = &cobra.Command{
 		client := cli.GetClient()
 		aggregates, err := client.Compute.AggregateList(nil)
 		cli.ExitIfError(err)
-
-		dataTable := common.DataListTable{
-			ShortHeaders: []string{"Id", "Name", "AvailabilityZone"},
-			LongHeaders:  []string{"HostNum", "Metadata"},
-			SortBy:       []table.SortBy{{Name: "Name", Mode: table.Asc}},
-			Slots: map[string]func(item interface{}) interface{}{
-				"HostNum": func(item interface{}) interface{} {
+		dataTable := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"},
+				{Name: "Name"},
+				{Name: "AvailabilityZone"},
+			},
+			LongColumns: []common.Column{
+				{Name: "HostNum", Slot: func(item interface{}) interface{} {
 					p, _ := (item).(compute.Aggregate)
 					return len(p.Hosts)
-				},
-				"Metadata": func(item interface{}) interface{} {
+				}},
+				{Name: "Metadata", Slot: func(item interface{}) interface{} {
 					p, _ := (item).(compute.Aggregate)
 					return p.MarshalMetadata()
-				},
+				}},
 			},
+			SortBy: []table.SortBy{{Name: "Name", Mode: table.Asc}},
 		}
 		filteredAggs := []compute.Aggregate{}
 		if name != "" {
@@ -52,7 +54,7 @@ var aggList = &cobra.Command{
 			filteredAggs = aggregates
 		}
 		dataTable.AddItems(filteredAggs)
-		common.PrintDataListTable(dataTable, long)
+		common.PrintPrettyTable(dataTable, long)
 	},
 }
 var aggShow = &cobra.Command{
@@ -69,19 +71,16 @@ var aggShow = &cobra.Command{
 			Item: *aggregate,
 			ShortFields: []common.Field{
 				{Name: "Id"}, {Name: "Name"}, {Name: "AvailabilityZone"},
-				{Name: "Hosts"}, {Name: "Metadata"},
-				{Name: "CreatedAt"}, {Name: "UpdatedAt"},
-				{Name: "Deleted"}, {Name: "DeletedAt"},
-			},
-			Slots: map[string]func(item interface{}) interface{}{
-				"Metadata": func(item interface{}) interface{} {
-					p, _ := (item).(compute.Aggregate)
-					return p.MarshalMetadata()
-				},
-				"Hosts": func(item interface{}) interface{} {
+				{Name: "Hosts", Slot: func(item interface{}) interface{} {
 					p, _ := (item).(compute.Aggregate)
 					return strings.Join(p.Hosts, "\n")
-				},
+				}},
+				{Name: "Metadata", Slot: func(item interface{}) interface{} {
+					p, _ := (item).(compute.Aggregate)
+					return p.MarshalMetadata()
+				}},
+				{Name: "CreatedAt"}, {Name: "UpdatedAt"},
+				{Name: "Deleted"}, {Name: "DeletedAt"},
 			},
 		}
 		common.PrintDataTable(dataTable)

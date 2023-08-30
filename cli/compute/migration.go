@@ -42,25 +42,25 @@ var migrationList = &cobra.Command{
 		if err != nil {
 			logging.Fatal("%s", err)
 		}
-		dataListTable := common.DataListTable{
-			ShortHeaders: []string{
-				"Id", "MigrationType", "Status", "SourceNode", "SourceCompute",
-				"DestNode", "DestCompute", "InstanceUUID",
+		dataListTable := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"}, {Name: "MigrationType", Text: "Type"},
+				{Name: "Status", AutoColor: true},
+				{Name: "SourceNode"},
+				{Name: "DestNode"}, {Name: "DestCompute"},
+				{Name: "InstanceUUID", Text: "Instance UUID"},
 			},
-			LongHeaders: []string{
-				"DestHost", "OldInstanceTypeId", "NewInstanceTypeId",
-				"CreatedAt", "UpdatedAt"},
-			HeaderLabel: map[string]string{
-				"MigrationType":     "Type",
-				"InstanceUUID":      "Instance UUID",
-				"OldInstanceTypeId": "Old Flavor",
-				"NewInstanceTypeId": "New Flavor",
+			LongColumns: []common.Column{
+				{Name: "DestHost"},
+				{Name: "OldInstanceTypeId", Text: "Old Flavor"},
+				{Name: "NewInstanceTypeId", Text: "New Flavor"},
+				{Name: "SourceRegion"}, {Name: "DestRegion"},
+				{Name: "CreatedAt"}, {Name: "UpdatedAt"},
 			},
-			SortBy:     []table.SortBy{{Name: "Id", Mode: table.Asc}},
-			AutoFormat: []string{"Status"},
+			SortBy: []table.SortBy{{Name: "Id", Mode: table.Asc}},
 		}
 		dataListTable.AddItems(migrations)
-		common.PrintDataListTable(dataListTable, long)
+		common.PrintPrettyTable(dataListTable, long)
 	},
 }
 

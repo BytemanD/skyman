@@ -241,6 +241,8 @@ type Migration struct {
 	DestHost          string `json:"dest_host"`
 	SourceCompute     string `json:"source_compute"`
 	SourceNode        string `json:"source_node"`
+	SourceRegion      string `json:"source_region,omitempty"`
+	DestRegion        string `json:"dest_regoin,omitempty"`
 	CreatedAt         string `json:"created_at,omitempty"`
 	UpdatedAt         string `json:"updated_at,omitempty"`
 }

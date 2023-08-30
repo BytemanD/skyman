@@ -43,52 +43,44 @@ var portList = &cobra.Command{
 			query.Set("router_id", router)
 		}
 		ports := client.Networking.PortList(query)
-		dataListTable := common.DataListTable{
-			ShortHeaders: []string{"Id", "Name", "Status", "MACAddress",
-				"FixedIps", "DeviceOwner"},
-			LongHeaders: []string{"SecurityGroups"},
-			SortBy: []table.SortBy{
-				{Name: "Name", Mode: table.Asc},
+		pt := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
+				{Name: "MACAddress", Text: "MAC Address"},
+				{Name: "FixedIps", Slot: func(item interface{}) interface{} {
+					p, _ := item.(networking.Port)
+					ips := []string{}
+					if !long {
+						for _, fixedIp := range p.FixedIps {
+							ips = append(ips, fixedIp.IpAddress)
+						}
+						return strings.Join(ips, ", ")
+					} else {
+						for _, fixedIp := range p.FixedIps {
+							ips = append(ips,
+								fmt.Sprintf("%s@%s", fixedIp.IpAddress, fixedIp.SubnetId))
+						}
+						return strings.Join(ips, "\n")
+					}
+				}},
+				{Name: "DeviceOwner"},
 			},
-			ColumnConfigs: []table.ColumnConfig{
-				{Number: 4, Align: text.AlignRight},
-			},
-			HeaderLabel: map[string]string{
-				"MACAddress": "MAC Address",
-			},
-			Slots: map[string]func(item interface{}) interface{}{
-				"SecurityGroups": func(item interface{}) interface{} {
+			LongColumns: []common.Column{
+				{Name: "SecurityGroups", Slot: func(item interface{}) interface{} {
 					p, _ := item.(networking.Port)
 					return strings.Join(p.SecurityGroups, "\n")
-				},
+				}},
 			},
+			SortBy:        []table.SortBy{{Name: "Name", Mode: table.Asc}},
+			ColumnConfigs: []table.ColumnConfig{{Number: 4, Align: text.AlignRight}},
 		}
-		if !long {
-			dataListTable.Slots["FixedIps"] = func(item interface{}) interface{} {
-				p, _ := item.(networking.Port)
-				ips := []string{}
-				for _, fixedIp := range p.FixedIps {
-					ips = append(ips, fixedIp.IpAddress)
-				}
-				return strings.Join(ips, ", ")
-			}
-		} else {
-			dataListTable.Slots["FixedIps"] = func(item interface{}) interface{} {
-				p, _ := item.(networking.Port)
-				ips := []string{}
-				for _, fixedIp := range p.FixedIps {
-					ips = append(ips,
-						fmt.Sprintf("%s@%s",
-							fixedIp.IpAddress, fixedIp.SubnetId))
-				}
-				return strings.Join(ips, "\n")
-			}
-		}
+		pt.AddItems(ports)
+		common.PrintPrettyTable(pt, long)
 		if long {
-			dataListTable.StyleSeparateRows = true
+			pt.StyleSeparateRows = true
 		}
-		dataListTable.AddItems(ports)
-		common.PrintDataListTable(dataListTable, long)
+		pt.AddItems(ports)
+		common.PrintPrettyTable(pt, long)
 	},
 }
 var portShow = &cobra.Command{
@@ -108,12 +100,10 @@ var portShow = &cobra.Command{
 				{Name: "MACAddress", Text: "MAC Address"},
 				{Name: "BindingVnicType"},
 				{Name: "BindingVifType"},
-				{Name: "BindingDetails",
-					Slot: func(item interface{}) interface{} {
-						p, _ := item.(networking.Port)
-						return p.MarshalVifDetails()
-					},
-				},
+				{Name: "BindingDetails", Slot: func(item interface{}) interface{} {
+					p, _ := item.(networking.Port)
+					return p.MarshalVifDetails()
+				}},
 				{Name: "BindingHostId"},
 				{Name: "FixedIps"},
 				{Name: "DeviceOwner"}, {Name: "DeviceId"},

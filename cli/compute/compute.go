@@ -21,19 +21,16 @@ func printServiceTable(item interface{}) {
 		Item: item,
 		ShortFields: []common.Field{
 			{Name: "Id"}, {Name: "Binary"}, {Name: "Host"},
-			{Name: "Status"}, {Name: "State"},
-			{Name: "ForcedDown", Text: "Forced Down"},
-			{Name: "DisabledReason", Text: "Disabled Reason"},
-		},
-		Slots: map[string]func(item interface{}) interface{}{
-			"Status": func(item interface{}) interface{} {
+			{Name: "Status", Slot: func(item interface{}) interface{} {
 				p, _ := (item).(compute.Service)
 				return common.BaseColorFormatter.Format(p.Status)
-			},
-			"State": func(item interface{}) interface{} {
+			}},
+			{Name: "State", Slot: func(item interface{}) interface{} {
 				p, _ := item.(compute.Service)
 				return common.BaseColorFormatter.Format(p.State)
-			},
+			}},
+			{Name: "ForcedDown", Text: "Forced Down"},
+			{Name: "DisabledReason", Text: "Disabled Reason"},
 		},
 	}
 	common.PrintDataTable(dataTable)
@@ -57,18 +54,23 @@ var csList = &cobra.Command{
 			query.Set("host", host)
 		}
 		services := client.Compute.ServiceList(query)
-		dataTable := common.DataListTable{
-			ShortHeaders: []string{
-				"Id", "Binary", "Host", "Zone", "Status", "State", "UpdatedAt"},
-			LongHeaders: []string{
-				"DisabledReason", "ForcedDown"},
+		dataTable := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"}, {Name: "Binary"},
+				{Name: "Host"}, {Name: "Zone"},
+				{Name: "Status", AutoColor: true},
+				{Name: "State", AutoColor: true},
+				{Name: "UpdatedAt"},
+			},
+			LongColumns: []common.Column{
+				{Name: "DisabledReason"}, {Name: "ForcedDown"},
+			},
 			SortBy: []table.SortBy{
 				{Name: "Name", Mode: table.Asc},
 			},
-			AutoFormat: []string{"Status", "State"},
 		}
 		dataTable.AddItems(services)
-		common.PrintDataListTable(dataTable, long)
+		common.PrintPrettyTable(dataTable, long)
 	},
 }
 

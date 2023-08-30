@@ -23,18 +23,14 @@ var tokenIssue = &cobra.Command{
 			ShortFields: []common.Field{
 				{Name: "ExpiresAt", Text: "Expires At"},
 				{Name: "TokenId", Text: "Id"},
-				{Name: "ProjectId", Text: "Project Id"},
-				{Name: "UserId", Text: "User Id"},
-			},
-			Slots: map[string]func(item interface{}) interface{}{
-				"ProjectId": func(item interface{}) interface{} {
+				{Name: "ProjectId", Text: "Project Id", Slot: func(item interface{}) interface{} {
 					p, _ := (item).(identity.Token)
 					return p.Project.Id
-				},
-				"UserId": func(item interface{}) interface{} {
+				}},
+				{Name: "UserId", Text: "User Id", Slot: func(item interface{}) interface{} {
 					p, _ := (item).(identity.Token)
 					return p.User.Id
-				},
+				}},
 			},
 		}
 		common.PrintDataTable(dataTable)

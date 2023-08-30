@@ -25,15 +25,20 @@ var actionList = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		dataTable := common.DataListTable{
-			ShortHeaders: []string{"Action", "RequestId", "StartTime", "Message"},
-			LongHeaders:  []string{"ProjectId", "UserId"},
+		pt := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Action"}, {Name: "RequestId"}, {Name: "StartTime"},
+				{Name: "Message"},
+			},
+			LongColumns: []common.Column{
+				{Name: "ProjectId"}, {Name: "UserId"},
+			},
 			SortBy: []table.SortBy{
 				{Name: "Start Time", Mode: table.Asc},
 			},
 		}
-		dataTable.AddItems(actions)
-		common.PrintDataListTable(dataTable, long)
+		pt.AddItems(actions)
+		common.PrintPrettyTable(pt, long)
 	},
 }
 
@@ -51,10 +56,19 @@ var actionShow = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		dataTable := common.DataListTable{
-			Title:        fmt.Sprintf("Action: %s", action.Action),
-			ShortHeaders: []string{"Event", "Host", "StartTime", "FinishTime", "Result"},
-			LongHeaders:  []string{"Host"},
+		pt := common.PrettyTable{
+			Title: fmt.Sprintf("Action: %s", action.Action),
+			ShortColumns: []common.Column{
+				{Name: "Event"}, {Name: "Host"},
+				{Name: "StartTime"}, {Name: "FinishTime"},
+				{Name: "Result", AutoColor: true},
+			},
+			LongColumns: []common.Column{
+				{Name: "ProjectId"}, {Name: "UserId"},
+			},
+			SortBy: []table.SortBy{
+				{Name: "Start Time", Mode: table.Asc},
+			},
 		}
 		// trace
 		tracbackMap := map[string]string{}
@@ -63,8 +77,8 @@ var actionShow = &cobra.Command{
 				tracbackMap[item.Event] = item.Traceback
 			}
 		}
-		dataTable.AddItems(action.Events)
-		common.PrintDataListTable(dataTable, long)
+		pt.AddItems(action.Events)
+		common.PrintPrettyTable(pt, long)
 		if long {
 			for k, v := range tracbackMap {
 				fmt.Printf("Event %s tracback:\n", k)

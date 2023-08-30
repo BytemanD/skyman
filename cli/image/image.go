@@ -36,26 +36,28 @@ var ImageList = &cobra.Command{
 			query.Set("limit", fmt.Sprintf("%d", pageSize))
 		}
 		images := client.Image.ImageList(query, limit)
-		dataListTable := common.DataListTable{
-			ShortHeaders: []string{"Id", "Name", "Status", "Size"},
-			LongHeaders: []string{
-				"DiskFormat", "ContainerFormat", "Visibility", "Protected"},
-			SortBy: []table.SortBy{
-				{Name: "Name", Mode: table.Asc},
+		pt := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
+				{Name: "Size", Slot: func(item interface{}) interface{} {
+					p, _ := item.(image.Image)
+					if human {
+						return p.HumanSize()
+					} else {
+						return p.Size
+					}
+				}},
 			},
-			ColumnConfigs: []table.ColumnConfig{
-				{Number: 4, Align: text.AlignRight},
+			LongColumns: []common.Column{
+				{Name: "DiskFormat"}, {Name: "ContainerFormat"},
+				{Name: "Visibility"}, {Name: "Protected"},
 			},
-			Slots: map[string]func(item interface{}) interface{}{},
+			SortBy:        []table.SortBy{{Name: "Name", Mode: table.Asc}},
+			ColumnConfigs: []table.ColumnConfig{{Number: 4, Align: text.AlignRight}},
 		}
-		if human {
-			dataListTable.Slots["Size"] = func(item interface{}) interface{} {
-				p, _ := item.(image.Image)
-				return p.HumanSize()
-			}
-		}
-		dataListTable.AddItems(images)
-		common.PrintDataListTable(dataListTable, long)
+
+		pt.AddItems(images)
+		common.PrintPrettyTable(pt, long)
 	},
 }
 var ImageShow = &cobra.Command{

@@ -29,21 +29,20 @@ var routerList = &cobra.Command{
 			query.Set("name", name)
 		}
 		routers := client.Networking.RouterList(query)
-		dataListTable := common.DataListTable{
-			ShortHeaders: []string{"Id", "Name", "Status", "AdminStateUp", "Distributed", "HA"},
-			LongHeaders:  []string{"Routes", "ExternalGatewayinfo"},
-			SortBy: []table.SortBy{
-				{Name: "Name", Mode: table.Asc},
+		pt := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
+				{Name: "AdminStateUp", AutoColor: true}, {Name: "Distributed"},
+				{Name: "HA", Text: "HA"},
 			},
-			HeaderLabel: map[string]string{"HA": "HA"},
-			ColumnConfigs: []table.ColumnConfig{
-				{Number: 4, Align: text.AlignRight},
+			LongColumns: []common.Column{
+				{Name: "Routes"}, {Name: "ExternalGatewayinfo"},
 			},
-			Slots: map[string]func(item interface{}) interface{}{},
+			SortBy:        []table.SortBy{{Name: "Name", Mode: table.Asc}},
+			ColumnConfigs: []table.ColumnConfig{{Number: 4, Align: text.AlignRight}},
 		}
-
-		dataListTable.AddItems(routers)
-		common.PrintDataListTable(dataListTable, long)
+		pt.AddItems(routers)
+		common.PrintPrettyTable(pt, long)
 	},
 }
 var routerShow = &cobra.Command{
@@ -63,11 +62,10 @@ var routerShow = &cobra.Command{
 				{Name: "AdminStateUp"},
 				{Name: "Distributed"}, {Name: "HA", Text: "HA"},
 				{Name: "AdminStateUp"},
-				{Name: "ExternalGatewayinfo",
-					Slot: func(item interface{}) interface{} {
-						p, _ := item.(networking.Router)
-						return p.MarshalExternalGatewayInfo()
-					}},
+				{Name: "ExternalGatewayinfo", Slot: func(item interface{}) interface{} {
+					p, _ := item.(networking.Router)
+					return p.MarshalExternalGatewayInfo()
+				}},
 				{Name: "AvailabilityZones"},
 				{Name: "RevsionNumber"},
 				{Name: "ProjectId"},

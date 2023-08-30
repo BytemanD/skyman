@@ -21,26 +21,32 @@ var userList = &cobra.Command{
 		project, _ := cmd.Flags().GetString("project")
 
 		client := cli.GetClient()
-
-		dataListTable := common.DataListTable{
-			ShortHeaders: []string{"Id", "Name"},
-			LongHeaders:  []string{"Project", "DomainId", "Description", "Email", "Enabled"},
-			SortBy:       []table.SortBy{{Name: "Region"}, {Name: "Service Name"}},
+		pt := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"}, {Name: "Name"},
+				{Name: "Enabled", AutoColor: true},
+			},
+			LongColumns: []common.Column{
+				{Name: "Project"}, {Name: "DomainId"},
+				{Name: "Description"}, {Name: "Email"},
+			},
+			SortBy: []table.SortBy{{Name: "Region"}, {Name: "Service Name"}},
 		}
+
 		if project == "" {
 			users, err := client.Identity.UserList(nil)
 			if err != nil {
 				logging.Fatal("get users failed, %s", err)
 			}
-			dataListTable.AddItems(users)
+			pt.AddItems(users)
 		} else {
 			users, err := client.Identity.UserListByProjectId(project)
 			if err != nil {
 				logging.Fatal("get users failed, %s", err)
 			}
-			dataListTable.AddItems(users)
+			pt.AddItems(users)
 		}
-		common.PrintDataListTable(dataListTable, long)
+		common.PrintPrettyTable(pt, long)
 	},
 }
 

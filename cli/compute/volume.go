@@ -15,15 +15,15 @@ import (
 var Volume = &cobra.Command{Use: "volume"}
 
 func printVolumeAttachments(items []compute.VolumeAttachment) {
-	dataListTable := common.DataListTable{
-		ShortHeaders: []string{"Id", "VolumeId", "Device"},
-		HeaderLabel:  map[string]string{"Id": "Attachment Id"},
-		SortBy: []table.SortBy{
-			{Name: "Device", Mode: table.Asc},
+	pt := common.PrettyTable{
+		ShortColumns: []common.Column{
+			{Name: "Id", Text: "Attachment Id"},
+			{Name: "VolumeId"}, {Name: "Device"},
 		},
+		SortBy: []table.SortBy{{Name: "Device", Mode: table.Asc}},
 	}
-	dataListTable.AddItems(items)
-	common.PrintDataListTable(dataListTable, false)
+	pt.AddItems(items)
+	common.PrintPrettyTable(pt, false)
 }
 
 var volumeList = &cobra.Command{

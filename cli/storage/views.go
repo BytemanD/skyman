@@ -14,27 +14,23 @@ func printVolume(volume storage.Volume) {
 			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 			{Name: "Status"}, {Name: "TaskStatus"},
 			{Name: "Size"}, {Name: "Bootable"},
-			{Name: "Attachments"}, {Name: "VolumeType"},
-			{Name: "Metadata"},
-			{Name: "AvailabilityZone"}, {Name: "Host"},
-			{Name: "Multiattach"}, {Name: "GroupId"}, {Name: "SourceVolid"},
-			{Name: "VolumeImageMetadata"},
-			{Name: "CreatedAt"}, {Name: "UpdatedAt"},
-			{Name: "UserId"}, {Name: "TenantId"},
-		},
-		Slots: map[string]func(item interface{}) interface{}{
-			"Attachments": func(item interface{}) interface{} {
+			{Name: "Attachments", Slot: func(item interface{}) interface{} {
 				p, _ := item.(storage.Volume)
 				return strings.Join(p.GetAttachmentList(), "\n")
-			},
-			"Metadata": func(item interface{}) interface{} {
+			}},
+			{Name: "VolumeType"},
+			{Name: "Metadata", Slot: func(item interface{}) interface{} {
 				p, _ := item.(storage.Volume)
 				return strings.Join(p.GetMetadataList(), "\n")
-			},
-			"VolumeImageMetadata": func(item interface{}) interface{} {
+			}},
+			{Name: "AvailabilityZone"}, {Name: "Host"},
+			{Name: "Multiattach"}, {Name: "GroupId"}, {Name: "SourceVolid"},
+			{Name: "VolumeImageMetadata", Slot: func(item interface{}) interface{} {
 				p, _ := item.(storage.Volume)
 				return strings.Join(p.GetImageMetadataList(), "\n")
-			},
+			}},
+			{Name: "CreatedAt"}, {Name: "UpdatedAt"},
+			{Name: "UserId"}, {Name: "TenantId"},
 		},
 	}
 	common.PrintDataTable(dataTable)

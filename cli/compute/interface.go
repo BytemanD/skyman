@@ -15,18 +15,20 @@ import (
 var serverInterface = &cobra.Command{Use: "interface"}
 
 func printinterfaceAttachments(items []compute.InterfaceAttachment) {
-	dataListTable := common.DataListTable{
-		ShortHeaders: []string{"PortState", "PortId", "NetId", "FixedIps", "MacAddr"},
-		HeaderLabel:  map[string]string{"FixedIps": "IP Addresses"},
-		Slots: map[string]func(item interface{}) interface{}{
-			"FixedIps": func(item interface{}) interface{} {
+	dataListTable := common.PrettyTable{
+		ShortColumns: []common.Column{
+			{Name: "PortState", AutoColor: true},
+			{Name: "PortId"},
+			{Name: "NetId"},
+			{Name: "FixedIps", Text: "IP Addresses", Slot: func(item interface{}) interface{} {
 				attachment, _ := item.(compute.InterfaceAttachment)
 				return strings.Join(attachment.GetIPAddresses(), ", ")
-			},
+			}},
+			{Name: "MacAddr"},
 		},
 	}
 	dataListTable.AddItems(items)
-	common.PrintDataListTable(dataListTable, false)
+	common.PrintPrettyTable(dataListTable, false)
 }
 
 var interfaceList = &cobra.Command{

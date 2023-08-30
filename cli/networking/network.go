@@ -34,28 +34,32 @@ var networkList = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		dataListTable := common.DataListTable{
-			ShortHeaders: []string{"Id", "Name", "Status", "AdminStateUp", "Subnets"},
-			LongHeaders: []string{
-				"Shared", "NetworkType", "AvailabilityZones"},
+		pt := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
+				{Name: "AdminStateUp", AutoColor: true},
+				{Name: "Subnets", Slot: func(item interface{}) interface{} {
+					p, _ := item.(networking.Network)
+					return strings.Join(p.Subnets, "\n")
+				}},
+				{Name: "DeviceOwner"},
+			},
+			LongColumns: []common.Column{
+				{Name: "Shared"}, {Name: "NetworkType"},
+				{Name: "AvailabilityZones"},
+			},
 			SortBy: []table.SortBy{
 				{Name: "Name", Mode: table.Asc},
 			},
 			ColumnConfigs: []table.ColumnConfig{
 				{Number: 4, Align: text.AlignRight},
 			},
-			Slots: map[string]func(item interface{}) interface{}{
-				"Subnets": func(item interface{}) interface{} {
-					p, _ := item.(networking.Network)
-					return strings.Join(p.Subnets, "\n")
-				},
-			},
 		}
-		dataListTable.AddItems(networks)
+		pt.AddItems(networks)
 		if long {
-			dataListTable.StyleSeparateRows = true
+			pt.StyleSeparateRows = true
 		}
-		common.PrintDataListTable(dataListTable, long)
+		common.PrintPrettyTable(pt, long)
 	},
 }
 var networkDelete = &cobra.Command{
