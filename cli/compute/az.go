@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/stackcrud/cli"
+	"github.com/BytemanD/stackcrud/common"
 )
 
 var AZ = &cobra.Command{Use: "az"}
@@ -20,7 +21,14 @@ var azList = &cobra.Command{
 		if tree {
 			printAZInfoTree(azInfo)
 		} else {
-			printAZInfo(azInfo)
+			switch common.CONF.Format {
+			case common.DEFAULT, common.FORMAT_TABLE, common.FORMAT_TABLE_LIGHT:
+				printAZInfo(azInfo)
+			case common.JSON:
+				printAzInfoJson(azInfo)
+			case common.YAML:
+				printAzInfoYaml(azInfo)
+			}
 		}
 	},
 }

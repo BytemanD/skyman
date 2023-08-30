@@ -622,13 +622,13 @@ var serverRegionLiveMigrate = &cobra.Command{
 				migrateErr = err
 			}
 			if dryRun {
-				table := common.DataTable{
+				table := common.PrettyItemTable{
 					Item: migrateResp,
-					ShortFields: []common.Field{
+					ShortFields: []common.Column{
 						{Name: "AllowLiveMigrate"}, {Name: "Reason"},
 					},
 				}
-				common.PrintDataTable(table)
+				common.PrintPrettyItemTable(table)
 			}
 		}
 		if migrateErr != nil {

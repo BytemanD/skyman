@@ -5,15 +5,16 @@ import (
 	"os"
 	"strings"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/compute"
 	"github.com/jedib0t/go-pretty/v6/list"
 )
 
 func printServer(server compute.Server) {
-	dataTable := common.DataTable{
+	pt := common.PrettyItemTable{
 		Item: server,
-		ShortFields: []common.Field{
+		ShortFields: []common.Column{
 			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 			{Name: "Flavor:original_name", Text: "Flavor:original_name",
 				Slot: func(item interface{}) interface{} {
@@ -74,12 +75,12 @@ func printServer(server compute.Server) {
 				}},
 		},
 	}
-	common.PrintDataTable(dataTable)
+	common.PrintPrettyItemTable(pt)
 }
 func printFlavor(server compute.Flavor) {
-	dataTable := common.DataTable{
+	pt := common.PrettyItemTable{
 		Item: server,
-		ShortFields: []common.Field{
+		ShortFields: []common.Column{
 			{Name: "Id"}, {Name: "Name"},
 			{Name: "Vcpus"}, {Name: "Ram"}, {Name: "Disk"}, {Name: "Swap"},
 			{Name: "RXTXFactor", Text: "RXTXFactor"},
@@ -104,7 +105,7 @@ func printFlavor(server compute.Flavor) {
 			}},
 		},
 	}
-	common.PrintDataTable(dataTable)
+	common.PrintPrettyItemTable(pt)
 }
 
 type AZHost struct {
@@ -201,4 +202,20 @@ func printAZInfoTree(azList []compute.AvailabilityZone) {
 	}
 
 	tw.Render()
+}
+
+func printAzInfoJson(azInfo []compute.AvailabilityZone) {
+	jsonString, err := common.GetIndentJson(azInfo)
+	if err != nil {
+		logging.Fatal("get json string failed, %v", err)
+	}
+	fmt.Println(jsonString)
+}
+
+func printAzInfoYaml(azInfo []compute.AvailabilityZone) {
+	yamlString, err := common.GetYaml(azInfo)
+	if err != nil {
+		logging.Fatal("get yaml string failed, %v", err)
+	}
+	fmt.Println(yamlString)
 }

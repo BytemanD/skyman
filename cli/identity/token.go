@@ -18,9 +18,9 @@ var tokenIssue = &cobra.Command{
 		client := cli.GetClient()
 
 		token := client.AuthClient.GetToken()
-		dataTable := common.DataTable{
+		pt := common.PrettyItemTable{
 			Item: token,
-			ShortFields: []common.Field{
+			ShortFields: []common.Column{
 				{Name: "ExpiresAt", Text: "Expires At"},
 				{Name: "TokenId", Text: "Id"},
 				{Name: "ProjectId", Text: "Project Id", Slot: func(item interface{}) interface{} {
@@ -33,7 +33,7 @@ var tokenIssue = &cobra.Command{
 				}},
 			},
 		}
-		common.PrintDataTable(dataTable)
+		common.PrintPrettyItemTable(pt)
 	},
 }
 

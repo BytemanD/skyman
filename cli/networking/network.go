@@ -85,9 +85,9 @@ var networkShow = &cobra.Command{
 		if err != nil {
 			common.LogError(err, "show network failed", true)
 		}
-		table := common.DataTable{
+		table := common.PrettyItemTable{
 			Item: *network,
-			ShortFields: []common.Field{
+			ShortFields: []common.Column{
 				{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 				{Name: "NetworkType"},
 				{Name: "PhysicalNetwork"},
@@ -99,7 +99,7 @@ var networkShow = &cobra.Command{
 				{Name: "CreatedAt"},
 			},
 		}
-		common.PrintDataTable(table)
+		common.PrintPrettyItemTable(table)
 	},
 }
 

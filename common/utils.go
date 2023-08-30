@@ -41,15 +41,3 @@ func LogError(err error, message string, exit bool) {
 		os.Exit(1)
 	}
 }
-
-func splitTitle(s string) string {
-	newStr := ""
-	for _, c := range s {
-		if c < 91 && newStr != "" {
-			newStr += " " + string(c)
-		} else {
-			newStr += string(c)
-		}
-	}
-	return newStr
-}

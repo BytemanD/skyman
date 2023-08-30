@@ -93,9 +93,9 @@ var portShow = &cobra.Command{
 		if err != nil {
 			common.LogError(err, "show port failed", true)
 		}
-		table := common.DataTable{
+		table := common.PrettyItemTable{
 			Item: *port,
-			ShortFields: []common.Field{
+			ShortFields: []common.Column{
 				{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 				{Name: "MACAddress", Text: "MAC Address"},
 				{Name: "BindingVnicType"},
@@ -113,7 +113,7 @@ var portShow = &cobra.Command{
 				{Name: "CreatedAt"}, {Name: "UpdatedAt"},
 			},
 		}
-		common.PrintDataTable(table)
+		common.PrintPrettyItemTable(table)
 	},
 }
 var portDelete = &cobra.Command{

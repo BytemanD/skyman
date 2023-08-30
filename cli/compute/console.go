@@ -53,11 +53,11 @@ var consoleUrl = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		dataTable := common.DataTable{
+		pt := common.PrettyItemTable{
 			Item:        *console,
-			ShortFields: []common.Field{{Name: "Type"}, {Name: "Url"}},
+			ShortFields: []common.Column{{Name: "Type"}, {Name: "Url"}},
 		}
-		common.PrintDataTable(dataTable)
+		common.PrintPrettyItemTable(pt)
 	},
 }
 

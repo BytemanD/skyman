@@ -6,9 +6,9 @@ import (
 )
 
 func printImage(img image.Image, human bool) {
-	dataTable := common.DataTable{
+	pt := common.PrettyItemTable{
 		Item: img,
-		ShortFields: []common.Field{
+		ShortFields: []common.Column{
 			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 			{Name: "Checksum"}, {Name: "Schema"},
 			{Name: "DirectUrl"}, {Name: "Status"},
@@ -21,10 +21,12 @@ func printImage(img image.Image, human bool) {
 					return p.Size
 				}
 			}},
-			{Name: "VirtualSize"}, {Name: "ProcessInfo"},
-			{Name: "Protected"}, {Name: "OSHashAlgo"}, {Name: "OSHashValue"},
-			{Name: "Tags"}, {Name: "Owner"}, {Name: "CreatedAt"}, {Name: "UpdatedAt"},
+			{Name: "VirtualSize"}, {Name: "ProcessInfo"}, {Name: "Protected"},
+			{Name: "OSHashAlgo", Text: "OS Hash Algo"},
+			{Name: "OSHashValue", Text: "OS Hash Value"},
+			{Name: "Tags"}, {Name: "Owner"},
+			{Name: "CreatedAt"}, {Name: "UpdatedAt"},
 		},
 	}
-	common.PrintDataTable(dataTable)
+	common.PrintPrettyItemTable(pt)
 }

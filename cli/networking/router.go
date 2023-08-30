@@ -55,9 +55,9 @@ var routerShow = &cobra.Command{
 		if err != nil {
 			common.LogError(err, "show router failed", true)
 		}
-		table := common.DataTable{
+		table := common.PrettyItemTable{
 			Item: *router,
-			ShortFields: []common.Field{
+			ShortFields: []common.Column{
 				{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 				{Name: "AdminStateUp"},
 				{Name: "Distributed"}, {Name: "HA", Text: "HA"},
@@ -72,7 +72,7 @@ var routerShow = &cobra.Command{
 				{Name: "CreatedAt"},
 			},
 		}
-		common.PrintDataTable(table)
+		common.PrintPrettyItemTable(table)
 	},
 }
 var routerDelete = &cobra.Command{

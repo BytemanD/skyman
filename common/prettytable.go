@@ -10,6 +10,22 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 )
 
+func splitTitle(s string) string {
+	newStr := ""
+	for _, c := range s {
+		if c < 91 && newStr != "" {
+			newStr += " " + string(c)
+		} else {
+			newStr += string(c)
+		}
+	}
+	return newStr
+}
+
+var (
+	STYLE_LIGHT = "light"
+)
+
 type Column struct {
 	Name string
 	Text string
@@ -143,6 +159,72 @@ func (pt PrettyTable) PrintYaml() {
 	output, err := GetYaml(pt.Items)
 	if err != nil {
 		logging.Fatal("print json failed, %s", err)
+	}
+	fmt.Println(output)
+}
+
+type PrettyItemTable struct {
+	ShortFields []Column
+	LongFields  []Column
+	Item        interface{}
+	Title       string
+	Style       string
+}
+
+func (pt PrettyItemTable) Print(long bool) {
+	tableWriter := table.NewWriter()
+	if pt.Style == STYLE_LIGHT {
+		tableWriter.SetStyle(table.StyleLight)
+		tableWriter.Style().Color.Header = text.Colors{text.FgBlue, text.Bold}
+		tableWriter.Style().Color.Border = text.Colors{text.FgBlue}
+		tableWriter.Style().Color.Separator = text.Colors{text.FgBlue}
+	}
+
+	tableWriter.Style().Format.Header = text.FormatDefault
+	tableWriter.SetOutputMirror(os.Stdout)
+
+	headerRow := table.Row{"Property", "Value"}
+	fields := pt.ShortFields
+	if long {
+		fields = append(fields, pt.LongFields...)
+	}
+	tableWriter.AppendHeader(headerRow)
+	reflectValue := reflect.ValueOf(pt.Item)
+	for _, field := range fields {
+		var (
+			fieldValue interface{}
+			fieldLabel string
+		)
+		if field.Text == "" {
+			fieldLabel = splitTitle(field.Name)
+		} else {
+			fieldLabel = field.Text
+		}
+		if field.Slot != nil {
+			fieldValue = field.Slot(pt.Item)
+		} else {
+			fieldValue = reflectValue.FieldByName(field.Name)
+		}
+		tableWriter.AppendRow(table.Row{fieldLabel, fieldValue})
+	}
+	if pt.Title != "" {
+		tableWriter.SetTitle(pt.Title)
+		tableWriter.Style().Title.Align = text.AlignCenter
+	}
+	tableWriter.Render()
+}
+func (dt PrettyItemTable) PrintJson() {
+	output, err := GetIndentJson(dt.Item)
+	if err != nil {
+		logging.Fatal("print json failed, %s", err)
+	}
+	fmt.Println(output)
+}
+
+func (dt PrettyItemTable) PrintYaml() {
+	output, err := GetYaml(dt.Item)
+	if err != nil {
+		logging.Fatal("print yaml failed, %s", err)
 	}
 	fmt.Println(output)
 }

@@ -16,9 +16,9 @@ var Compute = &cobra.Command{Use: "compute"}
 var computeService = &cobra.Command{Use: "service"}
 
 func printServiceTable(item interface{}) {
-	dataTable := common.DataTable{
+	pt := common.PrettyItemTable{
 		Item: item,
-		ShortFields: []common.Field{
+		ShortFields: []common.Column{
 			{Name: "Id"}, {Name: "Binary"}, {Name: "Host"},
 			{Name: "Status", Slot: func(item interface{}) interface{} {
 				p, _ := (item).(compute.Service)
@@ -32,7 +32,7 @@ func printServiceTable(item interface{}) {
 			{Name: "DisabledReason", Text: "Disabled Reason"},
 		},
 	}
-	common.PrintDataTable(dataTable)
+	common.PrintPrettyItemTable(pt)
 }
 
 var csList = &cobra.Command{
@@ -53,7 +53,7 @@ var csList = &cobra.Command{
 			query.Set("host", host)
 		}
 		services := client.Compute.ServiceList(query)
-		dataTable := common.PrettyTable{
+		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Binary"},
 				{Name: "Host"}, {Name: "Zone"},
@@ -65,8 +65,8 @@ var csList = &cobra.Command{
 				{Name: "DisabledReason"}, {Name: "ForcedDown"},
 			},
 		}
-		dataTable.AddItems(services)
-		common.PrintPrettyTable(dataTable, long)
+		pt.AddItems(services)
+		common.PrintPrettyTable(pt, long)
 	},
 }
 

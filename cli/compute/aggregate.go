@@ -23,7 +23,7 @@ var aggList = &cobra.Command{
 		client := cli.GetClient()
 		aggregates, err := client.Compute.AggregateList(nil)
 		cli.ExitIfError(err)
-		dataTable := common.PrettyTable{
+		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"},
 				{Name: "Name", Sort: true},
@@ -51,8 +51,8 @@ var aggList = &cobra.Command{
 		} else {
 			filteredAggs = aggregates
 		}
-		dataTable.AddItems(filteredAggs)
-		common.PrintPrettyTable(dataTable, long)
+		pt.AddItems(filteredAggs)
+		common.PrintPrettyTable(pt, long)
 	},
 }
 var aggShow = &cobra.Command{
@@ -65,9 +65,9 @@ var aggShow = &cobra.Command{
 		client := cli.GetClient()
 		aggregate, err := client.Compute.AggregateShow(agg)
 		cli.ExitIfError(err)
-		dataTable := common.DataTable{
+		pt := common.PrettyItemTable{
 			Item: *aggregate,
-			ShortFields: []common.Field{
+			ShortFields: []common.Column{
 				{Name: "Id"}, {Name: "Name"}, {Name: "AvailabilityZone"},
 				{Name: "Hosts", Slot: func(item interface{}) interface{} {
 					p, _ := (item).(compute.Aggregate)
@@ -81,7 +81,7 @@ var aggShow = &cobra.Command{
 				{Name: "Deleted"}, {Name: "DeletedAt"},
 			},
 		}
-		common.PrintDataTable(dataTable)
+		common.PrintPrettyItemTable(pt)
 	},
 }
 

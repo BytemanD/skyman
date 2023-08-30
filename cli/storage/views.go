@@ -8,9 +8,9 @@ import (
 )
 
 func printVolume(volume storage.Volume) {
-	dataTable := common.DataTable{
+	pt := common.PrettyItemTable{
 		Item: volume,
-		ShortFields: []common.Field{
+		ShortFields: []common.Column{
 			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 			{Name: "Status"}, {Name: "TaskStatus"},
 			{Name: "Size"}, {Name: "Bootable"},
@@ -33,5 +33,5 @@ func printVolume(volume storage.Volume) {
 			{Name: "UserId"}, {Name: "TenantId"},
 		},
 	}
-	common.PrintDataTable(dataTable)
+	common.PrintPrettyItemTable(pt)
 }

@@ -30,7 +30,8 @@ func PrintPrettyTable(table PrettyTable, long bool) {
 			GetOutputFormats())
 	}
 }
-func PrintDataTable(table DataTable) {
+
+func PrintPrettyItemTable(table PrettyItemTable) {
 	switch CONF.Format {
 	case TABLE, "default", "":
 		table.Print(true)
