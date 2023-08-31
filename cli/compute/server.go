@@ -71,7 +71,7 @@ var serverList = &cobra.Command{
 				}},
 			},
 			LongColumns: []common.Column{
-				{Name: "AZ"}, {Name: "Host"}, {Name: "InstanceName"},
+				{Name: "AZ", Text: "AZ"}, {Name: "Host"}, {Name: "InstanceName"},
 				{Name: "Flavor:name", Text: "Flavor:name", Slot: func(item interface{}) interface{} {
 					p, _ := (item).(compute.Server)
 					return p.Flavor.OriginalName
@@ -621,18 +621,18 @@ var serverRegionLiveMigrate = &cobra.Command{
 				migrateResp = *resp
 				migrateErr = err
 			}
-			if dryRun {
-				table := common.PrettyItemTable{
-					Item: migrateResp,
-					ShortFields: []common.Column{
-						{Name: "AllowLiveMigrate"}, {Name: "Reason"},
-					},
-				}
-				common.PrintPrettyItemTable(table)
-			}
 		}
 		if migrateErr != nil {
 			logging.Fatal("Reqeust to migrate server failed, %v", migrateErr)
+		}
+		if dryRun {
+			table := common.PrettyItemTable{
+				Item: migrateResp,
+				ShortFields: []common.Column{
+					{Name: "AllowLiveMigrate"}, {Name: "Reason"},
+				},
+			}
+			common.PrintPrettyItemTable(table)
 		} else {
 			fmt.Printf("Requested to migrate server: %s\n", args[0])
 		}
