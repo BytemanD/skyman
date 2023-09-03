@@ -59,7 +59,7 @@ var aggShow = &cobra.Command{
 	Use:   "show <aggregate id or name>",
 	Short: "Show aggregate",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		agg := args[0]
 
 		client := cli.GetClient()

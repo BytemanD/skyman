@@ -28,7 +28,7 @@ var volumeList = &cobra.Command{
 	Use:   "list <server>",
 	Short: "List service volumes",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 		attachments, err := client.Compute.ServerVolumeList(args[0])
 		if err != nil {
@@ -43,7 +43,7 @@ var volumeAttach = &cobra.Command{
 	Use:   "attach <server> <volume>",
 	Short: "Attach volome to service",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 		attachment, err := client.Compute.ServerVolumeAdd(args[0], args[1])
 		if err != nil {
@@ -57,7 +57,7 @@ var volumeDetach = &cobra.Command{
 	Use:   "detach <host> <binary>",
 	Short: "Detach volume from service",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 		err := client.Compute.ServerVolumeDelete(args[0], args[1])
 		if err != nil {

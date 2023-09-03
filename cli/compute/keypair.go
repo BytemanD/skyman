@@ -14,7 +14,7 @@ var Keypair = &cobra.Command{Use: "keypair"}
 var keypairList = &cobra.Command{
 	Use:   "list",
 	Short: "List keypairs",
-	Run: func(cmd *cobra.Command, _ []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		client := cli.GetClient()
 		keypairs, err := client.Compute.KeypairList(nil)
 		if err != nil {

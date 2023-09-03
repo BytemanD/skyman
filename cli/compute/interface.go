@@ -35,7 +35,7 @@ var interfaceList = &cobra.Command{
 	Use:   "list <server>",
 	Short: "List server interfaces",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 		attachments, err := client.Compute.ServerInterfaceList(args[0])
 		if err != nil {
@@ -50,7 +50,7 @@ var interfaceAttachPort = &cobra.Command{
 	Use:   "attach-port <server> <port id>",
 	Short: "Attach port to server",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 
 		attachment, err := client.Compute.ServerAddPort(args[0], args[1])
@@ -65,7 +65,7 @@ var interfaceAttachNet = &cobra.Command{
 	Use:   "attach-net <server> <network id>",
 	Short: "Attach network to server",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 
 		attachment, err := client.Compute.ServerAddNet(args[0], args[1])
@@ -80,7 +80,7 @@ var interfaceDetach = &cobra.Command{
 	Use:   "detach <server> <port id>",
 	Short: "Detach port from server",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 
 		err := client.Compute.ServerInterfaceDetach(args[0], args[1])

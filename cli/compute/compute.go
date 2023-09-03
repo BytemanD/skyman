@@ -74,7 +74,7 @@ var csEnable = &cobra.Command{
 	Use:   "enable <host> <binary>",
 	Short: "Enable compute service",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 		service, err := client.Compute.ServiceEnable(args[0], args[1])
 		if err != nil {
@@ -103,7 +103,7 @@ var csUp = &cobra.Command{
 	Use:   "up <host> <binary>",
 	Short: "Unset force down compute service",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 		service, err := client.Compute.ServiceUp(args[0], args[1])
 		if err != nil {
@@ -117,7 +117,7 @@ var csDown = &cobra.Command{
 	Use:   "down <host> <binary>",
 	Short: "Force down compute service",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 		service, err := client.Compute.ServiceDown(args[0], args[1])
 		if err != nil {

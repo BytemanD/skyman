@@ -34,7 +34,7 @@ var consoleUrl = &cobra.Command{
 	Use:   "url <server> <type>",
 	Short: "Show console url of server",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 		var isTypeValid bool
 		for _, item := range validType {

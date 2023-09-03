@@ -342,7 +342,7 @@ var serverPause = &cobra.Command{
 	Use:   "pause <server> [<server> ...]",
 	Short: "Pause server(s)",
 	Args:  cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 
 		for _, id := range args {
@@ -359,7 +359,7 @@ var serverUnpause = &cobra.Command{
 	Use:   "unpause <server> [<server> ...]",
 	Short: "Unpause server(s)",
 	Args:  cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 
 		for _, id := range args {
@@ -376,7 +376,7 @@ var serverShelve = &cobra.Command{
 	Use:   "shelve <server> [<server> ...]",
 	Short: "Shelve server(s)",
 	Args:  cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 
 		for _, id := range args {
@@ -393,7 +393,7 @@ var serverUnshelve = &cobra.Command{
 	Use:   "unshelve <server> [<server> ...]",
 	Short: "Unshelve server(s)",
 	Args:  cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 
 		for _, id := range args {
@@ -410,7 +410,7 @@ var serverSuspend = &cobra.Command{
 	Use:   "suspend <server> [<server> ...]",
 	Short: "Suspend server(s)",
 	Args:  cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 
 		for _, id := range args {
@@ -427,7 +427,7 @@ var serverResume = &cobra.Command{
 	Use:   "resume <server> [<server> ...]",
 	Short: "Resume server(s)",
 	Args:  cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 
 		for _, id := range args {
@@ -517,7 +517,7 @@ var serverRebuild = &cobra.Command{
 	Use:   "rebuild <server>",
 	Short: "Rebuild server",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 
 		err := client.Compute.ServerRebuild(args[0])

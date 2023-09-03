@@ -90,7 +90,7 @@ var flavorShow = &cobra.Command{
 	Use:   "show <flavor id>",
 	Short: "Show flavor",
 	Args:  cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 		flavorId := args[0]
 		flavor, err := client.Compute.FlavorShowWithExtraSpecs(flavorId)
@@ -109,7 +109,7 @@ var flavorDelete = &cobra.Command{
 	Short: "Delete flavor(s)",
 
 	Args: cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 		for _, flavorId := range args {
 			err := client.Compute.FlavorDelete(flavorId)
