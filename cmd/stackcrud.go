@@ -16,6 +16,7 @@ import (
 	"github.com/BytemanD/stackcrud/cli/networking"
 	"github.com/BytemanD/stackcrud/cli/storage"
 	"github.com/BytemanD/stackcrud/common"
+	"github.com/BytemanD/stackcrud/common/i18n"
 )
 
 var (
@@ -32,7 +33,7 @@ func getVersion() string {
 func main() {
 	rootCmd := cobra.Command{
 		Use:     "stackcurd",
-		Short:   "Golang Openstack Client",
+		Short:   "Golang OpenStack Client",
 		Version: getVersion(),
 		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 			conf, _ := cmd.Flags().GetString("conf")
@@ -40,7 +41,6 @@ func main() {
 				fmt.Printf("load config failed, %v\n", err)
 				os.Exit(1)
 			}
-
 			if common.CONF.Debug {
 				logging.BasicConfig(logging.LogConfig{Level: logging.DEBUG})
 			} else {
@@ -50,17 +50,15 @@ func main() {
 		},
 	}
 
-	rootCmd.PersistentFlags().BoolP("debug", "d", false, "显示Debug信息")
-	rootCmd.PersistentFlags().StringP("conf", "c", "", "配置文件")
+	rootCmd.PersistentFlags().BoolP("debug", "d", false, i18n.T("showDebug"))
+	rootCmd.PersistentFlags().StringP("conf", "c", "", i18n.T("thePathOfConfigFile"))
 	rootCmd.PersistentFlags().StringP("format", "f", "default",
-		fmt.Sprintf("格式, 支持的格式: %s", common.GetOutputFormats()))
+		fmt.Sprintf(i18n.T("formatAndSupported"), common.GetOutputFormats()))
 
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	viper.BindPFlag("format", rootCmd.PersistentFlags().Lookup("format"))
-
-	rootCmd.AddCommand(identity.Token)
-
 	rootCmd.AddCommand(
+		identity.Token,
 		identity.Service, identity.Endpoint,
 		identity.User, identity.Project,
 		compute.Server, compute.Flavor, compute.Hypervisor,
@@ -70,6 +68,5 @@ func main() {
 		storage.Volume,
 		networking.Router, networking.Network, networking.Port,
 	)
-
 	rootCmd.Execute()
 }

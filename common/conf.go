@@ -1,6 +1,7 @@
 package common
 
 import (
+	"github.com/BytemanD/stackcrud/common/i18n"
 	"github.com/BytemanD/stackcrud/openstack/identity"
 	"github.com/spf13/viper"
 )
@@ -21,8 +22,9 @@ var (
 )
 
 type ConfGroup struct {
-	Debug  bool   `yaml:"debug"`
-	Format string `yaml:"format"`
+	Debug    bool   `yaml:"debug"`
+	Format   string `yaml:"format"`
+	Language string `yaml:"language"`
 
 	Auth   Auth   `yaml:"auth"`
 	Server Server `yaml:"server"`
@@ -59,5 +61,6 @@ func LoadConfig(configFile string) error {
 		return err
 	}
 	viper.Unmarshal(&CONF)
+	i18n.InitLocalizer(CONF.Language)
 	return nil
 }

@@ -43,8 +43,8 @@ function rpmBuild() {
     logInfo "版本: $(awk '/^Version/{print $2}' ${buldingSpec})"
 
     mkdir -p /root/rpmbuild/SOURCES
-    cp dist/stackcrud etc/stackcrud-template.yaml /root/rpmbuild/SOURCES || exit 1
-    rpmbuild -bb ${buldingSpec}
+    cp dist/stackcrud etc/stackcrud-template.yaml locale/* /root/rpmbuild/SOURCES || exit 1
+    rpmbuild -bb ${buldingSpec} || exit 1
 
     ls -1 /root/rpmbuild/RPMS/x86_64/stackcrud-*.rpm |while read line
     do

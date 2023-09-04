@@ -37,6 +37,8 @@ require (
 	github.com/spf13/viper v1.16.0
 )
 
+require github.com/nicksnyder/go-i18n/v2 v2.2.1 // indirect
+
 replace github.com/BytemanD/stackcrud => ./
 
 replace github.com/BytemanD/stackcrud/openstack => ./openstack

@@ -1,0 +1,8 @@
+[thePathOfConfigFile]
+other = "配置文件路径"
+
+[showDebug]
+other = "显示Debug信息"
+
+[formatAndSupported]
+other = '输出格式, 支持的格式: %v'
