@@ -30,10 +30,11 @@ type Column struct {
 	Name string
 	Text string
 	// 只有 Table.Style 等于 light 是才会生效
-	AutoColor bool
-	Slot      func(item interface{}) interface{}
-	Sort      bool
-	SortMode  table.SortMode
+	AutoColor  bool
+	ForceColor bool
+	Slot       func(item interface{}) interface{}
+	Sort       bool
+	SortMode   table.SortMode
 }
 
 type PrettyTable struct {
@@ -44,6 +45,7 @@ type PrettyTable struct {
 	ColumnConfigs     []table.ColumnConfig
 	Style             string
 	StyleSeparateRows bool
+	HideTotalItems    bool
 	tableWriter       table.Writer
 }
 
@@ -122,7 +124,7 @@ func (pt PrettyTable) Print(long bool) {
 			} else {
 				value = reflectValue.FieldByName(column.Name)
 			}
-			if column.AutoColor && pt.Style == STYLE_LIGHT {
+			if column.ForceColor || (column.AutoColor && pt.Style == STYLE_LIGHT) {
 				value = pt.FormatString(fmt.Sprint(value))
 			}
 			row = append(row, value)
@@ -136,15 +138,13 @@ func (pt PrettyTable) Print(long bool) {
 	// TODO: 当前只能按Columns 顺序排序
 	tableWriter.SortBy(sortBy)
 	tableWriter.Render()
-	fmt.Printf("Total items: %d\n", len(pt.Items))
+	if !pt.HideTotalItems {
+		fmt.Printf("Total items: %d\n", len(pt.Items))
+	}
 }
 
 func (pt PrettyTable) FormatString(s string) string {
-	if pt.Style == STYLE_LIGHT {
-		return BaseColorFormatter.Format(s)
-	} else {
-		return s
-	}
+	return BaseColorFormatter.Format(s)
 }
 
 func (pt PrettyTable) PrintJson() {
@@ -227,4 +227,21 @@ func (dt PrettyItemTable) PrintYaml() {
 		logging.Fatal("print yaml failed, %s", err)
 	}
 	fmt.Println(output)
+}
+
+func PrintPrettyTableFormat(table PrettyTable, long bool, format string) {
+	switch format {
+	case TABLE, "default", "":
+		table.Print(long)
+	case TABLE_LIGHT:
+		table.Style = STYLE_LIGHT
+		table.Print(long)
+	case JSON:
+		table.PrintJson()
+	case YAML:
+		table.PrintYaml()
+	default:
+		logging.Fatal("invalid output format: %s, valid formats: %v", CONF.Format,
+			GetOutputFormats())
+	}
 }

@@ -697,6 +697,23 @@ var serverMigrationList = &cobra.Command{
 	},
 }
 
+var serverInspect = &cobra.Command{
+	Use:   "inspect <id>",
+	Short: "inspect server ",
+	Args:  cobra.ExactArgs(1),
+	Run: func(_ *cobra.Command, args []string) {
+		client := cli.GetClient()
+
+		serverId := args[0]
+		serverInspect, err := client.Compute.ServerInspect(serverId)
+
+		if err != nil {
+			openstackCommon.RaiseIfError(err, "inspect sever faield")
+		}
+		printServerInspect(*serverInspect)
+	},
+}
+
 func init() {
 	// Server list flags
 	serverList.Flags().StringP("name", "n", "", "Search by server name")
@@ -777,5 +794,7 @@ func init() {
 		serverSuspend, serverResume, serverResize, serverRebuild,
 		serverEvacuate, serverMigrate,
 		serverMigration,
-		serverRegion)
+		serverRegion,
+		serverInspect,
+	)
 }

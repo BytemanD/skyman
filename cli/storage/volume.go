@@ -9,6 +9,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
 	"github.com/BytemanD/stackcrud/common"
+	openstackCommon "github.com/BytemanD/stackcrud/openstack/common"
 	"github.com/BytemanD/stackcrud/openstack/storage"
 	"github.com/spf13/cobra"
 )
@@ -23,11 +24,19 @@ var volumeList = &cobra.Command{
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
+		all, _ := cmd.Flags().GetBool("all")
+
 		query := url.Values{}
 		if name != "" {
 			query.Set("name", name)
 		}
-		volumes := client.Storage.VolumeListDetail(query)
+		if all {
+			query.Set("all_tenants", "true")
+		}
+		volumes, err := client.Storage.VolumeListDetail(query)
+		if err != nil {
+			openstackCommon.RaiseIfError(err, "list volume falied")
+		}
 		table := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"},
@@ -67,7 +76,10 @@ var volumeShow = &cobra.Command{
 			logging.Fatal("%s", err)
 		}
 		if err != nil {
-			volumes := client.Storage.VolumeListDetailByName(idOrName)
+			volumes, err := client.Storage.VolumeListDetailByName(idOrName)
+			if err != nil {
+				openstackCommon.RaiseIfError(err, "list volume falied")
+			}
 			if len(volumes) > 1 {
 				fmt.Printf("Found multi volumes named %s\n", idOrName)
 				os.Exit(1)
@@ -147,6 +159,7 @@ var volumeCreate = &cobra.Command{
 
 func init() {
 	volumeList.Flags().BoolP("long", "l", false, "List additional fields in output")
+	volumeList.Flags().Bool("all", false, "List volumes of all tenants")
 	volumeList.Flags().StringP("name", "n", "", "Search by volume name")
 
 	volumePrune.Flags().StringP("name", "n", "", "Search by volume name")

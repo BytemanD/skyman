@@ -111,7 +111,7 @@ type HttpError struct {
 	Message string
 }
 
-func (err *HttpError) Error() string {
+func (err HttpError) Error() string {
 	return err.Reason
 }
 

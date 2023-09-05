@@ -15,20 +15,7 @@ func GetOutputFormats() []string {
 }
 
 func PrintPrettyTable(table PrettyTable, long bool) {
-	switch CONF.Format {
-	case TABLE, "default", "":
-		table.Print(long)
-	case TABLE_LIGHT:
-		table.Style = STYLE_LIGHT
-		table.Print(long)
-	case JSON:
-		table.PrintJson()
-	case YAML:
-		table.PrintYaml()
-	default:
-		logging.Fatal("invalid output format: %s, valid formats: %v", CONF.Format,
-			GetOutputFormats())
-	}
+	PrintPrettyTableFormat(table, long, CONF.Format)
 }
 
 func PrintPrettyItemTable(table PrettyItemTable) {

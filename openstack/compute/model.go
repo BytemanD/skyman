@@ -41,8 +41,8 @@ func (extraSpecs ExtraSpecs) GetList() []string {
 }
 
 type Fault struct {
-	Message string `json:"message,omitempty"`
 	Code    int    `json:"code,omitempty"`
+	Message string `json:"message,omitempty"`
 	Details string `json:"details,omitempty"`
 }
 
@@ -53,7 +53,6 @@ func (fault *Fault) Marshal() string {
 
 type Server struct {
 	common.Resource
-	Status       string               `json:"status,omitempty"`
 	TaskState    string               `json:"OS-EXT-STS:task_state,omitempty"`
 	PowerState   int                  `json:"OS-EXT-STS:power_state,omitempty"`
 	VmState      string               `json:"OS-EXT-STS:vm_state,omitempty"`
@@ -207,6 +206,15 @@ type InterfaceAttachment struct {
 	PortState string    `json:"port_state"`
 	FixedIps  []FixedIp `json:"fixed_ips"`
 }
+
+func (attachment InterfaceAttachment) GetIpAddresses() []string {
+	addresses := []string{}
+	for _, fixedIp := range attachment.FixedIps {
+		addresses = append(addresses, fixedIp.IpAddress)
+	}
+	return addresses
+}
+
 type FixedIp struct {
 	IpAddress string `json:"ip_address"`
 	SubnetId  string `json:"subnet_id"`
@@ -295,4 +303,10 @@ func (agg Aggregate) MarshalMetadata() string {
 type RegionMigrateResp struct {
 	AllowLiveMigrate bool   `json:"allow_live_migrate"`
 	Reason           string `json:"reason"`
+}
+
+type ServerInspect struct {
+	Server     Server                `json:"server"`
+	Interfaces []InterfaceAttachment `json:"interfaces"`
+	Volumes    []VolumeAttachment    `json:"volumes"`
 }

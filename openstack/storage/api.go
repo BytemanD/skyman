@@ -15,12 +15,15 @@ func (client StorageClientV2) VolumeListByName(name string) []Volume {
 	query.Set("name", name)
 	return client.VolumeList(query)
 }
-func (client StorageClientV2) VolumeListDetail(query url.Values) Volumes {
+func (client StorageClientV2) VolumeListDetail(query url.Values) (Volumes, error) {
 	body := map[string][]Volume{"volumes": {}}
-	client.List("volumes/detail", query, nil, &body)
-	return body["volumes"]
+	err := client.List("volumes/detail", query, nil, &body)
+	if err != nil {
+		return nil, err
+	}
+	return body["volumes"], nil
 }
-func (client StorageClientV2) VolumeListDetailByName(name string) Volumes {
+func (client StorageClientV2) VolumeListDetailByName(name string) (Volumes, error) {
 	query := url.Values{}
 	query.Set("name", name)
 	return client.VolumeListDetail(query)

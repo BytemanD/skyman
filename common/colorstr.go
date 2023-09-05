@@ -15,6 +15,9 @@ func GetGreenText(text string) string {
 func GetYellowText(text string) string {
 	return fmt.Sprintf("\033[1;33;40m%s\033[0m", text)
 }
+func GetBlueText(text string) string {
+	return fmt.Sprintf("\033[1;34;40m%s\033[0m", text)
+}
 
 type ColorFormater struct {
 	Green  []string
