@@ -709,7 +709,7 @@ var serverInspect = &cobra.Command{
 	Use:   "inspect <id>",
 	Short: "inspect server ",
 	Args:  cobra.ExactArgs(1),
-	Run: func(_ *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 
 		serverId := args[0]
@@ -718,7 +718,23 @@ var serverInspect = &cobra.Command{
 		if err != nil {
 			openstackCommon.RaiseIfError(err, "inspect sever faield")
 		}
-		printServerInspect(*serverInspect)
+		format, _ := cmd.Flags().GetString("format")
+		switch format {
+		case "json":
+			output, err := common.GetIndentJson(serverInspect)
+			if err != nil {
+				logging.Fatal("print json failed, %s", err)
+			}
+			fmt.Println(output)
+		case "yaml":
+			output, err := common.GetYaml(serverInspect)
+			if err != nil {
+				logging.Fatal("print json failed, %s", err)
+			}
+			fmt.Println(output)
+		default:
+			printServerInspect(*serverInspect)
+		}
 	},
 }
 

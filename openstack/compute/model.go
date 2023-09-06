@@ -309,4 +309,5 @@ type ServerInspect struct {
 	Server     Server                `json:"server"`
 	Interfaces []InterfaceAttachment `json:"interfaces"`
 	Volumes    []VolumeAttachment    `json:"volumes"`
+	PowerState string
 }

@@ -1,9 +1,14 @@
 package compute
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
+	"html/template"
 	"os"
 	"strings"
+
+	markdown "github.com/MichaelMure/go-term-markdown"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/common"
@@ -78,85 +83,56 @@ func printServer(server compute.Server) {
 	common.PrintPrettyItemTable(pt)
 }
 func printServerInspect(serverInspect compute.ServerInspect) {
-	fmt.Println(common.GetBlueText("Base Infomation"))
-	basePt := common.PrettyTable{
-		HideTotalItems: true,
-		ShortColumns: []common.Column{
-			{Name: "Id"}, {Name: "Name"}, {Name: "InstanceName"},
-			{Name: "Description"},
-		},
-	}
-	basePt.AddItems([]compute.Server{serverInspect.Server})
-	common.PrintPrettyTableFormat(basePt, false, common.TABLE)
+	source := `
+# Inspect For Instance {{.Server.Name}}
 
-	fmt.Println(common.GetBlueText("AZ/Host"))
-	azHostPt := common.PrettyTable{
-		HideTotalItems: true,
-		ShortColumns: []common.Column{{Name: "AZ", Text: "Availability Zone"},
-			{Name: "Host"}},
-	}
-	azHostPt.AddItems([]compute.Server{serverInspect.Server})
-	common.PrintPrettyTableFormat(azHostPt, false, common.TABLE)
+## 基本信息
 
-	fmt.Println(common.GetBlueText("Status"))
-	statusPt := common.PrettyTable{
-		HideTotalItems: true,
-		ShortColumns: []common.Column{
-			{Name: "VmState", ForceColor: true},
-			{Name: "PowerState", ForceColor: true, Slot: func(item interface{}) interface{} {
-				p, _ := item.(compute.Server)
-				return p.GetPowerState()
-			}},
-			{Name: "TaskState", ForceColor: true},
-		},
-	}
-	statusPt.AddItems([]compute.Server{serverInspect.Server})
-	common.PrintPrettyTableFormat(statusPt, false, common.TABLE)
+1. 实例详情
+	- **UUID**: {{.Server.Id}}
+	- **Name**: {{.Server.Name}}
+	- **InstanceName**: {{.Server.InstanceName}}
+	- **Description**: {{.Server.Description}}
+1. 状态
+	- **VmState**: {{.Server.VmState}}
+	- **PowerState**: {{.PowerState}}
+	- **TaskState**: {{.Server.TaskState}}
+1. 节点
+	- **Availability Zone**: {{.Server.AZ}}
+	- **Host**: {{.Server.Host}}
 
-	fmt.Println(common.GetBlueText("Flavor"))
-	flavorPt := common.PrettyTable{
-		HideTotalItems: true,
-		ShortColumns: []common.Column{
-			{Name: "OriginalName"}, {Name: "Vcpus"}, {Name: "Ram"},
-			{Name: "ExtraSpecs", Slot: func(item interface{}) interface{} {
-				p, _ := item.(compute.Flavor)
-				return strings.Join(p.ExtraSpecs.GetList(), "\n")
-			}},
-		},
-	}
-	flavorPt.AddItems([]compute.Flavor{serverInspect.Server.Flavor})
-	common.PrintPrettyTableFormat(flavorPt, false, common.TABLE)
+## Flavor
 
-	fmt.Println(common.GetBlueText("Interfaces"))
-	interfacesPt := common.PrettyTable{
-		HideTotalItems: true,
-		ShortColumns: []common.Column{
-			{Name: "PortId"}, {Name: "MacAddr"},
-			{Name: "FixedIps", Text: "IPAddress", Slot: func(item interface{}) interface{} {
-				p, _ := item.(compute.InterfaceAttachment)
-				return strings.Join(p.GetIPAddresses(), ",")
-			}},
-		},
-	}
-	interfacesPt.AddItems(serverInspect.Interfaces)
-	common.PrintPrettyTableFormat(interfacesPt, false, common.TABLE)
+- **Name**: {{.Server.Flavor.OriginalName}}
+- **Vcpus**: {{.Server.Flavor.Vcpus}}
+- **Ram**: {{.Server.Flavor.Ram}}
+- **Extra specs**:
+{{ range $key, $value := .Server.Flavor.ExtraSpecs }}
+	1. {{$key}} = {{$value}}
+{{end}}
 
-	fmt.Println(common.GetBlueText("Volumes"))
-	volumesPt := common.PrettyTable{
-		HideTotalItems: true,
-		ShortColumns: []common.Column{
-			{Name: "VolumeId"}, {Name: "Device", Sort: true}},
-	}
-	volumesPt.AddItems(serverInspect.Volumes)
-	common.PrintPrettyTableFormat(volumesPt, false, common.TABLE)
+## Interfaces
+{{ range $index, $interface := .Interfaces }}
+1. **PortId**: {{$interface.PortId}}
+  - **MacAddr**: {{$interface.MacAddr}}
+  - **IPAddress**: {{ range $index, $ip := $interface.FixedIps }} {{$ip.IpAddress}} {{end}}
+{{end}}
 
-	fmt.Println(common.GetBlueText("Fault"))
-	faultPt := common.PrettyTable{
-		HideTotalItems: true,
-		ShortColumns:   []common.Column{{Name: "Code"}, {Name: "Message"}, {Name: "Details"}},
-	}
-	faultPt.AddItems([]compute.Fault{serverInspect.Server.Fault})
-	common.PrintPrettyTableFormat(faultPt, false, common.TABLE)
+## Volumes
+{{ range $index, $volume := .Volumes }}
+1. **Volume Id**: {{$volume.VolumeId}}
+  - **Device**: {{$volume.Device}}
+{{end}}
+`
+	templateBuffer := bytes.NewBuffer([]byte{})
+	bufferWriter := bufio.NewWriter(templateBuffer)
+
+	tmpl, _ := template.New("inspect").Parse(source)
+	serverInspect.PowerState = serverInspect.Server.GetPowerState()
+	tmpl.Execute(bufferWriter, serverInspect)
+	bufferWriter.Flush()
+	result := markdown.Render(templateBuffer.String(), 100, 4)
+	fmt.Println(string(result))
 }
 func printFlavor(server compute.Flavor) {
 	pt := common.PrettyItemTable{
