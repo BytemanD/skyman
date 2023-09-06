@@ -36,6 +36,7 @@ var serverList = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		host, _ := cmd.Flags().GetString("host")
 		statusList, _ := cmd.Flags().GetStringArray("status")
+		flavor, _ := cmd.Flags().GetString("flavor")
 		all, _ := cmd.Flags().GetBool("all")
 		dsc, _ := cmd.Flags().GetBool("dsc")
 
@@ -50,6 +51,13 @@ var serverList = &cobra.Command{
 		}
 		for _, status := range statusList {
 			query.Add("status", status)
+		}
+		if flavor != "" {
+			flavor, err := client.Compute.FlavorGetByIdOrName(flavor)
+			if err != nil {
+				logging.Fatal("%s", err)
+			}
+			query.Set("flavor", flavor.Id)
 		}
 
 		long, _ := cmd.Flags().GetBool("long")
@@ -720,6 +728,7 @@ func init() {
 	serverList.Flags().String("host", "", "Search by hostname")
 	serverList.Flags().BoolP("all", "a", false, "Display servers from all tenants")
 	serverList.Flags().StringArrayP("status", "s", nil, "Search by server status")
+	serverList.Flags().String("flavor", "", "Search by flavor")
 	serverList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	serverList.Flags().BoolP("verbose", "v", false, "List verbose fields in output")
 	serverList.Flags().Bool("dsc", false, "Sort name by dsc")
