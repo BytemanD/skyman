@@ -32,6 +32,9 @@ func GetYaml(v interface{}) (string, error) {
 	return string(yamlBytes), nil
 }
 func LogError(err error, message string, exit bool) {
+	if err == nil {
+		return
+	}
 	if httpError, ok := err.(*common.HttpError); ok {
 		logging.Error("%s, %s, %s", message, httpError.Reason, httpError.Message)
 	} else {

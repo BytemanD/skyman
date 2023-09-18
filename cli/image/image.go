@@ -3,7 +3,6 @@ package image
 import (
 	"fmt"
 	"net/url"
-	"os"
 
 	"github.com/BytemanD/stackcrud/cli"
 	"github.com/BytemanD/stackcrud/common"
@@ -67,21 +66,10 @@ var ImageShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 
-		id := args[0]
+		idOrName := args[0]
 		human, _ := cmd.Flags().GetBool("human")
-		image, err := client.Image.ImageShow(id)
-		if err != nil {
-			images := client.Image.ImageListByName(id)
-			if len(images) > 1 {
-				fmt.Printf("Found multi images named %s\n", id)
-				os.Exit(1)
-			} else if len(images) == 1 {
-				image = &images[0]
-			} else if len(images) > 1 {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-		}
+		image, err := client.Image.ImageFound(idOrName)
+		common.LogError(err, "Get image faled", true)
 		printImage(*image, human)
 	},
 }

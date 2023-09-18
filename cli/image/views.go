@@ -22,6 +22,7 @@ func printImage(img image.Image, human bool) {
 				}
 			}},
 			{Name: "VirtualSize"}, {Name: "ProcessInfo"}, {Name: "Protected"},
+			{Name: "Visibility"},
 			{Name: "OSHashAlgo", Text: "OS Hash Algo"},
 			{Name: "OSHashValue", Text: "OS Hash Value"},
 			{Name: "Tags"}, {Name: "Owner"},

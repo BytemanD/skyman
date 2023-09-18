@@ -1,6 +1,8 @@
 package image
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/url"
 	"strconv"
 
@@ -67,4 +69,18 @@ func (client ImageClientV2) ImageShow(id string) (*Image, error) {
 		return nil, err
 	}
 	return &image, nil
+}
+func (client ImageClientV2) ImageFound(idOrName string) (*Image, error) {
+	obj, err := client.FoundByIdOrName("images", idOrName, "", "images", client.BaseHeaders)
+	if err != nil {
+		return nil, err
+	}
+	jsonObj, err := json.Marshal(&obj)
+	image := Image{}
+	err = json.Unmarshal(jsonObj, &image)
+	if err == nil {
+		return &image, nil
+	} else {
+		return nil, fmt.Errorf("parse %v failed, %v", image, err)
+	}
 }

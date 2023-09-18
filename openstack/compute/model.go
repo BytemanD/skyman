@@ -16,7 +16,7 @@ type Flavor struct {
 	OriginalName string     `json:"original_name,omitempty"`
 	Ram          int        `json:"ram,omitempty"`
 	Vcpus        int        `json:"vcpus,omitempty"`
-	Disk         int        `json:"disk,omitempty"`
+	Disk         int        `json:"disk"`
 	Swap         int        `json:"swap,omitempty"`
 	RXTXFactor   float32    `json:"rxtx_factor,omitempty"`
 	ExtraSpecs   ExtraSpecs `json:"extra_specs,omitempty"`

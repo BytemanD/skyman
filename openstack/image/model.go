@@ -38,7 +38,7 @@ type Image struct {
 	Owner           string   `json:"owner,omitempty"`
 	Tags            []string `json:"tags,omitempty"`
 	Protected       bool     `json:"protected,omitempty"`
-	Visibility      bool     `json:"visibility,omitempty"`
+	Visibility      string   `json:"visibility,omitempty"`
 	ProcessInfo     float32  `json:"progress_info,omitempty"`
 	OSHashAlgo      string   `json:"os_hash_algo,omitempty"`
 	OSHashValue     string   `json:"os_hash_value,omitempty"`

@@ -153,20 +153,13 @@ var serverShow = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 
-		nameOrId := args[0]
-		server, err := client.Compute.ServerShow(nameOrId)
+		idOrName := args[0]
+
+		server, err := client.Compute.ServerFound(idOrName)
 		if err != nil {
-			servers, err := client.Compute.ServerListDetailsByName(nameOrId)
-			if len(servers) > 1 {
-				fmt.Printf("Found multy severs named %s\n", nameOrId)
-				os.Exit(1)
-			} else if len(servers) == 1 {
-				server = &servers[0]
-			} else {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+			logging.Fatal("%v", err)
 		}
+
 		printServer(*server)
 	},
 }

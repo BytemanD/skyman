@@ -38,6 +38,20 @@ func (client ComputeClientV2) ServerShow(id string) (*Server, error) {
 	err := client.Show("servers", id, client.BaseHeaders, &body)
 	return body["server"], err
 }
+func (client ComputeClientV2) ServerFound(idOrName string) (*Server, error) {
+	obj, err := client.FoundByIdOrName("servers", idOrName, "server", "servers", client.BaseHeaders)
+	if err != nil {
+		return nil, err
+	}
+	jsonObj, err := json.Marshal(obj)
+	server := Server{}
+	err = json.Unmarshal(jsonObj, &server)
+	if err == nil {
+		return &server, nil
+	} else {
+		return nil, fmt.Errorf("parse %v failed", server)
+	}
+}
 
 func (client ComputeClientV2) ServerDelete(id string) error {
 	return client.Delete("servers", id, client.BaseHeaders)
@@ -395,7 +409,6 @@ func (client ComputeClientV2) FlavorList(query netUrl.Values) ([]Flavor, error) 
 	return body["flavors"], nil
 }
 
-// flavor api
 func (client ComputeClientV2) FlavorCreate(flavor Flavor) (*Flavor, error) {
 	reqBody, _ := json.Marshal(map[string]Flavor{"flavor": flavor})
 	respBody := map[string]*Flavor{"flavor": {}}
@@ -455,11 +468,11 @@ func (client ComputeClientV2) FlavorGetByIdOrName(flavorId string) (*Flavor, err
 	return nil, err
 }
 func (client ComputeClientV2) FlavorShowWithExtraSpecs(flavorId string) (*Flavor, error) {
-	flavor, err := client.FlavorShow(flavorId)
+	flavor, err := client.FlavorFound(flavorId)
 	if err != nil {
 		return nil, err
 	}
-	extraSpecs, err := client.FlavorExtraSpecsList(flavorId)
+	extraSpecs, err := client.FlavorExtraSpecsList(flavor.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -479,6 +492,33 @@ func (client ComputeClientV2) FlavorExtraSpecsCreate(flavorId string, extraSpecs
 }
 func (client ComputeClientV2) FlavorDelete(flavorId string) error {
 	return client.Delete("flavors", flavorId, client.BaseHeaders)
+}
+func (client ComputeClientV2) FlavorFound(idOrName string) (*Flavor, error) {
+	flavor, err := client.FlavorShow(idOrName)
+	if err == nil {
+		return flavor, nil
+	}
+	if httpError, ok := err.(*common.HttpError); ok {
+		if httpError.Status != 404 {
+			return nil, err
+		}
+	}
+	flavors, err := client.FlavorList(nil)
+	if err != nil {
+		return nil, err
+	}
+	for _, flavor := range flavors {
+		if flavor.Name != idOrName {
+			continue
+		}
+		flavor, err := client.FlavorShow(flavor.Id)
+		if err != nil {
+			return nil, err
+		} else {
+			return flavor, nil
+		}
+	}
+	return nil, fmt.Errorf("flavor %s not found", idOrName)
 }
 
 // hypervisor api

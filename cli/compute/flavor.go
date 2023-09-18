@@ -12,7 +12,6 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/cli"
 	"github.com/BytemanD/stackcrud/common"
-	openstackCommon "github.com/BytemanD/stackcrud/openstack/common"
 	"github.com/BytemanD/stackcrud/openstack/compute"
 )
 
@@ -87,20 +86,14 @@ var flavorList = &cobra.Command{
 	},
 }
 var flavorShow = &cobra.Command{
-	Use:   "show <flavor id>",
+	Use:   "show <flavor id or name>",
 	Short: "Show flavor",
-	Args:  cobra.MinimumNArgs(1),
+	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
-		flavorId := args[0]
-		flavor, err := client.Compute.FlavorShowWithExtraSpecs(flavorId)
-		if err != nil {
-			if httpError, ok := err.(*openstackCommon.HttpError); ok {
-				logging.Fatal("Show flavor %s failed, %s", flavorId, httpError.Message)
-			} else {
-				logging.Fatal("Show flavor %s failed, %v", flavorId, err)
-			}
-		}
+		idOrName := args[0]
+		flavor, err := client.Compute.FlavorShowWithExtraSpecs(idOrName)
+		common.LogError(err, "Show flavor failed", true)
 		printFlavor(*flavor)
 	},
 }
@@ -112,16 +105,17 @@ var flavorDelete = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 		for _, flavorId := range args {
-			err := client.Compute.FlavorDelete(flavorId)
+			flavor, err := client.Compute.FlavorFound(flavorId)
 			if err != nil {
-				if httpError, ok := err.(*openstackCommon.HttpError); ok {
-					logging.Fatal("Delete flavor %s failed, %s", flavorId, httpError.Message)
-				} else {
-					logging.Fatal("Delete flavor %s failed, %v", flavorId, err)
-				}
-			} else {
-				fmt.Printf("Delete flavor success: %s\n", flavorId)
+				common.LogError(err, "Get flavor failed", false)
+				continue
 			}
+			err = client.Compute.FlavorDelete(flavor.Id)
+			if err != nil {
+				common.LogError(err, "Delete flavor failed", false)
+				continue
+			}
+			fmt.Printf("Flavor %s deleted \n", flavorId)
 		}
 	},
 }
@@ -177,9 +171,8 @@ var flavorCreate = &cobra.Command{
 		client := cli.GetClient()
 
 		flavor, err := client.Compute.FlavorCreate(reqFlavor)
-		if err != nil {
-			logging.Fatal("%s", err)
-		}
+		common.LogError(err, "create flavor failed", true)
+
 		extraSpecs := getExtraSpecsMap(properties)
 		createdExtraSpecs, err := client.Compute.FlavorExtraSpecsCreate(flavor.Id, extraSpecs)
 		if err != nil {
