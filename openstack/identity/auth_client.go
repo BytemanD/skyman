@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/stackcrud/openstack/common"
+	"github.com/BytemanD/skyman/openstack/common"
 )
 
 const (

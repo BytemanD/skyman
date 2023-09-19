@@ -3,7 +3,7 @@ package storage
 import (
 	"fmt"
 
-	"github.com/BytemanD/stackcrud/openstack/common"
+	"github.com/BytemanD/skyman/openstack/common"
 )
 
 const (

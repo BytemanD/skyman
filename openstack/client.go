@@ -4,12 +4,12 @@ import (
 	"net/url"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/stackcrud/common"
-	"github.com/BytemanD/stackcrud/openstack/compute"
-	"github.com/BytemanD/stackcrud/openstack/identity"
-	"github.com/BytemanD/stackcrud/openstack/image"
-	"github.com/BytemanD/stackcrud/openstack/networking"
-	"github.com/BytemanD/stackcrud/openstack/storage"
+	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack/compute"
+	"github.com/BytemanD/skyman/openstack/identity"
+	"github.com/BytemanD/skyman/openstack/image"
+	"github.com/BytemanD/skyman/openstack/networking"
+	"github.com/BytemanD/skyman/openstack/storage"
 )
 
 type OpenstackClient struct {

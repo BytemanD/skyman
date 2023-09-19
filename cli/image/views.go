@@ -1,8 +1,8 @@
 package image
 
 import (
-	"github.com/BytemanD/stackcrud/common"
-	"github.com/BytemanD/stackcrud/openstack/image"
+	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack/image"
 )
 
 func printImage(img image.Image, human bool) {

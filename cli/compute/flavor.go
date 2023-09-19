@@ -10,9 +10,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/stackcrud/cli"
-	"github.com/BytemanD/stackcrud/common"
-	"github.com/BytemanD/stackcrud/openstack/compute"
+	"github.com/BytemanD/skyman/cli"
+	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack/compute"
 )
 
 var Flavor = &cobra.Command{Use: "flavor"}

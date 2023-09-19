@@ -26,5 +26,5 @@ ARG DATE
 RUN echo ${DATE}
 RUN go env -w GO111MODULE="on" \
     && go env -w GOPROXY="https://goproxy.cn,direct"
-RUN cd /root/stackcrud && sh scripts/build.sh
-RUN cd /root/stackcrud && sh scripts/build.sh --rpm
+RUN cd /root/skyman && sh scripts/build.sh
+RUN cd /root/skyman && sh scripts/build.sh --rpm

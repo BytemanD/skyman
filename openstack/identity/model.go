@@ -1,6 +1,6 @@
 package identity
 
-import "github.com/BytemanD/stackcrud/openstack/common"
+import "github.com/BytemanD/skyman/openstack/common"
 
 type Service struct {
 	common.Resource

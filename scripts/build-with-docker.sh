@@ -29,20 +29,20 @@ function main(){
     echo "INFO" "项目路径" $projectPath
 
     cd ${scriptPath}
-    ${containerCmd} build -v ${projectPath}:/root/stackcrud \
+    ${containerCmd} build -v ${projectPath}:/root/skyman \
         --target Stackcrud-Centos7-Builder \
-        -t stackcrud-builder-centos7:base \
+        -t skyman-builder-centos7:base \
         -f centos7.Dockerfile \
         ./
     if [[ $? -ne 0 ]]; then
         echo "ERROR" "基础镜像构建失败"
         exit 1
     fi
-    ${containerCmd} build -v ${projectPath}:/root/stackcrud ./ \
+    ${containerCmd} build -v ${projectPath}:/root/skyman ./ \
         --target Stackcrud-Centos7-Builder \
-        --cache-from stackcrud-builder-centos7:base \
+        --cache-from skyman-builder-centos7:base \
         --build-arg DATE="$(date +'%F %T')" \
-        -t stackcrud-builder-centos7:build-cache \
+        -t skyman-builder-centos7:build-cache \
         -f centos7.Dockerfile
 }
 

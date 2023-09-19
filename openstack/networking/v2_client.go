@@ -1,7 +1,7 @@
 package networking
 
 import (
-	"github.com/BytemanD/stackcrud/openstack/identity"
+	"github.com/BytemanD/skyman/openstack/identity"
 )
 
 type NeutronClientV2 struct {

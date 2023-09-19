@@ -3,7 +3,7 @@ package networking
 import (
 	"encoding/json"
 
-	"github.com/BytemanD/stackcrud/openstack/common"
+	"github.com/BytemanD/skyman/openstack/common"
 )
 
 type Router struct {

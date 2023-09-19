@@ -55,7 +55,7 @@ func init() {
 			path.Join("locale", fmt.Sprintf("%s.toml", osLang)))
 		if err != nil {
 			bundle.LoadMessageFile(
-				path.Join("/usr/share/stackcrud/locale", fmt.Sprintf("%s.toml", osLang)))
+				path.Join("/usr/share/skyman/locale", fmt.Sprintf("%s.toml", osLang)))
 		}
 		localizer = i18n.NewLocalizer(bundle, osLang, "en-US")
 	} else {

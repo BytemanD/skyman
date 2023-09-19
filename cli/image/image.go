@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/BytemanD/stackcrud/cli"
-	"github.com/BytemanD/stackcrud/common"
-	"github.com/BytemanD/stackcrud/openstack/image"
+	"github.com/BytemanD/skyman/cli"
+	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack/image"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"

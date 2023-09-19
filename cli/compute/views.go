@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/stackcrud/common"
-	"github.com/BytemanD/stackcrud/openstack/compute"
+	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack/compute"
 	"github.com/jedib0t/go-pretty/v6/list"
 )
 

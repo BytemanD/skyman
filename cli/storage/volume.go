@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/stackcrud/cli"
-	"github.com/BytemanD/stackcrud/common"
-	openstackCommon "github.com/BytemanD/stackcrud/openstack/common"
-	"github.com/BytemanD/stackcrud/openstack/storage"
+	"github.com/BytemanD/skyman/cli"
+	"github.com/BytemanD/skyman/common"
+	openstackCommon "github.com/BytemanD/skyman/openstack/common"
+	"github.com/BytemanD/skyman/openstack/storage"
 	"github.com/spf13/cobra"
 )
 

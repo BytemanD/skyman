@@ -12,9 +12,9 @@ import (
 	markdown "github.com/MichaelMure/go-term-markdown"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/stackcrud/openstack/common"
-	"github.com/BytemanD/stackcrud/openstack/networking"
-	"github.com/BytemanD/stackcrud/openstack/storage"
+	"github.com/BytemanD/skyman/openstack/common"
+	"github.com/BytemanD/skyman/openstack/networking"
+	"github.com/BytemanD/skyman/openstack/storage"
 )
 
 type Flavor struct {

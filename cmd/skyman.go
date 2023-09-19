@@ -10,13 +10,13 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/gitutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 
-	"github.com/BytemanD/stackcrud/cli/compute"
-	"github.com/BytemanD/stackcrud/cli/identity"
-	"github.com/BytemanD/stackcrud/cli/image"
-	"github.com/BytemanD/stackcrud/cli/networking"
-	"github.com/BytemanD/stackcrud/cli/storage"
-	"github.com/BytemanD/stackcrud/common"
-	"github.com/BytemanD/stackcrud/common/i18n"
+	"github.com/BytemanD/skyman/cli/compute"
+	"github.com/BytemanD/skyman/cli/identity"
+	"github.com/BytemanD/skyman/cli/image"
+	"github.com/BytemanD/skyman/cli/networking"
+	"github.com/BytemanD/skyman/cli/storage"
+	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/common/i18n"
 )
 
 var (

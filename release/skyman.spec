@@ -1,15 +1,15 @@
 Group: BytemanD
-Name: stackcrud
+Name: skyman
 Version: VERSION
 Release: 1
 Summary: Golang OpenStack Client
 License: ASL 2.0
 
-Source0: stackcrud
-Source1: stackcrud-template.yaml
+Source0: skyman
+Source1: skyman-template.yaml
 Source2: zh_CN.toml
 
-%global CONFIG_DIRNAME stackcrud
+%global CONFIG_DIRNAME skyman
 %global CONFIG_PATH /etc/${CONFIG_DIRNAME}
 %global SHARE_LOCALE_PATH /usr/share/%{CONFIG_DIRNAME}/locale
 
@@ -24,8 +24,8 @@ mkdir -p %{_builddir}${SHARE_LOCALE_PATH}
 
 
 %files
-%{_bindir}/stackcrud
-%{_sysconfdir}/stackcrud/stackcrud-template.yaml
+%{_bindir}/skyman
+%{_sysconfdir}/skyman/skyman-template.yaml
 %{SHARE_LOCALE_PATH}/zh_CN.toml
 
 %install
@@ -39,7 +39,7 @@ install -p -m 755 -t %{buildroot}%{SHARE_LOCALE_PATH} %{SOURCE2}
 
 %post
 
-cd %{_sysconfdir}/stackcrud/
-if [[ ! -f stackcrud.yaml ]]; then
-    cp stackcrud-template.yaml stackcrud.yaml
+cd %{_sysconfdir}/skyman/
+if [[ ! -f skyman.yaml ]]; then
+    cp skyman-template.yaml skyman.yaml
 fi

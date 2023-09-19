@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/stackcrud/cli"
-	"github.com/BytemanD/stackcrud/common"
-	"github.com/BytemanD/stackcrud/openstack/networking"
+	"github.com/BytemanD/skyman/cli"
+	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack/networking"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"

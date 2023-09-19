@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/stackcrud/cli"
-	"github.com/BytemanD/stackcrud/common"
-	"github.com/BytemanD/stackcrud/openstack/compute"
+	"github.com/BytemanD/skyman/cli"
+	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack/compute"
 )
 
 var Volume = &cobra.Command{Use: "volume"}

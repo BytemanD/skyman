@@ -7,9 +7,9 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 
-	"github.com/BytemanD/stackcrud/cli"
-	"github.com/BytemanD/stackcrud/common"
-	"github.com/BytemanD/stackcrud/openstack/identity"
+	"github.com/BytemanD/skyman/cli"
+	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack/identity"
 )
 
 var Endpoint = &cobra.Command{Use: "endpoint"}

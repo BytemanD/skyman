@@ -6,9 +6,9 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 
-	"github.com/BytemanD/stackcrud/common"
-	"github.com/BytemanD/stackcrud/openstack"
-	"github.com/BytemanD/stackcrud/openstack/identity"
+	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/identity"
 )
 
 func getAuthClient() (*identity.V3AuthClient, error) {

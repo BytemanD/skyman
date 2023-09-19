@@ -3,8 +3,8 @@ package storage
 import (
 	"strings"
 
-	"github.com/BytemanD/stackcrud/common"
-	"github.com/BytemanD/stackcrud/openstack/storage"
+	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack/storage"
 )
 
 func printVolume(volume storage.Volume) {

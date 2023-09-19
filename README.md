@@ -1,15 +1,15 @@
-# stackcrud
+# skyman
 
-Goalng Openstack client
+Goalng OpenStack Client
 
 ## Oveview
 
 ```
-$ stackcrud
+$ skyman
 Golang Openstack Client
 
 Usage:
-  stackcurd [command]
+  skyman [command]
 
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
@@ -22,12 +22,12 @@ Available Commands:
   volume
 
 Flags:
-  -c, --conf stringArray   配置文件 (default [etc/stackcrud.yaml,/etc/stackcrud/stackcrud.yaml])
+  -c, --conf stringArray   配置文件 (default [etc/skyman.yaml,/etc/skyman/skyman.yaml])
   -d, --debug              显示Debug信息
-  -h, --help               help for stackcurd
-  -v, --version            version for stackcurd
+  -h, --help               help for skyman
+  -v, --version            version for skyman
 
-Use "stackcurd [command] --help" for more information about a command.
+Use "skyman [command] --help" for more information about a command.
 ```
 
 ### 构建
@@ -51,33 +51,34 @@ Use "stackcurd [command] --help" for more information about a command.
 ## 安装
 
 ```bash
-rpm -ivh dist/stackcrud-<版本>-1.x86_64.rpm
+rpm -ivh dist/skyman-<版本>-1.x86_64.rpm
 ```
 
 ## 支持的命令
 
 ```bash
-stackcurd aggregate list/show
-stackcurd az list
-stackcurd compute service list/enable/disable/up/down
-stackcurd console log/url
-stackcurd action list/show
-stackcurd flavor list/create/delete/copy
-stackcurd hypervisor list
-stackcurd keypair list
-stackcurd migration list
-stackcurd server list/show/create/delete/prune
-stackcurd server stop/start/reboot/pause/unpause
-stackcurd server shelve/unshelve/suspend/resume
-stackcurd server resize/migrate/rebuild
-stackcurd server interface list/attach-port/attach-net/detach
-stackcurd server volume list/attach/detach
+skyman aggregate list/show
+skyman az list
+skyman compute service list/enable/disable/up/down
+skyman console log/url
+skyman action list/show
+skyman flavor list/create/delete/copy
+skyman hypervisor list
+skyman keypair list
+skyman migration list
+skyman server list/show/create/delete/prune
+skyman server stop/start/reboot/pause/unpause
+skyman server shelve/unshelve/suspend/resume
+skyman server resize/migrate/rebuild
+skyman server interface list/attach-port/attach-net/detach
+skyman server volume list/attach/detach
 
-stackcurd image list
+skyman image list
 
-stackcurd volume list/show/delete/prune
+skyman volume list/show/delete/prune
 
-stackcurd network list
-stackcurd router list
-stackcurd port list
+skyman network list
+skyman router list
+skyman port list
+...
 ```

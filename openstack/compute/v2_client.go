@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/BytemanD/stackcrud/openstack/identity"
+	"github.com/BytemanD/skyman/openstack/identity"
 )
 
 type VersionBody struct {

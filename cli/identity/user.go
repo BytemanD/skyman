@@ -5,8 +5,8 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 
-	"github.com/BytemanD/stackcrud/cli"
-	"github.com/BytemanD/stackcrud/common"
+	"github.com/BytemanD/skyman/cli"
+	"github.com/BytemanD/skyman/common"
 )
 
 var User = &cobra.Command{Use: "user"}

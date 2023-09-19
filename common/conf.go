@@ -1,14 +1,14 @@
 package common
 
 import (
-	"github.com/BytemanD/stackcrud/common/i18n"
-	"github.com/BytemanD/stackcrud/openstack/identity"
+	"github.com/BytemanD/skyman/common/i18n"
+	"github.com/BytemanD/skyman/openstack/identity"
 	"github.com/spf13/viper"
 )
 
 var CONF_FILES = []string{
-	"etc/stackcrud.yaml",
-	"/etc/stackcrud/stackcrud.yaml",
+	"etc/skyman.yaml",
+	"/etc/skyman/skyman.yaml",
 }
 
 var (
@@ -52,12 +52,11 @@ func LoadConfig(configFile string) error {
 	if configFile != "" {
 		viper.SetConfigFile(configFile)
 	} else {
-		viper.SetConfigName("stackcrud.yaml")
+		viper.SetConfigName("skyman.yaml")
 		viper.AddConfigPath("./etc")
-		viper.AddConfigPath("/etc/stackcrud")
+		viper.AddConfigPath("/etc/skyman")
 	}
-	err := viper.ReadInConfig()
-	if err != nil {
+	if err := viper.ReadInConfig(); err != nil {
 		return err
 	}
 	viper.Unmarshal(&CONF)

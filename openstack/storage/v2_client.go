@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/BytemanD/stackcrud/openstack/identity"
+	"github.com/BytemanD/skyman/openstack/identity"
 )
 
 type StorageClientV2 struct {

@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/stackcrud/cli"
-	"github.com/BytemanD/stackcrud/common"
+	"github.com/BytemanD/skyman/cli"
+	"github.com/BytemanD/skyman/common"
 )
 
 var serverAction = &cobra.Command{Use: "action"}

@@ -1,4 +1,4 @@
-module github.com/BytemanD/stackcrud
+module github.com/BytemanD/skyman
 
 go 1.19
 
@@ -7,7 +7,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require github.com/BytemanD/stackcrud/openstack v0.0.0
+require github.com/BytemanD/skyman/openstack v0.0.0
 
 require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
@@ -56,6 +56,6 @@ require (
 	golang.org/x/net v0.10.0 // indirect
 )
 
-replace github.com/BytemanD/stackcrud => ./
+replace github.com/BytemanD/skyman => ./
 
-replace github.com/BytemanD/stackcrud/openstack => ./openstack
+replace github.com/BytemanD/skyman/openstack => ./openstack

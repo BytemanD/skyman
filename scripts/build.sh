@@ -10,13 +10,13 @@ function logWarn() {
 }
 function goBuild(){
     logInfo "获取版本"
-    version=$(go run cmd/stackcrud.go -v |awk '{print $3}')
+    version=$(go run cmd/skyman.go -v |awk '{print $3}')
     if [[ -z $version ]] || [[ "${version}" == "" ]]; then
         exit 1
     fi
     mkdir -p dist
     logInfo "开始编译, 版本: ${version}"
-    go build  -ldflags "-X main.Version=${version} -s -w" -o dist/ cmd/stackcrud.go
+    go build  -ldflags "-X main.Version=${version} -s -w" -o dist/ cmd/skyman.go
     if [[ $? -ne 0 ]]; then
         logError "编译失败"
         exit 1
@@ -25,7 +25,7 @@ function goBuild(){
     which upx > /dev/null 2>&1
     if [[ $? -eq 0 ]]; then
         logInfo "检测到工具 upx, 压缩可执行文件"
-        upx -q dist/stackcrud > /dev/null
+        upx -q dist/skyman > /dev/null
     else
         logWarn "upx未安装, 不压缩可执行文件"
     fi
@@ -33,20 +33,20 @@ function goBuild(){
 
 function rpmBuild() {
     logInfo "构建rpm包"
-    local buldingSpec=/tmp/stackcrud.spec
+    local buldingSpec=/tmp/skyman.spec
 
     rm -rf ${buldingSpec}
-    cp release/stackcrud.spec ${buldingSpec} || exit 1
-    local buildVersion=$(./dist/stackcrud -v |awk '{print $3}')
+    cp release/skyman.spec ${buldingSpec} || exit 1
+    local buildVersion=$(./dist/skyman -v |awk '{print $3}')
 
     sed -i "s|VERSION|${buildVersion}|g" ${buldingSpec}
     logInfo "版本: $(awk '/^Version/{print $2}' ${buldingSpec})"
 
     mkdir -p /root/rpmbuild/SOURCES
-    cp dist/stackcrud etc/stackcrud-template.yaml locale/* /root/rpmbuild/SOURCES || exit 1
+    cp dist/skyman etc/skyman-template.yaml locale/* /root/rpmbuild/SOURCES || exit 1
     rpmbuild -bb ${buldingSpec} || exit 1
 
-    ls -1 /root/rpmbuild/RPMS/x86_64/stackcrud-*.rpm |while read line
+    ls -1 /root/rpmbuild/RPMS/x86_64/skyman-*.rpm |while read line
     do
         local rpmName=$(basename ${line})
         rm -rf dist/$line

@@ -17,11 +17,11 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/fileutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/stackcrud/cli"
-	"github.com/BytemanD/stackcrud/common"
-	openstackCommon "github.com/BytemanD/stackcrud/openstack/common"
-	"github.com/BytemanD/stackcrud/openstack/compute"
-	imageLib "github.com/BytemanD/stackcrud/openstack/image"
+	"github.com/BytemanD/skyman/cli"
+	"github.com/BytemanD/skyman/common"
+	openstackCommon "github.com/BytemanD/skyman/openstack/common"
+	"github.com/BytemanD/skyman/openstack/compute"
+	imageLib "github.com/BytemanD/skyman/openstack/image"
 )
 
 var Server = &cobra.Command{Use: "server"}

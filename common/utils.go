@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/BytemanD/stackcrud/openstack/common"
+	"github.com/BytemanD/skyman/openstack/common"
 	"gopkg.in/yaml.v3"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
