@@ -330,6 +330,7 @@ func (serverInspect *ServerInspect) Print() {
 1. 实例详情
 	- **UUID**: {{.Server.Id}}
 	- **Name**: {{.Server.Name}}
+	- **Root BDM Type**: {{.Server.RootBdmType}}
 	- **InstanceName**: {{.Server.InstanceName}}
 	- **Description**: {{.Server.Description}}
 1. 状态
@@ -353,21 +354,80 @@ func (serverInspect *ServerInspect) Print() {
 ## 网卡
 {{ range $index, $interface := .Interfaces }}
 1. **PortId**: {{$interface.PortId}}
-  - **MacAddr**: {{$interface.MacAddr}}
-  - **IPAddress**: {{ range $index, $ip := $interface.FixedIps }} {{$ip.IpAddress}} {{end}}
+  - **Mac Address**: {{$interface.MacAddr}}
+  - **IP Address**: {{ range $index, $ip := $interface.FixedIps }} {{$ip.IpAddress}} {{end}}
+  - **Binding Type**: vnic_type:{{ getPortVnicType $interface.PortId }} vif_type:{{ getPortVifType $interface.PortId }}
+  - **Binding Detail**: {{ getPortBindingDetail $interface.PortId }}
 {{end}}
 
 ## 磁盘
 {{ range $index, $volume := .Volumes }}
 1. **Volume Id**: {{$volume.VolumeId}}
   - **Device**: {{$volume.Device}}
+  - **Type**: {{ getVolumeType $volume.VolumeId }}
+  - **Size**: {{ getVolumeSize $volume.VolumeId }}
+  - **Image**: {{ getVolumeImage $volume.VolumeId }}
+
 {{end}}
 `
 	templateBuffer := bytes.NewBuffer([]byte{})
 	bufferWriter := bufio.NewWriter(templateBuffer)
-
-	tmpl, _ := template.New("inspect").Parse(source)
 	serverInspect.PowerState = serverInspect.Server.GetPowerState()
+
+	tmpl := template.New("inspect")
+	tmpl = tmpl.Funcs(template.FuncMap{
+		"getVolumeType": func(volumeId string) string {
+			if vol, ok := serverInspect.VolumeDetail[volumeId]; ok {
+				return vol.VolumeType
+			} else {
+				return "-"
+			}
+		},
+		"getVolumeSize": func(volumeId string) string {
+			if vol, ok := serverInspect.VolumeDetail[volumeId]; ok {
+				return fmt.Sprintf("%d GB", vol.Size)
+			} else {
+				return "-"
+			}
+		},
+		"getVolumeImage": func(volumeId string) string {
+			if vol, ok := serverInspect.VolumeDetail[volumeId]; ok {
+				var image string
+				if imageId, ok := vol.VolumeImageMetadata["image_id"]; ok {
+					image = imageId
+				}
+				if imageName, ok := vol.VolumeImageMetadata["image_name"]; ok {
+					image += fmt.Sprintf("(%s)", imageName)
+				}
+				return image
+			} else {
+				return "-"
+			}
+		},
+		"getPortVnicType": func(portId string) string {
+			if port, ok := serverInspect.InterfaceDetail[portId]; ok {
+				return port.BindingVnicType
+			} else {
+				return "-"
+			}
+		},
+		"getPortVifType": func(portId string) string {
+			if port, ok := serverInspect.InterfaceDetail[portId]; ok {
+				return port.BindingVifType
+			} else {
+				return "-"
+			}
+		},
+		"getPortBindingDetail": func(portId string) string {
+			if port, ok := serverInspect.InterfaceDetail[portId]; ok {
+				bytes, _ := json.Marshal(port.BindingDetails)
+				return string(bytes)
+			} else {
+				return "-"
+			}
+		},
+	})
+	tmpl, _ = tmpl.Parse(source)
 	tmpl.Execute(bufferWriter, serverInspect)
 	bufferWriter.Flush()
 	result := markdown.Render(templateBuffer.String(), 100, 4)
