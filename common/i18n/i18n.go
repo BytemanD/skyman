@@ -12,6 +12,10 @@ import (
 	"golang.org/x/text/language"
 )
 
+const (
+	ENV_SKYMAN_LANG = "SKYMAN_LANG"
+)
+
 var localizer *i18n.Localizer
 var bundle *i18n.Bundle
 
@@ -35,12 +39,13 @@ func InitLocalizer(lang string) {
 
 // TODO: remove to easygo
 func GetOsLang() string {
-	osLang := os.Getenv("LANG")
+	osLang := os.Getenv(ENV_SKYMAN_LANG)
+	if osLang == "" {
+		osLang = os.Getenv("LANG")
+	}
 	if osLang != "" {
 		osLangList := strings.Split(osLang, ".")
-		if len(osLangList) >= 2 {
-			return osLangList[0]
-		}
+		return osLangList[0]
 	}
 	return ""
 }

@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/common/i18n"
 	openstackCommon "github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/storage"
 	"github.com/spf13/cobra"
@@ -147,6 +149,29 @@ var volumeCreate = &cobra.Command{
 		printVolume(*volume)
 	},
 }
+var volumeExtend = &cobra.Command{
+	Use:   "extend <volume> <new size>",
+	Short: "Extend volume",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.ExactArgs(2)(cmd, args); err != nil {
+			return err
+		}
+		if _, err := strconv.Atoi(args[1]); err != nil {
+			return err
+		}
+		return nil
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		idOrName := args[0]
+		size, _ := strconv.Atoi(args[1])
+		client := cli.GetClient()
+		volume, err := client.Storage.VolumeFound(idOrName)
+		common.LogError(err, "get volume falied", true)
+
+		err = client.Storage.VolumeExtend(volume.Id, size)
+		common.LogError(err, "extend volume falied", true)
+	},
+}
 
 func init() {
 	volumeList.Flags().BoolP("long", "l", false, "List additional fields in output")
@@ -156,12 +181,12 @@ func init() {
 
 	volumePrune.Flags().StringP("name", "n", "", "Search by volume name")
 	volumePrune.Flags().StringArrayP("status", "s", nil, "Search by server status")
-	volumePrune.Flags().BoolP("yes", "y", false, "所有问题自动回答'是'")
+	volumePrune.Flags().BoolP("yes", "y", false, i18n.T("answerYes"))
 
 	volumeCreate.Flags().Uint("size", 0, "Volume size (GB)")
 	volumeCreate.MarkFlagRequired("size")
 	Volume.AddCommand(
-		volumeList, volumeShow, volumeCreate,
+		volumeList, volumeShow, volumeCreate, volumeExtend,
 		volumeDelete, volumePrune,
 	)
 }

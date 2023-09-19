@@ -19,6 +19,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/common/i18n"
 	openstackCommon "github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/compute"
 	imageLib "github.com/BytemanD/skyman/openstack/image"
@@ -800,7 +801,7 @@ func init() {
 	serverPrune.Flags().String("host", "", "Search by hostname")
 	serverPrune.Flags().StringArrayP("status", "s", nil, "Search by server status")
 	serverPrune.Flags().BoolP("wait", "w", false, "等待虚拟删除完成")
-	serverPrune.Flags().BoolP("yes", "y", false, "所有问题自动回答'是'")
+	serverPrune.Flags().BoolP("yes", "y", false, i18n.T("answerYes"))
 
 	serverSetPassword.Flags().String("user", "", "User name")
 

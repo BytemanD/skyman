@@ -53,6 +53,11 @@ Use "skyman [command] --help" for more information about a command.
 ```bash
 rpm -ivh dist/skyman-<版本>-1.x86_64.rpm
 ```
+## 设置语言
+
+```bash
+export SKYMAN_LANG=zh_CN
+```
 
 ## 支持的命令
 
@@ -82,3 +87,4 @@ skyman router list
 skyman port list
 ...
 ```
+

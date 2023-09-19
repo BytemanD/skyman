@@ -27,6 +27,9 @@ func init() {
 		{ID: "formatAndSupported",
 			Other: "output format, supported: %v",
 		},
+		{ID: "answerYes",
+			Other: "automatically answer yes for all questions",
+		},
 	}
 	defaultMessageMap = map[string]i18n.Message{}
 

@@ -6,3 +6,6 @@ other = "显示Debug信息"
 
 [formatAndSupported]
 other = '输出格式, 支持的格式: %v'
+
+[answerYes]
+other = '所有问题自动回答"是"'

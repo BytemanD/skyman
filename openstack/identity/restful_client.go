@@ -104,6 +104,7 @@ func (client RestfuleClient) Delete(resource string, id string, headers map[stri
 	return client.doRequest(req, nil)
 }
 
+// TODO: rename to Post
 func (client RestfuleClient) Create(resource string, body []byte, headers map[string]string,
 	obj interface{},
 ) error {

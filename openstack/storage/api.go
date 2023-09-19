@@ -60,7 +60,6 @@ func (client StorageClientV2) VolumeFound(idOrName string) (*Volume, error) {
 	}
 }
 func (client StorageClientV2) VolumeCreate(params map[string]interface{}) (*Volume, error) {
-
 	data := map[string]interface{}{"volume": params}
 	body, _ := json.Marshal(data)
 	respBody := map[string]*Volume{"volume": {}}
@@ -69,6 +68,20 @@ func (client StorageClientV2) VolumeCreate(params map[string]interface{}) (*Volu
 		return nil, err
 	}
 	return respBody["volume"], nil
+}
+func (client StorageClientV2) VolumeExtend(id string, size int) error {
+	repData := map[string]map[string]interface{}{
+		"os-extend": {
+			"new_size": size,
+		},
+	}
+	reqBody, _ := json.Marshal(repData)
+	err := client.Create(fmt.Sprintf("volumes/%s/action", id),
+		reqBody, client.BaseHeaders, nil)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 func (client StorageClientV2) VolumeDelete(id string) error {
 	return client.Delete("volumes", id, client.BaseHeaders)
