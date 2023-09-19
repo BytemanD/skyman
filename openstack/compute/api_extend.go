@@ -80,23 +80,7 @@ func (client ComputeClientV2) ServerPrune(query url.Values, yes bool, waitDelete
 	}
 	wg.Wait()
 }
-func (client ComputeClientV2) ServerInspect(serverId string) (*ServerInspect, error) {
-	server, err := client.ServerShow(serverId)
-	if err != nil {
-		return nil, err
-	}
-	interfaceAttachmetns, err := client.ServerInterfaceList(serverId)
-	if err != nil {
-		return nil, err
-	}
-	volumeAttachments, err := client.ServerVolumeList(serverId)
-	return &ServerInspect{
-		Server:     *server,
-		Interfaces: interfaceAttachmetns,
-		Volumes:    volumeAttachments,
-	}, nil
 
-}
 func (client ComputeClientV2) FlavorCopy(flavorId string, newName string, newId string,
 	newVcpus int, newRam int, newDisk int, newSwap int,
 	newEphemeral int, newRxtxFactor float32, setProperties map[string]string,

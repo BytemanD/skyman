@@ -1,14 +1,9 @@
 package compute
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
-	"html/template"
 	"os"
 	"strings"
-
-	markdown "github.com/MichaelMure/go-term-markdown"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/common"
@@ -82,58 +77,7 @@ func printServer(server compute.Server) {
 	}
 	common.PrintPrettyItemTable(pt)
 }
-func printServerInspect(serverInspect compute.ServerInspect) {
-	source := `
-# Inspect For Instance {{.Server.Name}}
 
-## 基本信息
-
-1. 实例详情
-	- **UUID**: {{.Server.Id}}
-	- **Name**: {{.Server.Name}}
-	- **InstanceName**: {{.Server.InstanceName}}
-	- **Description**: {{.Server.Description}}
-1. 状态
-	- **VmState**: {{.Server.VmState}}
-	- **PowerState**: {{.PowerState}}
-	- **TaskState**: {{.Server.TaskState}}
-1. 节点
-	- **Availability Zone**: {{.Server.AZ}}
-	- **Host**: {{.Server.Host}}
-
-## Flavor
-
-- **Name**: {{.Server.Flavor.OriginalName}}
-- **Vcpus**: {{.Server.Flavor.Vcpus}}
-- **Ram**: {{.Server.Flavor.Ram}}
-- **Extra specs**:
-{{ range $key, $value := .Server.Flavor.ExtraSpecs }}
-	1. {{$key}} = {{$value}}
-{{end}}
-
-## Interfaces
-{{ range $index, $interface := .Interfaces }}
-1. **PortId**: {{$interface.PortId}}
-  - **MacAddr**: {{$interface.MacAddr}}
-  - **IPAddress**: {{ range $index, $ip := $interface.FixedIps }} {{$ip.IpAddress}} {{end}}
-{{end}}
-
-## Volumes
-{{ range $index, $volume := .Volumes }}
-1. **Volume Id**: {{$volume.VolumeId}}
-  - **Device**: {{$volume.Device}}
-{{end}}
-`
-	templateBuffer := bytes.NewBuffer([]byte{})
-	bufferWriter := bufio.NewWriter(templateBuffer)
-
-	tmpl, _ := template.New("inspect").Parse(source)
-	serverInspect.PowerState = serverInspect.Server.GetPowerState()
-	tmpl.Execute(bufferWriter, serverInspect)
-	bufferWriter.Flush()
-	result := markdown.Render(templateBuffer.String(), 100, 4)
-	fmt.Println(string(result))
-}
 func printFlavor(server compute.Flavor) {
 	pt := common.PrettyItemTable{
 		Item: server,

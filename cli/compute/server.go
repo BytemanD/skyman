@@ -706,7 +706,8 @@ var serverInspect = &cobra.Command{
 		client := cli.GetClient()
 
 		serverId := args[0]
-		serverInspect, err := client.Compute.ServerInspect(serverId)
+		detail, _ := cmd.Flags().GetBool("detail")
+		serverInspect, err := client.ServerInspect(serverId, detail)
 
 		if err != nil {
 			openstackCommon.RaiseIfError(err, "inspect sever faield")
@@ -726,7 +727,7 @@ var serverInspect = &cobra.Command{
 			}
 			fmt.Println(output)
 		default:
-			printServerInspect(*serverInspect)
+			serverInspect.Print()
 		}
 	},
 }
@@ -802,6 +803,9 @@ func init() {
 	serverPrune.Flags().BoolP("yes", "y", false, "所有问题自动回答'是'")
 
 	serverSetPassword.Flags().String("user", "", "User name")
+
+	// server inspect
+	serverInspect.Flags().Bool("detail", false, "详细信息")
 
 	serverSet.AddCommand(serverSetPassword)
 

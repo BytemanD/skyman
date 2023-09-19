@@ -1,6 +1,8 @@
 package openstack
 
 import (
+	"net/url"
+
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/common"
 	"github.com/BytemanD/stackcrud/openstack/compute"
@@ -69,4 +71,37 @@ func GetClientWithAuthToken(authClient *identity.V3AuthClient) (*OpenstackClient
 		Storage:    *storageClient,
 		Networking: *networkingClient,
 	}, nil
+}
+
+func (client OpenstackClient) ServerInspect(serverId string, detail bool) (*compute.ServerInspect, error) {
+	server, err := client.Compute.ServerShow(serverId)
+	if err != nil {
+		return nil, err
+	}
+	interfaceAttachmetns, err := client.Compute.ServerInterfaceList(serverId)
+	if err != nil {
+		return nil, err
+	}
+	volumeAttachments, err := client.Compute.ServerVolumeList(serverId)
+	serverInspect := compute.ServerInspect{
+		Server:          *server,
+		Interfaces:      interfaceAttachmetns,
+		Volumes:         volumeAttachments,
+		InterfaceDetail: map[string]networking.Port{},
+		VolumeDetail:    map[string]storage.Volume{},
+	}
+	if detail {
+		portQuery := url.Values{}
+		portQuery.Add("device_id", serverId)
+		for _, port := range client.Networking.PortList(portQuery) {
+			serverInspect.InterfaceDetail[port.Id] = port
+		}
+
+		for _, volume := range serverInspect.Volumes {
+			vol, err := client.Storage.VolumeShow(volume.VolumeId)
+			common.LogError(err, "get volume  failed", true)
+			serverInspect.VolumeDetail[volume.VolumeId] = *vol
+		}
+	}
+	return &serverInspect, nil
 }

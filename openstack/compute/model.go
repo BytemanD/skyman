@@ -1,13 +1,20 @@
 package compute
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
+	"text/template"
+
+	markdown "github.com/MichaelMure/go-term-markdown"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/stackcrud/openstack/common"
+	"github.com/BytemanD/stackcrud/openstack/networking"
+	"github.com/BytemanD/stackcrud/openstack/storage"
 )
 
 type Flavor struct {
@@ -306,8 +313,63 @@ type RegionMigrateResp struct {
 }
 
 type ServerInspect struct {
-	Server     Server                `json:"server"`
-	Interfaces []InterfaceAttachment `json:"interfaces"`
-	Volumes    []VolumeAttachment    `json:"volumes"`
-	PowerState string
+	Server          Server                `json:"server"`
+	Interfaces      []InterfaceAttachment `json:"interfaces"`
+	Volumes         []VolumeAttachment    `json:"volumes"`
+	PowerState      string
+	InterfaceDetail map[string]networking.Port `json:"interfaceDetail"`
+	VolumeDetail    map[string]storage.Volume  `json:"volumeDetail"`
+}
+
+func (serverInspect *ServerInspect) Print() {
+	source := `
+# Inspect For Instance {{.Server.Name}}
+
+## 基本信息
+
+1. 实例详情
+	- **UUID**: {{.Server.Id}}
+	- **Name**: {{.Server.Name}}
+	- **InstanceName**: {{.Server.InstanceName}}
+	- **Description**: {{.Server.Description}}
+1. 状态
+	- **VmState**: {{.Server.VmState}}
+	- **PowerState**: {{.PowerState}}
+	- **TaskState**: {{.Server.TaskState}}
+1. 节点
+	- **Availability Zone**: {{.Server.AZ}}
+	- **Host**: {{.Server.Host}}
+
+## 规格
+
+- **Name**: {{.Server.Flavor.OriginalName}}
+- **Vcpus**: {{.Server.Flavor.Vcpus}}
+- **Ram**: {{.Server.Flavor.Ram}}
+- **Extra specs**:
+{{ range $key, $value := .Server.Flavor.ExtraSpecs }}
+	1. {{$key}} = {{$value}}
+{{end}}
+
+## 网卡
+{{ range $index, $interface := .Interfaces }}
+1. **PortId**: {{$interface.PortId}}
+  - **MacAddr**: {{$interface.MacAddr}}
+  - **IPAddress**: {{ range $index, $ip := $interface.FixedIps }} {{$ip.IpAddress}} {{end}}
+{{end}}
+
+## 磁盘
+{{ range $index, $volume := .Volumes }}
+1. **Volume Id**: {{$volume.VolumeId}}
+  - **Device**: {{$volume.Device}}
+{{end}}
+`
+	templateBuffer := bytes.NewBuffer([]byte{})
+	bufferWriter := bufio.NewWriter(templateBuffer)
+
+	tmpl, _ := template.New("inspect").Parse(source)
+	serverInspect.PowerState = serverInspect.Server.GetPowerState()
+	tmpl.Execute(bufferWriter, serverInspect)
+	bufferWriter.Flush()
+	result := markdown.Render(templateBuffer.String(), 100, 4)
+	fmt.Println(string(result))
 }
