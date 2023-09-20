@@ -32,7 +32,7 @@ func getVersion() string {
 
 func main() {
 	rootCmd := cobra.Command{
-		Use:     "stackcurd",
+		Use:     "skyman",
 		Short:   "Golang OpenStack Client",
 		Version: getVersion(),
 		PersistentPreRun: func(cmd *cobra.Command, _ []string) {

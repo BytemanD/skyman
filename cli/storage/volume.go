@@ -172,6 +172,32 @@ var volumeExtend = &cobra.Command{
 		common.LogError(err, "extend volume falied", true)
 	},
 }
+var volumeRetype = &cobra.Command{
+	Use:   "retype <volume> <new type>",
+	Short: "Retype volume",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.ExactArgs(2)(cmd, args); err != nil {
+			return err
+		}
+		migrationPolicy, _ := cmd.Flags().GetString("migration-policy")
+		if err := storage.InvalidMIgrationPoicy(migrationPolicy); err != nil {
+			return err
+		}
+		return nil
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		idOrName := args[0]
+		newType := args[1]
+		migrationPolicy, _ := cmd.Flags().GetString("migration-policy")
+
+		client := cli.GetClient()
+		volume, err := client.Storage.VolumeFound(idOrName)
+		common.LogError(err, "get volume falied", true)
+
+		err = client.Storage.VolumeRetype(volume.Id, newType, migrationPolicy)
+		common.LogError(err, "extend volume falied", true)
+	},
+}
 
 func init() {
 	volumeList.Flags().BoolP("long", "l", false, "List additional fields in output")
@@ -185,8 +211,13 @@ func init() {
 
 	volumeCreate.Flags().Uint("size", 0, "Volume size (GB)")
 	volumeCreate.MarkFlagRequired("size")
+
+	volumeRetype.Flags().StringP("migration-policy", "p", "never",
+		fmt.Sprintf("Migration policy during retype of volume,\ninvalid values: %s",
+			storage.MIGRATION_POLICYS))
+
 	Volume.AddCommand(
-		volumeList, volumeShow, volumeCreate, volumeExtend,
+		volumeList, volumeShow, volumeCreate, volumeExtend, volumeRetype,
 		volumeDelete, volumePrune,
 	)
 }

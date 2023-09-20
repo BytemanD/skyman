@@ -8,6 +8,20 @@ import (
 	"github.com/BytemanD/skyman/openstack/common"
 )
 
+const (
+	POLICY_NEVER     = "never"
+	POLICY_ON_DEMAND = "on-demand"
+)
+
+var MIGRATION_POLICYS = []string{POLICY_NEVER, POLICY_ON_DEMAND}
+
+func InvalidMIgrationPoicy(policy string) error {
+	if !common.ContainsString(MIGRATION_POLICYS, policy) {
+		return fmt.Errorf("Invalid migration policy: %s, supported: %s", policy, MIGRATION_POLICYS)
+	}
+	return nil
+}
+
 func (client StorageClientV2) VolumeList(query url.Values) []Volume {
 	body := map[string][]Volume{"volumes": {}}
 	client.List("volumes", query, nil, &body)
@@ -69,29 +83,33 @@ func (client StorageClientV2) VolumeCreate(params map[string]interface{}) (*Volu
 	}
 	return respBody["volume"], nil
 }
+func (client StorageClientV2) doAction(id, data interface{}, resp interface{}) error {
+	reqBody, _ := json.Marshal(data)
+	err := client.Create(fmt.Sprintf("volumes/%s/action", id),
+		reqBody, client.BaseHeaders, resp)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (client StorageClientV2) VolumeExtend(id string, size int) error {
 	repData := map[string]map[string]interface{}{
 		"os-extend": {
 			"new_size": size,
 		},
 	}
-	reqBody, _ := json.Marshal(repData)
-	err := client.Create(fmt.Sprintf("volumes/%s/action", id),
-		reqBody, client.BaseHeaders, nil)
-	if err != nil {
-		return err
-	}
-	return nil
+	return client.doAction(id, repData, nil)
 }
+func (client StorageClientV2) VolumeRetype(id string, newType string, migrationPolicy string) error {
+	repData := map[string]map[string]interface{}{
+		"os-retype": {
+			"new_type":         newType,
+			"migration_policy": migrationPolicy,
+		},
+	}
+	return client.doAction(id, repData, nil)
+}
+
 func (client StorageClientV2) VolumeDelete(id string) error {
 	return client.Delete("volumes", id, client.BaseHeaders)
 }
-
-// func (client CinderClientV2) ImageShow(id string) (*Volume, error) {
-// 	volume := Volume{}
-// 	err := client.Show("images", id, nil, &volume)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &volume, nil
-// }

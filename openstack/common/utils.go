@@ -24,3 +24,12 @@ func RaiseIfError(err error, msg string) {
 		logging.Fatal("%s, %v", msg, err)
 	}
 }
+
+func ContainsString(stringList []string, s string) bool {
+	for _, str := range stringList {
+		if s == str {
+			return true
+		}
+	}
+	return false
+}
