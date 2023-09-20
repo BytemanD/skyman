@@ -53,7 +53,7 @@ var serverList = &cobra.Command{
 			query.Add("status", status)
 		}
 		if flavor != "" {
-			flavor, err := client.Compute.FlavorGetByIdOrName(flavor)
+			flavor, err := client.Compute.FlavorFound(flavor)
 			if err != nil {
 				logging.Fatal("%s", err)
 			}

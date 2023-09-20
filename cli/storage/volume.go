@@ -19,16 +19,21 @@ var Volume = &cobra.Command{Use: "volume"}
 var volumeList = &cobra.Command{
 	Use:   "list",
 	Short: "List volumes",
+	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 		client := cli.GetClient()
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
+		status, _ := cmd.Flags().GetString("status")
 		all, _ := cmd.Flags().GetBool("all")
 
 		query := url.Values{}
 		if name != "" {
 			query.Set("name", name)
+		}
+		if status != "" {
+			query.Set("status", status)
 		}
 		if all {
 			query.Set("all_tenants", "true")
@@ -161,6 +166,7 @@ func init() {
 	volumeList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	volumeList.Flags().Bool("all", false, "List volumes of all tenants")
 	volumeList.Flags().StringP("name", "n", "", "Search by volume name")
+	volumeList.Flags().String("status", "", "Search by volume status")
 
 	volumePrune.Flags().StringP("name", "n", "", "Search by volume name")
 	volumePrune.Flags().StringArrayP("status", "s", nil, "Search by server status")

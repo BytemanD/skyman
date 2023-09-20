@@ -445,28 +445,6 @@ func (client ComputeClientV2) FlavorShow(flavorId string) (*Flavor, error) {
 	return body["flavor"], nil
 }
 
-func (client ComputeClientV2) FlavorGetByIdOrName(flavorId string) (*Flavor, error) {
-	flavor, err := client.FlavorShow(flavorId)
-	if err == nil {
-		return flavor, nil
-	}
-
-	if httpError, ok := err.(*common.HttpError); ok {
-		if httpError.Status == 404 {
-			flavors, err := client.FlavorList(nil)
-			if err != nil {
-				return nil, err
-			}
-			for _, f := range flavors {
-				if f.Name == flavorId {
-					return &f, nil
-				}
-			}
-			return nil, fmt.Errorf("flavor %s not found", flavorId)
-		}
-	}
-	return nil, err
-}
 func (client ComputeClientV2) FlavorShowWithExtraSpecs(flavorId string) (*Flavor, error) {
 	flavor, err := client.FlavorFound(flavorId)
 	if err != nil {
