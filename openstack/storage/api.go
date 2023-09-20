@@ -2,7 +2,10 @@ package storage
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
+
+	"github.com/BytemanD/skyman/openstack/common"
 )
 
 func (client StorageClientV2) VolumeList(query url.Values) []Volume {
@@ -28,10 +31,33 @@ func (client StorageClientV2) VolumeListDetailByName(name string) (Volumes, erro
 	query.Set("name", name)
 	return client.VolumeListDetail(query)
 }
+
 func (client StorageClientV2) VolumeShow(id string) (*Volume, error) {
 	body := map[string]*Volume{"volume": {}}
 	err := client.Show("volumes", id, client.BaseHeaders, &body)
 	return body["volume"], err
+}
+func (client StorageClientV2) VolumeFound(idOrName string) (*Volume, error) {
+	volume, err := client.VolumeShow(idOrName)
+	if err == nil {
+		return volume, nil
+	}
+	if httpError, ok := err.(*common.HttpError); ok {
+		if !httpError.IsNotFound() {
+			return nil, err
+		}
+	}
+	volumes, err := client.VolumeListDetailByName(idOrName)
+	if err != nil {
+		return nil, err
+	}
+	if len(volumes) == 0 {
+		return nil, fmt.Errorf("volume %s not found", idOrName)
+	} else if len(volumes) == 1 {
+		return &(volumes[0]), nil
+	} else {
+		return nil, fmt.Errorf("Found multi volumes named %s", idOrName)
+	}
 }
 func (client StorageClientV2) VolumeCreate(params map[string]interface{}) (*Volume, error) {
 

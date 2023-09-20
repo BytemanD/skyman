@@ -106,15 +106,10 @@ var flavorDelete = &cobra.Command{
 		client := cli.GetClient()
 		for _, flavorId := range args {
 			flavor, err := client.Compute.FlavorFound(flavorId)
-			if err != nil {
-				common.LogError(err, "Get flavor failed", false)
-				continue
-			}
+			common.LogError(err, "Get flavor failed", false)
 			err = client.Compute.FlavorDelete(flavor.Id)
-			if err != nil {
-				common.LogError(err, "Delete flavor failed", false)
-				continue
-			}
+			common.LogError(err, "Delete flavor failed", false)
+
 			fmt.Printf("Flavor %s deleted \n", flavorId)
 		}
 	},

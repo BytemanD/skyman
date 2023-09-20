@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
 	openstackCommon "github.com/BytemanD/skyman/openstack/common"
@@ -76,42 +75,29 @@ var volumeShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 		idOrName := args[0]
-		volume, err := client.Storage.VolumeShow(idOrName)
-		if err != nil {
-			logging.Fatal("%s", err)
-		}
-		if err != nil {
-			volumes, err := client.Storage.VolumeListDetailByName(idOrName)
-			if err != nil {
-				openstackCommon.RaiseIfError(err, "list volume falied")
-			}
-			if len(volumes) > 1 {
-				fmt.Printf("Found multi volumes named %s\n", idOrName)
-				os.Exit(1)
-			} else if len(volumes) == 1 {
-				volume = &volumes[0]
-			} else {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-		}
+		volume, err := client.Storage.VolumeFound(idOrName)
+		common.LogError(err, "get volume failed", true)
 		printVolume(*volume)
 	},
 }
 var volumeDelete = &cobra.Command{
-	// TODO: support volume id or name
-	Use:   "delete <volume id> [<volume id> ...]",
+	Use:   "delete <volume1> [<volume2> ...]",
 	Short: "Delete volume",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 
-		for _, volumeId := range args {
-			err := client.Storage.VolumeDelete(volumeId)
+		for _, idOrName := range args {
+			volume, err := client.Storage.VolumeFound(idOrName)
 			if err != nil {
-				fmt.Println(err)
+				common.LogError(err, "get volume failed", false)
+				continue
+			}
+			err = client.Storage.VolumeDelete(volume.Id)
+			if err == nil {
+				fmt.Printf("Requested to delete volume %s\n", idOrName)
 			} else {
-				fmt.Printf("Requested to delete volume %s\n", volumeId)
+				fmt.Println(err)
 			}
 		}
 	},

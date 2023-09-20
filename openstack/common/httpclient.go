@@ -105,6 +105,10 @@ func (client Session) UrlJoin(path []string) string {
 // 	return session.Request(req, headers)
 // }
 
+const (
+	CODE_404 = 404
+)
+
 type HttpError struct {
 	Status  int
 	Reason  string
@@ -113,6 +117,9 @@ type HttpError struct {
 
 func (err HttpError) Error() string {
 	return err.Reason
+}
+func (err HttpError) IsNotFound() bool {
+	return err.Status == CODE_404
 }
 
 func (resp *Response) JudgeStatus() error {
