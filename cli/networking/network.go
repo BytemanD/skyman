@@ -43,7 +43,6 @@ var networkList = &cobra.Command{
 					p, _ := item.(networking.Network)
 					return strings.Join(p.Subnets, "\n")
 				}},
-				{Name: "DeviceOwner"},
 			},
 			LongColumns: []common.Column{
 				{Name: "Shared"}, {Name: "NetworkType"},

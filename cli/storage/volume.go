@@ -45,11 +45,8 @@ var volumeList = &cobra.Command{
 		}
 		table := common.PrettyTable{
 			ShortColumns: []common.Column{
-				{Name: "Id"},
-				{Name: "Name"},
-				{Name: "Status", AutoColor: true},
-				{Name: "Size"},
-				{Name: "Bootable"},
+				{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
+				{Name: "Size"}, {Name: "Bootable"}, {Name: "VolumeType"},
 				{Name: "Attachments", Slot: func(item interface{}) interface{} {
 					obj, _ := (item).(storage.Volume)
 					return strings.Join(obj.GetAttachmentList(), "\n")
