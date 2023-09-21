@@ -9,6 +9,8 @@ function logWarn() {
     echo `date "+%F %T" ` "WARN:" $@ 1>&2
 }
 function goBuild(){
+    logInfo "下载依赖包"
+    go mod download
     logInfo "获取版本"
     version=$(go run cmd/skyman.go -v |awk '{print $3}')
     if [[ -z $version ]] || [[ "${version}" == "" ]]; then
