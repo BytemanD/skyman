@@ -196,6 +196,7 @@ var serverCreate = &cobra.Command{
 		min, _ := cmd.Flags().GetUint16("min")
 		max, _ := cmd.Flags().GetUint16("max")
 		userDataFile, _ := cmd.Flags().GetString("user-data")
+		wait, _ := cmd.Flags().GetBool("wait")
 
 		createOption := compute.ServerOpt{
 			Name:             name,
@@ -245,6 +246,14 @@ var serverCreate = &cobra.Command{
 			os.Exit(1)
 		}
 		printServer(*server)
+		if wait {
+			_, err := client.WaitServerCreated(server.Id)
+			if err != nil {
+				logging.Error("Server %s create failed, %v", server.Id, err)
+			} else {
+				logging.Info("Server %s created", server.Id)
+			}
+		}
 	},
 }
 var serverSet = &cobra.Command{Use: "set"}
@@ -252,15 +261,26 @@ var serverDelete = &cobra.Command{
 	Use:   "delete <server1> [server2 ...]",
 	Short: "Delete server(s)",
 	Args:  cobra.MinimumNArgs(1),
-	Run: func(_ *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) {
+		wait, _ := cmd.Flags().GetBool("wait")
 		client := cli.GetClient()
 
 		for _, id := range args {
 			err := client.Compute.ServerDelete(id)
 			if err != nil {
-				logging.Error("Reqeust to delete server failed, %v", err)
+				logging.Fatal("Reqeust to delete server failed, %v", err)
 			} else {
 				fmt.Printf("Requested to delete server: %s\n", id)
+			}
+		}
+		if wait {
+			for _, id := range args {
+				err := client.WaitServerDeleted(id)
+				if err == nil {
+					logging.Info("Server %s deleted", id)
+				} else {
+					logging.Error("Server %s delete failed, %v", id, err)
+				}
 			}
 		}
 	},
@@ -330,12 +350,24 @@ var serverReboot = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 		hard, _ := cmd.Flags().GetBool("hard")
+		wait, _ := cmd.Flags().GetBool("wait")
+
 		for _, id := range args {
 			err := client.Compute.ServerReboot(id, hard)
 			if err != nil {
-				logging.Error("Reqeust to reboot server failed, %v", err)
+				logging.Fatal("Reqeust to reboot server failed, %v", err)
 			} else {
 				fmt.Printf("Requested to reboot server: %s\n", id)
+			}
+		}
+		if wait {
+			for _, id := range args {
+				_, err := client.WaitServerRebooted(id)
+				if err == nil {
+					logging.Info("Server %s rebooted", id)
+				} else {
+					logging.Error("Server %s reboot failed, %v", id, err)
+				}
 			}
 		}
 	},
@@ -456,30 +488,10 @@ var serverResize = &cobra.Command{
 		}
 
 		err = client.Compute.ServerResize(args[0], args[1])
-		if err != nil {
-			logging.Fatal("Reqeust to resize server failed, %v", err)
-		} else {
-			fmt.Printf("Requested to resize server: %s\n", args[0])
-		}
+		common.LogError(err, "Reqeust to resize server failed", true)
 
 		if wait {
-			for {
-				server, err := client.Compute.ServerShow(args[0])
-				if err != nil {
-					logging.Fatal("Get server %s failed, %v", args[0], err)
-				}
-				logging.Info("实例状态: %s", server.AllStatus())
-				if server.TaskState != "" || server.InResize() {
-					time.Sleep(time.Second * 2)
-					continue
-				}
-				if server.Flavor.OriginalName == flavor.Name {
-					logging.Info("resize 成功")
-				} else {
-					logging.Fatal("resize 失败")
-				}
-				break
-			}
+			client.WaitServerResized(args[0], flavor.Name)
 		}
 	},
 }
@@ -758,13 +770,18 @@ func init() {
 	serverCreate.Flags().Uint16("min", 1, "Minimum number of servers to launch.")
 	serverCreate.Flags().Uint16("max", 1, "Maximum number of servers to launch.")
 	serverCreate.Flags().String("user-data", "", "user data file to pass to be exposed by the metadata server.")
+	serverCreate.Flags().BoolP("wait", "w", false, "Wait server created")
 
 	viper.BindPFlag("server.flavor", serverCreate.Flags().Lookup("flavor"))
 	viper.BindPFlag("server.image", serverCreate.Flags().Lookup("image"))
 	viper.BindPFlag("server.availabilityZone", serverCreate.Flags().Lookup("az"))
 
+	// server delete flags
+	serverDelete.Flags().BoolP("wait", "w", false, "Wait server rebooted")
+
 	// server reboot flags
 	serverReboot.Flags().Bool("hard", false, "Perform a hard reboot")
+	serverReboot.Flags().BoolP("wait", "w", false, "Wait server rebooted")
 
 	// server migrate flags
 	serverMigrate.Flags().Bool("live", false, "Migrate running server.")

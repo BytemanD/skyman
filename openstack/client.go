@@ -1,10 +1,14 @@
 package openstack
 
 import (
+	"fmt"
 	"net/url"
+	"strings"
+	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/common"
+	osCommon "github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/compute"
 	"github.com/BytemanD/skyman/openstack/identity"
 	"github.com/BytemanD/skyman/openstack/image"
@@ -104,4 +108,51 @@ func (client OpenstackClient) ServerInspect(serverId string, detail bool) (*comp
 		}
 	}
 	return &serverInspect, nil
+}
+
+func (client OpenstackClient) WaitServerStatus(serverId string, status string, taskState string) (*compute.Server, error) {
+	for {
+		server, err := client.Compute.ServerShow(serverId)
+		if err != nil {
+			return nil, err
+		}
+		logging.Info("server %s status: %s", serverId, server.AllStatus())
+
+		if strings.ToUpper(server.Status) == "ERROR" {
+			return nil, fmt.Errorf("server %s status is ERROR", serverId)
+		}
+		if (status == "" || strings.ToUpper(server.Status) == strings.ToUpper(status)) &&
+			(strings.ToUpper(server.TaskState) == strings.ToUpper(taskState)) {
+			return server, nil
+		}
+		time.Sleep(time.Second * 2)
+	}
+}
+func (client OpenstackClient) WaitServerCreated(serverId string) (*compute.Server, error) {
+	return client.WaitServerStatus(serverId, "ACTIVE", "")
+}
+
+func (client OpenstackClient) WaitServerRebooted(serverId string) (*compute.Server, error) {
+	return client.WaitServerStatus(serverId, "ACTIVE", "")
+}
+
+func (client OpenstackClient) WaitServerDeleted(serverId string) error {
+	_, err := client.WaitServerStatus(serverId, "", "")
+	if httpError, ok := err.(*osCommon.HttpError); ok {
+		if httpError.Status == 404 {
+			return nil
+		}
+	}
+	return err
+}
+func (client OpenstackClient) WaitServerResized(serverId string, newFlavorName string) error {
+	server, err := client.WaitServerStatus(serverId, "", "")
+	if err != nil {
+		return err
+	}
+	if server.Flavor.OriginalName == newFlavorName {
+		return nil
+	} else {
+		return fmt.Errorf("server %s not resized", serverId)
+	}
 }
