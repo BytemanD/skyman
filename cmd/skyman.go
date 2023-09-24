@@ -30,10 +30,19 @@ func getVersion() string {
 	return fmt.Sprint(Version)
 }
 
+var LOGO = `
+      _                             
+  ___| |  _ _   _ ____  _____ ____  
+ /___) |_/ ) | | |    \(____ |  _ \ 
+|___ |  _ (| |_| | | | / ___ | | | |
+(___/|_| \_)\__  |_|_|_\_____|_| |_|
+           (____/    
+`
+
 func main() {
 	rootCmd := cobra.Command{
 		Use:     "skyman",
-		Short:   "Golang OpenStack Client",
+		Short:   "Golang OpenStack Client \n" + LOGO,
 		Version: getVersion(),
 		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 			conf, _ := cmd.Flags().GetString("conf")
