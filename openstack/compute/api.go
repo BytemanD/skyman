@@ -605,6 +605,10 @@ func (client ComputeClientV2) ServerSetPassword(id string, password string, user
 	}
 	return client.ServerAction("changePassword", id, data, nil)
 }
+func (client ComputeClientV2) ServerSetName(id string, name string) error {
+	data := map[string]interface{}{"name": name}
+	return client.ServerAction("rename", id, data, nil)
+}
 
 // migration api
 

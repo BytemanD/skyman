@@ -604,6 +604,20 @@ var serverSetPassword = &cobra.Command{
 		}
 	},
 }
+var serverSetName = &cobra.Command{
+	Use:   "name <server> <new name>",
+	Short: "set name for server",
+	Args:  cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		idOrName := args[0]
+		name := args[1]
+		client := cli.GetClient()
+		server, err := client.Compute.ServerFound(idOrName)
+		common.LogError(err, "get server failed", true)
+		err = client.Compute.ServerSetName(server.Id, name)
+		common.LogError(err, "set server name failed", true)
+	},
+}
 var serverRegion = &cobra.Command{Use: "region"}
 var serverRegionLiveMigrate = &cobra.Command{
 	Use:   "migrate <server> <dest region>",
@@ -826,6 +840,7 @@ func init() {
 	serverInspect.Flags().Bool("detail", false, "详细信息")
 
 	serverSet.AddCommand(serverSetPassword)
+	serverSet.AddCommand(serverSetName)
 
 	Server.AddCommand(
 		serverList, serverShow, serverCreate, serverDelete, serverPrune,
