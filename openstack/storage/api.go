@@ -113,3 +113,72 @@ func (client StorageClientV2) VolumeRetype(id string, newType string, migrationP
 func (client StorageClientV2) VolumeDelete(id string) error {
 	return client.Delete("volumes", id, client.BaseHeaders)
 }
+
+// volume type api
+func (client StorageClientV2) VolumeTypeList(query url.Values) ([]VolumeType, error) {
+	body := map[string][]VolumeType{"volume_types": {}}
+	if err := client.List("types", query, nil, &body); err != nil {
+		return nil, err
+	}
+	return body["volume_types"], nil
+}
+func (client StorageClientV2) VolumeTypeListByName(name string) ([]VolumeType, error) {
+	volumeTypes, err := client.VolumeTypeList(nil)
+	if err != nil {
+		return nil, err
+	}
+	foundVolumeTypes := []VolumeType{}
+	for _, volumeType := range volumeTypes {
+		if volumeType.Name == name {
+			foundVolumeTypes = append(foundVolumeTypes, volumeType)
+		}
+	}
+	return foundVolumeTypes, nil
+}
+func (client StorageClientV2) VolumeTypeDefaultGet() (*VolumeType, error) {
+	body := map[string]*VolumeType{"volume_type": {}}
+	if err := client.List("types/default", nil, client.BaseHeaders, &body); err != nil {
+		return nil, err
+	}
+	return body["volume_type"], nil
+}
+func (client StorageClientV2) VolumeTypeShow(id string) (*VolumeType, error) {
+	body := map[string]*VolumeType{"volume_type": {}}
+	err := client.Show("types", id, client.BaseHeaders, &body)
+	return body["volume_type"], err
+}
+func (client StorageClientV2) VolumeTypeFound(idOrName string) (*VolumeType, error) {
+	volumeType, err := client.VolumeTypeShow(idOrName)
+	if err == nil {
+		return volumeType, nil
+	}
+	if httpError, ok := err.(*common.HttpError); ok {
+		if !httpError.IsNotFound() {
+			return nil, err
+		}
+	}
+	volumeTypes, err := client.VolumeTypeListByName(idOrName)
+	if err != nil {
+		return nil, err
+	}
+	if len(volumeTypes) == 0 {
+		return nil, fmt.Errorf("volume type %s not found", idOrName)
+	} else if len(volumeTypes) == 1 {
+		return &(volumeTypes[0]), nil
+	} else {
+		return nil, fmt.Errorf("Found multi volume types named %s", idOrName)
+	}
+}
+func (client StorageClientV2) VolumeTypeCreate(params map[string]interface{}) (*VolumeType, error) {
+	data := map[string]interface{}{"volume_type": params}
+	body, _ := json.Marshal(data)
+	respBody := map[string]*VolumeType{"volume_type": {}}
+	err := client.Create("types", body, client.BaseHeaders, &respBody)
+	if err != nil {
+		return nil, err
+	}
+	return respBody["volume_type"], nil
+}
+func (client StorageClientV2) VolumeTypeDelete(id string) error {
+	return client.Delete("types", id, client.BaseHeaders)
+}

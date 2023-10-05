@@ -35,3 +35,18 @@ func printVolume(volume storage.Volume) {
 	}
 	common.PrintPrettyItemTable(pt)
 }
+func printVolumeType(volumeType storage.VolumeType) {
+	pt := common.PrettyItemTable{
+		Item: volumeType,
+		ShortFields: []common.Column{
+			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
+			{Name: "IsPublic"}, {Name: "IsEncrypted"},
+			{Name: "QosSpecsId"},
+			{Name: "ExtraSpecs", Slot: func(item interface{}) interface{} {
+				p, _ := item.(storage.VolumeType)
+				return strings.Join(p.GetExtraSpecsList(), "\n")
+			}},
+		},
+	}
+	common.PrintPrettyItemTable(pt)
+}

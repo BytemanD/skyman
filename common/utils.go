@@ -3,7 +3,9 @@ package common
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/BytemanD/skyman/openstack/common"
 	"gopkg.in/yaml.v3"
@@ -42,5 +44,14 @@ func LogError(err error, message string, exit bool) {
 	}
 	if exit {
 		os.Exit(1)
+	}
+}
+
+func SplitKeyValue(kv string) ([]string, error) {
+	kvList := strings.Split(kv, "=")
+	if len(kvList) != 2 {
+		return nil, fmt.Errorf("invalid key value %s", kv)
+	} else {
+		return kvList, nil
 	}
 }
