@@ -81,3 +81,20 @@ func (volume Volume) GetImageMetadataList() []string {
 	}
 	return metadataList
 }
+
+type VolumeType struct {
+	common.Resource
+	QosSpecsId                 string            `json:"qos_specs_id,omitempty"`
+	IsPublic                   bool              `json:"is_public"`
+	IsEncrypted                bool              `json:"is_encrypted"`
+	OsVolumeTypeAccessIsPublic bool              `json:"os-volume-type-access:is_public"`
+	ExtraSpecs                 map[string]string `json:"extra_specs,omitempty"`
+}
+
+func (volumeType VolumeType) GetExtraSpecsList() []string {
+	properties := []string{}
+	for key, value := range volumeType.ExtraSpecs {
+		properties = append(properties, fmt.Sprintf("%s=%s", key, value))
+	}
+	return properties
+}

@@ -103,7 +103,7 @@ func (client OpenstackClient) ServerInspect(serverId string, detail bool) (*comp
 
 		for _, volume := range serverInspect.Volumes {
 			vol, err := client.Storage.VolumeShow(volume.VolumeId)
-			common.LogError(err, "get volume  failed", true)
+			common.LogError(err, "get volume failed", true)
 			serverInspect.VolumeDetail[volume.VolumeId] = *vol
 		}
 	}
