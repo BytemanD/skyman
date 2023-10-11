@@ -59,23 +59,18 @@ var actionShow = &cobra.Command{
 				{Name: "StartTime", Sort: true}, {Name: "FinishTime"},
 				{Name: "Result", AutoColor: true},
 			},
-			LongColumns: []common.Column{
-				{Name: "ProjectId"}, {Name: "UserId"},
-			},
 		}
 		// trace
-		tracbackMap := map[string]string{}
-		for _, item := range action.Events {
-			if item.Traceback != "" {
-				tracbackMap[item.Event] = item.Traceback
-			}
-		}
 		pt.AddItems(action.Events)
 		common.PrintPrettyTable(pt, long)
+
 		if long {
-			for k, v := range tracbackMap {
-				fmt.Printf("Event %s tracback:\n", k)
-				fmt.Println(v)
+			for _, item := range action.Events {
+				if item.Traceback == "" {
+					continue
+				}
+				fmt.Printf("Event %s tracback:\n", item.Event)
+				fmt.Println(item.Traceback)
 			}
 		}
 	},
