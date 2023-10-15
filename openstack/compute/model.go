@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"text/template"
+	"time"
 
 	markdown "github.com/MichaelMure/go-term-markdown"
 
@@ -187,6 +188,7 @@ type InstanceAction struct {
 	StartTime    string                `json:"start_time"`
 	Events       []InstanceActionEvent `json:"events"`
 }
+
 type InstanceActionEvent struct {
 	Event      string `json:"event"`
 	StartTime  string `json:"start_time"`
@@ -196,6 +198,49 @@ type InstanceActionEvent struct {
 	Result     string `json:"result"`
 	Traceback  string `json:"traceback"`
 }
+
+func (event InstanceActionEvent) GetSpendTime() (float64, error) {
+	// event.StartTime
+	if event.StartTime == "" {
+		return 0, fmt.Errorf("No start time")
+	}
+	if event.FinishTime == "" {
+		return 0, fmt.Errorf("No finish time")
+	}
+	logging.Debug("%s spend time: %s ~ %s", event.Event, event.StartTime, event.FinishTime)
+	startTime, _ := time.Parse("2006-01-02T15:04:05", event.StartTime)
+	finishTime, _ := time.Parse("2006-01-02T15:04:05", event.FinishTime)
+	return float64(finishTime.Sub(startTime).Milliseconds()) / 1000, nil
+}
+
+type InstanceActionAndEvents struct {
+	InstanceAction InstanceAction        `json:"action"`
+	RequestId      string                `json:"request_id"`
+	Events         []InstanceActionEvent `json:"events"`
+}
+
+func (actionWithEvents InstanceActionAndEvents) GetSpendTime() (float64, error) {
+	// event.StartTime
+	if actionWithEvents.InstanceAction.StartTime == "" {
+		return 0, fmt.Errorf("No start time")
+	}
+	var lastEventFinishTime string
+	for _, event := range actionWithEvents.Events {
+		if event.FinishTime > lastEventFinishTime {
+			lastEventFinishTime = event.FinishTime
+		}
+	}
+	if lastEventFinishTime == "" {
+		return 0, fmt.Errorf("No finish time")
+	}
+
+	logging.Debug("%s spend time: %s ~ %s", actionWithEvents.InstanceAction.Action,
+		actionWithEvents.InstanceAction.StartTime, lastEventFinishTime)
+	startTime, _ := time.Parse("2006-01-02T15:04:05", actionWithEvents.InstanceAction.StartTime)
+	finishTime, _ := time.Parse("2006-01-02T15:04:05", lastEventFinishTime)
+	return float64(finishTime.Sub(startTime).Milliseconds()) / 1000, nil
+}
+
 type InstanceActions []InstanceAction
 type InstanceActionEvents []InstanceActionEvent
 

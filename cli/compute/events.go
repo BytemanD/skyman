@@ -8,6 +8,7 @@ import (
 
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack/compute"
 )
 
 var serverAction = &cobra.Command{Use: "action"}
@@ -76,11 +77,78 @@ var actionShow = &cobra.Command{
 	},
 }
 
+var actionSpend = &cobra.Command{
+	Use:   "spend <server>",
+	Short: "Get server actions spend time",
+	Args:  cobra.RangeArgs(1, 2),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		long, _ := cmd.Flags().GetBool("long")
+		actionName, _ := cmd.Flags().GetString("name")
+		requestId, _ := cmd.Flags().GetString("request-id")
+
+		actionsWithEvents, err := client.Compute.ServerActionsWithEvents(args[0], actionName, requestId)
+		common.LogError(err, "get server actions and events failed", true)
+
+		pt := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Name", Slot: func(item interface{}) interface{} {
+					p, _ := (item).(compute.InstanceActionAndEvents)
+					return p.InstanceAction.Action
+				}},
+				{Name: "RequestId", Slot: func(item interface{}) interface{} {
+					p, _ := (item).(compute.InstanceActionAndEvents)
+					return p.InstanceAction.RequestId
+				}},
+				{Name: "SpendTime", Slot: func(item interface{}) interface{} {
+					p, _ := (item).(compute.InstanceActionAndEvents)
+					spendTime, err := p.GetSpendTime()
+					if err != nil {
+						return err
+					} else {
+						return fmt.Sprintf("%.3f", spendTime)
+					}
+				}},
+			},
+		}
+		for _, actionWithEvents := range actionsWithEvents {
+			for _, event := range actionWithEvents.Events {
+				columnIndex := pt.GetLongColumnIndex(event.Event)
+				if columnIndex < 0 {
+					pt.LongColumns = append(pt.LongColumns,
+						common.Column{
+							Name: event.Event,
+							SlotColumn: func(item interface{}, column common.Column) interface{} {
+								p, _ := (item).(compute.InstanceActionAndEvents)
+								for _, e := range p.Events {
+									if e.Event == column.Name {
+										spendTime, err := e.GetSpendTime()
+										if err != nil {
+											return err
+										} else {
+											return fmt.Sprintf("%.3f", spendTime)
+										}
+									}
+								}
+								return "-"
+							},
+						},
+					)
+				}
+			}
+		}
+		pt.AddItems(actionsWithEvents)
+		common.PrintPrettyTable(pt, long)
+	},
+}
+
 func init() {
 	serverAction.PersistentFlags().BoolP("long", "l", false, "List additional fields in output")
 
-	serverAction.AddCommand(actionList)
-	serverAction.AddCommand(actionShow)
+	actionSpend.Flags().StringP("name", "n", "", "Filter by action name")
+	actionSpend.Flags().StringP("request-id", "r", "", "Filter by request id")
+
+	serverAction.AddCommand(actionList, actionShow, actionSpend)
 
 	Server.AddCommand(serverAction)
 }

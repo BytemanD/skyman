@@ -138,3 +138,31 @@ func (client ComputeClientV2) FlavorCopy(flavorId string, newName string, newId 
 
 	return newFlavor, nil
 }
+
+func (client ComputeClientV2) ServerActionsWithEvents(id string, actionName string, requestId string) (
+	[]InstanceActionAndEvents, error,
+) {
+	serverActions, err := client.ServerActionList(id)
+	if err != nil {
+		return nil, err
+	}
+	var actionEvents []InstanceActionAndEvents
+	for _, action := range serverActions {
+		if requestId != "" && action.RequestId != requestId {
+			continue
+		}
+		if actionName != "" && action.Action != actionName {
+			continue
+		}
+		serverAction, err := client.ServerActionShow(id, action.RequestId)
+		if err != nil {
+			logging.Error("get server action %s failed, %s", action.RequestId, err)
+		}
+		actionEvents = append(actionEvents, InstanceActionAndEvents{
+			InstanceAction: action,
+			RequestId:      action.RequestId,
+			Events:         serverAction.Events,
+		})
+	}
+	return actionEvents, nil
+}

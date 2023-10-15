@@ -33,6 +33,7 @@ type Column struct {
 	AutoColor  bool
 	ForceColor bool
 	Slot       func(item interface{}) interface{}
+	SlotColumn func(item interface{}, column Column) interface{}
 	Sort       bool
 	SortMode   table.SortMode
 }
@@ -91,6 +92,22 @@ func (pt PrettyTable) getSortName(column Column) string {
 		return column.Name
 	}
 }
+func (pt PrettyTable) GetShortColumnIndex(column string) int {
+	for i, c := range pt.ShortColumns {
+		if c.Name == column {
+			return i
+		}
+	}
+	return -1
+}
+func (pt PrettyTable) GetLongColumnIndex(column string) int {
+	for i, c := range pt.LongColumns {
+		if c.Name == column {
+			return i
+		}
+	}
+	return -1
+}
 func (pt PrettyTable) Print(long bool) {
 	tableWriter := pt.getTableWriter()
 
@@ -121,6 +138,8 @@ func (pt PrettyTable) Print(long bool) {
 			var value interface{}
 			if column.Slot != nil {
 				value = column.Slot(item)
+			} else if column.SlotColumn != nil {
+				value = column.SlotColumn(item, column)
 			} else {
 				value = reflectValue.FieldByName(column.Name)
 			}
