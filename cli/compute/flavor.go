@@ -178,6 +178,47 @@ var flavorCreate = &cobra.Command{
 		printFlavor(*flavor)
 	},
 }
+var flavorSet = &cobra.Command{
+	Use:   "set <flavor id or name>",
+	Short: "Set flavor properties",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmds *cobra.Command, args []string) {
+		client := cli.GetClient()
+		idOrName := args[0]
+
+		extraSpecs := map[string]string{}
+		properties, _ := cmds.Flags().GetStringArray("property")
+		for _, property := range properties {
+			splited := strings.Split(property, "=")
+			if len(splited) != 2 {
+				logging.Fatal("Invalid property %s, must be: key=value", property)
+			}
+			extraSpecs[splited[0]] = splited[1]
+		}
+
+		flavor, err := client.Compute.FlavorFound(idOrName)
+		common.LogError(err, "Get flavor failed", true)
+		client.Compute.FlavorExtraSpecsCreate(flavor.Id, extraSpecs)
+	},
+}
+var flavorUnset = &cobra.Command{
+	Use:   "unset <flavor id or name>",
+	Short: "Unset flavor properties",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmds *cobra.Command, args []string) {
+		client := cli.GetClient()
+
+		properties, _ := cmds.Flags().GetStringArray("property")
+		flavor, err := client.Compute.FlavorFound(args[0])
+		common.LogError(err, "Get flavor failed", true)
+		for _, property := range properties {
+			client.Compute.FlavorExtraSpecsDelete(flavor.Id, property)
+			common.LogError(err, "delete extra specs failed", false)
+
+		}
+
+	},
+}
 var flavorCopy = &cobra.Command{
 	Use:   "copy <flavor id> <new flavor name>",
 	Short: "Copy flavor",
@@ -236,6 +277,11 @@ func init() {
 	flavorCreate.Flags().StringArrayP("property", "p", []string{},
 		"Property to add for this flavor (repeat option to set multiple properties)")
 
+	flavorSet.Flags().StringArrayP("property", "p", []string{},
+		"Property to add or modify for this flavor (repeat option to set multiple properties)")
+	flavorUnset.Flags().StringArrayP("property", "p", []string{},
+		"Property to add or modify for this flavor (repeat option to set multiple properties)")
+
 	flavorCopy.Flags().String("id", "", "New flavor ID, creates a UUID if empty")
 	flavorCopy.Flags().Uint("vcpus", 0, "Number of vcpus")
 	flavorCopy.Flags().Uint("ram", 0, "Memory size in MB")
@@ -248,5 +294,5 @@ func init() {
 	flavorCopy.Flags().StringArray("unset", []string{},
 		"Unset property for new flavor (repeat option to set multiple properties)")
 	Flavor.AddCommand(flavorList, flavorShow, flavorCreate, flavorDelete,
-		flavorCopy)
+		flavorSet, flavorUnset, flavorCopy)
 }

@@ -468,6 +468,14 @@ func (client ComputeClientV2) FlavorExtraSpecsCreate(flavorId string, extraSpecs
 	}
 	return respBody["extra_specs"], nil
 }
+func (client ComputeClientV2) FlavorExtraSpecsDelete(flavorId string, extraSpec string) error {
+	err := client.Delete(
+		fmt.Sprintf("flavors/%s/os-extra_specs", flavorId), extraSpec, client.BaseHeaders)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (client ComputeClientV2) FlavorDelete(flavorId string) error {
 	return client.Delete("flavors", flavorId, client.BaseHeaders)
 }
