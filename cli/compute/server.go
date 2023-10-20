@@ -192,6 +192,7 @@ var serverCreate = &cobra.Command{
 
 		volumeBoot, _ := cmd.Flags().GetBool("volume-boot")
 		volumeSize, _ := cmd.Flags().GetUint16("volume-size")
+		volumeType, _ := cmd.Flags().GetString("volume-type")
 
 		min, _ := cmd.Flags().GetUint16("min")
 		max, _ := cmd.Flags().GetUint16("max")
@@ -218,6 +219,9 @@ var serverCreate = &cobra.Command{
 		if volumeSize <= 0 {
 			volumeSize = common.CONF.Server.VolumeSize
 		}
+		if volumeType == "" {
+			volumeType = common.CONF.Server.VolumeType
+		}
 		if volumeBoot || common.CONF.Server.VolumeBoot {
 			createOption.BlockDeviceMappingV2 = []compute.BlockDeviceMappingV2{
 				{
@@ -226,6 +230,9 @@ var serverCreate = &cobra.Command{
 					SourceType: "image", DestinationType: "volume",
 					DeleteOnTemination: true,
 				},
+			}
+			if volumeType != "" {
+				createOption.BlockDeviceMappingV2[0].VolumeType = volumeType
 			}
 		} else {
 			createOption.Image = common.CONF.Server.Image
@@ -780,6 +787,7 @@ func init() {
 			"port-id=<port-uuid>: attach NIC to port with this UUID")
 	serverCreate.Flags().Bool("volume-boot", false, "Boot with volume")
 	serverCreate.Flags().Uint16("volume-size", 0, "Volume size(GB)")
+	serverCreate.Flags().String("volume-type", "", "Volume type.")
 	serverCreate.Flags().String("az", "", "Select an availability zone for the server.")
 	serverCreate.Flags().Uint16("min", 1, "Minimum number of servers to launch.")
 	serverCreate.Flags().Uint16("max", 1, "Maximum number of servers to launch.")

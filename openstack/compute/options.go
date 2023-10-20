@@ -6,6 +6,7 @@ type BlockDeviceMappingV2 struct {
 	VolumeSize         uint16 `json:"volume_size"`
 	SourceType         string `json:"source_type"`
 	DestinationType    string `json:"destination_type"`
+	VolumeType         string `json:"volume_type"`
 	DeleteOnTemination bool   `json:"delete_on_termination"`
 }
 type ServerOptNetwork struct {

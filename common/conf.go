@@ -42,6 +42,7 @@ type Server struct {
 	Image            string `yaml:"image"`
 	Network          string `yaml:"network"`
 	VolumeBoot       bool   `yaml:"volumeBoot"`
+	VolumeType       string `yaml:"volumeType"`
 	VolumeSize       uint16 `yaml:"volumeSize"`
 	AvailabilityZone string `yaml:"availabilityZone"`
 	NamePrefix       string `yaml:"namePrefix"`
