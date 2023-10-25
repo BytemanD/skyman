@@ -352,6 +352,26 @@ func (agg Aggregate) MarshalMetadata() string {
 	return string(data)
 }
 
+// {"policies": ["soft-anti-affinity"], "name": "soft-anti-affinity", "custom": false, "members": [], "id": "7357b2f7-d004-4c72-b38a-d3a156827c11", "metadata": {}}]
+type ServerGroup struct {
+	Id        string                 `json:"id"`
+	Name      string                 `json:"name"`
+	Policies  []string               `json:"policies"`
+	Custom    bool                   `json:"custom"`
+	Members   []string               `json:"members"`
+	Metadata  map[string]interface{} `json:"metadata"`
+	ProjectId string                 `json:"project_id"`
+	UserId    string                 `json:"user_id"`
+}
+
+func (serverGroup ServerGroup) GetMetadataList() []string {
+	metadataList := []string{}
+	for k, v := range serverGroup.Metadata {
+		metadataList = append(metadataList, fmt.Sprintf("%s=%s", k, v))
+	}
+	return metadataList
+}
+
 type RegionMigrateResp struct {
 	AllowLiveMigrate bool   `json:"allow_live_migrate"`
 	Reason           string `json:"reason"`

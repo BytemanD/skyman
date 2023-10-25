@@ -650,3 +650,9 @@ func (client ComputeClientV2) AggregateShow(aggregate string) (*Aggregate, error
 	}
 	return respBody["aggregate"], nil
 }
+
+func (client ComputeClientV2) ServerGroupList(query netUrl.Values) ([]ServerGroup, error) {
+	respBody := map[string][]ServerGroup{"server_groups": {}}
+	client.List("os-server-groups", query, client.BaseHeaders, &respBody)
+	return respBody["server_groups"], nil
+}

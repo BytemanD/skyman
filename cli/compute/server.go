@@ -773,7 +773,6 @@ func init() {
 	serverList.Flags().BoolP("all", "a", false, "Display servers from all tenants")
 	serverList.Flags().StringArrayP("status", "s", nil, "Search by server status")
 	serverList.Flags().String("flavor", "", "Search by flavor")
-	serverList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	serverList.Flags().BoolP("verbose", "v", false, "List verbose fields in output")
 	serverList.Flags().Bool("dsc", false, "Sort name by dsc")
 	serverList.Flags().Bool("watch", false, "List loop")
@@ -831,7 +830,6 @@ func init() {
 	serverMigrationList.Flags().Bool("latest", false, "List latest migrations")
 	serverMigrationList.Flags().Bool("watch", false, "List additional fields in output")
 	serverMigrationList.Flags().Uint16P("watch-interval", "i", 2, "Loop interval")
-	serverMigrationList.Flags().BoolP("long", "l", false, "List loop")
 
 	serverMigration.AddCommand(serverMigrationList)
 
@@ -846,6 +844,8 @@ func init() {
 
 	// server inspect
 	serverInspect.Flags().Bool("detail", false, "详细信息")
+	//
+	common.RegistryLongFlag(serverList, serverMigrationList)
 
 	serverSet.AddCommand(serverSetPassword)
 	serverSet.AddCommand(serverSetName)

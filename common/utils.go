@@ -7,10 +7,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/BytemanD/skyman/openstack/common"
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/openstack/common"
 )
 
 func GetIndentJson(v interface{}) (string, error) {
@@ -53,5 +54,11 @@ func SplitKeyValue(kv string) ([]string, error) {
 		return nil, fmt.Errorf("invalid key value %s", kv)
 	} else {
 		return kvList, nil
+	}
+}
+
+func RegistryLongFlag(cmd ...*cobra.Command) {
+	for _, c := range cmd {
+		c.Flags().BoolP("long", "l", false, "List additional fields in output")
 	}
 }
