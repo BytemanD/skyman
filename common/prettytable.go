@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/openstack/common"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 )
@@ -36,6 +37,7 @@ type Column struct {
 	SlotColumn func(item interface{}, column Column) interface{}
 	Sort       bool
 	SortMode   table.SortMode
+	Filters    []string
 }
 
 type PrettyTable struct {
@@ -48,6 +50,7 @@ type PrettyTable struct {
 	StyleSeparateRows bool
 	HideTotalItems    bool
 	tableWriter       table.Writer
+	Filters           map[string]string
 }
 
 func (pt *PrettyTable) AddItems(items interface{}) {
@@ -134,6 +137,7 @@ func (pt PrettyTable) Print(long bool) {
 	for _, item := range pt.Items {
 		reflectValue := reflect.ValueOf(item)
 		row := table.Row{}
+		isFiltered := false
 		for _, column := range columns {
 			var value interface{}
 			if column.Slot != nil {
@@ -143,10 +147,20 @@ func (pt PrettyTable) Print(long bool) {
 			} else {
 				value = reflectValue.FieldByName(column.Name)
 			}
+			// match filter
+			if len(column.Filters) > 0 {
+				if !common.ContainsString(column.Filters, fmt.Sprintf("%v", value)) {
+					isFiltered = true
+					break
+				}
+			}
 			if column.ForceColor || (column.AutoColor && pt.Style == STYLE_LIGHT) {
 				value = pt.FormatString(fmt.Sprint(value))
 			}
 			row = append(row, value)
+		}
+		if isFiltered {
+			continue
 		}
 		tableWriter.AppendRow(row)
 	}

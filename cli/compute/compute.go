@@ -44,6 +44,7 @@ var csList = &cobra.Command{
 		query := url.Values{}
 		binary, _ := cmd.Flags().GetString("binary")
 		host, _ := cmd.Flags().GetString("host")
+		zone, _ := cmd.Flags().GetString("zone")
 		long, _ := cmd.Flags().GetBool("long")
 
 		if binary != "" {
@@ -52,6 +53,7 @@ var csList = &cobra.Command{
 		if host != "" {
 			query.Set("host", host)
 		}
+
 		services := client.Compute.ServiceList(query)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
@@ -64,6 +66,10 @@ var csList = &cobra.Command{
 			LongColumns: []common.Column{
 				{Name: "DisabledReason"}, {Name: "ForcedDown"},
 			},
+			Filters: map[string]string{},
+		}
+		if zone != "" {
+			pt.ShortColumns[3].Filters = []string{zone}
 		}
 		pt.AddItems(services)
 		common.PrintPrettyTable(pt, long)
@@ -132,8 +138,10 @@ func init() {
 	// compute service
 	csList.Flags().String("binary", "", "Search by binary")
 	csList.Flags().String("host", "", "Search by hostname")
+	csList.Flags().String("zone", "", "Search by zone")
 	csList.Flags().StringArrayP("state", "s", nil, "Search by server status")
 	csList.Flags().BoolP("long", "l", false, "List additional fields in output")
+
 	csDisable.Flags().String("reason", "", "Disable reason")
 
 	computeService.AddCommand(csList, csEnable, csDisable, csUp, csDown)
