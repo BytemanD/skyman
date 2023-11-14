@@ -150,21 +150,52 @@ type HypervisorServer struct {
 	Name string `json:"name"`
 	UUID string `json:"uuid"`
 }
+type CpuInfo struct {
+	Arch     string                 `json:"arch"`
+	Model    string                 `json:"model"`
+	Vendor   string                 `json:"vendor"`
+	Features []string               `json:"Features"`
+	Topology map[string]interface{} `json:"topology"`
+}
 type Hypervisor struct {
 	common.Resource
-	Hostname     string `json:"hypervisor_hostname"`
-	HostIp       string `json:"host_ip"`
-	Status       string `json:"status"`
-	State        string `json:"state"`
-	Type         string `json:"hypervisor_type"`
-	Version      int    `json:"hypervisor_version"`
-	Uptime       string `json:"uptime"`
-	Vcpus        int    `json:"vcpus"`
-	VcpusUsed    int    `json:"vcpus_used"`
-	MemoryMB     int    `json:"memory_mb"`
-	MemoryMBUsed int    `json:"memory_mb_used"`
-	Servers      []HypervisorServer
+	Hostname       string                 `json:"hypervisor_hostname"`
+	HostIp         string                 `json:"host_ip"`
+	Status         string                 `json:"status"`
+	State          string                 `json:"state"`
+	Type           string                 `json:"hypervisor_type"`
+	Version        int                    `json:"hypervisor_version"`
+	Uptime         string                 `json:"uptime"`
+	Vcpus          int                    `json:"vcpus"`
+	VcpusUsed      int                    `json:"vcpus_used"`
+	MemoryMB       int                    `json:"memory_mb"`
+	MemoryMBUsed   int                    `json:"memory_mb_used"`
+	ExtraResources map[string]interface{} `json:"extra_resources"`
+	CpuInfo        CpuInfo                `json:"cpu_info"`
+
+	NumaNode0Hugepages map[string]interface{} `json:"numa_node_0_hugepages"`
+	NumaNode1Hugepages map[string]interface{} `json:"numa_node_1_hugepages"`
+	NumaNode2Hugepages map[string]interface{} `json:"numa_node_2_hugepages"`
+	NumaNode3Hugepages map[string]interface{} `json:"numa_node_3_hugepages"`
+
+	NumaNode0Cpuset map[string]interface{} `json:"numa_node_0_cpuset"`
+	NumaNode1Cpuset map[string]interface{} `json:"numa_node_1_cpuset"`
+	NumaNode2Cpuset map[string]interface{} `json:"numa_node_2_cpuset"`
+	NumaNode3Cpuset map[string]interface{} `json:"numa_node_3_cpuset"`
+
+	Servers []HypervisorServer
 }
+
+func (hypervisor Hypervisor) ExtraResourcesMarshal(indent bool) string {
+	var m []byte
+	if indent {
+		m, _ = json.MarshalIndent(hypervisor.ExtraResources, "", "  ")
+	} else {
+		m, _ = json.Marshal(hypervisor.ExtraResources)
+	}
+	return string(m)
+}
+
 type Hypervisors []Hypervisor
 
 type keypair struct {

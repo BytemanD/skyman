@@ -62,3 +62,13 @@ func RegistryLongFlag(cmd ...*cobra.Command) {
 		c.Flags().BoolP("long", "l", false, "List additional fields in output")
 	}
 }
+
+func MarshalModel(obj interface{}, indent bool) string {
+	var m []byte
+	if indent {
+		m, _ = json.MarshalIndent(obj, "", "  ")
+	} else {
+		m, _ = json.Marshal(obj)
+	}
+	return string(m)
+}

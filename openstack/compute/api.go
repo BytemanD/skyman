@@ -523,6 +523,14 @@ func (client ComputeClientV2) HypervisorListDetail(query netUrl.Values) (Hypervi
 	}
 	return body["hypervisors"], nil
 }
+func (client ComputeClientV2) HypervisorShow(id string) (*Hypervisor, error) {
+	body := map[string]*Hypervisor{"hypervisor": {}}
+	err := client.Show("os-hypervisors/", id, client.BaseHeaders, &body)
+	if err != nil {
+		return nil, err
+	}
+	return body["hypervisor"], nil
+}
 
 // keypair api
 func (client ComputeClientV2) KeypairList(query netUrl.Values) ([]Keypair, error) {

@@ -1,6 +1,7 @@
 package common
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"reflect"
@@ -38,6 +39,7 @@ type Column struct {
 	Sort       bool
 	SortMode   table.SortMode
 	Filters    []string
+	Marshal    bool
 }
 
 type PrettyTable struct {
@@ -222,6 +224,9 @@ func (pt PrettyItemTable) Print(long bool) {
 		fields = append(fields, pt.LongFields...)
 	}
 	tableWriter.AppendHeader(headerRow)
+	tableWriter.SetColumnConfigs([]table.ColumnConfig{
+		{Number: 2, WidthMax: 100},
+	})
 	reflectValue := reflect.ValueOf(pt.Item)
 	for _, field := range fields {
 		var (
@@ -236,7 +241,13 @@ func (pt PrettyItemTable) Print(long bool) {
 		if field.Slot != nil {
 			fieldValue = field.Slot(pt.Item)
 		} else {
-			fieldValue = reflectValue.FieldByName(field.Name)
+			reflectField := reflectValue.FieldByName(field.Name)
+			if field.Marshal {
+				j, _ := json.Marshal(reflectField.Interface())
+				fieldValue = string(j)
+			} else {
+				fieldValue = reflectField
+			}
 		}
 		tableWriter.AppendRow(table.Row{fieldLabel, fieldValue})
 	}

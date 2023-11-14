@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack/compute"
 )
 
 var Hypervisor = &cobra.Command{Use: "hypervisor"}
@@ -31,9 +31,7 @@ var hypervisorList = &cobra.Command{
 			query.Set("hypervisor_hostname_pattern", name)
 		}
 		hypervisors, err := client.Compute.HypervisorListDetail(query)
-		if err != nil {
-			logging.Fatal("%s", err)
-		}
+		common.LogError(err, "list hypervisors failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Hostname"}, {Name: "HostIp"},
@@ -50,6 +48,80 @@ var hypervisorList = &cobra.Command{
 		common.PrintPrettyTable(pt, long)
 	},
 }
+var hypervisorShow = &cobra.Command{
+	Use:   "show <id>",
+	Short: "Show hypervisor",
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+
+		hypervisor, err := client.Compute.HypervisorShow(args[0])
+		common.LogError(err, "get hypervisor failed", true)
+		pt := common.PrettyItemTable{
+			ShortFields: []common.Column{
+				{Name: "Id"}, {Name: "Hostname"}, {Name: "HostIp"},
+				{Name: "Status", AutoColor: true},
+				{Name: "State", AutoColor: true},
+				{Name: "Type"}, {Name: "Version"}, {Name: "Uptime"},
+				{Name: "Vcpus"}, {Name: "VcpusUsed"},
+				{Name: "MemoryMB", Text: "Memory MB"},
+				{Name: "MemoryMBUsed", Text: "Memory Used MB"},
+				{Name: "ExtraResources", Slot: func(item interface{}) interface{} {
+					p, _ := item.(compute.Hypervisor)
+					return p.ExtraResourcesMarshal(true)
+				}},
+				{Name: "CpuInfoArch",
+					Slot: func(item interface{}) interface{} {
+						p, _ := item.(compute.Hypervisor)
+						return p.CpuInfo.Arch
+					}},
+				{Name: "CpuInfoModel",
+					Slot: func(item interface{}) interface{} {
+						p, _ := item.(compute.Hypervisor)
+						return p.CpuInfo.Model
+					}},
+				{Name: "CpuInfoVendor",
+					Slot: func(item interface{}) interface{} {
+						p, _ := item.(compute.Hypervisor)
+						return p.CpuInfo.Vendor
+					},
+				},
+				{Name: "CpuInfoFeature",
+					Slot: func(item interface{}) interface{} {
+						p, _ := item.(compute.Hypervisor)
+						return p.CpuInfo.Features
+					},
+				},
+				// {Name: "Servers"},
+			},
+			Item: *hypervisor,
+		}
+		if len(hypervisor.NumaNode0Hugepages) > 0 {
+			pt.ShortFields = append(pt.ShortFields,
+				common.Column{Name: "NumaNode0Hugepages", Marshal: true},
+				common.Column{Name: "NumaNode0Cpuset", Marshal: true},
+			)
+		}
+		if len(hypervisor.NumaNode1Hugepages) > 0 {
+			pt.ShortFields = append(pt.ShortFields,
+				common.Column{Name: "NumaNode1Hugepages", Marshal: true},
+				common.Column{Name: "NumaNode1Cpuset", Marshal: true},
+			)
+		}
+		if len(hypervisor.NumaNode2Hugepages) > 0 {
+			pt.ShortFields = append(pt.ShortFields,
+				common.Column{Name: "NumaNode2Hugepages", Marshal: true},
+				common.Column{Name: "NumaNode2Cpuset", Marshal: true},
+			)
+		}
+		if len(hypervisor.NumaNode3Hugepages) > 0 {
+			pt.ShortFields = append(pt.ShortFields,
+				common.Column{Name: "NumaNode3Hugepages", Marshal: true},
+				common.Column{Name: "NumaNode3Cpuset", Marshal: true},
+			)
+		}
+		common.PrintPrettyItemTable(pt)
+	},
+}
 
 func init() {
 	// hypervisor list flags
@@ -57,5 +129,5 @@ func init() {
 	hypervisorList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	hypervisorList.Flags().Bool("with-servers", false, "List hypervisors with servers")
 
-	Hypervisor.AddCommand(hypervisorList)
+	Hypervisor.AddCommand(hypervisorList, hypervisorShow)
 }
