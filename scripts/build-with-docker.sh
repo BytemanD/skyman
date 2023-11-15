@@ -41,6 +41,7 @@ function main(){
     ${containerCmd} build -v ${projectPath}:/root/skyman ./ \
         --target Stackcrud-Centos7-Builder \
         --cache-from skyman-builder-centos7:base \
+        -v /etc/localtime:/etc/localtime \
         --build-arg DATE="$(date +'%F %T')" \
         -t skyman-builder-centos7:build-cache \
         -f centos7.Dockerfile

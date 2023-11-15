@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -20,7 +22,10 @@ import (
 )
 
 var (
-	Version string
+	Version       string
+	GoVersion     string
+	BuildDate     string
+	BuildPlatform string
 )
 
 func getVersion() string {
@@ -59,6 +64,27 @@ func main() {
 		},
 	}
 
+	versionCmd := &cobra.Command{
+		Use:   "version",
+		Short: "Version of client and server",
+		Run: func(cmd *cobra.Command, _ []string) {
+			if GoVersion == "" {
+				GoVersion = runtime.Version()
+			}
+			if BuildDate == "" {
+				BuildDate = time.Now().Format("2006-01-02 15:04:05")
+			}
+			if BuildPlatform == "" {
+				BuildPlatform = common.Uname()
+			}
+
+			fmt.Println("Version:       ", getVersion())
+			fmt.Println("GoVersion:     ", GoVersion)
+			fmt.Println("BuildDate:     ", BuildDate)
+			fmt.Println("BuildPlatform: ", BuildPlatform)
+		},
+	}
+
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, i18n.T("showDebug"))
 	rootCmd.PersistentFlags().StringP("conf", "c", "", i18n.T("thePathOfConfigFile"))
 	rootCmd.PersistentFlags().StringP("format", "f", "default",
@@ -67,6 +93,7 @@ func main() {
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	viper.BindPFlag("format", rootCmd.PersistentFlags().Lookup("format"))
 	rootCmd.AddCommand(
+		versionCmd,
 		identity.Token,
 		identity.Service, identity.Endpoint,
 		identity.User, identity.Project,

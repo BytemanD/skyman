@@ -29,7 +29,7 @@ var Server = &cobra.Command{Use: "server"}
 
 var serverList = &cobra.Command{
 	Use:   "list",
-	Short: "List servers",
+	Short: i18n.T("listServers"),
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 		client := cli.GetClient()
@@ -149,7 +149,7 @@ var serverList = &cobra.Command{
 }
 var serverShow = &cobra.Command{
 	Use:   "show <id or name>",
-	Short: "Show server details",
+	Short: i18n.T("showServerDetails"),
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()

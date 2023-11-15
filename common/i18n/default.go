@@ -30,6 +30,12 @@ func init() {
 		{ID: "answerYes",
 			Other: "automatically answer yes for all questions",
 		},
+		{ID: "listServers",
+			Other: "List Servers",
+		},
+		{ID: "showServerDetails",
+			Other: "Show server details",
+		},
 	}
 	defaultMessageMap = map[string]i18n.Message{}
 

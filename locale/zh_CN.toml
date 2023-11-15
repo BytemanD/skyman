@@ -9,3 +9,10 @@ other = '输出格式, 支持的格式: %v'
 
 [answerYes]
 other = '所有问题自动回答"是"'
+
+[listServers]
+other = '查询虚拟机'
+
+[showServerDetails]
+other = '展示虚拟机详情'
+
