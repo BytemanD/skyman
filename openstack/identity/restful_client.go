@@ -35,6 +35,21 @@ func (client RestfuleClient) Index(obj interface{}) error {
 	}
 	return client.doRequest(req, obj)
 }
+func (client RestfuleClient) BaseIndex(obj interface{}) error {
+	endpointUrl, err := url.Parse(client.Endpoint)
+	if err != nil {
+		return err
+	}
+	indexUrl := fmt.Sprintf(
+		"%s://%s:%s/", endpointUrl.Scheme, endpointUrl.Hostname(),
+		endpointUrl.Port())
+
+	req, err := http.NewRequest("GET", indexUrl, nil)
+	if err != nil {
+		return err
+	}
+	return client.doRequest(req, obj)
+}
 func (client RestfuleClient) List(resource string, query url.Values,
 	headers map[string]string, obj interface{},
 ) error {
@@ -130,4 +145,22 @@ func (client RestfuleClient) doRequest(req *http.Request, obj interface{}) error
 		json.Unmarshal(resp.Body, &obj)
 	}
 	return nil
+}
+
+func (client RestfuleClient) GetCurrentVersion() (*ApiVersion, error) {
+	versions := map[string]ApiVersions{"versions": {}}
+	if err := client.BaseIndex(&versions); err != nil {
+		return nil, err
+	}
+	return versions["versions"].Current(), nil
+}
+func (client RestfuleClient) GetStableVersion() (*ApiVersion, error) {
+	type apiVersion struct {
+		Values ApiVersions `json:"values"`
+	}
+	versions := map[string]apiVersion{"versions": {}}
+	if err := client.BaseIndex(&versions); err != nil {
+		return nil, err
+	}
+	return versions["versions"].Values.Stable(), nil
 }

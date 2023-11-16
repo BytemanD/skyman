@@ -19,6 +19,7 @@ import (
 	"github.com/BytemanD/skyman/cli/storage"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
+	"github.com/BytemanD/skyman/openstack"
 )
 
 var (
@@ -67,6 +68,7 @@ func main() {
 	versionCmd := &cobra.Command{
 		Use:   "version",
 		Short: "Version of client and server",
+		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, _ []string) {
 			if GoVersion == "" {
 				GoVersion = runtime.Version()
@@ -82,6 +84,53 @@ func main() {
 			fmt.Println("GoVersion:     ", GoVersion)
 			fmt.Println("BuildDate:     ", BuildDate)
 			fmt.Println("BuildPlatform: ", BuildPlatform)
+
+			client := openstack.CreateInstance()
+			fmt.Println("Version of servers:")
+
+			identityVerions, err := client.Identity.GetStableVersion()
+			if err == nil {
+				fmt.Println("  Identity:")
+				if v := identityVerions; v != nil {
+					fmt.Println("    Version:", v.Id)
+					if v.MinVersion != "" || v.Version != "" {
+						fmt.Printf("    MicroVersion: %s ~ %s\n", v.MinVersion, v.Version)
+					}
+				}
+			}
+
+			computeVerions, err := client.Compute.GetCurrentVersion()
+			if err == nil {
+				v := computeVerions
+				fmt.Println("  Compute:")
+				fmt.Println("    Version:", v.Id)
+				if v.MinVersion != "" || v.Version != "" {
+					fmt.Printf("    MicroVersion: %s ~ %s\n", v.MinVersion, v.Version)
+				}
+			}
+
+			imageVerions, err := client.Image.GetCurrentVersion()
+			if err == nil {
+				v := imageVerions
+				fmt.Println("  Image:")
+				fmt.Println("    Version:", v.Id)
+				if v.MinVersion != "" || v.Version != "" {
+					fmt.Printf("    MicroVersion: %s ~ %s\n", v.MinVersion, v.Version)
+				}
+			} else {
+				logging.Error("get image api version %s", err)
+			}
+			storageVerions, err := client.Storage.GetCurrentVersion()
+			if err == nil {
+				v := storageVerions
+				fmt.Println("  Storage:")
+				fmt.Println("    Version:", v.Id)
+				if v.MinVersion != "" || v.Version != "" {
+					fmt.Printf("    MicroVersion: %s ~ %s\n", v.MinVersion, v.Version)
+				}
+			} else {
+				logging.Error("get image api version %s", err)
+			}
 		},
 	}
 

@@ -156,3 +156,18 @@ func (client OpenstackClient) WaitServerResized(serverId string, newFlavorName s
 		return fmt.Errorf("server %s not resized", serverId)
 	}
 }
+
+func CreateInstance() *OpenstackClient {
+	authClient, err := getAuthClient()
+	if err != nil {
+		logging.Fatal("get auth client failed %s", err)
+	}
+	client, err := GetClientWithAuthToken(authClient)
+	if err == nil {
+		client.Compute.UpdateVersion()
+	}
+	if err != nil {
+		logging.Fatal("get openstack client failed %s", err)
+	}
+	return client
+}
