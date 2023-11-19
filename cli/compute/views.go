@@ -50,29 +50,33 @@ func printServer(server compute.Server) {
 			{Name: "Image",
 				Slot: func(item interface{}) interface{} {
 					p, _ := item.(compute.Server)
-					return p.Image.Id
+					if p.Image.Name != "" {
+						return fmt.Sprintf("%s (%s)", p.Image.Name, p.Image.Id)
+					} else {
+						return p.Image.Id
+					}
 				}},
 			{Name: "AZ", Text: "AZ"}, {Name: "Host"},
 			{Name: "Status"}, {Name: "TaskState"}, {Name: "PowerState"},
 			{Name: "RootBdmType"},
-			{Name: "Created"}, {Name: "Updated"},
-			{Name: "UserId"}, {Name: "LaunchedAt"},
+			{Name: "Created"}, {Name: "LaunchedAt"}, {Name: "Updated"}, {Name: "TerminatedAt"},
 
-			{Name: "Fault:code",
+			{Name: "Fault:code", Text: "Fault:code",
 				Slot: func(item interface{}) interface{} {
 					p, _ := item.(compute.Server)
 					return p.Fault.Code
 				}},
-			{Name: "Fault:message",
+			{Name: "Fault:message", Text: "Fault:message",
 				Slot: func(item interface{}) interface{} {
 					p, _ := item.(compute.Server)
 					return p.Fault.Message
 				}},
-			{Name: "Fault:details",
+			{Name: "Fault:details", Text: "Fault:details",
 				Slot: func(item interface{}) interface{} {
 					p, _ := item.(compute.Server)
 					return p.Fault.Details
 				}},
+			{Name: "UserId"},
 		},
 	}
 	common.PrintPrettyItemTable(pt)

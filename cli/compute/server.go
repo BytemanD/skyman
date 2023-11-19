@@ -81,9 +81,13 @@ var serverList = &cobra.Command{
 			},
 			LongColumns: []common.Column{
 				{Name: "AZ", Text: "AZ"}, {Name: "Host"}, {Name: "InstanceName"},
-				{Name: "Flavor:name", Text: "Flavor:name", Slot: func(item interface{}) interface{} {
+				{Name: "Flavor", Slot: func(item interface{}) interface{} {
 					p, _ := (item).(compute.Server)
-					return p.Flavor.OriginalName
+					if !verbose {
+						return p.Flavor.OriginalName
+					} else {
+						return fmt.Sprintf("%s\n[%s]", p.Flavor.OriginalName, p.Flavor.BaseInfo())
+					}
 				}},
 			},
 		}
@@ -95,15 +99,7 @@ var serverList = &cobra.Command{
 		}
 		if verbose {
 			pt.LongColumns = append(pt.LongColumns,
-				common.Column{Name: "Flavor:ram", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(compute.Server)
-					return p.Flavor.Ram
-				}},
-				common.Column{Name: "Flavor:vcpus", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(compute.Server)
-					return p.Flavor.Vcpus
-				}},
-				common.Column{Name: "Image:ram", Slot: func(item interface{}) interface{} {
+				common.Column{Name: "Image", Slot: func(item interface{}) interface{} {
 					p, _ := (item).(compute.Server)
 					return p.Image.Name
 				}},
@@ -154,11 +150,12 @@ var serverShow = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 
-		idOrName := args[0]
-
-		server, err := client.Compute.ServerFound(idOrName)
+		server, err := client.Compute.ServerFound(args[0])
 		if err != nil {
 			logging.Fatal("%v", err)
+		}
+		if image, err := client.Image.ImageShow(server.Image.Id); err == nil {
+			server.Image.Name = image.Name
 		}
 
 		printServer(*server)
@@ -740,13 +737,11 @@ var serverInspect = &cobra.Command{
 		client := cli.GetClient()
 
 		serverId := args[0]
-		detail, _ := cmd.Flags().GetBool("detail")
-		serverInspect, err := client.ServerInspect(serverId, detail)
-
-		if err != nil {
-			openstackCommon.RaiseIfError(err, "inspect sever faield")
-		}
 		format, _ := cmd.Flags().GetString("format")
+
+		serverInspect, err := client.ServerInspect(serverId)
+		common.LogError(err, "inspect sever faield", true)
+
 		switch format {
 		case "json":
 			output, err := common.GetIndentJson(serverInspect)
@@ -842,9 +837,6 @@ func init() {
 
 	serverSetPassword.Flags().String("user", "", "User name")
 
-	// server inspect
-	serverInspect.Flags().Bool("detail", false, "详细信息")
-	//
 	common.RegistryLongFlag(serverList, serverMigrationList)
 
 	serverSet.AddCommand(serverSetPassword)

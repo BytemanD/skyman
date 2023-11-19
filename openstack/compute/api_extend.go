@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/common"
 	"github.com/jedib0t/go-pretty/v6/progress"
 )
 
@@ -13,11 +14,9 @@ func (client ComputeClientV2) ServerPrune(query url.Values, yes bool, waitDelete
 	if len(query) == 0 {
 		query.Set("status", "error")
 	}
-	logging.Info("查询虚拟机: %v", query)
+	logging.Info("查询虚拟机: %v", query.Encode())
 	servers, err := client.ServerList(query)
-	if err != nil {
-		logging.Fatal("query servers failed, %s", err)
-	}
+	common.LogError(err, "query servers failed", true)
 	logging.Info("需要清理的虚拟机数量: %d\n", len(servers))
 	if len(servers) == 0 {
 		return
@@ -29,7 +28,7 @@ func (client ComputeClientV2) ServerPrune(query url.Values, yes bool, waitDelete
 			fmt.Printf("%s (%s)\n", server.Id, server.Name)
 		}
 		for {
-			fmt.Printf("是否删除[yes/no]: ")
+			fmt.Printf("是否删除[y(es)/n(o)]: ")
 			fmt.Scanln(&confirm)
 			if confirm == "yes" || confirm == "y" {
 				break

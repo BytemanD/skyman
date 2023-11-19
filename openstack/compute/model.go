@@ -1,21 +1,14 @@
 package compute
 
 import (
-	"bufio"
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
-	"text/template"
 	"time"
-
-	markdown "github.com/MichaelMure/go-term-markdown"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/openstack/common"
-	"github.com/BytemanD/skyman/openstack/networking"
-	"github.com/BytemanD/skyman/openstack/storage"
 )
 
 type Flavor struct {
@@ -36,6 +29,9 @@ type Flavor struct {
 func (flavor Flavor) Marshal() string {
 	flavorMarshal, _ := json.Marshal(flavor)
 	return string(flavorMarshal)
+}
+func (flavor Flavor) BaseInfo() string {
+	return fmt.Sprintf("vcpu=%d, ram=%d", flavor.Vcpus, flavor.Ram)
 }
 
 type ExtraSpecs map[string]string
@@ -406,126 +402,4 @@ func (serverGroup ServerGroup) GetMetadataList() []string {
 type RegionMigrateResp struct {
 	AllowLiveMigrate bool   `json:"allow_live_migrate"`
 	Reason           string `json:"reason"`
-}
-
-type ServerInspect struct {
-	Server          Server                `json:"server"`
-	Interfaces      []InterfaceAttachment `json:"interfaces"`
-	Volumes         []VolumeAttachment    `json:"volumes"`
-	PowerState      string
-	InterfaceDetail map[string]networking.Port `json:"interfaceDetail"`
-	VolumeDetail    map[string]storage.Volume  `json:"volumeDetail"`
-}
-
-func (serverInspect *ServerInspect) Print() {
-	source := `
-# Inspect For Instance {{.Server.Name}}
-
-## 基本信息
-
-1. 实例详情
-	- **UUID**: {{.Server.Id}}
-	- **Name**: {{.Server.Name}}
-	- **Root BDM Type**: {{.Server.RootBdmType}}
-	- **InstanceName**: {{.Server.InstanceName}}
-	- **Description**: {{.Server.Description}}
-1. 状态
-	- **VmState**: {{.Server.VmState}}
-	- **PowerState**: {{.PowerState}}
-	- **TaskState**: {{.Server.TaskState}}
-1. 节点
-	- **Availability Zone**: {{.Server.AZ}}
-	- **Host**: {{.Server.Host}}
-
-## 规格
-
-- **Name**: {{.Server.Flavor.OriginalName}}
-- **Vcpus**: {{.Server.Flavor.Vcpus}}
-- **Ram**: {{.Server.Flavor.Ram}}
-- **Extra specs**:
-{{ range $key, $value := .Server.Flavor.ExtraSpecs }}
-	1. {{$key}} = {{$value}}
-{{end}}
-
-## 网卡
-{{ range $index, $interface := .Interfaces }}
-1. **PortId**: {{$interface.PortId}}
-  - **Mac Address**: {{$interface.MacAddr}}
-  - **IP Address**: {{ range $index, $ip := $interface.FixedIps }} {{$ip.IpAddress}} {{end}}
-  - **Binding Type**: vnic_type:{{ getPortVnicType $interface.PortId }} vif_type:{{ getPortVifType $interface.PortId }}
-  - **Binding Detail**: {{ getPortBindingDetail $interface.PortId }}
-{{end}}
-
-## 磁盘
-{{ range $index, $volume := .Volumes }}
-1. **Volume Id**: {{$volume.VolumeId}}
-  - **Device**: {{$volume.Device}}
-  - **Type**: {{ getVolumeType $volume.VolumeId }}
-  - **Size**: {{ getVolumeSize $volume.VolumeId }}
-  - **Image**: {{ getVolumeImage $volume.VolumeId }}
-
-{{end}}
-`
-	templateBuffer := bytes.NewBuffer([]byte{})
-	bufferWriter := bufio.NewWriter(templateBuffer)
-	serverInspect.PowerState = serverInspect.Server.GetPowerState()
-
-	tmpl := template.New("inspect")
-	tmpl = tmpl.Funcs(template.FuncMap{
-		"getVolumeType": func(volumeId string) string {
-			if vol, ok := serverInspect.VolumeDetail[volumeId]; ok {
-				return vol.VolumeType
-			} else {
-				return "-"
-			}
-		},
-		"getVolumeSize": func(volumeId string) string {
-			if vol, ok := serverInspect.VolumeDetail[volumeId]; ok {
-				return fmt.Sprintf("%d GB", vol.Size)
-			} else {
-				return "-"
-			}
-		},
-		"getVolumeImage": func(volumeId string) string {
-			if vol, ok := serverInspect.VolumeDetail[volumeId]; ok {
-				var image string
-				if imageId, ok := vol.VolumeImageMetadata["image_id"]; ok {
-					image = imageId
-				}
-				if imageName, ok := vol.VolumeImageMetadata["image_name"]; ok {
-					image += fmt.Sprintf("(%s)", imageName)
-				}
-				return image
-			} else {
-				return "-"
-			}
-		},
-		"getPortVnicType": func(portId string) string {
-			if port, ok := serverInspect.InterfaceDetail[portId]; ok {
-				return port.BindingVnicType
-			} else {
-				return "-"
-			}
-		},
-		"getPortVifType": func(portId string) string {
-			if port, ok := serverInspect.InterfaceDetail[portId]; ok {
-				return port.BindingVifType
-			} else {
-				return "-"
-			}
-		},
-		"getPortBindingDetail": func(portId string) string {
-			if port, ok := serverInspect.InterfaceDetail[portId]; ok {
-				bytes, _ := json.Marshal(port.BindingDetails)
-				return string(bytes)
-			} else {
-				return "-"
-			}
-		},
-	})
-	tmpl, _ = tmpl.Parse(source)
-	tmpl.Execute(bufferWriter, serverInspect)
-	bufferWriter.Flush()
-	result := markdown.Render(templateBuffer.String(), 100, 4)
-	fmt.Println(string(result))
 }

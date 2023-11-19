@@ -77,7 +77,7 @@ func GetClientWithAuthToken(authClient *identity.V3AuthClient) (*OpenstackClient
 	}, nil
 }
 
-func (client OpenstackClient) ServerInspect(serverId string, detail bool) (*compute.ServerInspect, error) {
+func (client OpenstackClient) ServerInspect(serverId string) (*ServerInspect, error) {
 	server, err := client.Compute.ServerShow(serverId)
 	if err != nil {
 		return nil, err
@@ -87,25 +87,29 @@ func (client OpenstackClient) ServerInspect(serverId string, detail bool) (*comp
 		return nil, err
 	}
 	volumeAttachments, err := client.Compute.ServerVolumeList(serverId)
-	serverInspect := compute.ServerInspect{
+	actions, err := client.Compute.ServerActionList(serverId)
+	if err != nil {
+		return nil, err
+	}
+	serverInspect := ServerInspect{
 		Server:          *server,
 		Interfaces:      interfaceAttachmetns,
 		Volumes:         volumeAttachments,
 		InterfaceDetail: map[string]networking.Port{},
 		VolumeDetail:    map[string]storage.Volume{},
+		Actions:         actions,
 	}
-	if detail {
-		portQuery := url.Values{}
-		portQuery.Add("device_id", serverId)
-		for _, port := range client.Networking.PortList(portQuery) {
-			serverInspect.InterfaceDetail[port.Id] = port
-		}
 
-		for _, volume := range serverInspect.Volumes {
-			vol, err := client.Storage.VolumeShow(volume.VolumeId)
-			common.LogError(err, "get volume failed", true)
-			serverInspect.VolumeDetail[volume.VolumeId] = *vol
-		}
+	portQuery := url.Values{}
+	portQuery.Add("device_id", serverId)
+	for _, port := range client.Networking.PortList(portQuery) {
+		serverInspect.InterfaceDetail[port.Id] = port
+	}
+
+	for _, volume := range serverInspect.Volumes {
+		vol, err := client.Storage.VolumeShow(volume.VolumeId)
+		common.LogError(err, "get volume failed", true)
+		serverInspect.VolumeDetail[volume.VolumeId] = *vol
 	}
 	return &serverInspect, nil
 }
