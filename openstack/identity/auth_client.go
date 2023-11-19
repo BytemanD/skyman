@@ -44,6 +44,10 @@ type V3AuthClient struct {
 	session           common.Session
 }
 
+func (client *V3AuthClient) SetTimeout(timeout int) {
+	client.session.Timeout = time.Second * time.Duration(timeout)
+}
+
 func (client *V3AuthClient) GetToken() Token {
 	return client.token
 }

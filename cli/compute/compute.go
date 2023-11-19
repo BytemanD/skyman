@@ -9,31 +9,10 @@ import (
 
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/compute"
 )
 
 var Compute = &cobra.Command{Use: "compute"}
 var computeService = &cobra.Command{Use: "service"}
-
-func printServiceTable(item interface{}) {
-	pt := common.PrettyItemTable{
-		Item: item,
-		ShortFields: []common.Column{
-			{Name: "Id"}, {Name: "Binary"}, {Name: "Host"},
-			{Name: "Status", Slot: func(item interface{}) interface{} {
-				p, _ := (item).(compute.Service)
-				return common.BaseColorFormatter.Format(p.Status)
-			}},
-			{Name: "State", Slot: func(item interface{}) interface{} {
-				p, _ := item.(compute.Service)
-				return common.BaseColorFormatter.Format(p.State)
-			}},
-			{Name: "ForcedDown", Text: "Forced Down"},
-			{Name: "DisabledReason", Text: "Disabled Reason"},
-		},
-	}
-	common.PrintPrettyItemTable(pt)
-}
 
 var csList = &cobra.Command{
 	Use:   "list",

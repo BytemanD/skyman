@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 
+	uuid "github.com/satori/go.uuid"
+
 	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
@@ -32,4 +34,13 @@ func ContainsString(stringList []string, s string) bool {
 		}
 	}
 	return false
+}
+
+func IsUUID(s string) bool {
+	uuid.NewV4()
+	if _, err := uuid.FromString(s); err != nil {
+		return false
+	} else {
+		return true
+	}
 }

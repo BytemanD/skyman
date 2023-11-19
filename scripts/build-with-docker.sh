@@ -30,8 +30,8 @@ function main(){
 
     cd ${scriptPath}
     ${containerCmd} build -v ${projectPath}:/root/skyman \
-        --target Stackcrud-Centos7-Builder \
-        -t skyman-builder-centos7:base \
+        --target Skylight-Centos7-Base \
+        --tag skyman-builder-centos7:base \
         -f centos7.Dockerfile \
         ./
     if [[ $? -ne 0 ]]; then
@@ -39,11 +39,10 @@ function main(){
         exit 1
     fi
     ${containerCmd} build -v ${projectPath}:/root/skyman ./ \
-        --target Stackcrud-Centos7-Builder \
+        --target Skylight-Centos7-Builder \
         --cache-from skyman-builder-centos7:base \
         -v /etc/localtime:/etc/localtime \
         --build-arg DATE="$(date +'%F %T')" \
-        -t skyman-builder-centos7:build-cache \
         -f centos7.Dockerfile
 }
 

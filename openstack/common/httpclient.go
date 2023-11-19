@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 )
@@ -35,6 +36,7 @@ func (resp Response) BodyUnmarshal(object interface{}) error {
 }
 
 type Session struct {
+	Timeout time.Duration
 }
 
 func getSafeHeaders(headers http.Header) http.Header {
@@ -52,7 +54,10 @@ func getSafeHeaders(headers http.Header) http.Header {
 func (session Session) Request(req *http.Request) (*Response, error) {
 	logging.Debug("Req: %s %s with headers: %v, body: %v", req.Method, req.URL,
 		getSafeHeaders(req.Header), req.Body)
-	resp, err := http.DefaultClient.Do(req)
+
+	client := http.Client{Timeout: session.Timeout}
+	resp, err := client.Do(req)
+
 	if err != nil {
 		return nil, err
 	}

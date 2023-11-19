@@ -1,6 +1,6 @@
 module github.com/BytemanD/skyman
 
-go 1.19
+go 1.21.4
 
 require (
 	github.com/spf13/cobra v1.7.0
@@ -52,6 +52,7 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/satori/go.uuid v1.2.0 // indirect
 	golang.org/x/image v0.0.0-20191206065243-da761ea9ff43 // indirect
 	golang.org/x/net v0.10.0 // indirect
 )

@@ -220,3 +220,23 @@ func printAzInfoYaml(azInfo []compute.AvailabilityZone) {
 	}
 	fmt.Println(yamlString)
 }
+
+func printServiceTable(item interface{}) {
+	pt := common.PrettyItemTable{
+		Item: item,
+		ShortFields: []common.Column{
+			{Name: "Id"}, {Name: "Binary"}, {Name: "Host"},
+			{Name: "Status", Slot: func(item interface{}) interface{} {
+				p, _ := (item).(compute.Service)
+				return common.BaseColorFormatter.Format(p.Status)
+			}},
+			{Name: "State", Slot: func(item interface{}) interface{} {
+				p, _ := item.(compute.Service)
+				return common.BaseColorFormatter.Format(p.State)
+			}},
+			{Name: "ForcedDown", Text: "Forced Down"},
+			{Name: "DisabledReason", Text: "Disabled Reason"},
+		},
+	}
+	common.PrintPrettyItemTable(pt)
+}

@@ -33,9 +33,9 @@ func getAuthClient() (*identity.V3AuthClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := authClient.TokenIssue(); err != nil {
-		logging.Fatal("获取 Token 失败, %s", err)
-	}
+	// if err := authClient.TokenIssue(); err != nil {
+	// 	logging.Fatal("获取 Token 失败, %s", err)
+	// }
 	return authClient, nil
 }
 
@@ -161,6 +161,13 @@ func CreateInstance() *OpenstackClient {
 	authClient, err := getAuthClient()
 	if err != nil {
 		logging.Fatal("get auth client failed %s", err)
+	}
+
+	if common.CONF.HttpTimeout > 0 {
+		authClient.SetTimeout(common.CONF.HttpTimeout)
+	}
+	if err := authClient.TokenIssue(); err != nil {
+		logging.Fatal("获取 Token 失败, %s", err)
 	}
 	client, err := GetClientWithAuthToken(authClient)
 	if err == nil {

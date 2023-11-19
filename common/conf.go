@@ -22,9 +22,10 @@ var (
 )
 
 type ConfGroup struct {
-	Debug    bool   `yaml:"debug"`
-	Format   string `yaml:"format"`
-	Language string `yaml:"language"`
+	Debug       bool   `yaml:"debug"`
+	Format      string `yaml:"format"`
+	Language    string `yaml:"language"`
+	HttpTimeout int    `yaml:"httpTimeout"`
 
 	Auth   Auth   `yaml:"auth"`
 	Server Server `yaml:"server"`

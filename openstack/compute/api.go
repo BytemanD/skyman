@@ -531,6 +531,25 @@ func (client ComputeClientV2) HypervisorShow(id string) (*Hypervisor, error) {
 	}
 	return body["hypervisor"], nil
 }
+func (client ComputeClientV2) HypervisorShowByHostname(hostname string) (*Hypervisor, error) {
+	query := url.Values{}
+	query.Set("hypervisor_hostname_pattern", hostname)
+	hypervisors, err := client.HypervisorList(query)
+	if err != nil {
+		return nil, err
+	}
+	if len(hypervisors) == 0 {
+		return nil, &common.HttpError{
+			Status: 404, Reason: "NotFound",
+			Message: fmt.Sprintf("hypervisor named %s not found", hostname),
+		}
+	}
+	hypervisor, err := client.HypervisorShow(hypervisors[0].Id)
+	if err != nil {
+		return nil, err
+	}
+	return hypervisor, nil
+}
 
 // keypair api
 func (client ComputeClientV2) KeypairList(query netUrl.Values) ([]Keypair, error) {

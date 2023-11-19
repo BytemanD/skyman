@@ -7,6 +7,7 @@ import (
 
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	openstackCommon "github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/compute"
 )
 
@@ -54,8 +55,22 @@ var hypervisorShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 
-		hypervisor, err := client.Compute.HypervisorShow(args[0])
+		var (
+			hypervisor *compute.Hypervisor
+			err        error
+		)
+		if !openstackCommon.IsUUID(args[0]) {
+			hypervisor, err = client.Compute.HypervisorShowByHostname(args[0])
+		} else {
+			hypervisor, err = client.Compute.HypervisorShow(args[0])
+			if httpError, ok := err.(*openstackCommon.HttpError); ok {
+				if httpError.Status == 404 {
+					hypervisor, err = client.Compute.HypervisorShowByHostname(args[0])
+				}
+			}
+		}
 		common.LogError(err, "get hypervisor failed", true)
+
 		pt := common.PrettyItemTable{
 			ShortFields: []common.Column{
 				{Name: "Id"}, {Name: "Hostname"}, {Name: "HostIp"},

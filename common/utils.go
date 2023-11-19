@@ -40,7 +40,7 @@ func LogError(err error, message string, exit bool) {
 		return
 	}
 	if httpError, ok := err.(*common.HttpError); ok {
-		logging.Error("%s, %s, %s", message, httpError.Reason, httpError.Message)
+		logging.Error("%s, %s: %s", message, httpError.Reason, httpError.Message)
 	} else {
 		logging.Error("%s, %v", message, err)
 	}
