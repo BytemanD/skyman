@@ -14,7 +14,7 @@ import (
 func getAuthClient() (*identity.V3AuthClient, error) {
 	authClient, err := identity.GetV3AuthClient(
 		common.CONF.Auth.Url, common.CONF.Auth.User,
-		common.CONF.Auth.Project, common.CONF.Auth.RegionName,
+		common.CONF.Auth.Project, common.CONF.Auth.RegionName.Name,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("获取认证客户端失败, %s", err)

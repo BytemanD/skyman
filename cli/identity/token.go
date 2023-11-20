@@ -19,7 +19,8 @@ var tokenIssue = &cobra.Command{
 
 		token := client.AuthClient.GetToken()
 		pt := common.PrettyItemTable{
-			Item: token,
+			Item:            token,
+			Number2WidthMax: 184,
 			ShortFields: []common.Column{
 				{Name: "ExpiresAt", Text: "Expires At"},
 				{Name: "TokenId", Text: "Id"},

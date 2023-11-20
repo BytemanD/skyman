@@ -46,20 +46,11 @@ type AuthBody struct {
 	Auth Auth `json:"auth"`
 }
 
-func GetAuthReqBody(username string, password string, project_name string) AuthBody {
-	authBody := AuthBody{}
-	authBody.Auth.Identity.Methods = []string{"password"}
-
-	authBody.Auth.Identity.Password.User.Name = username
-	authBody.Auth.Identity.Password.User.Password = password
-	authBody.Auth.Identity.Password.User.Domain.Name = "default"
-	authBody.Auth.Scope.Project.Name = project_name
-	authBody.Auth.Scope.Project.Domain.Name = "default"
-
-	return authBody
-}
-
 type RoleAssigment struct {
 	Scope Scope `json:"scope,omitempty"`
 	User  User  `json:"user,omitempty"`
+}
+
+type Region struct {
+	Name string `json:"name,omitempty"`
 }

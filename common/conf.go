@@ -1,6 +1,8 @@
 package common
 
 import (
+	"strings"
+
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack/identity"
 	"github.com/spf13/viper"
@@ -32,7 +34,7 @@ type ConfGroup struct {
 }
 type Auth struct {
 	Url             string           `yaml:"url"`
-	RegionName      string           `yaml:"regionName"`
+	RegionName      identity.Region  `yaml:"region"`
 	User            identity.User    `yaml:"user"`
 	Project         identity.Project `yaml:"project"`
 	TokenExpireTime int              `yaml:"tokenExpireTime"`
@@ -50,6 +52,16 @@ type Server struct {
 }
 
 func LoadConfig(configFile string) error {
+	viper.AutomaticEnv()
+	viper.SetEnvPrefix("OS")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(
+		"AUTH.USER.NAME", "USERNAME",
+		"AUTH.USER.PASSWORD", "PASSWORD",
+		"AUTH.USER.DOMAIN", "USER_DOMAIN",
+		"AUTH.PROJECT", "PROJECT",
+		"AUTH.REGION", "REGION",
+		".", "_"))
+
 	viper.SetConfigType("yaml")
 	if configFile != "" {
 		viper.SetConfigFile(configFile)

@@ -199,11 +199,12 @@ func (pt PrettyTable) PrintYaml() {
 }
 
 type PrettyItemTable struct {
-	ShortFields []Column
-	LongFields  []Column
-	Item        interface{}
-	Title       string
-	Style       string
+	ShortFields     []Column
+	LongFields      []Column
+	Item            interface{}
+	Title           string
+	Style           string
+	Number2WidthMax int
 }
 
 func (pt PrettyItemTable) Print(long bool) {
@@ -224,9 +225,15 @@ func (pt PrettyItemTable) Print(long bool) {
 		fields = append(fields, pt.LongFields...)
 	}
 	tableWriter.AppendHeader(headerRow)
-	tableWriter.SetColumnConfigs([]table.ColumnConfig{
-		{Number: 2, WidthMax: 100},
-	})
+	if pt.Number2WidthMax == 0 {
+		tableWriter.SetColumnConfigs([]table.ColumnConfig{
+			{Number: 2, WidthMax: 100},
+		})
+	} else {
+		tableWriter.SetColumnConfigs([]table.ColumnConfig{
+			{Number: 2, WidthMax: pt.Number2WidthMax},
+		})
+	}
 	reflectValue := reflect.ValueOf(pt.Item)
 	for _, field := range fields {
 		var (

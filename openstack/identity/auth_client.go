@@ -87,8 +87,20 @@ func (client V3AuthClient) isTokenExpired() bool {
 	}
 	return false
 }
+func (client *V3AuthClient) getAuthReqBody() AuthBody {
+	authBody := AuthBody{}
+	authBody.Auth.Identity.Methods = []string{"password"}
+
+	authBody.Auth.Identity.Password.User.Name = client.Username
+	authBody.Auth.Identity.Password.User.Password = client.Password
+	authBody.Auth.Identity.Password.User.Domain.Name = client.UserDomainName
+	authBody.Auth.Scope.Project.Name = client.ProjectName
+	authBody.Auth.Scope.Project.Domain.Name = client.ProjectDomainName
+
+	return authBody
+}
 func (client *V3AuthClient) TokenIssue() error {
-	authBody := GetAuthReqBody(client.Username, client.Password, client.ProjectName)
+	authBody := client.getAuthReqBody()
 	body, _ := json.Marshal(authBody)
 
 	url := fmt.Sprintf("%s%s", client.AuthUrl, URL_AUTH_TOKEN)
