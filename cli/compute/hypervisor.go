@@ -16,6 +16,7 @@ var Hypervisor = &cobra.Command{Use: "hypervisor"}
 var hypervisorList = &cobra.Command{
 	Use:   "list",
 	Short: "List hypervisors",
+	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 		client := cli.GetClient()
 
@@ -52,6 +53,7 @@ var hypervisorList = &cobra.Command{
 var hypervisorShow = &cobra.Command{
 	Use:   "show <id>",
 	Short: "Show hypervisor",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 
