@@ -1,7 +1,6 @@
 package identity
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -31,37 +30,39 @@ const (
 )
 
 type V3AuthClient struct {
+	restfulClient     common.RestfulClient
 	AuthUrl           string
 	Username          string
 	Password          string
 	ProjectName       string
 	UserDomainName    string
 	ProjectDomainName string
-	TokenExpireSecond int
 	RegionName        string
-	token             Token
-	expiredAt         time.Time
-	session           common.Session
+
+	tokenCache TokenCache
+	session    common.Session
 }
 
 func (client *V3AuthClient) SetTimeout(timeout int) {
 	client.session.Timeout = time.Second * time.Duration(timeout)
+	client.restfulClient.Timeout = time.Second * time.Duration(timeout)
 }
 
 func (client *V3AuthClient) GetToken() Token {
-	return client.token
+	return client.tokenCache.token
 }
 
 func (client V3AuthClient) Request(req *http.Request) (*common.Response, error) {
-	req.Header.Set("User-Agent", "go-stackcurd")
+	req.Header.Set("User-Agent", "go-skyman")
 	if err := client.rejectToken(req); err != nil {
 		return nil, err
 	}
-	return client.session.Request(req)
+	return client.restfulClient.Request(req)
+	// return client.session.Request(req)
 }
 
 func (client V3AuthClient) rejectToken(req *http.Request) error {
-	tokenId, err := client.getTokenId()
+	tokenId, err := client.GetTokenId()
 	if err != nil {
 		return err
 	}
@@ -69,20 +70,20 @@ func (client V3AuthClient) rejectToken(req *http.Request) error {
 	return nil
 }
 
-func (client *V3AuthClient) getTokenId() (string, error) {
+func (client *V3AuthClient) GetTokenId() (string, error) {
 	if client.isTokenExpired() {
 		if err := client.TokenIssue(); err != nil {
-			return "", nil
+			return "", err
 		}
 	}
-	return client.token.TokenId, nil
+	return client.tokenCache.TokenId, nil
 }
 func (client V3AuthClient) isTokenExpired() bool {
-	if client.token.TokenId == "" {
+	if client.tokenCache.TokenId == "" {
 		return true
 	}
-	if client.expiredAt.Before(time.Now()) {
-		logging.Debug("token is exipred, expire second is %d", client.TokenExpireSecond)
+	if client.tokenCache.expiredAt.Before(time.Now()) {
+		logging.Debug("token is exipred, expire second is %d", client.tokenCache.TokenExpireSecond)
 		return true
 	}
 	return false
@@ -100,37 +101,34 @@ func (client *V3AuthClient) getAuthReqBody() AuthBody {
 	return authBody
 }
 func (client *V3AuthClient) TokenIssue() error {
-	authBody := client.getAuthReqBody()
-	body, _ := json.Marshal(authBody)
-
-	url := fmt.Sprintf("%s%s", client.AuthUrl, URL_AUTH_TOKEN)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
-	if err != nil {
-		return err
-	}
-	resp, err := client.session.Request(req)
+	body, _ := json.Marshal(client.getAuthReqBody())
+	resp, err := client.restfulClient.Post(
+		fmt.Sprintf("%s%s", client.AuthUrl, URL_AUTH_TOKEN), body)
 	if err != nil {
 		return fmt.Errorf("token issue failed, %v", err)
 	}
 	var resToken RespToken
-	json.Unmarshal(resp.Body, &resToken)
-	resToken.Token.TokenId = resp.GetHeader("X-Subject-Token")
-	client.token = resToken.Token
-	client.expiredAt = time.Now().Add(time.Second * time.Duration(client.TokenExpireSecond))
+	resp.BodyUnmarshal(&resToken)
+
+	client.tokenCache = TokenCache{
+		token:     resToken.Token,
+		TokenId:   resp.GetHeader("X-Subject-Token"),
+		expiredAt: time.Now().Add(time.Second * time.Duration(client.tokenCache.TokenExpireSecond)),
+	}
 	return nil
 }
 
 func (client *V3AuthClient) SetTokenExpireSecond(second int) {
-	client.TokenExpireSecond = second
+	client.tokenCache.TokenExpireSecond = second
 }
 
 func (client V3AuthClient) GetEndpointFromCatalog(serviceType string, endpointInterface string, region string) (string, error) {
-	if len(client.token.Catalogs) == 0 {
+	if len(client.tokenCache.token.Catalogs) == 0 {
 		if err := client.TokenIssue(); err != nil {
 			return "", err
 		}
 	}
-	endpoints := client.token.GetEndpoints(OptionCatalog{
+	endpoints := client.tokenCache.GetEndpoints(OptionCatalog{
 		Type:      serviceType,
 		Interface: endpointInterface,
 		Region:    region,
@@ -158,8 +156,8 @@ func GetV3AuthClient(authUrl string, user User, project Project, regionName stri
 		ProjectName:       project.Name,
 		ProjectDomainName: project.Domain.Name,
 		RegionName:        regionName,
-		TokenExpireSecond: DEFAULT_TOKEN_EXPIRE_SECOND,
 	}
+	client.SetTokenExpireSecond(DEFAULT_TOKEN_EXPIRE_SECOND)
 	if client.RegionName == "" {
 		client.RegionName = "RegionOne"
 	}

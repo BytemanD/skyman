@@ -12,6 +12,7 @@ import (
 	"github.com/BytemanD/skyman/openstack/compute"
 	"github.com/BytemanD/skyman/openstack/identity"
 	"github.com/BytemanD/skyman/openstack/image"
+	"github.com/BytemanD/skyman/openstack/keystoneauth"
 	"github.com/BytemanD/skyman/openstack/networking"
 	"github.com/BytemanD/skyman/openstack/storage"
 )
@@ -39,16 +40,21 @@ func getAuthClient() (*identity.V3AuthClient, error) {
 	return authClient, nil
 }
 
-func GetClient(authUrl string, user identity.User, project identity.Project, regionName string,
+func GetClient(authUrl string, user keystoneauth.User, project keystoneauth.Project,
+	regionName string,
 ) (*OpenstackClient, error) {
-	authClient, err := identity.GetV3AuthClient(authUrl, user, project, regionName)
-	if err != nil {
-		return nil, err
+	if authUrl == "" {
+		return nil, fmt.Errorf("authUrl is missing")
 	}
-	return GetClientWithAuthToken(authClient)
+	passwordAuth := keystoneauth.NewPasswordAuth(
+		authUrl, user, project, regionName,
+	)
+	// authClient, err := identity.GetV3AuthClient(authUrl, user, project, regionName)
+
+	return GetClientWithAuthToken(&passwordAuth)
 }
 
-func GetClientWithAuthToken(authClient *identity.V3AuthClient) (*OpenstackClient, error) {
+func GetClientWithAuthToken(passwordAuth *keystoneauth.PasswordAuthPlugin) (*OpenstackClient, error) {
 	identityClient, err := identity.GetIdentityClientV3(*authClient)
 
 	computeClient, err := compute.GetComputeClientV2(*authClient)

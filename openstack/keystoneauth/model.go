@@ -1,4 +1,8 @@
-package identity
+package keystoneauth
+
+import (
+	"time"
+)
 
 type Domain struct {
 	Id   string `json:"id,omitempty"`
@@ -37,6 +41,39 @@ type Project struct {
 type Scope struct {
 	Project Project `json:"project,omitempty"`
 }
+type Endpoint struct {
+	Id        string `json:"id"`
+	Region    string `json:"region"`
+	Url       string `json:"url"`
+	Interface string `json:"interface"`
+	RegionId  string `json:"region_id"`
+	ServiceId string `json:"service_id"`
+}
+
+type Catalog struct {
+	Type      string     `json:"type"`
+	Name      string     `json:"name"`
+	Id        string     `json:"id"`
+	Endpoints []Endpoint `json:"endpoints"`
+}
+
+type Token struct {
+	IsDomain  bool      `json:"is_domain"`
+	Methods   []string  `json:"methods"`
+	ExpiresAt string    `json:"expires_at"`
+	Name      bool      `json:"name"`
+	Catalogs  []Catalog `json:"catalog"`
+	Project   Project
+	User      User
+}
+
+type TokenCache struct {
+	TokenExpireSecond int
+	token             Token
+	TokenId           string
+	expiredAt         time.Time
+}
+
 type Auth struct {
 	Identity Identity `json:"identity,omitempty"`
 	Scope    Scope    `json:"scope,omitempty"`
@@ -46,11 +83,7 @@ type AuthBody struct {
 	Auth Auth `json:"auth"`
 }
 
-type RoleAssigment struct {
-	Scope Scope `json:"scope,omitempty"`
-	User  User  `json:"user,omitempty"`
-}
-
-type Region struct {
-	Name string `json:"name,omitempty"`
+type RespToken struct {
+	Token         Token `json:"token"`
+	XSubjectToken string
 }

@@ -1,9 +1,11 @@
 package common
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -77,39 +79,6 @@ func (client Session) UrlJoin(path []string) string {
 	return strings.Join(path, "/")
 }
 
-// func (session *Session) Get(url string, query netUrl.Values, headers map[string]string) (*Response, error) {
-// 	req, err := http.NewRequest("GET", url, nil)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	req.URL.RawQuery = query.Encode()
-// 	return session.Request(req, headers)
-// }
-
-// func (session *Session) Post(url string, body []byte, headers map[string]string) (*Response, error) {
-// 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return session.Request(req, headers)
-// }
-
-// func (session *Session) Put(url string, body []byte, headers map[string]string) (*Response, error) {
-// 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return session.Request(req, headers)
-// }
-
-// func (session *Session) Delete(url string, headers map[string]string) (*Response, error) {
-// 	req, err := http.NewRequest("DELETE", url, nil)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return session.Request(req, headers)
-// }
-
 const (
 	CODE_404 = 404
 )
@@ -135,4 +104,60 @@ func (resp *Response) JudgeStatus() error {
 		return &HttpError{Status: resp.Status, Reason: resp.Reason,
 			Message: resp.BodyString()}
 	}
+}
+
+type RestfulClient struct {
+	Timeout time.Duration
+}
+
+func (c RestfulClient) Request(req *http.Request) (*Response, error) {
+	logging.Debug("Req: %s %s with headers: %v, body: %v", req.Method, req.URL,
+		getSafeHeaders(req.Header), req.Body)
+
+	client := http.Client{Timeout: c.Timeout}
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
+	content, _ := io.ReadAll(resp.Body)
+	defer resp.Body.Close()
+
+	logging.Debug("Resp: status code: %d, body: %s", resp.StatusCode, content)
+	response := Response{
+		Body:    content,
+		Status:  resp.StatusCode,
+		Reason:  resp.Status,
+		Headers: resp.Header}
+	return &response, response.JudgeStatus()
+}
+
+func (c RestfulClient) Get(url string, query url.Values) (*Response, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.URL.RawQuery = query.Encode()
+	return c.Request(req)
+}
+func (c RestfulClient) Post(url string, body []byte) (*Response, error) {
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+	return c.Request(req)
+}
+func (c RestfulClient) PUT(url string, body []byte) (*Response, error) {
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+	return c.Request(req)
+}
+func (c RestfulClient) Delete(url string) (*Response, error) {
+	req, err := http.NewRequest("Delete", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	return c.Request(req)
 }

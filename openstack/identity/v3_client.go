@@ -4,6 +4,8 @@ package identity
 
 import (
 	"strings"
+
+	"github.com/BytemanD/skyman/openstack/keystoneauth"
 )
 
 const DEFAULT_TOKEN_EXPIRE_SECOND = 3600
@@ -11,13 +13,10 @@ const DEFAULT_TOKEN_EXPIRE_SECOND = 3600
 type IdentityClientV3 struct {
 	RestfuleClient
 	BaseHeaders map[string]string
+	Auth        keystoneauth.PasswordAuthPlugin
 }
 
-func GetIdentityClientV3(authClient V3AuthClient) (*IdentityClientV3, error) {
-	if authClient.RegionName == "" {
-		authClient.RegionName = "RegionOne"
-	}
-
+func GetIdentityClientV3(auth keystoneauth.PasswordAuthPlugin) (*IdentityClientV3, error) {
 	endpoint, err := authClient.GetEndpointFromCatalog(
 		TYPE_IDENTITY, INTERFACE_PUBLIC, authClient.RegionName)
 	if err != nil {
@@ -28,9 +27,9 @@ func GetIdentityClientV3(authClient V3AuthClient) (*IdentityClientV3, error) {
 	}
 	return &IdentityClientV3{
 		RestfuleClient: RestfuleClient{
-			V3AuthClient: authClient,
-			Endpoint:     endpoint,
+			Endpoint: endpoint,
 		},
+		Auth:        auth,
 		BaseHeaders: map[string]string{"Content-Type": "application/json"},
 	}, nil
 }

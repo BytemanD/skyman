@@ -2,7 +2,6 @@ package identity
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -142,7 +141,7 @@ func (client RestfuleClient) doRequest(req *http.Request, obj interface{}) error
 		// return fmt.Errorf("%s", resp.BodyString())
 	}
 	if obj != nil {
-		json.Unmarshal(resp.Body, &obj)
+		resp.BodyUnmarshal(&obj)
 	}
 	return nil
 }
