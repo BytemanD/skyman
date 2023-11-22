@@ -3,6 +3,7 @@ package common
 import (
 	"bytes"
 	"encoding/json"
+	"strings"
 
 	uuid "github.com/satori/go.uuid"
 
@@ -43,4 +44,8 @@ func IsUUID(s string) bool {
 	} else {
 		return true
 	}
+}
+
+func UrlJoin(path ...string) string {
+	return strings.Join(path, "/")
 }

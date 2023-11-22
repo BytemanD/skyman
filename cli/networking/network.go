@@ -29,7 +29,7 @@ var networkList = &cobra.Command{
 		if name != "" {
 			query.Set("name", name)
 		}
-		networks, err := client.Networking.NetworkList(query)
+		networks, err := client.NetworkingClient().NetworkList(query)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -67,7 +67,7 @@ var networkDelete = &cobra.Command{
 		client := cli.GetClient()
 		for _, net := range args {
 			fmt.Printf("Reqeust to delete network %s\n", net)
-			err := client.Networking.NetworkDelete(net)
+			err := client.NetworkingClient().NetworkDelete(net)
 			if err != nil {
 				logging.Error("Delete network %s failed, %s", net, err)
 			}
@@ -80,7 +80,7 @@ var networkShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
-		network, err := client.Networking.NetworkShow(args[0])
+		network, err := client.NetworkingClient().NetworkShow(args[0])
 		if err != nil {
 			common.LogError(err, "show network failed", true)
 		}

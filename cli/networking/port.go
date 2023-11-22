@@ -42,7 +42,8 @@ var portList = &cobra.Command{
 		if router != "" {
 			query.Set("router_id", router)
 		}
-		ports := client.Networking.PortList(query)
+		ports, err := client.NetworkingClient().PortList(query)
+		common.LogError(err, "list ports failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name", Sort: true},
@@ -89,7 +90,7 @@ var portShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
-		port, err := client.Networking.PortShow(args[0])
+		port, err := client.NetworkingClient().PortShow(args[0])
 		if err != nil {
 			common.LogError(err, "show port failed", true)
 		}
@@ -124,7 +125,7 @@ var portDelete = &cobra.Command{
 		client := cli.GetClient()
 		for _, port := range args {
 			fmt.Printf("Reqeust to delete port %s\n", port)
-			err := client.Networking.PortDelete(port)
+			err := client.NetworkingClient().PortDelete(port)
 			if err != nil {
 				logging.Error("Delete port %s failed, %s", port, err)
 			}

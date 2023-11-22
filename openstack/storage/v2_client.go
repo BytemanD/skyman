@@ -1,34 +1,42 @@
 package storage
 
 import (
+	"github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/identity"
 )
 
 type StorageClientV2 struct {
-	identity.RestfuleClient
+	identity.IdentityClientV3
+
 	BaseHeaders map[string]string
+	endpoint    string
 }
 
 func (client StorageClientV2) UpdateVersion() {
 
 }
-
-func GetStorageClientV2(authClient identity.V3AuthClient) (*StorageClientV2, error) {
-	if authClient.RegionName == "" {
-		authClient.RegionName = "RegionOne"
+func (client *StorageClientV2) Index() (*common.Response, error) {
+	return client.Request(common.NewIndexRequest(client.endpoint, nil, client.BaseHeaders))
+}
+func (client *StorageClientV2) GetCurrentVersion() (*identity.ApiVersion, error) {
+	resp, err := client.Index()
+	if err != nil {
+		return nil, err
 	}
-	endpoint, err := authClient.GetEndpointFromCatalog(
-		identity.TYPE_VOLUME_V2, identity.INTERFACE_PUBLIC, authClient.RegionName)
+	versions := map[string]identity.ApiVersions{"versions": {}}
+	resp.BodyUnmarshal(&versions)
+	return versions["versions"].Current(), nil
+}
+
+func GetStorageClientV2(authClient identity.IdentityClientV3) (*StorageClientV2, error) {
+	endpoint, err := authClient.Auth.GetServiceEndpoint(
+		identity.TYPE_VOLUME_V2, "", identity.INTERFACE_PUBLIC)
 	if err != nil {
 		return nil, err
 	}
 	return &StorageClientV2{
-		RestfuleClient: identity.RestfuleClient{
-			V3AuthClient: authClient,
-			Endpoint:     endpoint,
-		},
-		BaseHeaders: map[string]string{
-			"Content-Type": "application/json",
-		},
+		IdentityClientV3: authClient,
+		endpoint:         endpoint,
+		BaseHeaders:      map[string]string{"Content-Type": "application/json"},
 	}, nil
 }

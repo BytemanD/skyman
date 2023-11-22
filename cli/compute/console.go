@@ -19,7 +19,7 @@ var consoleLog = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 		lines, _ := cmd.Flags().GetUint("lines")
-		consoleLog, err := client.Compute.ServerConsoleLog(args[0], lines)
+		consoleLog, err := client.ComputeClient().ServerConsoleLog(args[0], lines)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -48,7 +48,7 @@ var consoleUrl = &cobra.Command{
 			os.Exit(1)
 		}
 
-		console, err := client.Compute.ServerConsoleUrl(args[0], args[1])
+		console, err := client.ComputeClient().ServerConsoleUrl(args[0], args[1])
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

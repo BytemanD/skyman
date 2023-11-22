@@ -17,13 +17,17 @@ var tokenIssue = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 
-		token := client.AuthClient.GetToken()
+		tokenId, err := client.Identity.Auth.GetTokenId()
+		common.LogError(err, "get token failed", true)
+		token, _ := client.Identity.Auth.GetToken()
 		pt := common.PrettyItemTable{
 			Item:            token,
 			Number2WidthMax: 184,
 			ShortFields: []common.Column{
 				{Name: "ExpiresAt", Text: "Expires At"},
-				{Name: "TokenId", Text: "Id"},
+				{Name: "TokenId", Text: "Id", Slot: func(item interface{}) interface{} {
+					return tokenId
+				}},
 				{Name: "ProjectId", Text: "Project Id", Slot: func(item interface{}) interface{} {
 					p, _ := (item).(identity.Token)
 					return p.Project.Id

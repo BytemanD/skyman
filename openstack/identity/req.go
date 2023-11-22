@@ -1,8 +1,8 @@
 package identity
 
 type Domain struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Id   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 type User struct {
@@ -22,8 +22,8 @@ type Password struct {
 }
 
 type Identity struct {
-	Methods  []string `json:"methods"`
-	Password Password `json:"password"`
+	Methods  []string `json:"methods,omitempty"`
+	Password Password `json:"password,omitempty"`
 }
 
 type Project struct {

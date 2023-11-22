@@ -37,7 +37,7 @@ var interfaceList = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
-		attachments, err := client.Compute.ServerInterfaceList(args[0])
+		attachments, err := client.ComputeClient().ServerInterfaceList(args[0])
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -53,7 +53,7 @@ var interfaceAttachPort = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 
-		attachment, err := client.Compute.ServerAddPort(args[0], args[1])
+		attachment, err := client.ComputeClient().ServerAddPort(args[0], args[1])
 		if err != nil {
 			fmt.Printf("Attach port %s to server failed: %v", args[1], err)
 			os.Exit(1)
@@ -68,7 +68,7 @@ var interfaceAttachNet = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 
-		attachment, err := client.Compute.ServerAddNet(args[0], args[1])
+		attachment, err := client.ComputeClient().ServerAddNet(args[0], args[1])
 		if err != nil {
 			fmt.Printf("Attach network %s to server failed: %v", args[1], err)
 			os.Exit(1)
@@ -83,7 +83,7 @@ var interfaceDetach = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 
-		err := client.Compute.ServerInterfaceDetach(args[0], args[1])
+		err := client.ComputeClient().ServerInterfaceDetach(args[0], args[1])
 		if err != nil {
 			fmt.Printf("Detach port %s from server failed: %v", args[1], err)
 			os.Exit(1)

@@ -16,7 +16,7 @@ var azList = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		tree, _ := cmd.Flags().GetBool("tree")
 		client := cli.GetClient()
-		azInfo, err := client.Compute.AZListDetail(nil)
+		azInfo, err := client.ComputeClient().AZListDetail(nil)
 		cli.ExitIfError(err)
 		if tree {
 			printAZInfoTree(azInfo)

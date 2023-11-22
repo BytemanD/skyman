@@ -39,7 +39,7 @@ var volumeList = &cobra.Command{
 		if all {
 			query.Set("all_tenants", "true")
 		}
-		volumes, err := client.Storage.VolumeListDetail(query)
+		volumes, err := client.StorageClient().VolumeListDetail(query)
 		if err != nil {
 			openstackCommon.RaiseIfError(err, "list volume falied")
 		}
@@ -74,7 +74,7 @@ var volumeShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 		idOrName := args[0]
-		volume, err := client.Storage.VolumeFound(idOrName)
+		volume, err := client.StorageClient().VolumeFound(idOrName)
 		common.LogError(err, "get volume failed", true)
 		printVolume(*volume)
 	},
@@ -87,12 +87,12 @@ var volumeDelete = &cobra.Command{
 		client := cli.GetClient()
 
 		for _, idOrName := range args {
-			volume, err := client.Storage.VolumeFound(idOrName)
+			volume, err := client.StorageClient().VolumeFound(idOrName)
 			if err != nil {
 				common.LogError(err, "get volume failed", false)
 				continue
 			}
-			err = client.Storage.VolumeDelete(volume.Id)
+			err = client.StorageClient().VolumeDelete(volume.Id)
 			if err == nil {
 				fmt.Printf("Requested to delete volume %s\n", idOrName)
 			} else {
@@ -119,7 +119,7 @@ var volumePrune = &cobra.Command{
 			query.Add("status", status)
 		}
 		client := cli.GetClient()
-		client.Storage.VolumePrune(query, yes, false)
+		client.StorageClient().VolumePrune(query, yes, false)
 
 	},
 }
@@ -138,7 +138,8 @@ var volumeCreate = &cobra.Command{
 		}
 
 		client := cli.GetClient()
-		volume, err := client.Storage.VolumeCreate(params)
+
+		volume, err := client.StorageClient().VolumeCreate(params)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -162,10 +163,10 @@ var volumeExtend = &cobra.Command{
 		idOrName := args[0]
 		size, _ := strconv.Atoi(args[1])
 		client := cli.GetClient()
-		volume, err := client.Storage.VolumeFound(idOrName)
+		volume, err := client.StorageClient().VolumeFound(idOrName)
 		common.LogError(err, "get volume falied", true)
 
-		err = client.Storage.VolumeExtend(volume.Id, size)
+		err = client.StorageClient().VolumeExtend(volume.Id, size)
 		common.LogError(err, "extend volume falied", true)
 	},
 }
@@ -188,10 +189,10 @@ var volumeRetype = &cobra.Command{
 		migrationPolicy, _ := cmd.Flags().GetString("migration-policy")
 
 		client := cli.GetClient()
-		volume, err := client.Storage.VolumeFound(idOrName)
+		volume, err := client.StorageClient().VolumeFound(idOrName)
 		common.LogError(err, "get volume falied", true)
 
-		err = client.Storage.VolumeRetype(volume.Id, newType, migrationPolicy)
+		err = client.StorageClient().VolumeRetype(volume.Id, newType, migrationPolicy)
 		common.LogError(err, "extend volume falied", true)
 	},
 }

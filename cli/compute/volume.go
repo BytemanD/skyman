@@ -30,7 +30,7 @@ var volumeList = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
-		attachments, err := client.Compute.ServerVolumeList(args[0])
+		attachments, err := client.ComputeClient().ServerVolumeList(args[0])
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -45,7 +45,7 @@ var volumeAttach = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
-		attachment, err := client.Compute.ServerVolumeAdd(args[0], args[1])
+		attachment, err := client.ComputeClient().ServerVolumeAdd(args[0], args[1])
 		if err != nil {
 			fmt.Printf("Attach volume %s to server failed: %v", args[1], err)
 			os.Exit(1)
@@ -59,7 +59,7 @@ var volumeDetach = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
-		err := client.Compute.ServerVolumeDelete(args[0], args[1])
+		err := client.ComputeClient().ServerVolumeDelete(args[0], args[1])
 		if err != nil {
 			fmt.Printf("Detach volume %s from server failed: %v", args[1], err)
 			os.Exit(1)

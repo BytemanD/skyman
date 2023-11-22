@@ -34,7 +34,8 @@ var ImageList = &cobra.Command{
 		if pageSize != 0 {
 			query.Set("limit", fmt.Sprintf("%d", pageSize))
 		}
-		images := client.Image.ImageList(query, limit)
+		images, err := client.ImageClient().ImageList(query, limit)
+		common.LogError(err, "get imges failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name", Sort: true},
@@ -65,10 +66,9 @@ var ImageShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
-
 		idOrName := args[0]
 		human, _ := cmd.Flags().GetBool("human")
-		image, err := client.Image.ImageFound(idOrName)
+		image, err := client.ImageClient().ImageFound(idOrName)
 		common.LogError(err, "Get image faled", true)
 		printImage(*image, human)
 	},

@@ -40,10 +40,9 @@ var flavorList = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 
 		client := cli.GetClient()
-		flavors, err := client.Compute.FlavorListDetail(nil)
-		if err != nil {
-			logging.Fatal("%s", err)
-		}
+		flavors, err := client.ComputeClient().FlavorListDetail(nil)
+		common.LogError(err, "get server failed %s", true)
+
 		filteredFlavors := []compute.Flavor{}
 		if name != "" {
 			for _, flavor := range flavors {
@@ -74,7 +73,7 @@ var flavorList = &cobra.Command{
 		if long {
 			pt.StyleSeparateRows = true
 			for i, flavor := range filteredFlavors {
-				extraSpecs, err := client.Compute.FlavorExtraSpecsList(flavor.Id)
+				extraSpecs, err := client.ComputeClient().FlavorExtraSpecsList(flavor.Id)
 				if err != nil {
 					logging.Fatal("get flavor extra specs failed %s", err)
 				}
@@ -92,7 +91,7 @@ var flavorShow = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 		idOrName := args[0]
-		flavor, err := client.Compute.FlavorShowWithExtraSpecs(idOrName)
+		flavor, err := client.ComputeClient().FlavorShowWithExtraSpecs(idOrName)
 		common.LogError(err, "Show flavor failed", true)
 		printFlavor(*flavor)
 	},
@@ -105,9 +104,9 @@ var flavorDelete = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 		for _, flavorId := range args {
-			flavor, err := client.Compute.FlavorFound(flavorId)
+			flavor, err := client.ComputeClient().FlavorFound(flavorId)
 			common.LogError(err, "Get flavor failed", false)
-			err = client.Compute.FlavorDelete(flavor.Id)
+			err = client.ComputeClient().FlavorDelete(flavor.Id)
 			common.LogError(err, "Delete flavor failed", false)
 
 			fmt.Printf("Flavor %s deleted \n", flavorId)
@@ -165,11 +164,11 @@ var flavorCreate = &cobra.Command{
 
 		client := cli.GetClient()
 
-		flavor, err := client.Compute.FlavorCreate(reqFlavor)
+		flavor, err := client.ComputeClient().FlavorCreate(reqFlavor)
 		common.LogError(err, "create flavor failed", true)
 
 		extraSpecs := getExtraSpecsMap(properties)
-		createdExtraSpecs, err := client.Compute.FlavorExtraSpecsCreate(flavor.Id, extraSpecs)
+		createdExtraSpecs, err := client.ComputeClient().FlavorExtraSpecsCreate(flavor.Id, extraSpecs)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -196,9 +195,9 @@ var flavorSet = &cobra.Command{
 			extraSpecs[splited[0]] = splited[1]
 		}
 
-		flavor, err := client.Compute.FlavorFound(idOrName)
+		flavor, err := client.ComputeClient().FlavorFound(idOrName)
 		common.LogError(err, "Get flavor failed", true)
-		client.Compute.FlavorExtraSpecsCreate(flavor.Id, extraSpecs)
+		client.ComputeClient().FlavorExtraSpecsCreate(flavor.Id, extraSpecs)
 	},
 }
 var flavorUnset = &cobra.Command{
@@ -209,10 +208,10 @@ var flavorUnset = &cobra.Command{
 		client := cli.GetClient()
 
 		properties, _ := cmds.Flags().GetStringArray("property")
-		flavor, err := client.Compute.FlavorFound(args[0])
+		flavor, err := client.ComputeClient().FlavorFound(args[0])
 		common.LogError(err, "Get flavor failed", true)
 		for _, property := range properties {
-			client.Compute.FlavorExtraSpecsDelete(flavor.Id, property)
+			client.ComputeClient().FlavorExtraSpecsDelete(flavor.Id, property)
 			common.LogError(err, "delete extra specs failed", false)
 
 		}
@@ -250,7 +249,7 @@ var flavorCopy = &cobra.Command{
 
 		client := cli.GetClient()
 
-		newFlavor, err := client.Compute.FlavorCopy(flavorId, newName, newId,
+		newFlavor, err := client.ComputeClient().FlavorCopy(flavorId, newName, newId,
 			int(vcpus), int(ram), int(disk), int(swap), int(ephemeral), rxtxFactor,
 			getExtraSpecsMap(setProperties), unSetProperties,
 		)

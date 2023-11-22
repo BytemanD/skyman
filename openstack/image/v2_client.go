@@ -1,29 +1,42 @@
 package image
 
 import (
+	"strings"
+
+	"github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/identity"
 )
 
 type ImageClientV2 struct {
-	identity.RestfuleClient
+	identity.IdentityClientV3
+	endpoint    string
 	BaseHeaders map[string]string
 }
 
-func GetImageClientV2(authClient identity.V3AuthClient) (*ImageClientV2, error) {
-	if authClient.RegionName == "" {
-		authClient.RegionName = "RegionOne"
-	}
-	endpoint, err := authClient.GetEndpointFromCatalog(
-		identity.TYPE_IMAGE, identity.INTERFACE_PUBLIC, authClient.RegionName)
-
+func (client *ImageClientV2) Index() (*common.Response, error) {
+	return client.Request(common.NewIndexRequest(client.endpoint, nil, client.BaseHeaders))
+}
+func (client *ImageClientV2) GetCurrentVersion() (*identity.ApiVersion, error) {
+	resp, err := client.Index()
 	if err != nil {
 		return nil, err
 	}
+	versions := map[string]identity.ApiVersions{"versions": {}}
+	resp.BodyUnmarshal(&versions)
+	return versions["versions"].Current(), nil
+}
+
+func GetImageClientV2(session identity.IdentityClientV3) (*ImageClientV2, error) {
+	url, err := session.GetServiceEndpoint(identity.TYPE_IMAGE, "", identity.INTERFACE_PUBLIC)
+	if err != nil {
+		return nil, err
+	}
+	if !strings.Contains(url, "/v") {
+		url += "/v2"
+	}
 	return &ImageClientV2{
-		RestfuleClient: identity.RestfuleClient{
-			V3AuthClient: authClient,
-			Endpoint:     endpoint + "/v2",
-		},
-		BaseHeaders: map[string]string{},
+		IdentityClientV3: session,
+		endpoint:         url,
+		BaseHeaders:      map[string]string{},
 	}, nil
 }

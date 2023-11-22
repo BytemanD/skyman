@@ -1,9 +1,11 @@
 package compute
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/identity"
 )
 
@@ -16,9 +18,11 @@ type Version struct {
 }
 
 type ComputeClientV2 struct {
-	identity.RestfuleClient
+	identity.IdentityClientV3
+
 	MicroVersion Version
 	BaseHeaders  map[string]string
+	endpoint     string
 }
 
 type microVersion struct {
@@ -33,6 +37,9 @@ func getMicroVersion(vertionStr string) microVersion {
 	return microVersion{Version: v, MicroVersion: micro}
 }
 
+func (client *ComputeClientV2) String() string {
+	return fmt.Sprintf("<%s %s>", client.endpoint, client.Auth.RegionName)
+}
 func (client *ComputeClientV2) MicroVersionLargeEqual(version string) bool {
 	clientVersion := getMicroVersion(client.MicroVersion.Version)
 	otherVersion := getMicroVersion(version)
@@ -45,33 +52,43 @@ func (client *ComputeClientV2) MicroVersionLargeEqual(version string) bool {
 	}
 }
 
+func (client *ComputeClientV2) Index() (*common.Response, error) {
+	return client.Request(common.NewIndexRequest(client.endpoint, nil, client.BaseHeaders))
+}
+func (client *ComputeClientV2) GetCurrentVersion() (*identity.ApiVersion, error) {
+	resp, err := client.Index()
+	if err != nil {
+		return nil, err
+	}
+	versions := map[string]identity.ApiVersions{"versions": {}}
+	resp.BodyUnmarshal(&versions)
+	return versions["versions"].Current(), nil
+}
+
 // X-OpenStack-Nova-API-Version
 func (client *ComputeClientV2) UpdateVersion() error {
 	versionBody := VersionBody{}
-	if err := client.Index(&versionBody); err != nil {
+	resp, err := client.Index()
+	if err != nil {
 		return err
 	}
-
+	if err = resp.BodyUnmarshal(&versionBody); err != nil {
+		return err
+	}
 	client.MicroVersion = versionBody.Version
 	client.BaseHeaders["OpenStack-API-Versionn"] = client.MicroVersion.Version
 	client.BaseHeaders["X-OpenStack-Nova-API-Version"] = client.MicroVersion.Version
 	return nil
 }
 
-func GetComputeClientV2(authClient identity.V3AuthClient) (*ComputeClientV2, error) {
-	if authClient.RegionName == "" {
-		authClient.RegionName = "RegionOne"
-	}
-	endpoint, err := authClient.GetEndpointFromCatalog(
-		identity.TYPE_COMPUTE, identity.INTERFACE_PUBLIC, authClient.RegionName)
+func GetComputeClientV2(idendityClient identity.IdentityClientV3) (*ComputeClientV2, error) {
+	endpoint, err := idendityClient.GetServiceEndpoint(identity.TYPE_COMPUTE, "", identity.INTERFACE_PUBLIC)
 	if err != nil {
 		return nil, err
 	}
 	computeClient := ComputeClientV2{
-		RestfuleClient: identity.RestfuleClient{
-			V3AuthClient: authClient,
-			Endpoint:     endpoint,
-		},
+		IdentityClientV3: idendityClient,
+		endpoint:         endpoint,
 		BaseHeaders: map[string]string{
 			"Content-Type": "application/json",
 		},

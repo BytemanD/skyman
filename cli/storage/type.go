@@ -49,7 +49,7 @@ var typeList = &cobra.Command{
 		var err error
 
 		if argDefault {
-			volumeType, err := client.Storage.VolumeTypeDefaultGet()
+			volumeType, err := client.StorageClient().VolumeTypeDefaultGet()
 			volumeTypes = append(volumeTypes, *volumeType)
 			openstackCommon.RaiseIfError(err, "list default volume falied")
 		} else {
@@ -60,7 +60,7 @@ var typeList = &cobra.Command{
 			if private {
 				query.Set("is_public", "false")
 			}
-			volumeTypes, err = client.Storage.VolumeTypeList(query)
+			volumeTypes, err = client.StorageClient().VolumeTypeList(query)
 			openstackCommon.RaiseIfError(err, "list volumes falied")
 		}
 
@@ -90,7 +90,7 @@ var typeShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 		idOrName := args[0]
-		volumeType, err := client.Storage.VolumeTypeFound(idOrName)
+		volumeType, err := client.StorageClient().VolumeTypeFound(idOrName)
 		common.LogError(err, "get volume type failed", true)
 		printVolumeType(*volumeType)
 	},
@@ -141,7 +141,7 @@ var typeCreate = &cobra.Command{
 		}
 
 		client := cli.GetClient()
-		volume, err := client.Storage.VolumeTypeCreate(params)
+		volume, err := client.StorageClient().VolumeTypeCreate(params)
 		common.LogError(err, "create volume type failed", true)
 		printVolumeType(*volume)
 	},
@@ -154,12 +154,12 @@ var typeDelete = &cobra.Command{
 		client := cli.GetClient()
 
 		for _, idOrName := range args {
-			volumeType, err := client.Storage.VolumeTypeFound(idOrName)
+			volumeType, err := client.StorageClient().VolumeTypeFound(idOrName)
 			if err != nil {
 				common.LogError(err, "get volume type failed", false)
 				continue
 			}
-			err = client.Storage.VolumeTypeDelete(volumeType.Id)
+			err = client.StorageClient().VolumeTypeDelete(volumeType.Id)
 			if err == nil {
 				fmt.Printf("Requested to delete volume type %s\n", idOrName)
 			} else {

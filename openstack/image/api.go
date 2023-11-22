@@ -1,18 +1,13 @@
 package image
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/url"
 	"strconv"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/openstack/common"
 )
-
-type ImagesResp struct {
-	Images []Image `json:"images,omitempty"`
-	Next   string  `json:"next,omitempty"`
-}
 
 func min(numbers ...int) int {
 	minNumber := numbers[0]
@@ -23,64 +18,86 @@ func min(numbers ...int) int {
 	}
 	return minNumber
 }
+func (client ImageClientV2) newRequest(resource string, id string, query url.Values, body []byte) common.RestfulRequest {
+	return common.RestfulRequest{
+		Endpoint: client.endpoint,
+		Resource: resource, Id: id,
+		Query:   query,
+		Body:    body,
+		Headers: client.BaseHeaders}
+}
 
-func (client ImageClientV2) ImageList(query url.Values, total int) []Image {
+func (client ImageClientV2) ImageList(query url.Values, total int) ([]Image, error) {
 	images := []Image{}
 	limit := 0
 	if query.Get("limit") != "" {
 		limit, _ = strconv.Atoi(query.Get("limit"))
 	}
 	for {
-		body := ImagesResp{}
-		client.List("images", query, nil, &body)
-		if len(body.Images) == 0 {
+		resp, err := client.Request(client.newRequest("images", "", query, nil))
+		if err != nil {
+			return nil, err
+		}
+		respBbody := ImagesResp{}
+		resp.BodyUnmarshal(&respBbody)
+		if len(respBbody.Images) == 0 {
 			break
 		}
 		if total > 0 {
-			images = append(images, body.Images[:min(total, len(body.Images))]...)
+			images = append(images, respBbody.Images[:min(total, len(respBbody.Images))]...)
 			if len(images) >= total {
 				break
 			}
 		} else {
-			images = append(images, body.Images...)
+			images = append(images, respBbody.Images...)
 		}
-		if body.Next == "" {
+		if respBbody.Next == "" {
 			break
 		}
-		logging.Info("next query url : %s", body.Next)
-		parsedUrl, _ := url.Parse(body.Next)
+		logging.Info("next query url : %s", respBbody.Next)
+		parsedUrl, _ := url.Parse(respBbody.Next)
 		query = parsedUrl.Query()
 		if limit > 0 && total > 0 && (total-len(images)) < limit {
 			query.Set("limit", strconv.Itoa(total-len(images)))
 		}
 	}
-	return images
+	return images, nil
 }
 
-func (client ImageClientV2) ImageListByName(name string) Images {
+func (client ImageClientV2) ImageListByName(name string) (Images, error) {
 	query := url.Values{}
 	query.Set("name", name)
 	return client.ImageList(query, 0)
 }
 func (client ImageClientV2) ImageShow(id string) (*Image, error) {
 	image := Image{}
-	err := client.Show("images", id, client.BaseHeaders, &image)
+	resp, err := client.Request(client.newRequest("images", id, nil, nil))
 	if err != nil {
 		return nil, err
 	}
+	resp.BodyUnmarshal(&image)
 	return &image, nil
 }
 func (client ImageClientV2) ImageFound(idOrName string) (*Image, error) {
-	obj, err := client.FoundByIdOrName("images", idOrName, "", "images", client.BaseHeaders)
-	if err != nil {
-		return nil, err
-	}
-	jsonObj, err := json.Marshal(&obj)
-	image := Image{}
-	err = json.Unmarshal(jsonObj, &image)
+	var (
+		image *Image
+		err   error
+	)
+	image, err = client.ImageShow(idOrName)
 	if err == nil {
-		return &image, nil
-	} else {
-		return nil, fmt.Errorf("parse %v failed, %v", image, err)
+		return image, nil
 	}
+	if httpError, ok := err.(common.HttpError); ok {
+		if httpError.IsNotFound() {
+			var images []Image
+			if images, err = client.ImageListByName(idOrName); err != nil {
+				return nil, err
+			}
+			if len(images) == 0 {
+				return nil, fmt.Errorf("image %s not found", idOrName)
+			}
+			image, err = client.ImageShow(images[0].Id)
+		}
+	}
+	return image, err
 }

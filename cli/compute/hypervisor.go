@@ -32,7 +32,7 @@ var hypervisorList = &cobra.Command{
 		if name != "" {
 			query.Set("hypervisor_hostname_pattern", name)
 		}
-		hypervisors, err := client.Compute.HypervisorListDetail(query)
+		hypervisors, err := client.ComputeClient().HypervisorListDetail(query)
 		common.LogError(err, "list hypervisors failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
@@ -62,12 +62,12 @@ var hypervisorShow = &cobra.Command{
 			err        error
 		)
 		if !openstackCommon.IsUUID(args[0]) {
-			hypervisor, err = client.Compute.HypervisorShowByHostname(args[0])
+			hypervisor, err = client.ComputeClient().HypervisorShowByHostname(args[0])
 		} else {
-			hypervisor, err = client.Compute.HypervisorShow(args[0])
+			hypervisor, err = client.ComputeClient().HypervisorShow(args[0])
 			if httpError, ok := err.(*openstackCommon.HttpError); ok {
 				if httpError.Status == 404 {
-					hypervisor, err = client.Compute.HypervisorShowByHostname(args[0])
+					hypervisor, err = client.ComputeClient().HypervisorShowByHostname(args[0])
 				}
 			}
 		}

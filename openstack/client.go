@@ -12,82 +12,76 @@ import (
 	"github.com/BytemanD/skyman/openstack/compute"
 	"github.com/BytemanD/skyman/openstack/identity"
 	"github.com/BytemanD/skyman/openstack/image"
+	"github.com/BytemanD/skyman/openstack/keystoneauth"
 	"github.com/BytemanD/skyman/openstack/networking"
 	"github.com/BytemanD/skyman/openstack/storage"
 )
 
 type OpenstackClient struct {
-	AuthClient identity.V3AuthClient
-	Identity   identity.IdentityClientV3
-	Compute    compute.ComputeClientV2
-	Image      image.ImageClientV2
-	Storage    storage.StorageClientV2
-	Networking networking.NeutronClientV2
+	Identity   *identity.IdentityClientV3
+	Compute    *compute.ComputeClientV2
+	Image      *image.ImageClientV2
+	Storage    *storage.StorageClientV2
+	Networking *networking.NeutronClientV2
 }
 
-func getAuthClient() (*identity.V3AuthClient, error) {
-	authClient, err := identity.GetV3AuthClient(
-		common.CONF.Auth.Url, common.CONF.Auth.User,
-		common.CONF.Auth.Project, common.CONF.Auth.RegionName.Name,
-	)
-	if err != nil {
-		return nil, err
+func (c *OpenstackClient) ComputeClient() *compute.ComputeClientV2 {
+	if c.Compute == nil {
+		c.Compute, _ = compute.GetComputeClientV2(*c.Identity)
 	}
-	// if err := authClient.TokenIssue(); err != nil {
-	// 	logging.Fatal("获取 Token 失败, %s", err)
-	// }
-	return authClient, nil
+	return c.Compute
 }
 
-func GetClient(authUrl string, user identity.User, project identity.Project, regionName string,
+func (c *OpenstackClient) ImageClient() *image.ImageClientV2 {
+	if c.Image == nil {
+		c.Image, _ = image.GetImageClientV2(*c.Identity)
+	}
+	return c.Image
+}
+
+func (c *OpenstackClient) StorageClient() *storage.StorageClientV2 {
+	if c.Storage == nil {
+		c.Storage, _ = storage.GetStorageClientV2(*c.Identity)
+	}
+	return c.Storage
+}
+
+func (c *OpenstackClient) NetworkingClient() *networking.NeutronClientV2 {
+	if c.Networking == nil {
+		c.Networking, _ = networking.GetNeutronClientV2(*c.Identity)
+	}
+	return c.Networking
+}
+
+func NewOpenstackClient(authUrl string, user keystoneauth.User, project keystoneauth.Project,
+	regionName string, tokenExpireSecond int,
 ) (*OpenstackClient, error) {
-	authClient, err := identity.GetV3AuthClient(authUrl, user, project, regionName)
-	if err != nil {
-		return nil, err
+	if authUrl == "" {
+		return nil, fmt.Errorf("authUrl is missing")
 	}
-	return GetClientWithAuthToken(authClient)
+	passwordAuth := keystoneauth.NewPasswordAuth(authUrl, user, project, regionName)
+	// passwordAuth.TokenIssue()
+	passwordAuth.SetTokenExpireSecond(tokenExpireSecond)
+	return GetClientWithAuthToken(&passwordAuth), nil
 }
 
-func GetClientWithAuthToken(authClient *identity.V3AuthClient) (*OpenstackClient, error) {
-	identityClient, err := identity.GetIdentityClientV3(*authClient)
+func GetClientWithAuthToken(passwordAuth *keystoneauth.PasswordAuthPlugin) *OpenstackClient {
+	identityClient := identity.GetIdentityClientV3(*passwordAuth)
 
-	computeClient, err := compute.GetComputeClientV2(*authClient)
-	if err != nil {
-		return nil, err
-	}
-	imageClient, err := image.GetImageClientV2(*authClient)
-	if err != nil {
-		return nil, err
-	}
-	storageClient, err := storage.GetStorageClientV2(*authClient)
-	if err != nil {
-		return nil, err
-	}
-	networkingClient, err := networking.GetNeutronClientV2(*authClient)
-	if err != nil {
-		return nil, err
-	}
-	return &OpenstackClient{
-		AuthClient: *authClient,
-		Identity:   *identityClient,
-		Compute:    *computeClient,
-		Image:      *imageClient,
-		Storage:    *storageClient,
-		Networking: *networkingClient,
-	}, nil
+	return &OpenstackClient{Identity: identityClient}
 }
 
 func (client OpenstackClient) ServerInspect(serverId string) (*ServerInspect, error) {
-	server, err := client.Compute.ServerShow(serverId)
+	server, err := client.ComputeClient().ServerShow(serverId)
 	if err != nil {
 		return nil, err
 	}
-	interfaceAttachmetns, err := client.Compute.ServerInterfaceList(serverId)
+	interfaceAttachmetns, err := client.ComputeClient().ServerInterfaceList(serverId)
 	if err != nil {
 		return nil, err
 	}
-	volumeAttachments, err := client.Compute.ServerVolumeList(serverId)
-	actions, err := client.Compute.ServerActionList(serverId)
+	volumeAttachments, err := client.ComputeClient().ServerVolumeList(serverId)
+	actions, err := client.ComputeClient().ServerActionList(serverId)
 	if err != nil {
 		return nil, err
 	}
@@ -101,13 +95,16 @@ func (client OpenstackClient) ServerInspect(serverId string) (*ServerInspect, er
 	}
 
 	portQuery := url.Values{}
-	portQuery.Add("device_id", serverId)
-	for _, port := range client.Networking.PortList(portQuery) {
+	ports, err := client.NetworkingClient().PortList(portQuery)
+	if err != nil {
+		return nil, err
+	}
+	for _, port := range ports {
 		serverInspect.InterfaceDetail[port.Id] = port
 	}
 
 	for _, volume := range serverInspect.Volumes {
-		vol, err := client.Storage.VolumeShow(volume.VolumeId)
+		vol, err := client.StorageClient().VolumeShow(volume.VolumeId)
 		common.LogError(err, "get volume failed", true)
 		serverInspect.VolumeDetail[volume.VolumeId] = *vol
 	}
@@ -116,7 +113,7 @@ func (client OpenstackClient) ServerInspect(serverId string) (*ServerInspect, er
 
 func (client OpenstackClient) WaitServerStatus(serverId string, status string, taskState string) (*compute.Server, error) {
 	for {
-		server, err := client.Compute.ServerShow(serverId)
+		server, err := client.ComputeClient().ServerShow(serverId)
 		if err != nil {
 			return nil, err
 		}
@@ -159,26 +156,4 @@ func (client OpenstackClient) WaitServerResized(serverId string, newFlavorName s
 	} else {
 		return fmt.Errorf("server %s not resized", serverId)
 	}
-}
-
-func CreateInstance() *OpenstackClient {
-	authClient, err := getAuthClient()
-	if err != nil {
-		logging.Fatal("get auth client failed %s", err)
-	}
-
-	if common.CONF.HttpTimeout > 0 {
-		authClient.SetTimeout(common.CONF.HttpTimeout)
-	}
-	if err := authClient.TokenIssue(); err != nil {
-		logging.Fatal("获取 Token 失败, %s", err)
-	}
-	client, err := GetClientWithAuthToken(authClient)
-	if err == nil {
-		client.Compute.UpdateVersion()
-	}
-	if err != nil {
-		logging.Fatal("get openstack client failed %s", err)
-	}
-	return client
 }

@@ -54,7 +54,7 @@ var serverList = &cobra.Command{
 			query.Add("status", status)
 		}
 		if flavor != "" {
-			flavor, err := client.Compute.FlavorFound(flavor)
+			flavor, err := client.ComputeClient().FlavorFound(flavor)
 			if err != nil {
 				logging.Fatal("%s", err)
 			}
@@ -108,15 +108,13 @@ var serverList = &cobra.Command{
 
 		imageMap := map[string]imageLib.Image{}
 		for {
-			servers, err := client.Compute.ServerListDetails(query)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+			servers, err := client.ComputeClient().ServerListDetails(query)
+			common.LogError(err, "get server failed %s", true)
+
 			if long && verbose {
 				for i, server := range servers {
 					if _, ok := imageMap[server.Image.Id]; !ok {
-						image, err := client.Image.ImageShow(server.Image.Id)
+						image, err := client.ImageClient().ImageShow(server.Image.Id)
 						if err != nil {
 							logging.Warning("get image %s faield, %s", server.Image.Id, err)
 						} else {
@@ -150,11 +148,11 @@ var serverShow = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 
-		server, err := client.Compute.ServerFound(args[0])
+		server, err := client.ComputeClient().ServerFound(args[0])
 		if err != nil {
 			logging.Fatal("%v", err)
 		}
-		if image, err := client.Image.ImageShow(server.Image.Id); err == nil {
+		if image, err := client.ImageClient().ImageShow(server.Image.Id); err == nil {
 			server.Image.Name = image.Name
 		}
 
@@ -239,12 +237,12 @@ var serverCreate = &cobra.Command{
 				{UUID: common.CONF.Server.Network},
 			}
 		}
-		server, err := client.Compute.ServerCreate(createOption)
+		server, err := client.ComputeClient().ServerCreate(createOption)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		server, err = client.Compute.ServerShow(server.Id)
+		server, err = client.ComputeClient().ServerShow(server.Id)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -270,7 +268,7 @@ var serverDelete = &cobra.Command{
 		client := cli.GetClient()
 
 		for _, id := range args {
-			err := client.Compute.ServerDelete(id)
+			err := client.ComputeClient().ServerDelete(id)
 			if err != nil {
 				logging.Fatal("Reqeust to delete server failed, %v", err)
 			} else {
@@ -312,7 +310,7 @@ var serverPrune = &cobra.Command{
 		}
 		client := cli.GetClient()
 
-		client.Compute.ServerPrune(query, yes, wait)
+		client.ComputeClient().ServerPrune(query, yes, wait)
 	},
 }
 var serverStop = &cobra.Command{
@@ -322,7 +320,7 @@ var serverStop = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 		for _, id := range args {
-			err := client.Compute.ServerStop(id)
+			err := client.ComputeClient().ServerStop(id)
 			if err != nil {
 				logging.Error("Reqeust to stop server failed, %v", err)
 			} else {
@@ -338,7 +336,7 @@ var serverStart = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 		for _, id := range args {
-			err := client.Compute.ServerStart(id)
+			err := client.ComputeClient().ServerStart(id)
 			if err != nil {
 				logging.Error("Reqeust to start server failed, %v", err)
 			} else {
@@ -357,7 +355,7 @@ var serverReboot = &cobra.Command{
 		wait, _ := cmd.Flags().GetBool("wait")
 
 		for _, id := range args {
-			err := client.Compute.ServerReboot(id, hard)
+			err := client.ComputeClient().ServerReboot(id, hard)
 			if err != nil {
 				logging.Fatal("Reqeust to reboot server failed, %v", err)
 			} else {
@@ -384,7 +382,7 @@ var serverPause = &cobra.Command{
 		client := cli.GetClient()
 
 		for _, id := range args {
-			err := client.Compute.ServerPause(id)
+			err := client.ComputeClient().ServerPause(id)
 			if err != nil {
 				logging.Error("Reqeust to pause server failed, %v", err)
 			} else {
@@ -401,7 +399,7 @@ var serverUnpause = &cobra.Command{
 		client := cli.GetClient()
 
 		for _, id := range args {
-			err := client.Compute.ServerUnpause(id)
+			err := client.ComputeClient().ServerUnpause(id)
 			if err != nil {
 				logging.Error("Reqeust to unpause server failed, %v", err)
 			} else {
@@ -418,7 +416,7 @@ var serverShelve = &cobra.Command{
 		client := cli.GetClient()
 
 		for _, id := range args {
-			err := client.Compute.ServerShelve(id)
+			err := client.ComputeClient().ServerShelve(id)
 			if err != nil {
 				logging.Error("Reqeust to shelve server failed, %v", err)
 			} else {
@@ -435,7 +433,7 @@ var serverUnshelve = &cobra.Command{
 		client := cli.GetClient()
 
 		for _, id := range args {
-			err := client.Compute.ServerShelve(id)
+			err := client.ComputeClient().ServerShelve(id)
 			if err != nil {
 				logging.Error("Reqeust to unshelve server failed, %v", err)
 			} else {
@@ -452,7 +450,7 @@ var serverSuspend = &cobra.Command{
 		client := cli.GetClient()
 
 		for _, id := range args {
-			err := client.Compute.ServerSuspend(id)
+			err := client.ComputeClient().ServerSuspend(id)
 			if err != nil {
 				logging.Error("Reqeust to susppend server failed, %v", err)
 			} else {
@@ -469,7 +467,7 @@ var serverResume = &cobra.Command{
 		client := cli.GetClient()
 
 		for _, id := range args {
-			err := client.Compute.ServerResume(id)
+			err := client.ComputeClient().ServerResume(id)
 			if err != nil {
 				logging.Error("Reqeust to resume server failed, %v", err)
 			} else {
@@ -486,12 +484,12 @@ var serverResize = &cobra.Command{
 		wait, _ := cmd.Flags().GetBool("wait")
 		client := cli.GetClient()
 
-		flavor, err := client.Compute.FlavorShow(args[1])
+		flavor, err := client.ComputeClient().FlavorShow(args[1])
 		if err != nil {
 			logging.Fatal("Get flavor %s failed, %v", args[1], err)
 		}
 
-		err = client.Compute.ServerResize(args[0], args[1])
+		err = client.ComputeClient().ServerResize(args[0], args[1])
 		common.LogError(err, "Reqeust to resize server failed", true)
 
 		if wait {
@@ -511,15 +509,15 @@ var serverMigrate = &cobra.Command{
 		var err error
 		if live {
 			if host == "" {
-				err = client.Compute.ServerLiveMigrate(args[0], blockMigrate)
+				err = client.ComputeClient().ServerLiveMigrate(args[0], blockMigrate)
 			} else {
-				err = client.Compute.ServerLiveMigrateTo(args[0], blockMigrate, host)
+				err = client.ComputeClient().ServerLiveMigrateTo(args[0], blockMigrate, host)
 			}
 		} else {
 			if host == "" {
-				err = client.Compute.ServerMigrate(args[0])
+				err = client.ComputeClient().ServerMigrate(args[0])
 			} else {
-				err = client.Compute.ServerMigrateTo(args[0], host)
+				err = client.ComputeClient().ServerMigrateTo(args[0], host)
 			}
 		}
 
@@ -538,7 +536,7 @@ var serverRebuild = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 
-		err := client.Compute.ServerRebuild(args[0])
+		err := client.ComputeClient().ServerRebuild(args[0])
 		if err != nil {
 			logging.Error("Reqeust to rebuild server failed, %v", err)
 		} else {
@@ -557,7 +555,7 @@ var serverEvacuate = &cobra.Command{
 		host, _ := cmd.Flags().GetString("host")
 		force, _ := cmd.Flags().GetBool("force")
 
-		err := client.Compute.ServerEvacuate(args[0], password, host, force)
+		err := client.ComputeClient().ServerEvacuate(args[0], password, host, force)
 		if err != nil {
 			common.LogError(err, "Reqeust to evacuate server failed", true)
 		} else {
@@ -572,7 +570,7 @@ var serverSetPassword = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 		user, _ := cmd.Flags().GetString("user")
-		server, err := client.Compute.ServerShow(args[0])
+		server, err := client.ComputeClient().ServerShow(args[0])
 		if err != nil {
 			logging.Fatal("show server %s failed, %v", args[0], err)
 		}
@@ -595,7 +593,7 @@ var serverSetPassword = &cobra.Command{
 			}
 			logging.Fatal("Passwords do not match.")
 		}
-		err = client.Compute.ServerSetPassword(server.Id, string(newPasswd), user)
+		err = client.ComputeClient().ServerSetPassword(server.Id, string(newPasswd), user)
 		if err != nil {
 			if httpError, ok := err.(*openstackCommon.HttpError); ok {
 				logging.Fatal("set password failed, %s, %s",
@@ -616,9 +614,9 @@ var serverSetName = &cobra.Command{
 		idOrName := args[0]
 		name := args[1]
 		client := cli.GetClient()
-		server, err := client.Compute.ServerFound(idOrName)
+		server, err := client.ComputeClient().ServerFound(idOrName)
 		common.LogError(err, "get server failed", true)
-		err = client.Compute.ServerSetName(server.Id, name)
+		err = client.ComputeClient().ServerSetName(server.Id, name)
 		common.LogError(err, "set server name failed", true)
 	},
 }
@@ -645,11 +643,11 @@ var serverRegionLiveMigrate = &cobra.Command{
 		)
 		if live {
 			if host == "" {
-				resp, err := client.Compute.ServerRegionLiveMigrate(serverId, destRegion, dryRun)
+				resp, err := client.ComputeClient().ServerRegionLiveMigrate(serverId, destRegion, dryRun)
 				migrateResp = *resp
 				migrateErr = err
 			} else {
-				resp, err := client.Compute.ServerRegionLiveMigrateTo(serverId, destRegion, dryRun, host)
+				resp, err := client.ComputeClient().ServerRegionLiveMigrateTo(serverId, destRegion, dryRun, host)
 				migrateResp = *resp
 				migrateErr = err
 			}
@@ -707,7 +705,7 @@ var serverMigrationList = &cobra.Command{
 			},
 		}
 		for {
-			migrations, err := client.Compute.ServerMigrationList(serverId, query)
+			migrations, err := client.ComputeClient().ServerMigrationList(serverId, query)
 			if err != nil {
 				logging.Fatal("Reqeust to list server migration failed, %v", err)
 			}

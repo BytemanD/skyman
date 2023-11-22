@@ -12,21 +12,57 @@ import (
 	"github.com/BytemanD/skyman/openstack/common"
 )
 
+func (client ComputeClientV2) newRequest(resource string, id string, query url.Values, body []byte) common.RestfulRequest {
+	return common.RestfulRequest{
+		Endpoint: client.endpoint,
+		Resource: resource, Id: id,
+		Query:   query,
+		Body:    body,
+		Headers: client.BaseHeaders}
+}
+func (client ComputeClientV2) newGetRequest(resource string, id string) common.RestfulRequest {
+	req := client.newRequest(resource, id, nil, nil)
+	req.Method = "GET"
+	return req
+}
+func (client ComputeClientV2) newPostRequest(resource string, body []byte) common.RestfulRequest {
+	req := client.newRequest(resource, "", nil, body)
+	req.Method = "POST"
+	return req
+}
+func (client ComputeClientV2) newDeleteRequest(resource string, id string) common.RestfulRequest {
+	req := client.newRequest(resource, id, nil, nil)
+	req.Method = "DELETE"
+	return req
+}
+func (client ComputeClientV2) newPutRequest(resource string, id string, body []byte) common.RestfulRequest {
+	req := client.newRequest(resource, id, nil, body)
+	req.Method = "PUT"
+	return req
+}
+
 func (client ComputeClientV2) ServerList(query netUrl.Values) ([]Server, error) {
-	body := map[string][]Server{"servers": {}}
-	err := client.List("servers", query, client.BaseHeaders, &body)
+	resp, err := client.Request(client.newRequest("servers", "", query, nil))
 	if err != nil {
 		return nil, err
 	}
+	body := map[string][]Server{"servers": {}}
+	resp.BodyUnmarshal(&body)
 	return body["servers"], nil
 }
 func (client ComputeClientV2) ServerListDetails(query netUrl.Values) ([]Server, error) {
-	body := map[string][]Server{"servers": {}}
-	err := client.List("servers/detail", query, client.BaseHeaders, &body)
+	resp, err := client.Request(client.newRequest("servers/detail", "", query, nil))
 	if err != nil {
 		return nil, err
 	}
+	body := map[string][]Server{"servers": {}}
+	resp.BodyUnmarshal(&body)
 	return body["servers"], nil
+}
+func (client ComputeClientV2) ServerListByName(name string) ([]Server, error) {
+	query := url.Values{}
+	query.Set("name", name)
+	return client.ServerList(query)
 }
 func (client ComputeClientV2) ServerListDetailsByName(name string) ([]Server, error) {
 	query := url.Values{}
@@ -34,28 +70,38 @@ func (client ComputeClientV2) ServerListDetailsByName(name string) ([]Server, er
 	return client.ServerListDetails(query)
 }
 func (client ComputeClientV2) ServerShow(id string) (*Server, error) {
-	body := map[string]*Server{"server": {}}
-	err := client.Show("servers", id, client.BaseHeaders, &body)
-	return body["server"], err
-}
-func (client ComputeClientV2) ServerFound(idOrName string) (*Server, error) {
-	obj, err := client.FoundByIdOrName("servers", idOrName, "server", "servers", client.BaseHeaders)
+	resp, err := client.Request(client.newRequest("servers", id, nil, nil))
 	if err != nil {
 		return nil, err
 	}
-	jsonObj, err := json.Marshal(obj)
-	server := Server{}
-	err = json.Unmarshal(jsonObj, &server)
-	if err == nil {
-		return &server, nil
-	} else {
-		return nil, fmt.Errorf("parse %v failed", server)
+	body := map[string]*Server{"server": {}}
+	resp.BodyUnmarshal(&body)
+	return body["server"], err
+}
+func (client ComputeClientV2) ServerFound(idOrName string) (*Server, error) {
+	server, err := client.ServerShow(idOrName)
+	if err != nil {
+		if httpError, ok := err.(common.HttpError); ok {
+			if httpError.IsNotFound() {
+				servers, err := client.ServerListByName(idOrName)
+				if err != nil || len(servers) == 0 {
+					return nil, fmt.Errorf("server %s not found", idOrName)
+				}
+				server, err = client.ServerShow(servers[0].Id)
+			}
+		}
 	}
+	return server, err
 }
 
 func (client ComputeClientV2) ServerDelete(id string) error {
-	return client.Delete("servers", id, client.BaseHeaders)
+	_, err := client.Request(client.newDeleteRequest("servers", id))
+	if err != nil {
+		return err
+	}
+	return nil
 }
+
 func (client ComputeClientV2) getBlockDeviceMappingV2(imageRef string) BlockDeviceMappingV2 {
 	return BlockDeviceMappingV2{
 		BootIndex:          0,
@@ -78,14 +124,20 @@ func (client ComputeClientV2) ServerCreate(options ServerOpt) (*Server, error) {
 		options.Networks = "none"
 	}
 	repBody, _ := json.Marshal(map[string]ServerOpt{"server": options})
-	serverBody := map[string]*Server{"server": {}}
-	var err error
+
+	var req common.RestfulRequest
 	if options.BlockDeviceMappingV2 != nil {
-		err = client.Create("os-volumes_boot", repBody, client.BaseHeaders, &serverBody)
+		req = client.newPostRequest("os-volumes_boot", repBody)
 	} else {
-		err = client.Create("servers", repBody, client.BaseHeaders, &serverBody)
+		req = client.newPostRequest("os-volumes_boot", repBody)
 	}
-	return serverBody["server"], err
+	resp, err := client.Request(req)
+	if err != nil {
+		return nil, err
+	}
+	respBody := map[string]*Server{"server": {}}
+	resp.BodyUnmarshal(&respBody)
+	return respBody["server"], err
 }
 func (client ComputeClientV2) WaitServerCreate(options ServerOpt) (*Server, error) {
 	server, err := client.ServerCreate(options)
@@ -133,32 +185,41 @@ func (client ComputeClientV2) WaitServerDeleted(id string) {
 }
 
 // service api
-func (client ComputeClientV2) ServiceList(query netUrl.Values) []Service {
+func (client ComputeClientV2) ServiceList(query netUrl.Values) ([]Service, error) {
+	resp, err := client.Request(client.newGetRequest("os-services", ""))
+	if err != nil {
+		return nil, err
+	}
 	body := map[string][]Service{"services": {}}
-	client.List("os-services", query, client.BaseHeaders, &body)
-	return body["services"]
+	resp.BodyUnmarshal(&body)
+	return body["services"], nil
 }
-func (client ComputeClientV2) ServiceAction(action string, host string, binary string) *Service {
-	req := Service{Binary: binary, Host: host}
-	reqBody, _ := json.Marshal(req)
-	body := map[string]Service{"service": {}}
-	client.Put("os-services/"+action, reqBody, client.BaseHeaders, &body)
-	service := body["service"]
-	return &service
+func (client ComputeClientV2) ServiceAction(action string, host string, binary string) (*Service, error) {
+	reqBody, _ := json.Marshal(Service{Binary: binary, Host: host})
+	resp, err := client.Request(client.newPutRequest("os-services/"+action, "", reqBody))
+	if err != nil {
+		return nil, err
+	}
+	body := map[string]*Service{"service": {}}
+	resp.BodyUnmarshal(&body)
+	return body["service"], nil
 }
 func (client ComputeClientV2) ServiceUpdate(id string, update map[string]interface{}) (*Service, error) {
 	reqBody, _ := json.Marshal(update)
-	body := map[string]Service{"service": {}}
-
-	if err := client.Put("os-services/"+id, reqBody, client.BaseHeaders, &body); err != nil {
+	resp, err := client.Request(client.newPutRequest("os-services", id, reqBody))
+	if err != nil {
 		return nil, err
 	}
-	reqService := body["service"]
-	return &reqService, nil
+	body := map[string]*Service{"service": {}}
+	resp.BodyUnmarshal(&body)
+	return body["service"], nil
 }
 func (client ComputeClientV2) ServiceGetByHostBinary(host string, binary string) (*Service, error) {
 	query := netUrl.Values{"host": []string{host}, "binary": []string{binary}}
-	services := client.ServiceList(query)
+	services, err := client.ServiceList(query)
+	if err != nil {
+		return nil, err
+	}
 	if len(services) == 0 {
 		return nil, fmt.Errorf("service %s:%s not found", host, binary)
 	}
@@ -173,7 +234,7 @@ func (client ComputeClientV2) ServiceUp(host string, binary string) (*Service, e
 		return client.ServiceUpdate(service.Id,
 			map[string]interface{}{"forced_down": false})
 	}
-	return client.ServiceAction("up", host, binary), nil
+	return client.ServiceAction("up", host, binary)
 }
 func (client ComputeClientV2) ServiceDown(host string, binary string) (*Service, error) {
 	if client.MicroVersionLargeEqual("2.53") {
@@ -183,7 +244,7 @@ func (client ComputeClientV2) ServiceDown(host string, binary string) (*Service,
 		}
 		return client.ServiceUpdate(service.Id, map[string]interface{}{"forced_down": true})
 	}
-	return client.ServiceAction("down", host, binary), nil
+	return client.ServiceAction("down", host, binary)
 }
 func (client ComputeClientV2) ServiceEnable(host string, binary string) (*Service, error) {
 	if client.MicroVersionLargeEqual("2.53") {
@@ -193,7 +254,7 @@ func (client ComputeClientV2) ServiceEnable(host string, binary string) (*Servic
 		}
 		return client.ServiceUpdate(service.Id, map[string]interface{}{"status": "enabled"})
 	}
-	return client.ServiceAction("enable", host, binary), nil
+	return client.ServiceAction("enable", host, binary)
 }
 func (client ComputeClientV2) ServiceDisable(host string, binary string,
 	reason string,
@@ -209,24 +270,23 @@ func (client ComputeClientV2) ServiceDisable(host string, binary string,
 		}
 		return client.ServiceUpdate(service.Id, body)
 	}
-	return client.ServiceAction("disable", host, binary), nil
+	return client.ServiceAction("disable", host, binary)
 }
 
 // server api
-func (client ComputeClientV2) ServerAction(action string, id string,
-	params interface{}, obj interface{},
-) error {
-	actionBody := map[string]interface{}{action: params}
-	body, _ := json.Marshal(actionBody)
-	err := client.Create(fmt.Sprintf("%s/%s/action", "servers", id), body,
-		client.BaseHeaders, obj)
-	return err
+func (client ComputeClientV2) ServerAction(action string, id string, params interface{}) (*common.Response, error) {
+	body, _ := json.Marshal(map[string]interface{}{action: params})
+	return client.Request(
+		client.newPutRequest(fmt.Sprintf("servers/%s", id), "action", body),
+	)
 }
 func (client ComputeClientV2) ServerStop(id string) error {
-	return client.ServerAction("os-stop", id, nil, nil)
+	_, err := client.ServerAction("os-stop", id, nil)
+	return err
 }
 func (client ComputeClientV2) ServerStart(id string) error {
-	return client.ServerAction("os-start", id, nil, nil)
+	_, err := client.ServerAction("os-start", id, nil)
+	return err
 }
 func (client ComputeClientV2) ServerReboot(id string, hard bool) error {
 	actionBody := map[string]string{}
@@ -235,40 +295,50 @@ func (client ComputeClientV2) ServerReboot(id string, hard bool) error {
 	} else {
 		actionBody["type"] = "SOFT"
 	}
-	return client.ServerAction("reboot", id, actionBody, nil)
+	_, err := client.ServerAction("reboot", id, actionBody)
+	return err
 }
 func (client ComputeClientV2) ServerPause(id string) error {
-	return client.ServerAction("pause", id, nil, nil)
+	_, err := client.ServerAction("pause", id, nil)
+	return err
 }
 func (client ComputeClientV2) ServerUnpause(id string) error {
-	return client.ServerAction("unpause", id, nil, nil)
+	_, err := client.ServerAction("unpause", id, nil)
+	return err
 }
 func (client ComputeClientV2) ServerShelve(id string) error {
-	return client.ServerAction("unshelve", id, nil, nil)
+	_, err := client.ServerAction("unshelve", id, nil)
+	return err
 }
 func (client ComputeClientV2) ServerUnshelve(id string) error {
-	return client.ServerAction("unshelve", id, nil, nil)
+	_, err := client.ServerAction("unshelve", id, nil)
+	return err
 }
 func (client ComputeClientV2) ServerSuspend(id string) error {
-	return client.ServerAction("suspend", id, nil, nil)
+	_, err := client.ServerAction("suspend", id, nil)
+	return err
 }
 func (client ComputeClientV2) ServerResume(id string) error {
-	return client.ServerAction("resume", id, nil, nil)
+	_, err := client.ServerAction("resume", id, nil)
+	return err
 }
 func (client ComputeClientV2) ServerResize(id string, flavorRef string) error {
 	data := map[string]interface{}{
 		"flavorRef": flavorRef,
 	}
-	return client.ServerAction("resize", id, data, nil)
+	_, err := client.ServerAction("resize", id, data)
+	return err
 }
 func (client ComputeClientV2) ServerMigrate(id string) error {
-	return client.ServerAction("migrate", id, nil, nil)
+	_, err := client.ServerAction("migrate", id, nil)
+	return err
 }
 func (client ComputeClientV2) ServerMigrateTo(id string, host string) error {
 	data := map[string]interface{}{
 		"host": host,
 	}
-	return client.ServerAction("migrate", id, data, nil)
+	_, err := client.ServerAction("migrate", id, data)
+	return err
 }
 
 func (client ComputeClientV2) ServerLiveMigrate(id string, blockMigrate bool) error {
@@ -276,20 +346,23 @@ func (client ComputeClientV2) ServerLiveMigrate(id string, blockMigrate bool) er
 		"block_migration": blockMigrate,
 		"host":            nil,
 	}
-	return client.ServerAction("os-migrateLive", id, data, nil)
+	_, err := client.ServerAction("os-migrateLive", id, data)
+	return err
 }
 func (client ComputeClientV2) ServerLiveMigrateTo(id string, blockMigrate bool, host string) error {
 	data := map[string]interface{}{
 		"block_migration": blockMigrate,
 		"host":            host,
 	}
-	return client.ServerAction("os-migrateLive", id, data, nil)
+	_, err := client.ServerAction("os-migrateLive", id, data)
+	return err
 }
 
 // TODO: more params
 func (client ComputeClientV2) ServerRebuild(id string) error {
 	data := map[string]interface{}{}
-	return client.ServerAction("rebuild", id, data, nil)
+	_, err := client.ServerAction("rebuild", id, data)
+	return err
 }
 
 func (client ComputeClientV2) ServerEvacuate(id string, password string, host string, force bool) error {
@@ -303,27 +376,30 @@ func (client ComputeClientV2) ServerEvacuate(id string, password string, host st
 	if force {
 		data["force"] = force
 	}
-	return client.ServerAction("evacuate", id, data, nil)
+	_, err := client.ServerAction("evacuate", id, data)
+	return err
 }
 func (client ComputeClientV2) ServerConsoleLog(id string, length uint) (*ConsoleLog, error) {
 	params := map[string]interface{}{}
 	if length != 0 {
 		params["length"] = length
 	}
-	body := ConsoleLog{}
-	err := client.ServerAction("os-getConsoleOutput", id, params, &body)
+	resp, err := client.ServerAction("os-getConsoleOutput", id, params)
 	if err != nil {
 		return nil, err
 	}
+	body := ConsoleLog{}
+	resp.BodyUnmarshal(&body)
 	return &body, nil
 }
 func (client ComputeClientV2) getVNCConsole(id string, consoleType string) (*Console, error) {
 	params := map[string]interface{}{"type": consoleType}
-	respBody := map[string]*Console{"console": {}}
-	err := client.ServerAction("os-getVNCConsole", id, params, &respBody)
+	resp, err := client.ServerAction("os-getVNCConsole", id, params)
 	if err != nil {
 		return nil, err
 	}
+	respBody := map[string]*Console{"console": {}}
+	resp.BodyUnmarshal(&respBody)
 	return respBody["console"], nil
 }
 func (client ComputeClientV2) getRemoteConsole(id string, protocol string, consoleType string) (*Console, error) {
@@ -333,13 +409,15 @@ func (client ComputeClientV2) getRemoteConsole(id string, protocol string, conso
 			"type":     consoleType,
 		},
 	}
-	repBody, _ := json.Marshal(params)
-	respBody := map[string]*Console{"console": {}}
-	err := client.Create(fmt.Sprintf("servers/%s/remote-consoles", id),
-		repBody, client.BaseHeaders, &respBody)
+	reqBody, _ := json.Marshal(params)
+	resp, err := client.Request(
+		client.newPostRequest(fmt.Sprintf("servers/%s/remote-consoles", id), reqBody),
+	)
 	if err != nil {
 		return nil, err
 	}
+	respBody := map[string]*Console{"console": {}}
+	resp.BodyUnmarshal(&respBody)
 	return respBody["remote_console"], nil
 }
 
@@ -353,22 +431,27 @@ func (client ComputeClientV2) ServerConsoleUrl(id string, consoleType string) (*
 
 // server action api
 func (client ComputeClientV2) ServerActionList(id string) ([]InstanceAction, error) {
-	body := map[string][]InstanceAction{"instanceActions": {}}
-	err := client.List(fmt.Sprintf("servers/%s/os-instance-actions", id), nil, client.BaseHeaders, &body)
+	resp, err := client.Request(
+		client.newRequest(fmt.Sprintf("servers/%s/os-instance-actions", id), "", nil, nil),
+	)
 	if err != nil {
 		return nil, err
 	}
+	body := map[string][]InstanceAction{"instanceActions": {}}
+	resp.BodyUnmarshal(&body)
 	return body["instanceActions"], nil
 }
 func (client ComputeClientV2) ServerActionShow(id string, requestId string) (
 	*InstanceAction, error,
 ) {
-	body := map[string]InstanceAction{"instanceAction": {}}
-	err := client.List(fmt.Sprintf("servers/%s/os-instance-actions/%s", id, requestId),
-		nil, client.BaseHeaders, &body)
+	resp, err := client.Request(
+		client.newGetRequest(fmt.Sprintf("servers/%s", id), "os-instance-actions"),
+	)
 	if err != nil {
 		return nil, err
 	}
+	body := map[string]InstanceAction{"instanceAction": {}}
+	resp.BodyUnmarshal(&body)
 	instanceAction := body["instanceAction"]
 	return &instanceAction, nil
 }
@@ -381,12 +464,13 @@ func (client ComputeClientV2) serverRegionLiveMigrate(id string, destRegion stri
 	if destHost != "" {
 		data["host"] = destHost
 	}
-	resp := RegionMigrateResp{}
-	err := client.ServerAction("os-migrateLive-region", id, data, &resp)
+	resp, err := client.ServerAction("os-migrateLive-region", id, data)
 	if err != nil {
-		return &resp, err
+		return nil, err
 	}
-	return &resp, nil
+	respBody := &RegionMigrateResp{}
+	resp.BodyUnmarshal(respBody)
+	return respBody, nil
 }
 func (client ComputeClientV2) ServerRegionLiveMigrate(id string, destRegion string, dryRun bool) (*RegionMigrateResp, error) {
 	return client.serverRegionLiveMigrate(id, destRegion, true, dryRun, "")
@@ -395,53 +479,65 @@ func (client ComputeClientV2) ServerRegionLiveMigrateTo(id string, destRegion st
 	return client.serverRegionLiveMigrate(id, destRegion, true, dryRun, destHost)
 }
 func (client ComputeClientV2) ServerMigrationList(id string, query url.Values) ([]Migration, error) {
+	resp, err := client.Request(
+		client.newGetRequest(common.UrlJoin("servers", id, "migrations"), ""),
+	)
+	if err != nil {
+		return nil, err
+	}
 	respBody := map[string][]Migration{"migrations": {}}
-	client.List(fmt.Sprintf("servers/%s/migrations", id), query, client.BaseHeaders, &respBody)
+	resp.BodyUnmarshal(&respBody)
 	return respBody["migrations"], nil
 }
 
-// http://szbcec.vip.cmss:8774/v2.1/servers/6b785423-1d17-4756-86a5-123a7280a81e/migrations?status=all&latest=True
-
 // flavor api
 func (client ComputeClientV2) FlavorList(query netUrl.Values) ([]Flavor, error) {
+	resp, err := client.Request(client.newRequest("flavors", "", query, nil))
+	if err != nil {
+		return nil, err
+	}
 	body := map[string][]Flavor{"flavors": {}}
-	client.List("flavors", query, client.BaseHeaders, &body)
+	resp.BodyUnmarshal(body)
 	return body["flavors"], nil
 }
 
 func (client ComputeClientV2) FlavorCreate(flavor Flavor) (*Flavor, error) {
 	reqBody, _ := json.Marshal(map[string]Flavor{"flavor": flavor})
-	respBody := map[string]*Flavor{"flavor": {}}
-	err := client.Create("flavors", reqBody, client.BaseHeaders, &respBody)
+	resp, err := client.Request(client.newRequest("flavors/detail", "", nil, reqBody))
 	if err != nil {
 		return nil, err
 	}
+	respBody := map[string]*Flavor{"flavor": {}}
+	resp.BodyUnmarshal(&respBody)
 	return respBody["flavor"], nil
 }
 func (client ComputeClientV2) FlavorListDetail(query netUrl.Values) (Flavors, error) {
-	body := map[string]Flavors{"flavors": {}}
-	err := client.List("flavors/detail", query, client.BaseHeaders, &body)
+	resp, err := client.Request(client.newRequest("flavors/detail", "", query, nil))
 	if err != nil {
 		return nil, err
 	}
-	return body["flavors"], nil
+	respBody := map[string]Flavors{"flavors": {}}
+	resp.BodyUnmarshal(&respBody)
+	return respBody["flavors"], nil
 }
 func (client ComputeClientV2) FlavorExtraSpecsList(flavorId string) (ExtraSpecs, error) {
-	body := map[string]ExtraSpecs{"extra_specs": {}}
-	err := client.List(
-		fmt.Sprintf("flavors/%s/os-extra_specs", flavorId), nil, client.BaseHeaders,
-		&body)
+	resp, err := client.Request(
+		client.newGetRequest(common.UrlJoin("flavors", flavorId, "os-extra_specs"), ""),
+	)
 	if err != nil {
 		return nil, err
 	}
+	body := map[string]ExtraSpecs{"extra_specs": {}}
+	resp.BodyUnmarshal(&body)
 	return body["extra_specs"], nil
 }
 func (client ComputeClientV2) FlavorShow(flavorId string) (*Flavor, error) {
-	body := map[string]*Flavor{"flavor": {}}
-	err := client.Show("flavors", flavorId, client.BaseHeaders, &body)
+	resp, err := client.Request(client.newGetRequest("flavors", flavorId))
 	if err != nil {
 		return nil, err
 	}
+	body := map[string]*Flavor{"flavor": {}}
+	resp.BodyUnmarshal(&body)
 	return body["flavor"], nil
 }
 
@@ -458,26 +554,26 @@ func (client ComputeClientV2) FlavorShowWithExtraSpecs(flavorId string) (*Flavor
 	return flavor, nil
 }
 func (client ComputeClientV2) FlavorExtraSpecsCreate(flavorId string, extraSpecs map[string]string) (ExtraSpecs, error) {
-	repBody, _ := json.Marshal(map[string]ExtraSpecs{"extra_specs": extraSpecs})
-	respBody := map[string]ExtraSpecs{"extra_specs": {}}
-	err := client.Create(
-		fmt.Sprintf("flavors/%s/os-extra_specs", flavorId), repBody,
-		client.BaseHeaders, &respBody)
+	reqBody, _ := json.Marshal(map[string]ExtraSpecs{"extra_specs": extraSpecs})
+	resp, err := client.Request(
+		client.newPostRequest(common.UrlJoin("flavors", flavorId, "os-extra_specs"), reqBody),
+	)
 	if err != nil {
 		return nil, err
 	}
+	respBody := map[string]ExtraSpecs{"extra_specs": {}}
+	resp.BodyUnmarshal(&respBody)
 	return respBody["extra_specs"], nil
 }
 func (client ComputeClientV2) FlavorExtraSpecsDelete(flavorId string, extraSpec string) error {
-	err := client.Delete(
-		fmt.Sprintf("flavors/%s/os-extra_specs", flavorId), extraSpec, client.BaseHeaders)
-	if err != nil {
-		return err
-	}
-	return nil
+	_, err := client.Request(
+		client.newDeleteRequest(common.UrlJoin("flavors", flavorId, "os-extra_specs"), extraSpec),
+	)
+	return err
 }
 func (client ComputeClientV2) FlavorDelete(flavorId string) error {
-	return client.Delete("flavors", flavorId, client.BaseHeaders)
+	_, err := client.Request(client.newDeleteRequest("flavors", flavorId))
+	return err
 }
 func (client ComputeClientV2) FlavorFound(idOrName string) (*Flavor, error) {
 	flavor, err := client.FlavorShow(idOrName)
@@ -485,7 +581,7 @@ func (client ComputeClientV2) FlavorFound(idOrName string) (*Flavor, error) {
 		return flavor, nil
 	}
 	if httpError, ok := err.(*common.HttpError); ok {
-		if httpError.Status != 404 {
+		if !httpError.IsNotFound() {
 			return nil, err
 		}
 	}
@@ -509,31 +605,34 @@ func (client ComputeClientV2) FlavorFound(idOrName string) (*Flavor, error) {
 
 // hypervisor api
 func (client ComputeClientV2) HypervisorList(query netUrl.Values) (Hypervisors, error) {
-	body := map[string]Hypervisors{
-		"hypervisors": []Hypervisor{},
+	body := map[string]Hypervisors{"hypervisors": []Hypervisor{}}
+	resp, err := client.Request(client.newRequest("os-hypervisors", "", query, nil))
+	if err != nil {
+		return nil, err
 	}
-	client.List("os-hypervisors", query, client.BaseHeaders, &body)
+	resp.BodyUnmarshal(&body)
 	return body["hypervisors"], nil
 }
 func (client ComputeClientV2) HypervisorListDetail(query netUrl.Values) (Hypervisors, error) {
 	body := map[string]Hypervisors{"hypervisors": {}}
-	err := client.List("os-hypervisors/detail", query, client.BaseHeaders, &body)
+	resp, err := client.Request(client.newRequest("os-hypervisors/detail", "", query, nil))
 	if err != nil {
 		return nil, err
 	}
+	resp.BodyUnmarshal(&body)
 	return body["hypervisors"], nil
 }
 func (client ComputeClientV2) HypervisorShow(id string) (*Hypervisor, error) {
-	body := map[string]*Hypervisor{"hypervisor": {}}
-	err := client.Show("os-hypervisors/", id, client.BaseHeaders, &body)
+	resp, err := client.Request(client.newGetRequest("os-hypervisors/detail", id))
 	if err != nil {
 		return nil, err
 	}
+	body := map[string]*Hypervisor{"hypervisor": {}}
+	resp.BodyUnmarshal(&body)
 	return body["hypervisor"], nil
 }
 func (client ComputeClientV2) HypervisorShowByHostname(hostname string) (*Hypervisor, error) {
-	query := url.Values{}
-	query.Set("hypervisor_hostname_pattern", hostname)
+	query := url.Values{"hypervisor_hostname_pattern": []string{hostname}}
 	hypervisors, err := client.HypervisorList(query)
 	if err != nil {
 		return nil, err
@@ -554,10 +653,11 @@ func (client ComputeClientV2) HypervisorShowByHostname(hostname string) (*Hyperv
 // keypair api
 func (client ComputeClientV2) KeypairList(query netUrl.Values) ([]Keypair, error) {
 	body := map[string][]Keypair{"keypairs": {}}
-	err := client.List("os-keypairs", query, client.BaseHeaders, &body)
+	resp, err := client.Request(client.newRequest("os-keypairs", "", query, nil))
 	if err != nil {
 		return nil, err
 	}
+	resp.BodyUnmarshal(&body)
 	return body["keypairs"], nil
 }
 
@@ -565,71 +665,79 @@ func (client ComputeClientV2) KeypairList(query netUrl.Values) ([]Keypair, error
 
 func (client ComputeClientV2) ServerVolumeList(id string) ([]VolumeAttachment, error) {
 	body := map[string][]VolumeAttachment{"volumeAttachments": {}}
-	err := client.List(
-		fmt.Sprintf("servers/%s/os-volume_attachments", id),
-		nil, client.BaseHeaders, &body)
+	resp, err := client.Request(
+		client.newGetRequest(common.UrlJoin("servers", id, "os-volume_attachments"), ""),
+	)
 	if err != nil {
 		return nil, err
 	}
+	resp.BodyUnmarshal(&body)
 	return body["volumeAttachments"], nil
 }
 func (client ComputeClientV2) ServerVolumeAdd(id string, volumeId string) (*VolumeAttachment, error) {
-	data := map[string]map[string]string{
-		"volumeAttachment": {"volumeId": volumeId}}
-	reqBody, _ := json.Marshal(data)
+	reqBody, _ := json.Marshal(
+		map[string]map[string]string{"volumeAttachment": {"volumeId": volumeId}},
+	)
 	respBody := map[string]*VolumeAttachment{"volumeAttachment": {}}
-	err := client.Create(fmt.Sprintf("servers/%s/os-volume_attachments", id),
-		reqBody, client.BaseHeaders, &respBody)
+	resp, err := client.Request(
+		client.newPostRequest(common.UrlJoin("servers", id, "os-volume_attachments"), reqBody),
+	)
 	if err != nil {
 		return nil, err
 	}
+	resp.BodyUnmarshal(&respBody)
 	return respBody["volumeAttachment"], nil
 }
 func (client ComputeClientV2) ServerVolumeDelete(id string, volumeId string) error {
-	return client.Delete(
-		fmt.Sprintf("servers/%s/os-volume_attachments", id),
-		volumeId, client.BaseHeaders)
-
+	_, err := client.Request(
+		client.newDeleteRequest(common.UrlJoin("servers", id, "os-volume_attachments"), volumeId),
+	)
+	return err
 }
 func (client ComputeClientV2) ServerInterfaceList(id string) ([]InterfaceAttachment, error) {
-	body := map[string][]InterfaceAttachment{"interfaceAttachments": {}}
-	err := client.List(
-		fmt.Sprintf("servers/%s/os-interface", id),
-		nil, client.BaseHeaders, &body)
+	resp, err := client.Request(
+		client.newGetRequest(common.UrlJoin("servers", id, "os-interface"), ""),
+	)
 	if err != nil {
 		return nil, err
 	}
+	body := map[string][]InterfaceAttachment{"interfaceAttachments": {}}
+	resp.BodyUnmarshal(&body)
 	return body["interfaceAttachments"], nil
 }
 
 func (client ComputeClientV2) ServerAddNet(id string, netId string) (*InterfaceAttachment, error) {
 	data := map[string]string{"net_id": netId}
 	reqBody, _ := json.Marshal(map[string]interface{}{"interfaceAttachment": data})
-
-	body := map[string]*InterfaceAttachment{"interfaceAttachment": {}}
-	err := client.Create(fmt.Sprintf("servers/%s/os-interface", id),
-		reqBody, client.BaseHeaders, &body)
+	resp, err := client.Request(
+		client.newPostRequest(common.UrlJoin("servers", id, "os-interface"), reqBody),
+	)
 	if err != nil {
 		return nil, err
 	}
+	body := map[string]*InterfaceAttachment{"interfaceAttachment": {}}
+	resp.BodyUnmarshal(&body)
 	return body["interfaceAttachment"], nil
 }
 func (client ComputeClientV2) ServerAddPort(id string, portId string) (*InterfaceAttachment, error) {
 	data := map[string]string{"port_id": portId}
 	reqBody, _ := json.Marshal(map[string]interface{}{"interfaceAttachment": data})
-
-	body := map[string]*InterfaceAttachment{"interfaceAttachment": {}}
-	err := client.Create(fmt.Sprintf("servers/%s/os-interface", id),
-		reqBody, client.BaseHeaders, &body)
+	resp, err := client.Request(
+		client.newPostRequest(common.UrlJoin("servers", id, "os-interface"), reqBody),
+	)
 	if err != nil {
 		return nil, err
 	}
+	body := map[string]*InterfaceAttachment{"interfaceAttachment": {}}
+	resp.BodyUnmarshal(&body)
 	return body["interfaceAttachment"], nil
 }
 
 func (client ComputeClientV2) ServerInterfaceDetach(id string, portId string) error {
-	return client.Delete(
-		fmt.Sprintf("servers/%s/os-interface", id), portId, client.BaseHeaders)
+	_, err := client.Request(
+		client.newDeleteRequest(common.UrlJoin("servers", id, "os-interface"), portId),
+	)
+	return err
 }
 func (client ComputeClientV2) ServerSetPassword(id string, password string, user string) error {
 	data := map[string]interface{}{
@@ -638,48 +746,71 @@ func (client ComputeClientV2) ServerSetPassword(id string, password string, user
 	if user != "" {
 		data["userName"] = user
 	}
-	return client.ServerAction("changePassword", id, data, nil)
+	_, err := client.ServerAction("changePassword", id, data)
+	return err
 }
 func (client ComputeClientV2) ServerSetName(id string, name string) error {
 	data := map[string]interface{}{"name": name}
-	return client.ServerAction("rename", id, data, nil)
+	_, err := client.ServerAction("rename", id, data)
+	return err
 }
 
 // migration api
 
 func (client ComputeClientV2) MigrationList(query netUrl.Values) ([]Migration, error) {
+	resp, err := client.Request(client.newRequest("os-migrations", "", query, nil))
+	if err != nil {
+		return nil, err
+	}
 	respBody := map[string][]Migration{"migrations": {}}
-	client.List("os-migrations", query, client.BaseHeaders, &respBody)
+	resp.BodyUnmarshal(&respBody)
 	return respBody["migrations"], nil
 }
 
 // availability zone api
-func (client ComputeClientV2) AZList(query netUrl.Values) (AvailabilityZone, error) {
-	respBody := map[string]AvailabilityZone{"availabilityZoneInfo": {}}
-	client.List("os-availability-zone", query, client.BaseHeaders, &respBody)
-	return respBody["availabilityZoneInfo"], nil
-}
-func (client ComputeClientV2) AZListDetail(query netUrl.Values) ([]AvailabilityZone, error) {
-	respBody := map[string][]AvailabilityZone{"availabilityZoneInfo": {}}
-	client.List("os-availability-zone/detail", query, client.BaseHeaders, &respBody)
-	return respBody["availabilityZoneInfo"], nil
-}
-func (client ComputeClientV2) AggregateList(query netUrl.Values) ([]Aggregate, error) {
-	respBody := map[string][]Aggregate{"aggregates": {}}
-	client.List("os-aggregates", query, client.BaseHeaders, &respBody)
-	return respBody["aggregates"], nil
-}
-func (client ComputeClientV2) AggregateShow(aggregate string) (*Aggregate, error) {
-	respBody := map[string]*Aggregate{"aggregate": {}}
-	err := client.Show("os-aggregates", aggregate, client.BaseHeaders, &respBody)
+func (client ComputeClientV2) AZList(query netUrl.Values) (*AvailabilityZone, error) {
+	resp, err := client.Request(client.newRequest("os-availability-zone", "", query, nil))
 	if err != nil {
 		return nil, err
 	}
+	respBody := map[string]*AvailabilityZone{"availabilityZoneInfo": {}}
+	resp.BodyUnmarshal(&respBody)
+	return respBody["availabilityZoneInfo"], nil
+}
+func (client ComputeClientV2) AZListDetail(query netUrl.Values) ([]AvailabilityZone, error) {
+	resp, err := client.Request(client.newRequest("os-availability-zone/detail", "", query, nil))
+	if err != nil {
+		return nil, err
+	}
+	respBody := map[string][]AvailabilityZone{"availabilityZoneInfo": {}}
+	resp.BodyUnmarshal(&respBody)
+	return respBody["availabilityZoneInfo"], nil
+}
+func (client ComputeClientV2) AggregateList(query netUrl.Values) ([]Aggregate, error) {
+	resp, err := client.Request(client.newRequest("aggregates", "", query, nil))
+	if err != nil {
+		return nil, err
+	}
+	respBody := map[string][]Aggregate{"aggregates": {}}
+	resp.BodyUnmarshal(&respBody)
+	return respBody["aggregates"], nil
+}
+func (client ComputeClientV2) AggregateShow(aggregate string) (*Aggregate, error) {
+	resp, err := client.Request(client.newGetRequest("aggregates", aggregate))
+	if err != nil {
+		return nil, err
+	}
+	respBody := map[string]*Aggregate{"aggregate": {}}
+	resp.BodyUnmarshal(&respBody)
 	return respBody["aggregate"], nil
 }
 
 func (client ComputeClientV2) ServerGroupList(query netUrl.Values) ([]ServerGroup, error) {
+	resp, err := client.Request(client.newRequest("os-server-groups", "", query, nil))
+	if err != nil {
+		return nil, err
+	}
 	respBody := map[string][]ServerGroup{"server_groups": {}}
-	client.List("os-server-groups", query, client.BaseHeaders, &respBody)
+	resp.BodyUnmarshal(&respBody)
 	return respBody["server_groups"], nil
 }

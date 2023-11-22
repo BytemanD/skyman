@@ -21,7 +21,7 @@ var aggList = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 
 		client := cli.GetClient()
-		aggregates, err := client.Compute.AggregateList(nil)
+		aggregates, err := client.ComputeClient().AggregateList(nil)
 		cli.ExitIfError(err)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
@@ -63,7 +63,7 @@ var aggShow = &cobra.Command{
 		agg := args[0]
 
 		client := cli.GetClient()
-		aggregate, err := client.Compute.AggregateShow(agg)
+		aggregate, err := client.ComputeClient().AggregateShow(agg)
 		cli.ExitIfError(err)
 		pt := common.PrettyItemTable{
 			Item: *aggregate,

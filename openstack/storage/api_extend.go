@@ -12,7 +12,11 @@ func (client StorageClientV2) VolumePrune(query url.Values, yes bool, waitDelete
 		query.Set("status", "error")
 	}
 	logging.Info("查询卷: %v", query)
-	volumes := client.VolumeList(query)
+	volumes, err := client.VolumeList(query)
+	if err != nil {
+		logging.Error("get volumes failed, %s", err)
+		return
+	}
 	logging.Info("需要清理的卷数量: %d\n", len(volumes))
 	if len(volumes) == 0 {
 		return

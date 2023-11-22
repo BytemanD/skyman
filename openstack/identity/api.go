@@ -2,15 +2,26 @@ package identity
 
 import (
 	"net/url"
+
+	"github.com/BytemanD/skyman/openstack/common"
 )
 
+func (client IdentityClientV3) newRequest(resource string, id string, query url.Values, body []byte) common.RestfulRequest {
+	return common.RestfulRequest{
+		Endpoint: client.endpoint,
+		Resource: resource, Id: id,
+		Query:   query,
+		Body:    body,
+		Headers: client.BaseHeaders}
+}
 func (client IdentityClientV3) ServiceList(query url.Values) ([]Service, error) {
-	body := map[string][]Service{"services": {}}
-	err := client.List("services", query, nil, &body)
+	resp, err := client.Request(client.newRequest("services", "", query, nil))
 	if err != nil {
 		return nil, err
 	}
-	return body["services"], nil
+	respBody := map[string][]Service{"services": {}}
+	resp.BodyUnmarshal(&respBody)
+	return respBody["services"], nil
 }
 func (client IdentityClientV3) ServiceListByName(name string) ([]Service, error) {
 	query := url.Values{}
@@ -18,52 +29,65 @@ func (client IdentityClientV3) ServiceListByName(name string) ([]Service, error)
 	return client.ServiceList(query)
 }
 func (client IdentityClientV3) ServiceShow(serviceId string) (*Service, error) {
-	body := map[string]*Service{"service": {}}
-	err := client.Show("services", serviceId, nil, &body)
+	resp, err := client.Request(client.newRequest("services", serviceId, nil, nil))
 	if err != nil {
 		return nil, err
 	}
-	return body["service"], nil
+	respBody := map[string]*Service{"service": {}}
+	resp.BodyUnmarshal(&respBody)
+	return respBody["service"], nil
 }
+
 func (client IdentityClientV3) EndpointList(query url.Values) ([]Endpoint, error) {
-	body := map[string][]Endpoint{"endpoints": {}}
-	err := client.List("endpoints", query, nil, &body)
+	resp, err := client.Request(client.newRequest("endpoints", "", query, nil))
 	if err != nil {
 		return nil, err
 	}
-	return body["endpoints"], nil
+	respBody := map[string][]Endpoint{"endpoints": {}}
+	resp.BodyUnmarshal(&respBody)
+	return respBody["endpoints"], nil
 }
+func (client IdentityClientV3) GetServiceEndpoint(serviceType string, serviceName string, serviceInterface string,
+) (string, error) {
+	return client.Auth.GetServiceEndpoint(serviceType, serviceName, serviceInterface)
+}
+
 func (client IdentityClientV3) UserList(query url.Values) ([]User, error) {
-	body := map[string][]User{"users": {}}
-	err := client.List("users", query, nil, &body)
+	resp, err := client.Request(client.newRequest("users", "", query, nil))
 	if err != nil {
 		return nil, err
 	}
-	return body["users"], nil
+	respBody := map[string][]User{"users": {}}
+	resp.BodyUnmarshal(&respBody)
+	return respBody["users"], nil
 }
 func (client IdentityClientV3) UserShow(userId string) (*User, error) {
-	body := map[string]*User{"user": {}}
-	err := client.Show("users", userId, nil, &body)
+	resp, err := client.Request(client.newRequest("users", userId, nil, nil))
 	if err != nil {
 		return nil, err
 	}
-	return body["user"], nil
+	respBody := map[string]*User{"user": {}}
+	resp.BodyUnmarshal(&respBody)
+	return respBody["user"], nil
 }
+
 func (client IdentityClientV3) ProjectList(query url.Values) ([]Project, error) {
-	body := map[string][]Project{"projects": {}}
-	err := client.List("projects", query, nil, &body)
+	resp, err := client.Request(client.newRequest("projects", "", query, nil))
 	if err != nil {
 		return nil, err
 	}
-	return body["projects"], nil
+	respBody := map[string][]Project{"projects": {}}
+	resp.BodyUnmarshal(&respBody)
+	return respBody["projects"], nil
 }
 func (client IdentityClientV3) RoleAssignmentList(query url.Values) ([]RoleAssigment, error) {
-	body := map[string][]RoleAssigment{"role_assignments": {}}
-	err := client.List("role_assignments", query, nil, &body)
+	resp, err := client.Request(client.newRequest("role_assignments", "", query, nil))
 	if err != nil {
 		return nil, err
 	}
-	return body["role_assignments"], nil
+	respBody := map[string][]RoleAssigment{"role_assignments": {}}
+	resp.BodyUnmarshal(&respBody)
+	return respBody["role_assignments"], nil
 }
 func (client IdentityClientV3) UserListByProjectId(projectId string) ([]User, error) {
 	query := url.Values{}

@@ -34,7 +34,7 @@ type ConfGroup struct {
 }
 type Auth struct {
 	Url             string           `yaml:"url"`
-	RegionName      identity.Region  `yaml:"region"`
+	Region          identity.Region  `yaml:"region"`
 	User            identity.User    `yaml:"user"`
 	Project         identity.Project `yaml:"project"`
 	TokenExpireTime int              `yaml:"tokenExpireTime"`
@@ -75,5 +75,8 @@ func LoadConfig(configFile string) error {
 	}
 	viper.Unmarshal(&CONF)
 	i18n.InitLocalizer(CONF.Language)
+	if CONF.Auth.TokenExpireTime <= 0 {
+		CONF.Auth.TokenExpireTime = 60 * 30
+	}
 	return nil
 }

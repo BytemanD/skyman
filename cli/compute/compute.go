@@ -33,7 +33,7 @@ var csList = &cobra.Command{
 			query.Set("host", host)
 		}
 
-		services := client.Compute.ServiceList(query)
+		services, _ := client.ComputeClient().ServiceList(query)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Binary"},
@@ -61,7 +61,7 @@ var csEnable = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
-		service, err := client.Compute.ServiceEnable(args[0], args[1])
+		service, err := client.ComputeClient().ServiceEnable(args[0], args[1])
 		if err != nil {
 			fmt.Printf("Set service diabled failed: %v", err)
 			os.Exit(1)
@@ -76,7 +76,7 @@ var csDisable = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 		reason, _ := cmd.Flags().GetString("reason")
-		service, err := client.Compute.ServiceDisable(args[0], args[1], reason)
+		service, err := client.ComputeClient().ServiceDisable(args[0], args[1], reason)
 		if err != nil {
 			fmt.Printf("Set service diabled failed: %v", err)
 			os.Exit(1)
@@ -90,7 +90,7 @@ var csUp = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
-		service, err := client.Compute.ServiceUp(args[0], args[1])
+		service, err := client.ComputeClient().ServiceUp(args[0], args[1])
 		if err != nil {
 			fmt.Printf("Set service diabled failed: %v", err)
 			os.Exit(1)
@@ -104,7 +104,7 @@ var csDown = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
-		service, err := client.Compute.ServiceDown(args[0], args[1])
+		service, err := client.ComputeClient().ServiceDown(args[0], args[1])
 		if err != nil {
 			fmt.Printf("Set service diabled failed: %v", err)
 			os.Exit(1)

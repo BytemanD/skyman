@@ -22,7 +22,7 @@ var groupList = &cobra.Command{
 		query := url.Values{}
 
 		long, _ := cmd.Flags().GetBool("long")
-		serverGroups, err := client.Compute.ServerGroupList(query)
+		serverGroups, err := client.ComputeClient().ServerGroupList(query)
 		common.LogError(err, "Get server groups failed", true)
 
 		pt := common.PrettyTable{

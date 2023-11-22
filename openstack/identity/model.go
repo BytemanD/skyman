@@ -1,7 +1,9 @@
 package identity
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/BytemanD/skyman/openstack/common"
 )
@@ -29,6 +31,14 @@ type ApiVersion struct {
 	Version    string `json:"version"`
 }
 
+func (v *ApiVersion) VersoinInfo() string {
+	version := v.Id
+	if v.MinVersion != "" {
+		version += fmt.Sprintf(" (%s ~ %s)", v.MinVersion, v.Version)
+	}
+	return version
+}
+
 type ApiVersions []ApiVersion
 
 func (client ApiVersions) Current() *ApiVersion {
@@ -47,4 +57,49 @@ func (client ApiVersions) Stable() *ApiVersion {
 		}
 	}
 	return nil
+}
+
+type Token struct {
+	IsDomain  bool      `json:"is_domain"`
+	Methods   []string  `json:"methods"`
+	ExpiresAt string    `json:"expires_at"`
+	Name      bool      `json:"name"`
+	Catalogs  []Catalog `json:"catalog"`
+	Project   Project
+	User      User
+}
+
+type TokenCache struct {
+	TokenExpireSecond int
+	token             Token
+	TokenId           string
+	expiredAt         time.Time
+}
+
+func (tc *TokenCache) GetCatalogByType(serviceType string) *Catalog {
+	for _, catalog := range tc.token.Catalogs {
+		if catalog.Type == serviceType {
+			return &catalog
+		}
+	}
+	return nil
+}
+
+func (tc *TokenCache) GetEndpoints(option OptionCatalog) []Endpoint {
+	endpoints := []Endpoint{}
+
+	for _, catalog := range tc.token.Catalogs {
+		if (option.Type != "" && catalog.Type != option.Type) ||
+			(option.Name != "" && catalog.Name != option.Name) {
+			continue
+		}
+		for _, endpoint := range catalog.Endpoints {
+			if (option.Region != "" && endpoint.Region != option.Region) ||
+				(option.Interface != "" && endpoint.Interface != option.Interface) {
+				continue
+			}
+			endpoints = append(endpoints, endpoint)
+		}
+	}
+	return endpoints
 }

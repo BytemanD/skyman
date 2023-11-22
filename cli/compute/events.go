@@ -20,7 +20,7 @@ var actionList = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 		long, _ := cmd.Flags().GetBool("long")
-		actions, err := client.Compute.ServerActionList(args[0])
+		actions, err := client.ComputeClient().ServerActionList(args[0])
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -48,7 +48,7 @@ var actionShow = &cobra.Command{
 		long, _ := cmd.Flags().GetBool("long")
 		id := args[0]
 		requestId := args[1]
-		action, err := client.Compute.ServerActionShow(id, requestId)
+		action, err := client.ComputeClient().ServerActionShow(id, requestId)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -87,7 +87,7 @@ var actionSpend = &cobra.Command{
 		actionName, _ := cmd.Flags().GetString("name")
 		requestId, _ := cmd.Flags().GetString("request-id")
 
-		actionsWithEvents, err := client.Compute.ServerActionsWithEvents(args[0], actionName, requestId)
+		actionsWithEvents, err := client.ComputeClient().ServerActionsWithEvents(args[0], actionName, requestId)
 		common.LogError(err, "get server actions and events failed", true)
 
 		pt := common.PrettyTable{

@@ -37,7 +37,7 @@ var migrationList = &cobra.Command{
 		if migration_type != "" {
 			query.Set("migration_type", migration_type)
 		}
-		migrations, err := client.Compute.MigrationList(query)
+		migrations, err := client.ComputeClient().MigrationList(query)
 		if err != nil {
 			logging.Fatal("%s", err)
 		}

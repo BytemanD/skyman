@@ -12,6 +12,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/gitutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 
+	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/cli/compute"
 	"github.com/BytemanD/skyman/cli/identity"
 	"github.com/BytemanD/skyman/cli/image"
@@ -19,7 +20,6 @@ import (
 	"github.com/BytemanD/skyman/cli/storage"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
-	"github.com/BytemanD/skyman/openstack"
 )
 
 var (
@@ -80,54 +80,39 @@ func main() {
 				BuildPlatform = common.Uname()
 			}
 
-			fmt.Println("Version:       ", getVersion())
-			fmt.Println("GoVersion:     ", GoVersion)
-			fmt.Println("BuildDate:     ", BuildDate)
-			fmt.Println("BuildPlatform: ", BuildPlatform)
+			fmt.Println("Client:")
+			fmt.Println("  Version:       ", getVersion())
+			fmt.Println("  GoVersion:     ", GoVersion)
+			fmt.Println("  BuildDate:     ", BuildDate)
+			fmt.Println("  BuildPlatform: ", BuildPlatform)
 
-			client := openstack.CreateInstance()
-			fmt.Println("Version of servers:")
+			client := cli.GetClient()
+			fmt.Println("Servers:")
 
-			identityVerions, err := client.Identity.GetStableVersion()
-			if err == nil {
-				fmt.Println("  Identity:")
-				if v := identityVerions; v != nil {
-					fmt.Println("    Version:", v.Id)
-					if v.MinVersion != "" || v.Version != "" {
-						fmt.Printf("    MicroVersion: %s ~ %s\n", v.MinVersion, v.Version)
-					}
-				}
+			identityVerion, err := client.Identity.GetStableVersion()
+			common.LogError(err, "get idendity veresion failed", true)
+			if err != nil {
+				return
 			}
+			fmt.Printf("  Identity: %s\n", identityVerion.VersoinInfo())
 
-			computeVerions, err := client.Compute.GetCurrentVersion()
+			compute := client.ComputeClient()
+			computeVerion, err := compute.GetCurrentVersion()
 			if err == nil {
-				v := computeVerions
-				fmt.Println("  Compute:")
-				fmt.Println("    Version:", v.Id)
-				if v.MinVersion != "" || v.Version != "" {
-					fmt.Printf("    MicroVersion: %s ~ %s\n", v.MinVersion, v.Version)
-				}
-			}
-
-			imageVerions, err := client.Image.GetCurrentVersion()
-			if err == nil {
-				v := imageVerions
-				fmt.Println("  Image:")
-				fmt.Println("    Version:", v.Id)
-				if v.MinVersion != "" || v.Version != "" {
-					fmt.Printf("    MicroVersion: %s ~ %s\n", v.MinVersion, v.Version)
-				}
+				fmt.Printf("  Compute:  %s\n", computeVerion.VersoinInfo())
 			} else {
-				logging.Error("get image api version %s", err)
+				logging.Error("get compute api version failed %s", err)
 			}
-			storageVerions, err := client.Storage.GetCurrentVersion()
+
+			imageVerion, err := client.ImageClient().GetCurrentVersion()
 			if err == nil {
-				v := storageVerions
-				fmt.Println("  Storage:")
-				fmt.Println("    Version:", v.Id)
-				if v.MinVersion != "" || v.Version != "" {
-					fmt.Printf("    MicroVersion: %s ~ %s\n", v.MinVersion, v.Version)
-				}
+				fmt.Printf("  Image:    %s\n", imageVerion.VersoinInfo())
+			} else {
+				logging.Error("get image api version failed %s", err)
+			}
+			storageVerion, err := client.StorageClient().GetCurrentVersion()
+			if err == nil {
+				fmt.Printf("  Storage:  %s\n", storageVerion.VersoinInfo())
 			} else {
 				logging.Error("get image api version %s", err)
 			}
