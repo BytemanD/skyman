@@ -5,7 +5,7 @@ import (
 
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/identity"
+	"github.com/BytemanD/skyman/openstack/keystoneauth"
 )
 
 var Token = &cobra.Command{Use: "token"}
@@ -21,7 +21,7 @@ var tokenIssue = &cobra.Command{
 		common.LogError(err, "get token failed", true)
 		token, _ := client.Identity.Auth.GetToken()
 		pt := common.PrettyItemTable{
-			Item:            token,
+			Item:            *token,
 			Number2WidthMax: 184,
 			ShortFields: []common.Column{
 				{Name: "ExpiresAt", Text: "Expires At"},
@@ -29,11 +29,11 @@ var tokenIssue = &cobra.Command{
 					return tokenId
 				}},
 				{Name: "ProjectId", Text: "Project Id", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(identity.Token)
+					p, _ := (item).(keystoneauth.Token)
 					return p.Project.Id
 				}},
 				{Name: "UserId", Text: "User Id", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(identity.Token)
+					p, _ := (item).(keystoneauth.Token)
 					return p.User.Id
 				}},
 			},

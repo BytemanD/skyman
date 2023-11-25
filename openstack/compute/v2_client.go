@@ -9,9 +9,6 @@ import (
 	"github.com/BytemanD/skyman/openstack/identity"
 )
 
-type VersionBody struct {
-	Version Version `json:"version"`
-}
 type Version struct {
 	MinVersion string `json:"min_version"`
 	Version    string `json:"version"`
@@ -20,7 +17,7 @@ type Version struct {
 type ComputeClientV2 struct {
 	identity.IdentityClientV3
 
-	MicroVersion Version
+	MicroVersion identity.ApiVersion
 	BaseHeaders  map[string]string
 	endpoint     string
 }
@@ -67,15 +64,11 @@ func (client *ComputeClientV2) GetCurrentVersion() (*identity.ApiVersion, error)
 
 // X-OpenStack-Nova-API-Version
 func (client *ComputeClientV2) UpdateVersion() error {
-	versionBody := VersionBody{}
-	resp, err := client.Index()
+	version, err := client.GetCurrentVersion()
 	if err != nil {
 		return err
 	}
-	if err = resp.BodyUnmarshal(&versionBody); err != nil {
-		return err
-	}
-	client.MicroVersion = versionBody.Version
+	client.MicroVersion = *version
 	client.BaseHeaders["OpenStack-API-Versionn"] = client.MicroVersion.Version
 	client.BaseHeaders["X-OpenStack-Nova-API-Version"] = client.MicroVersion.Version
 	return nil

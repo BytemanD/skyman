@@ -49,10 +49,7 @@ var actionShow = &cobra.Command{
 		id := args[0]
 		requestId := args[1]
 		action, err := client.ComputeClient().ServerActionShow(id, requestId)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		common.LogError(err, "get server action failed", true)
 		pt := common.PrettyTable{
 			Title: fmt.Sprintf("Action: %s", action.Action),
 			ShortColumns: []common.Column{

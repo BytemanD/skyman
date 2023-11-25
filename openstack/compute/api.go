@@ -445,15 +445,16 @@ func (client ComputeClientV2) ServerActionShow(id string, requestId string) (
 	*InstanceAction, error,
 ) {
 	resp, err := client.Request(
-		client.newGetRequest(fmt.Sprintf("servers/%s", id), "os-instance-actions"),
+		client.newGetRequest(
+			common.UrlJoin("servers", id, "os-instance-actions"), requestId,
+		),
 	)
 	if err != nil {
 		return nil, err
 	}
-	body := map[string]InstanceAction{"instanceAction": {}}
+	body := map[string]*InstanceAction{"instanceAction": {}}
 	resp.BodyUnmarshal(&body)
-	instanceAction := body["instanceAction"]
-	return &instanceAction, nil
+	return body["instanceAction"], nil
 }
 func (client ComputeClientV2) serverRegionLiveMigrate(id string, destRegion string, blockMigrate bool, dryRun bool, destHost string) (*RegionMigrateResp, error) {
 	data := map[string]interface{}{
@@ -623,7 +624,7 @@ func (client ComputeClientV2) HypervisorListDetail(query netUrl.Values) (Hypervi
 	return body["hypervisors"], nil
 }
 func (client ComputeClientV2) HypervisorShow(id string) (*Hypervisor, error) {
-	resp, err := client.Request(client.newGetRequest("os-hypervisors/detail", id))
+	resp, err := client.Request(client.newGetRequest("os-hypervisors", id))
 	if err != nil {
 		return nil, err
 	}

@@ -27,7 +27,13 @@ type OpenstackClient struct {
 
 func (c *OpenstackClient) ComputeClient() *compute.ComputeClientV2 {
 	if c.Compute == nil {
-		c.Compute, _ = compute.GetComputeClientV2(*c.Identity)
+		client, err := compute.GetComputeClientV2(*c.Identity)
+		if err != nil {
+			logging.Error("get compute client failed, %s", err)
+			return nil
+		}
+		c.Compute = client
+		c.Compute.UpdateVersion()
 	}
 	return c.Compute
 }
