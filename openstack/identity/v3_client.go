@@ -13,24 +13,7 @@ import (
 )
 
 const (
-	ContentType string = "application/json"
-
-	TYPE_COMPUTE   string = "compute"
-	TYPE_VOLUME    string = "volume"
-	TYPE_VOLUME_V2 string = "volumev2"
-	TYPE_VOLUME_V3 string = "volumev3"
-	TYPE_IDENTITY  string = "identity"
-	TYPE_IMAGE     string = "image"
-	TYPE_NETWORK   string = "network"
-
-	INTERFACE_PUBLIC   string = "public"
-	INTERFACE_ADMIN    string = "admin"
-	INTERFACE_INTERVAL string = "internal"
-
-	URL_AUTH_TOKEN string = "/auth/tokens"
-
-	DEFAULT_TOKEN_EXPIRE_SECOND = 3600
-	AUTH_TOKEN_HEADER           = "X-Auth-Token"
+	AUTH_TOKEN_HEADER = "X-Auth-Token"
 )
 
 type IdentityClientV3 struct {

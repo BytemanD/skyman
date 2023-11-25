@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	ContentType string = "application/json"
+	CONTENT_TYPE string = "application/json"
 
 	TYPE_COMPUTE   string = "compute"
 	TYPE_VOLUME    string = "volume"

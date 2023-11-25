@@ -61,7 +61,7 @@ var typeList = &cobra.Command{
 				query.Set("is_public", "false")
 			}
 			volumeTypes, err = client.StorageClient().VolumeTypeList(query)
-			openstackCommon.RaiseIfError(err, "list volumes falied")
+			openstackCommon.RaiseIfError(err, "list volume type falied")
 		}
 
 		table := common.PrettyTable{

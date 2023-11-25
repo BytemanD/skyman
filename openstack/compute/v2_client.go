@@ -7,6 +7,7 @@ import (
 
 	"github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/identity"
+	"github.com/BytemanD/skyman/openstack/keystoneauth"
 )
 
 type Version struct {
@@ -75,7 +76,7 @@ func (client *ComputeClientV2) UpdateVersion() error {
 }
 
 func GetComputeClientV2(idendityClient identity.IdentityClientV3) (*ComputeClientV2, error) {
-	endpoint, err := idendityClient.GetServiceEndpoint(identity.TYPE_COMPUTE, "", identity.INTERFACE_PUBLIC)
+	endpoint, err := idendityClient.GetServiceEndpoint(keystoneauth.TYPE_COMPUTE, "", keystoneauth.INTERFACE_PUBLIC)
 	if err != nil {
 		return nil, err
 	}

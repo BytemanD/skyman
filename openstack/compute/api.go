@@ -788,7 +788,7 @@ func (client ComputeClientV2) AZListDetail(query netUrl.Values) ([]AvailabilityZ
 	return respBody["availabilityZoneInfo"], nil
 }
 func (client ComputeClientV2) AggregateList(query netUrl.Values) ([]Aggregate, error) {
-	resp, err := client.Request(client.newRequest("aggregates", "", query, nil))
+	resp, err := client.Request(client.newRequest("os-aggregates", "", query, nil))
 	if err != nil {
 		return nil, err
 	}

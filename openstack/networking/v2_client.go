@@ -3,7 +3,9 @@ package networking
 import (
 	"strings"
 
+	"github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/identity"
+	"github.com/BytemanD/skyman/openstack/keystoneauth"
 )
 
 type NeutronClientV2 struct {
@@ -12,9 +14,22 @@ type NeutronClientV2 struct {
 	BaseHeaders map[string]string
 }
 
+func (client *NeutronClientV2) Index() (*common.Response, error) {
+	return client.Request(common.NewIndexRequest(client.endpoint, nil, client.BaseHeaders))
+}
+func (client *NeutronClientV2) GetCurrentVersion() (*identity.ApiVersion, error) {
+	resp, err := client.Index()
+	if err != nil {
+		return nil, err
+	}
+	versions := map[string]identity.ApiVersions{"versions": {}}
+	resp.BodyUnmarshal(&versions)
+	return versions["versions"].Current(), nil
+}
+
 func GetNeutronClientV2(authClient identity.IdentityClientV3) (*NeutronClientV2, error) {
 	endpoint, err := authClient.GetServiceEndpoint(
-		identity.TYPE_NETWORK, "", identity.INTERFACE_PUBLIC)
+		keystoneauth.TYPE_NETWORK, "", keystoneauth.INTERFACE_PUBLIC)
 
 	if err != nil {
 		return nil, err

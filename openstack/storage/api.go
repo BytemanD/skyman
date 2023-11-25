@@ -139,7 +139,7 @@ func (client StorageClientV2) VolumeDelete(id string) error {
 // volume type api
 func (client StorageClientV2) VolumeTypeList(query url.Values) ([]VolumeType, error) {
 	resp, err := client.Request(
-		common.NewResourceListRequest(client.endpoint, "volume_types", query, client.BaseHeaders),
+		common.NewResourceListRequest(client.endpoint, "types", query, client.BaseHeaders),
 	)
 	if err != nil {
 		return nil, err
@@ -174,7 +174,7 @@ func (client StorageClientV2) VolumeTypeDefaultGet() (*VolumeType, error) {
 }
 func (client StorageClientV2) VolumeTypeShow(id string) (*VolumeType, error) {
 	resp, err := client.Request(
-		common.NewResourceShowRequest(client.endpoint, "volume_types", id, client.BaseHeaders),
+		common.NewResourceShowRequest(client.endpoint, "types", id, client.BaseHeaders),
 	)
 	if err != nil {
 		return nil, err

@@ -5,6 +5,7 @@ import (
 
 	"github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/identity"
+	"github.com/BytemanD/skyman/openstack/keystoneauth"
 )
 
 type ImageClientV2 struct {
@@ -27,7 +28,7 @@ func (client *ImageClientV2) GetCurrentVersion() (*identity.ApiVersion, error) {
 }
 
 func GetImageClientV2(session identity.IdentityClientV3) (*ImageClientV2, error) {
-	url, err := session.GetServiceEndpoint(identity.TYPE_IMAGE, "", identity.INTERFACE_PUBLIC)
+	url, err := session.GetServiceEndpoint(keystoneauth.TYPE_IMAGE, "", keystoneauth.INTERFACE_PUBLIC)
 	if err != nil {
 		return nil, err
 	}

@@ -3,6 +3,7 @@ package storage
 import (
 	"github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/identity"
+	"github.com/BytemanD/skyman/openstack/keystoneauth"
 )
 
 type StorageClientV2 struct {
@@ -30,7 +31,7 @@ func (client *StorageClientV2) GetCurrentVersion() (*identity.ApiVersion, error)
 
 func GetStorageClientV2(authClient identity.IdentityClientV3) (*StorageClientV2, error) {
 	endpoint, err := authClient.Auth.GetServiceEndpoint(
-		identity.TYPE_VOLUME_V2, "", identity.INTERFACE_PUBLIC)
+		keystoneauth.TYPE_VOLUME_V2, "", keystoneauth.INTERFACE_PUBLIC)
 	if err != nil {
 		return nil, err
 	}

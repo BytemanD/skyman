@@ -19,8 +19,9 @@ var (
 )
 
 var (
-	FORMAT_TABLE_LIGHT = "table-light"
-	FORMAT_TABLE       = "table"
+	FORMAT_TABLE_LIGHT        = "table-light"
+	FORMAT_TABLE              = "table"
+	DEFAULT_TOKEN_EXPIRE_TIME = 60 * 30
 )
 
 type ConfGroup struct {
@@ -76,7 +77,7 @@ func LoadConfig(configFile string) error {
 	viper.Unmarshal(&CONF)
 	i18n.InitLocalizer(CONF.Language)
 	if CONF.Auth.TokenExpireTime <= 0 {
-		CONF.Auth.TokenExpireTime = 60 * 30
+		CONF.Auth.TokenExpireTime = DEFAULT_TOKEN_EXPIRE_TIME
 	}
 	return nil
 }
