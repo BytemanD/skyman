@@ -105,7 +105,7 @@ func (client ImageClientV2) ImageFound(idOrName string) (*Image, error) {
 			if len(images) == 0 {
 				return nil, fmt.Errorf("image %s not found", idOrName)
 			}
-			if len(images) >= 0 {
+			if len(images) > 1 {
 				return nil, fmt.Errorf("found multi images named %s ", idOrName)
 			}
 			image, err = client.ImageShow(images[0].Id)

@@ -12,6 +12,12 @@ const (
 	GB = MB * 1024
 )
 
+var IMAGE_CONTAINER_FORMATS = []string{"bare", "ami", "ari", "aki", "bare",
+	"ovf", "ova", "docker", "community", "shared"}
+var IMAGE_DISK_FORMATS = []string{"ami", "ari", "aki", "vhd", "vhdx", "vmdk",
+	"raw", "qcow2", "vdi", "iso", "ploop", "luks"}
+var IMAGE_VISIBILITIES = []string{"public", "private", "community", "shared"}
+
 func humanSize(size uint) string {
 	switch {
 	case size >= GB:

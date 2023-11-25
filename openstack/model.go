@@ -3,9 +3,9 @@ package openstack
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"html/template"
+	"strings"
 
 	markdown "github.com/MichaelMure/go-term-markdown"
 
@@ -67,12 +67,9 @@ func (serverInspect *ServerInspect) Print() {
 {{end}}
 
 ## 磁盘
-{{ range $index, $volume := .Volumes }}
-1. **Volume Id**: {{$volume.VolumeId}}
-  - **Device**: {{$volume.Device}}
-  - **Type**: {{ getVolumeType $volume.VolumeId }}
-  - **Size**: {{ getVolumeSize $volume.VolumeId }}
-  - **Image**: {{ getVolumeImage $volume.VolumeId }}
+|  **Device** |  **Volume Id** | **Type**  | **Size** | **Image** |
+|---|---|---|---|---|
+{{ range $index, $volume := .Volumes }} {{$volume.Device}} |{{$volume.VolumeId}} | {{ getVolumeType $volume.VolumeId }} |{{ getVolumeSize $volume.VolumeId }} |{{ getVolumeImage $volume.VolumeId }}|
 {{end}}
   
 ## 操作记录
@@ -130,8 +127,7 @@ func (serverInspect *ServerInspect) Print() {
 		},
 		"getPortBindingDetail": func(portId string) string {
 			if port, ok := serverInspect.InterfaceDetail[portId]; ok {
-				bytes, _ := json.Marshal(port.BindingDetails)
-				return string(bytes)
+				return strings.Join(port.VifDetailList(), ", ")
 			} else {
 				return "-"
 			}
@@ -140,6 +136,6 @@ func (serverInspect *ServerInspect) Print() {
 	tmpl, _ = tmpl.Parse(source)
 	tmpl.Execute(bufferWriter, serverInspect)
 	bufferWriter.Flush()
-	result := markdown.Render(templateBuffer.String(), 100, 4)
+	result := markdown.Render(templateBuffer.String(), 120, 4)
 	fmt.Println(string(result))
 }

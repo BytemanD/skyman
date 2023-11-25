@@ -60,6 +60,9 @@ type ReaderWithProcess struct {
 }
 
 func (reader *ReaderWithProcess) PrintProcess(r int) {
+	if r == 0 {
+		return
+	}
 	reader.completed = reader.completed + r
 	percent := reader.completed * 100 / reader.Size
 	fmt.Printf("\r[%-50s]", strings.Repeat("=", percent/2)+">")

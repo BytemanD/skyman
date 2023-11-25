@@ -2,6 +2,7 @@ package networking
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/BytemanD/skyman/openstack/common"
 )
@@ -55,6 +56,14 @@ type Port struct {
 func (port Port) MarshalVifDetails() string {
 	bytes, _ := json.Marshal(port.BindingDetails)
 	return string(bytes)
+
+}
+func (port Port) VifDetailList() []string {
+	details := []string{}
+	for k, v := range port.BindingDetails {
+		details = append(details, fmt.Sprintf("%s=%v", k, v))
+	}
+	return details
 
 }
 

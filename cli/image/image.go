@@ -13,8 +13,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var IMAGE_VISIBILITIES = []string{"public", "private", "community", "shared"}
-
 var Image = &cobra.Command{Use: "image"}
 
 var ImageList = &cobra.Command{
@@ -51,9 +49,9 @@ var ImageList = &cobra.Command{
 						return p.Size
 					}
 				}},
+				{Name: "DiskFormat"}, {Name: "ContainerFormat"},
 			},
 			LongColumns: []common.Column{
-				{Name: "DiskFormat"}, {Name: "ContainerFormat"},
 				{Name: "Visibility"}, {Name: "Protected"},
 			},
 			ColumnConfigs: []table.ColumnConfig{{Number: 4, Align: text.AlignRight}},
@@ -90,16 +88,20 @@ var imageCreate = &cobra.Command{
 
 		if file != "" {
 			if containerFormat == "" {
-				return fmt.Errorf("Must provide --container-format where using --file")
+				return fmt.Errorf("must provide --container-format where using --file")
 			}
 			if diskFormat == "" {
-				return fmt.Errorf("Must provide --disk-format when using --file")
+				return fmt.Errorf("must provide --disk-format when using --file")
 			}
 		}
-		if visibility != "" {
-			if !openstackCommon.ContainsString(IMAGE_VISIBILITIES, visibility) {
-				return fmt.Errorf("invalid visibility, inlvalid: %v", IMAGE_VISIBILITIES)
-			}
+		if containerFormat != "" && !openstackCommon.ContainsString(image.IMAGE_CONTAINER_FORMATS, containerFormat) {
+			return fmt.Errorf("invalid container format, valid: %v", image.IMAGE_CONTAINER_FORMATS)
+		}
+		if diskFormat != "" && !openstackCommon.ContainsString(image.IMAGE_DISK_FORMATS, diskFormat) {
+			return fmt.Errorf("invalid disk format, valid: %v", image.IMAGE_DISK_FORMATS)
+		}
+		if visibility != "" && !openstackCommon.ContainsString(image.IMAGE_VISIBILITIES, visibility) {
+			return fmt.Errorf("invalid visibility, valid: %v", image.IMAGE_VISIBILITIES)
 		}
 		return nil
 	},
@@ -170,7 +172,7 @@ var imageSave = &cobra.Command{
 		client := cli.GetClient()
 
 		image, err := client.ImageClient().ImageFound(args[0])
-		common.LogError(err, fmt.Sprintf("get image %v failed", args[0]), false)
+		common.LogError(err, fmt.Sprintf("get image %v failed", args[0]), true)
 
 		fileName, _ := cmd.Flags().GetString("file")
 		if fileName == "" {
@@ -178,7 +180,7 @@ var imageSave = &cobra.Command{
 		}
 
 		err = client.ImageClient().ImageDownload(image.Id, fileName, true)
-		common.LogError(err, fmt.Sprintf("download image %v failed", args[0]), false)
+		common.LogError(err, fmt.Sprintf("download image %v failed", args[0]), true)
 		fmt.Printf("Saved image to %s.\n", fileName)
 	},
 }
@@ -197,8 +199,8 @@ func init() {
 	imageCreate.Flags().String("os-distro", "", "Common name of operating system distribution")
 
 	// TODO: show valid values.
-	imageCreate.Flags().String("container-format", "", "Format of the container.")
-	imageCreate.Flags().String("disk-format", "", "Format of the disk.")
+	imageCreate.Flags().String("container-format", "", fmt.Sprintf("Format of the container. Valid:\n%v", image.IMAGE_CONTAINER_FORMATS))
+	imageCreate.Flags().String("disk-format", "", fmt.Sprintf("Format of the disk. Valid:\n%v", image.IMAGE_DISK_FORMATS))
 
 	imageSave.Flags().String("file", "", "Downloaded image save filename.")
 	Image.PersistentFlags().Bool("human", false, "Human size")
