@@ -1,15 +1,21 @@
 package common
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+)
+
+const (
+	CODE_404 = 404
 )
 
 type BaseResponse interface {
@@ -19,14 +25,24 @@ type BaseResponse interface {
 }
 
 type Response struct {
-	Status  int
-	Reason  string
-	Body    []byte
-	Headers http.Header
+	Status     int
+	Reason     string
+	Body       []byte
+	Headers    http.Header
+	bodyReader io.ReadCloser
 }
 
 func (resp Response) BodyString() string {
 	return string(resp.Body)
+}
+
+func (resp *Response) ReadAll() error {
+	bodyBytes, err := io.ReadAll(resp.bodyReader)
+	if err != nil {
+		return err
+	}
+	resp.Body = bodyBytes
+	return nil
 }
 
 func (resp Response) GetHeader(key string) string {
@@ -36,6 +52,28 @@ func (resp Response) GetHeader(key string) string {
 func (resp Response) BodyUnmarshal(object interface{}) error {
 	return json.Unmarshal(resp.Body, object)
 }
+func (resp Response) GetContentLength() int {
+	length, _ := strconv.Atoi(resp.Headers.Get("Content-Length"))
+	return length
+}
+func (resp Response) SaveBody(file *os.File, process bool) error {
+	defer resp.bodyReader.Close()
+
+	var reader io.Reader
+
+	if process && resp.GetContentLength() > 0 {
+		reader = &ReaderWithProcess{
+			Reader: bufio.NewReaderSize(resp.bodyReader, 1024*32),
+			Size:   resp.GetContentLength(),
+		}
+	} else {
+		reader = bufio.NewReaderSize(resp.bodyReader, 1024*32)
+	}
+
+	_, err := io.Copy(bufio.NewWriter(file), reader)
+	return err
+}
+
 func (resp Response) IsNotFound() bool {
 	return resp.Status == 404
 }
@@ -55,36 +93,6 @@ func getSafeHeaders(headers http.Header) http.Header {
 	}
 	return safeHeaders
 }
-
-func (session Session) Request(req *http.Request) (*Response, error) {
-	logging.Debug("Req: %s %s with headers: %v, body: %v", req.Method, req.URL,
-		getSafeHeaders(req.Header), req.Body)
-
-	client := http.Client{Timeout: session.Timeout}
-	resp, err := client.Do(req)
-
-	if err != nil {
-		return nil, err
-	}
-	content, _ := io.ReadAll(resp.Body)
-	defer resp.Body.Close()
-
-	logging.Debug("Resp: status code: %d, body: %s", resp.StatusCode, content)
-	response := Response{
-		Body:    content,
-		Status:  resp.StatusCode,
-		Reason:  resp.Status,
-		Headers: resp.Header}
-	return &response, response.JudgeStatus()
-}
-
-func (client Session) UrlJoin(path []string) string {
-	return strings.Join(path, "/")
-}
-
-const (
-	CODE_404 = 404
-)
 
 type HttpError struct {
 	Status  int
@@ -114,7 +122,9 @@ type RestfulClient struct {
 }
 
 func (c RestfulClient) Request(req *http.Request) (*Response, error) {
-	if ContainsString(req.Header["Content-Type"], "application/octet-stream") {
+	isIoStream := ContainsString(req.Header["Content-Type"], "application/octet-stream")
+
+	if isIoStream {
 		logging.Debug("Req: %s %s with headers: %v, body: %v", req.Method, req.URL,
 			getSafeHeaders(req.Header), "<Omitted, octet-stream>")
 	} else {
@@ -128,15 +138,19 @@ func (c RestfulClient) Request(req *http.Request) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	content, _ := io.ReadAll(resp.Body)
-	defer resp.Body.Close()
-
-	logging.Debug("Resp: status code: %d, body: %s", resp.StatusCode, content)
 	response := Response{
-		Body:    content,
-		Status:  resp.StatusCode,
-		Reason:  resp.Status,
-		Headers: resp.Header}
+		bodyReader: resp.Body,
+		Status:     resp.StatusCode,
+		Reason:     resp.Status,
+		Headers:    resp.Header,
+	}
+	if isIoStream {
+		logging.Debug("Resp: status code: %d, body: %s", resp.StatusCode, "<Omitted, octet-stream>")
+	} else {
+		response.ReadAll()
+		defer resp.Body.Close()
+		logging.Debug("Resp: status code: %d, body: %s", response.Status, response.Body)
+	}
 	return &response, response.JudgeStatus()
 }
 func (c RestfulClient) setHeader(req *http.Request, headers map[string]string) {

@@ -63,13 +63,34 @@ func (reader *ReaderWithProcess) PrintProcess(r int) {
 	reader.completed = reader.completed + r
 	percent := reader.completed * 100 / reader.Size
 	fmt.Printf("\r[%-50s]", strings.Repeat("=", percent/2)+">")
-	if r == 0 {
+	if percent >= 100 {
 		fmt.Println()
 	}
 }
 
 func (reader *ReaderWithProcess) Read(p []byte) (n int, err error) {
 	n, err = reader.Reader.Read(p)
+	reader.PrintProcess(n)
+	return n, err
+}
+
+type WriterWithProces struct {
+	io.Writer
+	Size      int
+	completed int
+}
+
+func (reader *WriterWithProces) PrintProcess(r int) {
+	reader.completed = reader.completed + r
+	percent := reader.completed * 100 / reader.Size
+	fmt.Printf("\r[%-50s]", strings.Repeat("=", percent/2)+">")
+	if r == 0 {
+		fmt.Println()
+	}
+}
+
+func (reader *WriterWithProces) Write(p []byte) (n int, err error) {
+	n, err = reader.Writer.Write(p)
 	reader.PrintProcess(n)
 	return n, err
 }

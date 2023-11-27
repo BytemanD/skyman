@@ -150,3 +150,18 @@ func (client ImageClientV2) ImageDelete(id string) error {
 	)
 	return err
 }
+
+func (client ImageClientV2) ImageDownload(id string, fileName string, process bool) error {
+	headers := client.BaseHeaders
+	headers["Content-Type"] = "application/octet-stream"
+
+	file, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	resp, err := client.Request(
+		common.NewResourceShowRequest(client.endpoint, "images", id+"/file", headers),
+	)
+	resp.SaveBody(file, process)
+	return err
+}

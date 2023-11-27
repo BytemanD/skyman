@@ -162,6 +162,26 @@ var imageDelete = &cobra.Command{
 		}
 	},
 }
+var imageSave = &cobra.Command{
+	Use:   "save <image>",
+	Short: "Save image",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+
+		image, err := client.ImageClient().ImageFound(args[0])
+		common.LogError(err, fmt.Sprintf("get image %v failed", args[0]), false)
+
+		fileName, _ := cmd.Flags().GetString("file")
+		if fileName == "" {
+			fileName = fmt.Sprintf("%s.%s", image.Name, image.DiskFormat)
+		}
+
+		err = client.ImageClient().ImageDownload(image.Id, fileName, true)
+		common.LogError(err, fmt.Sprintf("download image %v failed", args[0]), false)
+		fmt.Printf("Saved image to %s.\n", fileName)
+	},
+}
 
 func init() {
 	ImageList.Flags().BoolP("long", "l", false, "List additional fields in output")
@@ -180,7 +200,8 @@ func init() {
 	imageCreate.Flags().String("container-format", "", "Format of the container.")
 	imageCreate.Flags().String("disk-format", "", "Format of the disk.")
 
+	imageSave.Flags().String("file", "", "Downloaded image save filename.")
 	Image.PersistentFlags().Bool("human", false, "Human size")
 
-	Image.AddCommand(ImageList, ImageShow, imageCreate, imageDelete)
+	Image.AddCommand(ImageList, ImageShow, imageCreate, imageDelete, imageSave)
 }
