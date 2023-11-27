@@ -6,11 +6,14 @@ import (
 
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	openstackCommon "github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/image"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 )
+
+var IMAGE_VISIBILITIES = []string{"public", "private", "community", "shared"}
 
 var Image = &cobra.Command{Use: "image"}
 
@@ -83,12 +86,19 @@ var imageCreate = &cobra.Command{
 		containerFormat, _ := cmd.Flags().GetString("container-format")
 		diskFormat, _ := cmd.Flags().GetString("disk-format")
 		file, _ := cmd.Flags().GetString("file")
+		visibility, _ := cmd.Flags().GetString("visibility")
+
 		if file != "" {
 			if containerFormat == "" {
 				return fmt.Errorf("Must provide --container-format where using --file")
 			}
 			if diskFormat == "" {
 				return fmt.Errorf("Must provide --disk-format when using --file")
+			}
+		}
+		if visibility != "" {
+			if !openstackCommon.ContainsString(IMAGE_VISIBILITIES, visibility) {
+				return fmt.Errorf("invalid visibility, inlvalid: %v", IMAGE_VISIBILITIES)
 			}
 		}
 		return nil
@@ -101,9 +111,15 @@ var imageCreate = &cobra.Command{
 		diskFormat, _ := cmd.Flags().GetString("disk-format")
 		file, _ := cmd.Flags().GetString("file")
 
+		protect, _ := cmd.Flags().GetBool("file")
+		visibility, _ := cmd.Flags().GetString("visibility")
+		// osDistro, _ := cmd.Flags().GetString("os-distro")
+
 		reqImage := image.Image{
 			ContainerFormat: containerFormat,
 			DiskFormat:      diskFormat,
+			Protected:       protect,
+			Visibility:      visibility,
 		}
 		if name == "" && file != "" {
 			name, _ = common.PathExtSplit(file)
@@ -155,6 +171,10 @@ func init() {
 
 	imageCreate.Flags().StringP("name", "n", "", "The name of image")
 	imageCreate.Flags().String("file", "", "Local file that contains disk image to be uploaded during creation.")
+	imageCreate.Flags().Bool("protect", false, "Prevent image from being deleted")
+	imageCreate.Flags().String("visibility", "private", "Scope of image accessibility Valid values")
+
+	imageCreate.Flags().String("os-distro", "", "Common name of operating system distribution")
 
 	// TODO: show valid values.
 	imageCreate.Flags().String("container-format", "", "Format of the container.")

@@ -43,10 +43,34 @@ type Image struct {
 	OSHashAlgo      string   `json:"os_hash_algo,omitempty"`
 	OSHashValue     string   `json:"os_hash_value,omitempty"`
 	Schema          string   `json:"schema,omitempty"`
+	File            string   `json:"file,omitempty"`
+	raw             map[string]interface{}
 }
 
 func (img Image) HumanSize() string {
 	return humanSize(img.Size)
+}
+
+func (img Image) GetProperties() map[string]interface{} {
+	proerties := map[string]interface{}{}
+	tags := append(common.GetStructTags(img), common.GetStructTags(img.Resource)...)
+
+	for k, v := range img.raw {
+		if common.ContainsString(tags, k) {
+			continue
+		}
+		proerties[k] = v
+	}
+	delete(proerties, "self")
+	return proerties
+}
+func (img Image) GetPropertyList() []string {
+
+	properties := []string{}
+	for k, v := range img.GetProperties() {
+		properties = append(properties, fmt.Sprintf("%s=%s", k, v))
+	}
+	return properties
 }
 
 type Images []Image

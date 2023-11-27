@@ -1,6 +1,8 @@
 package image
 
 import (
+	"strings"
+
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/image"
 )
@@ -13,6 +15,7 @@ func printImage(img image.Image, human bool) {
 			{Name: "Checksum"}, {Name: "Schema"},
 			{Name: "DirectUrl"}, {Name: "Status"},
 			{Name: "ContainerFormat"}, {Name: "DiskFormat"},
+			{Name: "File"},
 			{Name: "Size", Slot: func(item interface{}) interface{} {
 				p, _ := item.(image.Image)
 				if human {
@@ -20,6 +23,10 @@ func printImage(img image.Image, human bool) {
 				} else {
 					return p.Size
 				}
+			}},
+			{Name: "Properties", Slot: func(item interface{}) interface{} {
+				p, _ := item.(image.Image)
+				return strings.Join(p.GetPropertyList(), "\n")
 			}},
 			{Name: "VirtualSize"}, {Name: "ProcessInfo"}, {Name: "Protected"},
 			{Name: "Visibility"},

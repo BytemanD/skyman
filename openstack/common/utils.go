@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"reflect"
 	"strings"
 
 	uuid "github.com/satori/go.uuid"
@@ -71,4 +72,17 @@ func (reader *ReaderWithProcess) Read(p []byte) (n int, err error) {
 	n, err = reader.Reader.Read(p)
 	reader.PrintProcess(n)
 	return n, err
+}
+
+func GetStructTags(i interface{}) []string {
+	tags := []string{}
+	iType := reflect.TypeOf(i)
+	for i := 0; i < iType.NumField(); i++ {
+		tag := iType.Field(i).Tag
+		values := strings.Split(tag.Get("json"), ",")
+		if len(values) >= 1 {
+			tags = append(tags, strings.TrimSpace(values[0]))
+		}
+	}
+	return tags
 }

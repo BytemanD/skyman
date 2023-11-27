@@ -82,6 +82,9 @@ func (client ImageClientV2) ImageShow(id string) (*Image, error) {
 		return nil, err
 	}
 	resp.BodyUnmarshal(&image)
+	rawBody := map[string]interface{}{}
+	resp.BodyUnmarshal(&rawBody)
+	image.raw = rawBody
 	return &image, nil
 }
 func (client ImageClientV2) ImageFound(idOrName string) (*Image, error) {
