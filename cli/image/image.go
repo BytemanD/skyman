@@ -73,6 +73,79 @@ var ImageShow = &cobra.Command{
 		printImage(*image, human)
 	},
 }
+var imageCreate = &cobra.Command{
+	Use:   "create <id or name>",
+	Short: "Create image",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.ExactArgs(0)(cmd, args); err != nil {
+			return err
+		}
+		containerFormat, _ := cmd.Flags().GetString("container-format")
+		diskFormat, _ := cmd.Flags().GetString("disk-format")
+		file, _ := cmd.Flags().GetString("file")
+		if file != "" {
+			if containerFormat == "" {
+				return fmt.Errorf("Must provide --container-format where using --file")
+			}
+			if diskFormat == "" {
+				return fmt.Errorf("Must provide --disk-format when using --file")
+			}
+		}
+		return nil
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+
+		name, _ := cmd.Flags().GetString("name")
+		containerFormat, _ := cmd.Flags().GetString("container-format")
+		diskFormat, _ := cmd.Flags().GetString("disk-format")
+		file, _ := cmd.Flags().GetString("file")
+
+		reqImage := image.Image{
+			ContainerFormat: containerFormat,
+			DiskFormat:      diskFormat,
+		}
+		if name == "" && file != "" {
+			name, _ = common.PathExtSplit(file)
+		}
+		reqImage.Name = name
+
+		imageClient := client.ImageClient()
+		image, err := imageClient.ImageCreate(reqImage)
+		common.LogError(err, "Create image faled", true)
+		if file != "" {
+			err = imageClient.ImageUpload(image.Id, file)
+			common.LogError(err, "Upload image failed", true)
+			image, err = imageClient.ImageShow(image.Id)
+			common.LogError(err, "get image failed", true)
+		}
+
+		printImage(*image, true)
+	},
+}
+
+var imageDelete = &cobra.Command{
+	Use:   "delete <image1> [<image2> ...]",
+	Short: "Delete image",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+
+		for _, idOrName := range args {
+			image, err := client.ImageClient().ImageFound(idOrName)
+			if err != nil {
+				common.LogError(err, fmt.Sprintf("get image %v failed", idOrName), false)
+				continue
+			}
+			err = client.ImageClient().ImageDelete(image.Id)
+			if err != nil {
+				common.LogError(err, fmt.Sprintf("delete image %s failed", idOrName), false)
+				continue
+			}
+			fmt.Printf("Requested to delete image %s\n", idOrName)
+		}
+	},
+}
 
 func init() {
 	ImageList.Flags().BoolP("long", "l", false, "List additional fields in output")
@@ -80,7 +153,14 @@ func init() {
 	ImageList.Flags().Uint("page-size", 0, "Number of images to request in each paginated request")
 	ImageList.Flags().Int("limit", 0, "Maximum number of images to get")
 
+	imageCreate.Flags().StringP("name", "n", "", "The name of image")
+	imageCreate.Flags().String("file", "", "Local file that contains disk image to be uploaded during creation.")
+
+	// TODO: show valid values.
+	imageCreate.Flags().String("container-format", "", "Format of the container.")
+	imageCreate.Flags().String("disk-format", "", "Format of the disk.")
+
 	Image.PersistentFlags().Bool("human", false, "Human size")
 
-	Image.AddCommand(ImageList, ImageShow)
+	Image.AddCommand(ImageList, ImageShow, imageCreate, imageDelete)
 }

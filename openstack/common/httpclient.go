@@ -45,7 +45,7 @@ type Session struct {
 }
 
 func getSafeHeaders(headers http.Header) http.Header {
-	safeHeaders := http.Header{}
+	safeHeaders := map[string][]string{}
 	for k, v := range headers {
 		if k == "X-Auth-Token" {
 			safeHeaders[k] = []string{"******"}
@@ -104,7 +104,7 @@ func (resp *Response) JudgeStatus() error {
 	case resp.Status < 400:
 		return nil
 	default:
-		return HttpError{Status: resp.Status, Reason: resp.Reason,
+		return &HttpError{Status: resp.Status, Reason: resp.Reason,
 			Message: resp.BodyString()}
 	}
 }
@@ -114,8 +114,13 @@ type RestfulClient struct {
 }
 
 func (c RestfulClient) Request(req *http.Request) (*Response, error) {
-	logging.Debug("Req: %s %s with headers: %v, body: %v", req.Method, req.URL,
-		getSafeHeaders(req.Header), req.Body)
+	if ContainsString(req.Header["Content-Type"], "application/octet-stream") {
+		logging.Debug("Req: %s %s with headers: %v, body: %v", req.Method, req.URL,
+			getSafeHeaders(req.Header), "<Omitted, octet-stream>")
+	} else {
+		logging.Debug("Req: %s %s with headers: %v, body: %v", req.Method, req.URL,
+			getSafeHeaders(req.Header), req.Body)
+	}
 
 	client := http.Client{Timeout: c.Timeout}
 	resp, err := client.Do(req)

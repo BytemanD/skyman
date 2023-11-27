@@ -3,6 +3,8 @@ package common
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
 	"strings"
 
 	uuid "github.com/satori/go.uuid"
@@ -48,4 +50,25 @@ func IsUUID(s string) bool {
 
 func UrlJoin(path ...string) string {
 	return strings.Join(path, "/")
+}
+
+type ReaderWithProcess struct {
+	io.Reader
+	Size      int
+	completed int
+}
+
+func (reader *ReaderWithProcess) PrintProcess(r int) {
+	reader.completed = reader.completed + r
+	percent := reader.completed * 100 / reader.Size
+	fmt.Printf("\r[%-50s]", strings.Repeat("=", percent/2)+">")
+	if r == 0 {
+		fmt.Println()
+	}
+}
+
+func (reader *ReaderWithProcess) Read(p []byte) (n int, err error) {
+	n, err = reader.Reader.Read(p)
+	reader.PrintProcess(n)
+	return n, err
 }

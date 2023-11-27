@@ -1,8 +1,10 @@
 package image
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
 	"strconv"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -34,7 +36,9 @@ func (client ImageClientV2) ImageList(query url.Values, total int) ([]Image, err
 		limit, _ = strconv.Atoi(query.Get("limit"))
 	}
 	for {
-		resp, err := client.Request(client.newRequest("images", "", query, nil))
+		resp, err := client.Request(
+			common.NewResourceListRequest(client.endpoint, "images", query, client.BaseHeaders),
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -71,7 +75,9 @@ func (client ImageClientV2) ImageListByName(name string) (Images, error) {
 }
 func (client ImageClientV2) ImageShow(id string) (*Image, error) {
 	image := Image{}
-	resp, err := client.Request(client.newRequest("images", id, nil, nil))
+	resp, err := client.Request(
+		common.NewResourceShowRequest(client.endpoint, "images", id, client.BaseHeaders),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +93,7 @@ func (client ImageClientV2) ImageFound(idOrName string) (*Image, error) {
 	if err == nil {
 		return image, nil
 	}
-	if httpError, ok := err.(common.HttpError); ok {
+	if httpError, ok := err.(*common.HttpError); ok {
 		if httpError.IsNotFound() {
 			var images []Image
 			if images, err = client.ImageListByName(idOrName); err != nil {
@@ -96,8 +102,48 @@ func (client ImageClientV2) ImageFound(idOrName string) (*Image, error) {
 			if len(images) == 0 {
 				return nil, fmt.Errorf("image %s not found", idOrName)
 			}
+			if len(images) >= 0 {
+				return nil, fmt.Errorf("found multi images named %s ", idOrName)
+			}
 			image, err = client.ImageShow(images[0].Id)
 		}
 	}
 	return image, err
+}
+
+func (client ImageClientV2) ImageCreate(options Image) (*Image, error) {
+	// params := map[string]interface{}{"name": name}
+	reqBody, _ := json.Marshal(&options)
+	resp, err := client.Request(
+		common.NewResourceCreateRequest(client.endpoint, "images", reqBody, client.BaseHeaders),
+	)
+	if err != nil {
+		return nil, err
+	}
+	image := Image{}
+	resp.BodyUnmarshal(&image)
+	return &image, nil
+}
+func (client ImageClientV2) ImageUpload(id string, fileName string) error {
+	headers := client.BaseHeaders
+	headers["Content-Type"] = "application/octet-stream"
+
+	file, err := os.Open(fileName)
+	if err != nil {
+		return err
+	}
+	fileStat, err := file.Stat()
+	buffer := make([]byte, fileStat.Size())
+	file.Read(buffer)
+
+	_, err = client.RequestWitProcess(
+		common.NewResourcePutRequest(client.endpoint, "images", id+"/file", buffer, headers),
+	)
+	return err
+}
+func (client ImageClientV2) ImageDelete(id string) error {
+	_, err := client.Request(
+		common.NewResourceDeleteRequest(client.endpoint, "images", id, client.BaseHeaders),
+	)
+	return err
 }

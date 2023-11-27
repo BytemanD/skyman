@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 	"syscall"
 
@@ -93,4 +94,10 @@ func Uname() string {
 		toString(utsname.Sysname), toString(utsname.Release),
 		toString(utsname.Version), toString(utsname.Machine),
 	)
+}
+
+func PathExtSplit(file string) (string, string) {
+	ext := path.Ext(path.Base(file))
+	name := strings.TrimSuffix(path.Base(file), ext)
+	return name, ext
 }

@@ -27,10 +27,10 @@ func humanSize(size uint) string {
 
 type Image struct {
 	common.Resource
-	DiskFormat      string   `json:"disk_format"`
-	ContainerFormat string   `json:"container_format"`
-	DirectUrl       string   `json:"direct_url"`
-	Checksum        string   `json:"checksum"`
+	DiskFormat      string   `json:"disk_format,omitempty"`
+	ContainerFormat string   `json:"container_format,omitempty"`
+	DirectUrl       string   `json:"direct_url,omitempty"`
+	Checksum        string   `json:"checksum,omitempty"`
 	Size            uint     `json:"size,omitempty"`
 	VirtualSize     uint     `json:"virtual_size,omitempty"`
 	MinDisk         uint     `json:"min_disk,omitempty"`
