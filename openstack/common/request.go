@@ -6,13 +6,14 @@ import (
 )
 
 type RestfulRequest struct {
-	Endpoint string
-	Method   string
-	Resource string
-	Id       string
-	Query    url.Values
-	Body     []byte
-	Headers  map[string]string
+	Endpoint    string
+	Method      string
+	Resource    string
+	Id          string
+	Query       url.Values
+	Body        []byte
+	Headers     map[string]string
+	ShowProcess bool
 }
 
 func (request *RestfulRequest) Url() (string, error) {

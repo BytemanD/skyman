@@ -110,3 +110,14 @@ func GetStructTags(i interface{}) []string {
 	}
 	return tags
 }
+
+func CloneHeaders(h1 map[string]string, h2 map[string]string) map[string]string {
+	clonedHeaders := map[string]string{}
+	for k, v := range h1 {
+		clonedHeaders[k] = v
+	}
+	for k, v := range h2 {
+		clonedHeaders[k] = v
+	}
+	return clonedHeaders
+}

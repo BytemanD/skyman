@@ -30,17 +30,16 @@ func (client IdentityClientV3) rejectToken(req *http.Request) error {
 	req.Header.Set(AUTH_TOKEN_HEADER, tokenId)
 	return nil
 }
+
 func (client IdentityClientV3) RequestWithoutToken(restfulReq common.RestfulRequest) (*common.Response, error) {
-	return client.request(restfulReq, false, false)
-}
-func (client IdentityClientV3) Request(restfulReq common.RestfulRequest) (*common.Response, error) {
-	return client.request(restfulReq, true, false)
-}
-func (client IdentityClientV3) RequestWitProcess(restfulReq common.RestfulRequest) (*common.Response, error) {
-	return client.request(restfulReq, true, true)
+	return client.request(restfulReq, false)
 }
 
-func (client IdentityClientV3) request(restfulReq common.RestfulRequest, rejectToken bool, process bool) (*common.Response, error) {
+func (client IdentityClientV3) Request(restfulReq common.RestfulRequest) (*common.Response, error) {
+	return client.request(restfulReq, true)
+}
+
+func (client IdentityClientV3) request(restfulReq common.RestfulRequest, rejectToken bool) (*common.Response, error) {
 	url, err := restfulReq.Url()
 	if err != nil {
 		return nil, err
@@ -53,7 +52,7 @@ func (client IdentityClientV3) request(restfulReq common.RestfulRequest, rejectT
 	}
 	buffer := bytes.NewBuffer(restfulReq.Body)
 	var req *http.Request
-	if len(restfulReq.Body) > 0 && process {
+	if len(restfulReq.Body) > 0 && restfulReq.ShowProcess {
 		bodyWrapper := common.ReaderWithProcess{
 			Reader: buffer, Size: len(restfulReq.Body),
 		}

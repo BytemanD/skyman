@@ -128,8 +128,9 @@ func (client ImageClientV2) ImageCreate(options Image) (*Image, error) {
 	return &image, nil
 }
 func (client ImageClientV2) ImageUpload(id string, fileName string) error {
-	headers := client.BaseHeaders
-	headers["Content-Type"] = "application/octet-stream"
+	headers := common.CloneHeaders(client.BaseHeaders,
+		map[string]string{"Content-Type": "application/octet-stream"},
+	)
 
 	file, err := os.Open(fileName)
 	if err != nil {
@@ -139,9 +140,9 @@ func (client ImageClientV2) ImageUpload(id string, fileName string) error {
 	buffer := make([]byte, fileStat.Size())
 	file.Read(buffer)
 
-	_, err = client.RequestWitProcess(
-		common.NewResourcePutRequest(client.endpoint, "images", id+"/file", buffer, headers),
-	)
+	req := common.NewResourcePutRequest(client.endpoint, "images", id+"/file", buffer, headers)
+	req.ShowProcess = true
+	_, err = client.Request(req)
 	return err
 }
 func (client ImageClientV2) ImageDelete(id string) error {
@@ -152,16 +153,19 @@ func (client ImageClientV2) ImageDelete(id string) error {
 }
 
 func (client ImageClientV2) ImageDownload(id string, fileName string, process bool) error {
-	headers := client.BaseHeaders
-	headers["Content-Type"] = "application/octet-stream"
-
+	headers := common.CloneHeaders(client.BaseHeaders,
+		map[string]string{"Content-Type": "application/octet-stream"},
+	)
 	file, err := os.Create(fileName)
 	if err != nil {
 		return err
 	}
-	resp, err := client.Request(
-		common.NewResourceShowRequest(client.endpoint, "images", id+"/file", headers),
-	)
+	req := common.NewResourceShowRequest(client.endpoint, "images", id+"/file", headers)
+	req.ShowProcess = true
+	resp, err := client.Request(req)
+	if err != nil {
+		return err
+	}
 	resp.SaveBody(file, process)
 	return err
 }

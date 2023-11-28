@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -30,42 +31,37 @@ type Response struct {
 	Body       []byte
 	Headers    http.Header
 	bodyReader io.ReadCloser
-	readBody   bool
+}
+
+func (resp Response) BodyString() string {
+	return string(resp.Body)
+}
+
+func (resp *Response) ReadAll() error {
+	bodyBytes, err := io.ReadAll(resp.bodyReader)
+	if err != nil {
+		return err
+	}
+	resp.Body = bodyBytes
+	return nil
 }
 
 func (resp Response) GetHeader(key string) string {
 	return resp.Headers.Get(key)
 }
-func (resp Response) GetContentLength() int {
-	length, _ := strconv.Atoi(resp.GetHeader("Content-Length"))
-	return length
-}
 
-func (resp *Response) BodyString() string {
-	resp.ReadAll()
-	return string(resp.Body)
-}
-
-func (resp *Response) ReadAll() error {
-	if !resp.readBody {
-		bodyBytes, err := io.ReadAll(resp.bodyReader)
-		if err != nil {
-			return err
-		}
-		defer resp.bodyReader.Close()
-		resp.Body = bodyBytes
-		resp.readBody = true
-	}
-	return nil
-}
-
-func (resp *Response) BodyUnmarshal(object interface{}) error {
-	resp.ReadAll()
+func (resp Response) BodyUnmarshal(object interface{}) error {
 	return json.Unmarshal(resp.Body, object)
 }
-func (resp *Response) SaveBody(file *os.File, process bool) error {
+func (resp Response) GetContentLength() int {
+	length, _ := strconv.Atoi(resp.Headers.Get("Content-Length"))
+	return length
+}
+func (resp Response) SaveBody(file *os.File, process bool) error {
 	defer resp.bodyReader.Close()
+
 	var reader io.Reader
+
 	if process && resp.GetContentLength() > 0 {
 		reader = &ReaderWithProcess{
 			Reader: bufio.NewReaderSize(resp.bodyReader, 1024*32),
@@ -74,8 +70,8 @@ func (resp *Response) SaveBody(file *os.File, process bool) error {
 	} else {
 		reader = bufio.NewReaderSize(resp.bodyReader, 1024*32)
 	}
+
 	_, err := io.Copy(bufio.NewWriter(file), reader)
-	resp.readBody = true
 	return err
 }
 
@@ -124,6 +120,21 @@ func (resp *Response) JudgeStatus() error {
 
 type RestfulClient struct {
 	Timeout time.Duration
+	session *http.Client
+}
+
+func (c RestfulClient) getClient() *http.Client {
+	if c.session == nil {
+		c.session = &http.Client{
+			// Timeout: c.Timeout,
+			Transport: &http.Transport{
+				Dial: (&net.Dialer{
+					Timeout: c.Timeout,
+				}).Dial,
+			},
+		}
+	}
+	return c.session
 }
 
 func (c RestfulClient) Request(req *http.Request) (*Response, error) {
@@ -137,7 +148,7 @@ func (c RestfulClient) Request(req *http.Request) (*Response, error) {
 			getSafeHeaders(req.Header), req.Body)
 	}
 
-	client := http.Client{Timeout: c.Timeout}
+	client := c.getClient()
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -153,6 +164,7 @@ func (c RestfulClient) Request(req *http.Request) (*Response, error) {
 		logging.Debug("Resp: status code: %d, body: %s", resp.StatusCode, "<Omitted, octet-stream>")
 	} else {
 		response.ReadAll()
+		defer resp.Body.Close()
 		logging.Debug("Resp: status code: %d, body: %s", response.Status, response.Body)
 	}
 	return &response, response.JudgeStatus()
