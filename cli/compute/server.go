@@ -78,9 +78,10 @@ var serverList = &cobra.Command{
 					p, _ := (item).(compute.Server)
 					return strings.Join(p.GetNetworks(), "\n")
 				}},
+				{Name: "Host"},
 			},
 			LongColumns: []common.Column{
-				{Name: "AZ", Text: "AZ"}, {Name: "Host"}, {Name: "InstanceName"},
+				{Name: "AZ", Text: "AZ"}, {Name: "InstanceName"},
 				{Name: "Flavor", Slot: func(item interface{}) interface{} {
 					p, _ := (item).(compute.Server)
 					if !verbose {

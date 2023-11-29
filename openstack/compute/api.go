@@ -186,7 +186,9 @@ func (client ComputeClientV2) WaitServerDeleted(id string) {
 
 // service api
 func (client ComputeClientV2) ServiceList(query netUrl.Values) ([]Service, error) {
-	resp, err := client.Request(client.newGetRequest("os-services", ""))
+	resp, err := client.Request(
+		common.NewResourceListRequest(client.endpoint, "os-services", query, client.BaseHeaders),
+	)
 	if err != nil {
 		return nil, err
 	}
