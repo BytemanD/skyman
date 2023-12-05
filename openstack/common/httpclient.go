@@ -4,12 +4,14 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -94,6 +96,13 @@ func getSafeHeaders(headers http.Header) http.Header {
 	}
 	return safeHeaders
 }
+func encodeHeaders(headers http.Header) string {
+	headersString := []string{}
+	for k, v := range headers {
+		headersString = append(headersString, fmt.Sprintf("%s:%s", k, strings.Join(v, ",")))
+	}
+	return strings.Join(headersString, " ")
+}
 
 type HttpError struct {
 	Status  int
@@ -139,13 +148,13 @@ func (c RestfulClient) getClient() *http.Client {
 
 func (c RestfulClient) Request(req *http.Request) (*Response, error) {
 	isIoStream := ContainsString(req.Header["Content-Type"], "application/octet-stream")
-
+	encodedHeader := encodeHeaders(getSafeHeaders(req.Header))
 	if isIoStream {
-		logging.Debug("Req: %s %s with headers: %v, body: %v", req.Method, req.URL,
-			getSafeHeaders(req.Header), "<Omitted, octet-stream>")
+		logging.Debug("REQ: %s %s, \n    Headers: %v \n    Body: %v",
+			req.Method, req.URL, encodedHeader, "<Omitted, octet-stream>")
 	} else {
-		logging.Debug("Req: %s %s with headers: %v, body: %v", req.Method, req.URL,
-			getSafeHeaders(req.Header), req.Body)
+		logging.Debug("REQ: %s %s, \n    Headers: %v \n    Body: %v",
+			req.Method, req.URL, encodedHeader, req.Body)
 	}
 
 	client := c.getClient()
@@ -161,11 +170,11 @@ func (c RestfulClient) Request(req *http.Request) (*Response, error) {
 		Headers:    resp.Header,
 	}
 	if isIoStream {
-		logging.Debug("Resp: status code: %d, body: %s", resp.StatusCode, "<Omitted, octet-stream>")
+		logging.Debug("RESP: [%d], \n    Body: %s", resp.StatusCode, "<Omitted, octet-stream>")
 	} else {
 		response.ReadAll()
 		defer resp.Body.Close()
-		logging.Debug("Resp: status code: %d, body: %s", response.Status, response.Body)
+		logging.Debug("RESP: [%d], \n    Body: %s", response.Status, response.Body)
 	}
 	return &response, response.JudgeStatus()
 }
