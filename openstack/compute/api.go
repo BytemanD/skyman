@@ -652,6 +652,32 @@ func (client ComputeClientV2) HypervisorShowByHostname(hostname string) (*Hyperv
 	}
 	return hypervisor, nil
 }
+func (client ComputeClientV2) HypervisorFound(idOrName string) (*Hypervisor, error) {
+	if !common.IsUUID(idOrName) {
+		return client.HypervisorShowByHostname(idOrName)
+	}
+	hypervisor, err := client.HypervisorShow(idOrName)
+	if httpError, ok := err.(*common.HttpError); ok {
+		if httpError.Status == 404 {
+			hypervisor, err = client.HypervisorShowByHostname(idOrName)
+		}
+	}
+	return hypervisor, err
+}
+func (client ComputeClientV2) HypervisorUptime(id string) (*Hypervisor, error) {
+
+	resp, err := client.Request(
+		common.NewResourceListRequest(
+			client.endpoint, common.UrlJoin("os-hypervisors", id, "uptime"),
+			nil, client.BaseHeaders),
+	)
+	if err != nil {
+		return nil, err
+	}
+	body := map[string]*Hypervisor{"hypervisor": {}}
+	resp.BodyUnmarshal(&body)
+	return body["hypervisor"], nil
+}
 
 // keypair api
 func (client ComputeClientV2) KeypairList(query netUrl.Values) ([]Keypair, error) {
