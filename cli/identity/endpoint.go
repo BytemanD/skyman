@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"fmt"
 	"net/url"
 
 	"github.com/spf13/cobra"
@@ -17,14 +18,28 @@ var Endpoint = &cobra.Command{Use: "endpoint"}
 var endpointList = &cobra.Command{
 	Use:   "list",
 	Short: "List endpoints",
-	Args:  cobra.ExactArgs(0),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.ExactArgs(0)(cmd, args); err != nil {
+			return err
+		}
+		current, _ := cmd.Flags().GetBool("current")
+		region, _ := cmd.Flags().GetString("region")
+		if current && region != "" {
+			return fmt.Errorf("flags --current and --region conflict.")
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, _ []string) {
 		long, _ := cmd.Flags().GetBool("long")
+		current, _ := cmd.Flags().GetBool("current")
 		endpointRegion, _ := cmd.Flags().GetString("region")
 		endpointInterface, _ := cmd.Flags().GetString("interface")
 		serviceName, _ := cmd.Flags().GetString("service")
 
 		query := url.Values{}
+		if current {
+			endpointRegion = common.CONF.Auth.Region.Name
+		}
 		if endpointRegion != "" {
 			query.Set("region_id", endpointRegion)
 		}
@@ -75,6 +90,7 @@ func init() {
 	endpointList.Flags().StringP("region", "r", "", "Search by region Id")
 	endpointList.Flags().StringP("interface", "i", "", "Search by interface")
 	endpointList.Flags().StringP("service", "s", "", "Search by service name")
+	endpointList.Flags().Bool("current", false, "Search by current region")
 
 	Endpoint.AddCommand(endpointList)
 }
