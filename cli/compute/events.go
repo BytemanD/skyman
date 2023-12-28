@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/compute"
@@ -62,13 +63,15 @@ var actionShow = &cobra.Command{
 		pt.AddItems(action.Events)
 		common.PrintPrettyTable(pt, long)
 
-		if long {
-			for _, item := range action.Events {
-				if item.Traceback == "" {
-					continue
-				}
+		for _, item := range action.Events {
+			if item.Traceback == "" {
+				continue
+			}
+			if long {
 				fmt.Printf("Event %s tracback:\n", item.Event)
 				fmt.Println(item.Traceback)
+			} else {
+				logging.Warning("use --long flags to show tracebacks")
 			}
 		}
 	},

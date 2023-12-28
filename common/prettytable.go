@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/openstack/common"
@@ -53,6 +54,7 @@ type PrettyTable struct {
 	HideTotalItems    bool
 	tableWriter       table.Writer
 	Filters           map[string]string
+	Search            string
 }
 
 func (pt *PrettyTable) AddItems(items interface{}) {
@@ -140,6 +142,7 @@ func (pt PrettyTable) Print(long bool) {
 		reflectValue := reflect.ValueOf(item)
 		row := table.Row{}
 		isFiltered := false
+		matchedCount := len(columns)
 		for _, column := range columns {
 			var value interface{}
 			if column.Slot != nil {
@@ -156,12 +159,15 @@ func (pt PrettyTable) Print(long bool) {
 					break
 				}
 			}
+			if pt.Search != "" && !strings.Contains(fmt.Sprintf("%v", value), pt.Search) {
+				matchedCount -= 1
+			}
 			if column.ForceColor || (column.AutoColor && pt.Style == STYLE_LIGHT) {
 				value = pt.FormatString(fmt.Sprint(value))
 			}
 			row = append(row, value)
 		}
-		if isFiltered {
+		if isFiltered || matchedCount <= 0 {
 			continue
 		}
 		tableWriter.AppendRow(row)

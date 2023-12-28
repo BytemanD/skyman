@@ -40,6 +40,7 @@ var serverList = &cobra.Command{
 		flavor, _ := cmd.Flags().GetString("flavor")
 		all, _ := cmd.Flags().GetBool("all")
 		dsc, _ := cmd.Flags().GetBool("dsc")
+		search, _ := cmd.Flags().GetString("search")
 
 		if name != "" {
 			query.Set("name", name)
@@ -67,6 +68,7 @@ var serverList = &cobra.Command{
 		watchInterval, _ := cmd.Flags().GetUint16("watch-interval")
 
 		pt := common.PrettyTable{
+			Search: search,
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name", Sort: true}, {Name: "Status", AutoColor: true},
 				{Name: "TaskState"},
@@ -769,8 +771,10 @@ func init() {
 	serverList.Flags().String("flavor", "", "Search by flavor")
 	serverList.Flags().BoolP("verbose", "v", false, "List verbose fields in output")
 	serverList.Flags().Bool("dsc", false, "Sort name by dsc")
+	serverList.Flags().String("search", "", i18n.T("localFuzzySearch"))
 	serverList.Flags().Bool("watch", false, "List loop")
 	serverList.Flags().Uint16P("watch-interval", "i", 2, "Loop interval")
+
 	// Server create flags
 	serverCreate.Flags().String("flavor", "", "Create server with this flavor")
 	serverCreate.Flags().StringP("image", "i", "", "Create server with this image")

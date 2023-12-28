@@ -16,3 +16,5 @@ other = '查询虚拟机'
 [showServerDetails]
 other = '展示虚拟机详情'
 
+[localFuzzySearch]
+other = '本地模糊查询'
