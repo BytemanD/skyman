@@ -106,3 +106,13 @@ func (client IdentityClientV3) UserListByProjectId(projectId string) ([]User, er
 	}
 	return users, nil
 }
+
+func (client IdentityClientV3) RegionList() ([]Region, error) {
+	resp, err := client.Request(client.newRequest("regions", "", nil, nil))
+	if err != nil {
+		return nil, err
+	}
+	respBody := map[string][]Region{"regions": {}}
+	resp.BodyUnmarshal(&respBody)
+	return respBody["regions"], nil
+}

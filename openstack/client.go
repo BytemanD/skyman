@@ -3,6 +3,7 @@ package openstack
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -36,6 +37,15 @@ func (c *OpenstackClient) ComputeClient() *compute.ComputeClientV2 {
 		c.Compute.UpdateVersion()
 	}
 	return c.Compute
+}
+
+func (c *OpenstackClient) MustGenerateComputeClient() *compute.ComputeClientV2 {
+	client := c.ComputeClient()
+	if client == nil {
+		fmt.Println("can not get compute client")
+		os.Exit(1)
+	}
+	return client
 }
 
 func (c *OpenstackClient) ImageClient() *image.ImageClientV2 {

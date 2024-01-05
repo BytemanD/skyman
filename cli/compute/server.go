@@ -33,6 +33,10 @@ var serverList = &cobra.Command{
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 		client := cli.GetClient()
+		computeClient := client.ComputeClient()
+		if computeClient == nil {
+			os.Exit(1)
+		}
 		query := url.Values{}
 		name, _ := cmd.Flags().GetString("name")
 		host, _ := cmd.Flags().GetString("host")
@@ -55,7 +59,7 @@ var serverList = &cobra.Command{
 			query.Add("status", status)
 		}
 		if flavor != "" {
-			flavor, err := client.ComputeClient().FlavorFound(flavor)
+			flavor, err := computeClient.FlavorFound(flavor)
 			if err != nil {
 				logging.Fatal("%s", err)
 			}
@@ -730,38 +734,6 @@ var serverMigrationList = &cobra.Command{
 	},
 }
 
-var serverInspect = &cobra.Command{
-	Use:   "inspect <id>",
-	Short: "inspect server ",
-	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
-
-		serverId := args[0]
-		format, _ := cmd.Flags().GetString("format")
-
-		serverInspect, err := client.ServerInspect(serverId)
-		common.LogError(err, "inspect sever faield", true)
-
-		switch format {
-		case "json":
-			output, err := common.GetIndentJson(serverInspect)
-			if err != nil {
-				logging.Fatal("print json failed, %s", err)
-			}
-			fmt.Println(output)
-		case "yaml":
-			output, err := common.GetYaml(serverInspect)
-			if err != nil {
-				logging.Fatal("print json failed, %s", err)
-			}
-			fmt.Println(output)
-		default:
-			serverInspect.Print()
-		}
-	},
-}
-
 func init() {
 	// Server list flags
 	serverList.Flags().StringP("name", "n", "", "Search by server name")
@@ -853,6 +825,6 @@ func init() {
 		serverEvacuate, serverMigrate,
 		serverMigration,
 		serverRegion,
-		serverInspect,
+		serverInspect, serverFound,
 	)
 }

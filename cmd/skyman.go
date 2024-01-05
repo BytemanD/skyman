@@ -138,7 +138,7 @@ func main() {
 	rootCmd.AddCommand(
 		versionCmd,
 		identity.Token,
-		identity.Service, identity.Endpoint,
+		identity.Service, identity.Endpoint, identity.Region,
 		identity.User, identity.Project,
 		compute.Server, compute.Flavor, compute.Hypervisor,
 		compute.Keypair, compute.Compute, compute.Console,

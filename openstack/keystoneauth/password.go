@@ -130,7 +130,7 @@ func (plugin *PasswordAuthPlugin) GetServiceEndpoint(
 			return endpoint.Url, nil
 		}
 	}
-	return "", fmt.Errorf("endpoint not found")
+	return "", fmt.Errorf("endpoint for region '%s' not found", plugin.RegionName)
 }
 func (plugin *PasswordAuthPlugin) SetHttpTimeout(timeout int) {
 	plugin.restfulClient.Timeout = time.Second * time.Duration(timeout)

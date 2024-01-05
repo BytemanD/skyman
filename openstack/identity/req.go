@@ -50,7 +50,3 @@ type RoleAssigment struct {
 	Scope Scope `json:"scope,omitempty"`
 	User  User  `json:"user,omitempty"`
 }
-
-type Region struct {
-	Name string `json:"name,omitempty"`
-}

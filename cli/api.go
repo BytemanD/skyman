@@ -11,6 +11,9 @@ import (
 )
 
 func GetClient() *openstack.OpenstackClient {
+	return GetClientWithRegion(common.CONF.Auth.Region.Name)
+}
+func GetClientWithRegion(regionName string) *openstack.OpenstackClient {
 	user := keystoneauth.User{
 		Name:     common.CONF.Auth.User.Name,
 		Password: common.CONF.Auth.User.Password,
@@ -24,7 +27,7 @@ func GetClient() *openstack.OpenstackClient {
 	}
 
 	client, _ := openstack.NewOpenstackClient(
-		common.CONF.Auth.Url, user, project, common.CONF.Auth.Region.Name,
+		common.CONF.Auth.Url, user, project, regionName,
 		common.CONF.Auth.TokenExpireTime,
 	)
 

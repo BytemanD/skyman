@@ -103,3 +103,11 @@ func (tc *TokenCache) GetEndpoints(option OptionCatalog) []Endpoint {
 	}
 	return endpoints
 }
+
+type Region struct {
+	Name           string `json:"name,omitempty"`
+	Id             string `json:"id,omitempty"`
+	Description    string `json:"description,omitempty"`
+	Enabled        bool   `json:"enabled,omitempty"`
+	ParentRegionId string `json:"parent_region_id,omitempty"`
+}
