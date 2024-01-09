@@ -18,7 +18,16 @@ var Image = &cobra.Command{Use: "image"}
 var ImageList = &cobra.Command{
 	Use:   "list",
 	Short: "List images",
-	Args:  cobra.ExactArgs(0),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.ExactArgs(0)(cmd, args); err != nil {
+			return err
+		}
+		visibility, _ := cmd.Flags().GetString("visibility")
+		if visibility != "" && !openstackCommon.ContainsString(image.IMAGE_VISIBILITIES, visibility) {
+			return fmt.Errorf("invalid visibility, valid: %v", image.IMAGE_VISIBILITIES)
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, _ []string) {
 		client := cli.GetClient()
 
@@ -27,6 +36,7 @@ var ImageList = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		limit, _ := cmd.Flags().GetInt("limit")
 		pageSize, _ := cmd.Flags().GetUint("page-size")
+		visibility, _ := cmd.Flags().GetString("visibility")
 
 		query := url.Values{}
 		if name != "" {
@@ -35,6 +45,10 @@ var ImageList = &cobra.Command{
 		if pageSize != 0 {
 			query.Set("limit", fmt.Sprintf("%d", pageSize))
 		}
+		if visibility != "" {
+			query.Set("visibility", visibility)
+		}
+
 		images, err := client.ImageClient().ImageList(query, limit)
 		common.LogError(err, "get imges failed", true)
 		pt := common.PrettyTable{
@@ -190,6 +204,7 @@ func init() {
 	ImageList.Flags().StringP("name", "n", "", "Search by image name")
 	ImageList.Flags().Uint("page-size", 0, "Number of images to request in each paginated request")
 	ImageList.Flags().Int("limit", 0, "Maximum number of images to get")
+	ImageList.Flags().String("visibility", "", "The visibility of the images to display.")
 
 	imageCreate.Flags().StringP("name", "n", "", "The name of image")
 	imageCreate.Flags().String("file", "", "Local file that contains disk image to be uploaded during creation.")
