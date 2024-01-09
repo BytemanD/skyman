@@ -84,7 +84,7 @@ var ImageShow = &cobra.Command{
 		idOrName := args[0]
 		human, _ := cmd.Flags().GetBool("human")
 		image, err := client.ImageClient().ImageFound(idOrName)
-		common.LogError(err, "Get image faled", true)
+		common.LogError(err, "Get image failed", true)
 		printImage(*image, human)
 	},
 }
@@ -178,6 +178,7 @@ var imageDelete = &cobra.Command{
 		}
 	},
 }
+
 var imageSave = &cobra.Command{
 	Use:   "save <image>",
 	Short: "Save image",
@@ -196,6 +197,40 @@ var imageSave = &cobra.Command{
 		err = client.ImageClient().ImageDownload(image.Id, fileName, true)
 		common.LogError(err, fmt.Sprintf("download image %v failed", args[0]), true)
 		fmt.Printf("Saved image to %s.\n", fileName)
+	},
+}
+
+var IMAGE_ATTRIBUTIES = map[string]string{
+	"name":             "name",
+	"visibility":       "visibility",
+	"container-format": "container_format",
+	"disk-format":      "disk_format",
+	"kernel-id":        "kernel_id",
+	"os-distro":        "os_distro",
+	"os-version":       "os_version",
+}
+
+var imageSet = &cobra.Command{
+	Use:   "set <id or name>",
+	Short: "Set image properties",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+
+		human, _ := cmd.Flags().GetBool("human")
+		image, err := client.ImageClient().ImageFound(args[0])
+		common.LogError(err, "Get image failed", true)
+		params := map[string]interface{}{}
+		for flag, attribute := range IMAGE_ATTRIBUTIES {
+			value, _ := cmd.Flags().GetString(flag)
+			if value == "" {
+				continue
+			}
+			params[attribute] = value
+		}
+		image, err = client.ImageClient().ImageSet(image.Id, params)
+		common.LogError(err, "update image failed", true)
+		printImage(*image, human)
 	},
 }
 
@@ -220,5 +255,9 @@ func init() {
 	imageSave.Flags().String("file", "", "Downloaded image save filename.")
 	Image.PersistentFlags().Bool("human", false, "Human size")
 
-	Image.AddCommand(ImageList, ImageShow, imageCreate, imageDelete, imageSave)
+	for k, v := range IMAGE_ATTRIBUTIES {
+		imageSet.Flags().String(k, "", fmt.Sprintf("Set %s of image", v))
+	}
+
+	Image.AddCommand(ImageList, ImageShow, imageCreate, imageDelete, imageSave, imageSet)
 }

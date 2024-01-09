@@ -85,3 +85,9 @@ type ImagesResp struct {
 	Images []Image `json:"images,omitempty"`
 	Next   string  `json:"next,omitempty"`
 }
+
+type AttributeOp struct {
+	Path  string      `json:"path"`
+	Value interface{} `json:"value"`
+	Op    string      `json:"op"`
+}

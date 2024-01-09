@@ -83,3 +83,11 @@ func NewResourceDeleteRequest(endpoint string, resource string, id string,
 		Id: id, Headers: headers,
 	}
 }
+func NewResourcePatchRequest(endpoint string, resource string, id string, body []byte,
+	headers map[string]string,
+) RestfulRequest {
+	return RestfulRequest{
+		Method: "PATCH", Endpoint: endpoint, Resource: resource,
+		Id: id, Body: body, Headers: headers,
+	}
+}

@@ -169,3 +169,29 @@ func (client ImageClientV2) ImageDownload(id string, fileName string, process bo
 	resp.SaveBody(file, process)
 	return err
 }
+
+func (client ImageClientV2) ImageSet(id string, params map[string]interface{}) (*Image, error) {
+	attributies := []AttributeOp{}
+	for k, v := range params {
+		attributies = append(attributies, AttributeOp{
+			Path:  fmt.Sprintf("/%s", k),
+			Value: v,
+			Op:    "replace",
+		})
+	}
+	body, _ := json.Marshal(attributies)
+	headers := client.BaseHeaders
+	headers["Content-Type"] = "application/openstack-images-v2.1-json-patch"
+	resp, err := client.Request(
+		common.NewResourcePatchRequest(client.endpoint, "images", id, body, headers),
+	)
+	if err != nil {
+		return nil, err
+	}
+	image := Image{}
+	resp.BodyUnmarshal(&image)
+	rawBody := map[string]interface{}{}
+	resp.BodyUnmarshal(&rawBody)
+	image.raw = rawBody
+	return &image, nil
+}
