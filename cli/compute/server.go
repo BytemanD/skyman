@@ -13,7 +13,6 @@ import (
 	"github.com/howeyc/gopass"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/BytemanD/easygo/pkg/fileutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -167,10 +166,10 @@ var serverShow = &cobra.Command{
 	},
 }
 var serverCreate = &cobra.Command{
-	Use:   "create [server name]",
-	Short: "Create server(s)",
+	Use:   "create <name>",
+	Short: "Create server",
 	Args: func(cmd *cobra.Command, args []string) error {
-		if err := cobra.MaximumNArgs(1)(cmd, args); err != nil {
+		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
 			return err
 		}
 		min, _ := cmd.Flags().GetUint16("min")
@@ -178,56 +177,62 @@ var serverCreate = &cobra.Command{
 		if min > max {
 			return fmt.Errorf("invalid flags: expect min <= max, got: %d > %d", min, max)
 		}
+		volumeBoot, _ := cmd.Flags().GetBool("volume-boot")
+		volumeSize, _ := cmd.Flags().GetUint16("volume-size")
+		if volumeBoot && volumeSize == 0 {
+			return fmt.Errorf("invalid flags: --volume-size is required when --volume-boot is true")
+		}
+		nics, _ := cmd.Flags().GetStringArray("nic")
+
+		if len(nics) > 0 {
+			for _, nic := range nics {
+				values := strings.Split(nic, "=")
+				if len(values) != 2 || values[1] == "" || (values[0] != "net-id" && values[0] != "port-id") {
+					return fmt.Errorf("invalid format for flag nic: %s", nic)
+				}
+			}
+		}
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		var name string
-		if len(args) == 1 {
-			name = args[0]
-		} else {
-			name = fmt.Sprintf(
-				"%s%s", common.CONF.Server.NamePrefix,
-				time.Now().Format("2006-01-02_15:04:05"),
-			)
-		}
-		client := cli.GetClient()
+		name := args[0]
 
 		volumeBoot, _ := cmd.Flags().GetBool("volume-boot")
 		volumeSize, _ := cmd.Flags().GetUint16("volume-size")
 		volumeType, _ := cmd.Flags().GetString("volume-type")
+		flavor, _ := cmd.Flags().GetString("flavor")
+		image, _ := cmd.Flags().GetString("image")
+		az, _ := cmd.Flags().GetString("az")
+		userDataFile, _ := cmd.Flags().GetString("user-data")
 
 		min, _ := cmd.Flags().GetUint16("min")
 		max, _ := cmd.Flags().GetUint16("max")
-		userDataFile, _ := cmd.Flags().GetString("user-data")
+		nics, _ := cmd.Flags().GetStringArray("nic")
+
 		wait, _ := cmd.Flags().GetBool("wait")
 
 		createOption := compute.ServerOpt{
 			Name:             name,
-			Flavor:           common.CONF.Server.Flavor,
-			AvailabilityZone: common.CONF.Server.AvailabilityZone,
+			Flavor:           flavor,
+			AvailabilityZone: az,
 			MinCount:         min,
 			MaxCount:         max,
 		}
 
+		client := cli.GetClient()
 		if userDataFile != "" {
 			content, err := fileutils.ReadAll(userDataFile)
 			if err != nil {
-				logging.Fatal("read user data %s failed, %v", userDataFile, err)
+				logging.Fatal("read user data failed, %v", err)
 			}
 			encodedContent := base64.StdEncoding.EncodeToString([]byte(content))
 			createOption.UserData = encodedContent
 		}
 
-		if volumeSize <= 0 {
-			volumeSize = common.CONF.Server.VolumeSize
-		}
-		if volumeType == "" {
-			volumeType = common.CONF.Server.VolumeType
-		}
-		if volumeBoot || common.CONF.Server.VolumeBoot {
+		if volumeBoot {
 			createOption.BlockDeviceMappingV2 = []compute.BlockDeviceMappingV2{
 				{
-					UUID:       common.CONF.Server.Image,
+					UUID:       image,
 					VolumeSize: volumeSize,
 					SourceType: "image", DestinationType: "volume",
 					DeleteOnTemination: true,
@@ -237,14 +242,14 @@ var serverCreate = &cobra.Command{
 				createOption.BlockDeviceMappingV2[0].VolumeType = volumeType
 			}
 		} else {
-			createOption.Image = common.CONF.Server.Image
+			createOption.Image = image
 		}
-		if common.CONF.Server.Network != "" {
-			createOption.Networks = []compute.ServerOptNetwork{
-				{UUID: common.CONF.Server.Network},
-			}
+		if len(nics) > 0 {
+			createOption.Networks = compute.ParseServerOptyNetworks(nics)
 		}
+		logging.Debug("networks %v", createOption.Networks)
 		server, err := client.ComputeClient().ServerCreate(createOption)
+		common.LogError(err, "create server failed", true)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -750,8 +755,8 @@ func init() {
 	// Server create flags
 	serverCreate.Flags().String("flavor", "", "Create server with this flavor")
 	serverCreate.Flags().StringP("image", "i", "", "Create server with this image")
-	serverCreate.Flags().StringP("nic", "n", "",
-		"Create a NIC on the server. NIC format:\n"+
+	serverCreate.Flags().StringArray("nic", []string{},
+		"Create NICs on the server. NIC format:\n"+
 			"net-id=<net-uuid>: attach NIC to network with this UUID\n"+
 			"port-id=<port-uuid>: attach NIC to port with this UUID")
 	serverCreate.Flags().Bool("volume-boot", false, "Boot with volume")
@@ -763,9 +768,8 @@ func init() {
 	serverCreate.Flags().String("user-data", "", "user data file to pass to be exposed by the metadata server.")
 	serverCreate.Flags().BoolP("wait", "w", false, "Wait server created")
 
-	viper.BindPFlag("server.flavor", serverCreate.Flags().Lookup("flavor"))
-	viper.BindPFlag("server.image", serverCreate.Flags().Lookup("image"))
-	viper.BindPFlag("server.availabilityZone", serverCreate.Flags().Lookup("az"))
+	serverCreate.MarkFlagRequired("flavor")
+	serverCreate.MarkFlagRequired("image")
 
 	// server delete flags
 	serverDelete.Flags().BoolP("wait", "w", false, "Wait server rebooted")

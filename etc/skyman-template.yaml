@@ -18,13 +18,3 @@ auth:
     name: admin
     domain:
       name: Default
-
-# 创建server时默认参数
-server:
-  flavor:
-  image:
-  network:
-  volumeBoot: true
-  volumeSize: 1
-  availabilityZone:
-  namePrefix: server

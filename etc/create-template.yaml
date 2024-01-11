@@ -1,0 +1,9 @@
+server:
+  namePrefix: server-
+  name: 
+  flavor: m1.1g1v
+  image: 418f589b-d337-4ce3-ab53-1f460316ea25
+  network:
+  volumeBoot: true
+  volumeSize: 20
+  availabilityZone:

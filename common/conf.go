@@ -30,8 +30,7 @@ type ConfGroup struct {
 	Language    string `yaml:"language"`
 	HttpTimeout int    `yaml:"httpTimeout"`
 
-	Auth   Auth   `yaml:"auth"`
-	Server Server `yaml:"server"`
+	Auth Auth `yaml:"auth"`
 }
 type Auth struct {
 	Url             string           `yaml:"url"`

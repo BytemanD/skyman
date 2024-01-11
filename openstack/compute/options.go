@@ -1,5 +1,7 @@
 package compute
 
+import "strings"
+
 type BlockDeviceMappingV2 struct {
 	BootIndex          int    `json:"boot_index"`
 	UUID               string `json:"uuid"`
@@ -23,4 +25,17 @@ type ServerOpt struct {
 	MinCount             uint16                 `json:"min_count"`
 	MaxCount             uint16                 `json:"max_count"`
 	UserData             string                 `json:"user_data,omitempty"`
+}
+
+func ParseServerOptyNetworks(nics []string) []ServerOptNetwork {
+	networks := []ServerOptNetwork{}
+	for _, nic := range nics {
+		values := strings.Split(nic, "=")
+		if values[0] == "net-id" {
+			networks = append(networks, ServerOptNetwork{UUID: values[1]})
+		} else if values[0] == "port-id" {
+			networks = append(networks, ServerOptNetwork{PortId: values[1]})
+		}
+	}
+	return networks
 }

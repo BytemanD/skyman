@@ -18,6 +18,7 @@ import (
 	"github.com/BytemanD/skyman/cli/image"
 	"github.com/BytemanD/skyman/cli/networking"
 	"github.com/BytemanD/skyman/cli/storage"
+	"github.com/BytemanD/skyman/cli/templates"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
 )
@@ -146,6 +147,7 @@ func main() {
 		image.Image,
 		storage.Volume,
 		networking.Router, networking.Network, networking.Port,
+		templates.CreateCmd,
 	)
 	rootCmd.Execute()
 }
