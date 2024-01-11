@@ -167,13 +167,15 @@ var flavorCreate = &cobra.Command{
 		flavor, err := client.ComputeClient().FlavorCreate(reqFlavor)
 		common.LogError(err, "create flavor failed", true)
 
-		extraSpecs := getExtraSpecsMap(properties)
-		createdExtraSpecs, err := client.ComputeClient().FlavorExtraSpecsCreate(flavor.Id, extraSpecs)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+		if len(properties) > 0 {
+			extraSpecs := getExtraSpecsMap(properties)
+			createdExtraSpecs, err := client.ComputeClient().FlavorExtraSpecsCreate(flavor.Id, extraSpecs)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			flavor.ExtraSpecs = createdExtraSpecs
 		}
-		flavor.ExtraSpecs = createdExtraSpecs
 		printFlavor(*flavor)
 	},
 }

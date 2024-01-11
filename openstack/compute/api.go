@@ -79,16 +79,20 @@ func (client ComputeClientV2) ServerShow(id string) (*Server, error) {
 	return body["server"], err
 }
 func (client ComputeClientV2) ServerFound(idOrName string) (*Server, error) {
-	server, err := client.ServerShow(idOrName)
-	if err != nil {
-		if httpError, ok := err.(common.HttpError); ok {
-			if httpError.IsNotFound() {
-				servers, err := client.ServerListByName(idOrName)
-				if err != nil || len(servers) == 0 {
-					return nil, fmt.Errorf("server %s not found", idOrName)
-				}
-				server, err = client.ServerShow(servers[0].Id)
+	var server *Server
+	var err error
+	server, err = client.ServerShow(idOrName)
+	if err == nil {
+		return server, nil
+	}
+
+	if httpError, ok := err.(*common.HttpError); ok {
+		if httpError.IsNotFound() {
+			servers, err := client.ServerListByName(idOrName)
+			if err != nil || len(servers) == 0 {
+				return nil, fmt.Errorf("server %s not found", idOrName)
 			}
+			server, err = client.ServerShow(servers[0].Id)
 		}
 	}
 	return server, err
@@ -506,7 +510,7 @@ func (client ComputeClientV2) FlavorList(query netUrl.Values) ([]Flavor, error) 
 
 func (client ComputeClientV2) FlavorCreate(flavor Flavor) (*Flavor, error) {
 	reqBody, _ := json.Marshal(map[string]Flavor{"flavor": flavor})
-	resp, err := client.Request(client.newRequest("flavors/detail", "", nil, reqBody))
+	resp, err := client.Request(client.newPostRequest("flavors", reqBody))
 	if err != nil {
 		return nil, err
 	}
@@ -578,6 +582,24 @@ func (client ComputeClientV2) FlavorDelete(flavorId string) error {
 	_, err := client.Request(client.newDeleteRequest("flavors", flavorId))
 	return err
 }
+func (client ComputeClientV2) FlavorFoundByName(name string) (*Flavor, error) {
+	flavors, err := client.FlavorList(nil)
+	if err != nil {
+		return nil, err
+	}
+	for _, flavor := range flavors {
+		if flavor.Name != name {
+			continue
+		}
+		flavor, err := client.FlavorShow(flavor.Id)
+		if err != nil {
+			return nil, err
+		} else {
+			return flavor, nil
+		}
+	}
+	return nil, fmt.Errorf("flavor %s not found", name)
+}
 func (client ComputeClientV2) FlavorFound(idOrName string) (*Flavor, error) {
 	flavor, err := client.FlavorShow(idOrName)
 	if err == nil {
@@ -588,22 +610,7 @@ func (client ComputeClientV2) FlavorFound(idOrName string) (*Flavor, error) {
 			return nil, err
 		}
 	}
-	flavors, err := client.FlavorList(nil)
-	if err != nil {
-		return nil, err
-	}
-	for _, flavor := range flavors {
-		if flavor.Name != idOrName {
-			continue
-		}
-		flavor, err := client.FlavorShow(flavor.Id)
-		if err != nil {
-			return nil, err
-		} else {
-			return flavor, nil
-		}
-	}
-	return nil, fmt.Errorf("flavor %s not found", idOrName)
+	return client.FlavorFoundByName(idOrName)
 }
 
 // hypervisor api

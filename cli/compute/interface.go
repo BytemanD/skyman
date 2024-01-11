@@ -54,10 +54,7 @@ var interfaceAttachPort = &cobra.Command{
 		client := cli.GetClient()
 
 		attachment, err := client.ComputeClient().ServerAddPort(args[0], args[1])
-		if err != nil {
-			fmt.Printf("Attach port %s to server failed: %v", args[1], err)
-			os.Exit(1)
-		}
+		common.LogError(err, fmt.Sprintf("Attach port %s to server failed", args[1]), true)
 		printinterfaceAttachments([]compute.InterfaceAttachment{*attachment})
 	},
 }
@@ -69,10 +66,7 @@ var interfaceAttachNet = &cobra.Command{
 		client := cli.GetClient()
 
 		attachment, err := client.ComputeClient().ServerAddNet(args[0], args[1])
-		if err != nil {
-			fmt.Printf("Attach network %s to server failed: %v", args[1], err)
-			os.Exit(1)
-		}
+		common.LogError(err, fmt.Sprintf("Attach network %s to server failed", args[1]), true)
 		printinterfaceAttachments([]compute.InterfaceAttachment{*attachment})
 	},
 }

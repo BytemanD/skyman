@@ -1,4 +1,4 @@
-package template
+package templates
 
 import (
 	"os"
@@ -6,11 +6,18 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type BaseResource struct {
+	Name string
+	Id   string
+}
+type Default struct {
+	ServerNamePrefix string `yaml:"serverNamePrefix"`
+}
+
 type Server struct {
-	NamePrefix       string `yaml:"namePrefix"`
 	Name             string `yaml:"name"`
-	Flavor           string `yaml:"flavor"`
-	Image            string `yaml:"image"`
+	Flavor           BaseResource
+	Image            BaseResource
 	Network          string `yaml:"network"`
 	VolumeBoot       bool   `yaml:"volumeBoot"`
 	VolumeType       string `yaml:"volumeType"`
@@ -20,8 +27,21 @@ type Server struct {
 	Max              uint16 `yaml:"max"`
 }
 
+type Flavor struct {
+	Id         string            `yaml:"id,omitempty"`
+	Name       string            `yaml:"name,omitempty"`
+	Vcpus      int               `yaml:"vcpus,omitempty"`
+	Ram        int               `yaml:"ram,omitempty"`
+	Disk       int               `yaml:"disk,omitempty"`
+	Swap       int               `yaml:"swap,omitempty"`
+	RXTXFactor float32           `yaml:"rxtx_factor,omitempty"`
+	ExtraSpecs map[string]string `yaml:"extra_specs,omitempty"`
+}
+
 type CreateTemplate struct {
-	Server Server `yaml:"server"`
+	Default Default `yaml:"default"`
+	Flavor  Flavor  `yaml:"flavor"`
+	Server  Server  `yaml:"server"`
 }
 
 func LoadCreateTemplate(file string) (*CreateTemplate, error) {
@@ -31,8 +51,8 @@ func LoadCreateTemplate(file string) (*CreateTemplate, error) {
 		return nil, err
 	}
 	err = yaml.Unmarshal(yamlFile, &template)
-	if template.Server.NamePrefix == "" {
-		template.Server.NamePrefix = "server-"
+	if template.Default.ServerNamePrefix == "" {
+		template.Default.ServerNamePrefix = "server-"
 	}
 	if template.Server.Min == 0 {
 		template.Server.Min = 1

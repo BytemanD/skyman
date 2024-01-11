@@ -73,6 +73,23 @@ func (client ImageClientV2) ImageListByName(name string) (Images, error) {
 	query.Set("name", name)
 	return client.ImageList(query, 0)
 }
+
+func (client ImageClientV2) ImageFountByName(name string) (*Image, error) {
+	query := url.Values{}
+	query.Set("name", name)
+	images, err := client.ImageListByName(name)
+	if err != nil {
+		return nil, err
+	}
+	if len(images) == 0 {
+		return nil, fmt.Errorf("image %s not found", name)
+	}
+	if len(images) > 1 {
+		return nil, fmt.Errorf("found multi images named %s ", name)
+	}
+	return client.ImageShow(images[0].Id)
+}
+
 func (client ImageClientV2) ImageShow(id string) (*Image, error) {
 	image := Image{}
 	resp, err := client.Request(
@@ -98,17 +115,7 @@ func (client ImageClientV2) ImageFound(idOrName string) (*Image, error) {
 	}
 	if httpError, ok := err.(*common.HttpError); ok {
 		if httpError.IsNotFound() {
-			var images []Image
-			if images, err = client.ImageListByName(idOrName); err != nil {
-				return nil, err
-			}
-			if len(images) == 0 {
-				return nil, fmt.Errorf("image %s not found", idOrName)
-			}
-			if len(images) > 1 {
-				return nil, fmt.Errorf("found multi images named %s ", idOrName)
-			}
-			image, err = client.ImageShow(images[0].Id)
+			image, err = client.ImageFountByName(idOrName)
 		}
 	}
 	return image, err

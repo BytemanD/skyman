@@ -38,6 +38,7 @@ func (client StorageClientV2) VolumeListByName(name string) ([]Volume, error) {
 	query.Set("name", name)
 	return client.VolumeList(query)
 }
+
 func (client StorageClientV2) VolumeListDetail(query url.Values) ([]Volume, error) {
 	resp, err := client.Request(
 		common.NewResourceListRequest(client.endpoint, "volumes/detail", query, client.BaseHeaders),

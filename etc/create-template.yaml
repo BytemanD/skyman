@@ -1,8 +1,18 @@
+default:
+  serverNamePrefix: server-
+
+flavor:
+  id: test.m1.2g2v
+  name: test.m1.2g2v
+  vcpus: 2
+  ram: 2048
+
 server:
-  namePrefix: server-
-  name: 
-  flavor: m1.1g1v
-  image: 418f589b-d337-4ce3-ab53-1f460316ea25
+  name: test-server
+  flavor:
+    id: test.m1.2g2v
+  image:
+    id: 418f589b-d337-4ce3-ab53-1f460316ea25
   network:
   volumeBoot: true
   volumeSize: 20
