@@ -56,6 +56,7 @@ func PrintServer(server compute.Server) {
 						return p.Image.Id
 					}
 				}},
+			{Name: "KeyName"},
 			{Name: "AZ", Text: "AZ"}, {Name: "Host"},
 			{Name: "Status"}, {Name: "TaskState"}, {Name: "PowerState"},
 			{Name: "RootBdmType"},

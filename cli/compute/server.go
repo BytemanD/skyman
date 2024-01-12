@@ -161,8 +161,7 @@ var serverShow = &cobra.Command{
 		if image, err := client.ImageClient().ImageShow(server.Image.Id); err == nil {
 			server.Image.Name = image.Name
 		}
-
-		printServer(*server)
+		cli.PrintServer(*server)
 	},
 }
 var serverCreate = &cobra.Command{
@@ -204,6 +203,8 @@ var serverCreate = &cobra.Command{
 		image, _ := cmd.Flags().GetString("image")
 		az, _ := cmd.Flags().GetString("az")
 		userDataFile, _ := cmd.Flags().GetString("user-data")
+		keyName, _ := cmd.Flags().GetString("key-name")
+		adminPass, _ := cmd.Flags().GetString("admin-pass")
 
 		min, _ := cmd.Flags().GetUint16("min")
 		max, _ := cmd.Flags().GetUint16("max")
@@ -228,10 +229,17 @@ var serverCreate = &cobra.Command{
 			encodedContent := base64.StdEncoding.EncodeToString([]byte(content))
 			createOption.UserData = encodedContent
 		}
+		if keyName != "" {
+			createOption.KeyName = keyName
+		}
+		if adminPass != "" {
+			createOption.AdminPass = adminPass
+		}
 
 		if volumeBoot {
 			createOption.BlockDeviceMappingV2 = []compute.BlockDeviceMappingV2{
 				{
+					BootIndex:  0,
 					UUID:       image,
 					VolumeSize: volumeSize,
 					SourceType: "image", DestinationType: "volume",
@@ -766,6 +774,8 @@ func init() {
 	serverCreate.Flags().Uint16("min", 1, "Minimum number of servers to launch.")
 	serverCreate.Flags().Uint16("max", 1, "Maximum number of servers to launch.")
 	serverCreate.Flags().String("user-data", "", "user data file to pass to be exposed by the metadata server.")
+	serverCreate.Flags().String("key-name", "", "Keypair to inject into this server.")
+	serverCreate.Flags().String("admin-pass", "", "Admin password for the instance.")
 	serverCreate.Flags().BoolP("wait", "w", false, "Wait server created")
 
 	serverCreate.MarkFlagRequired("flavor")

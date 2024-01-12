@@ -25,6 +25,8 @@ type ServerOpt struct {
 	MinCount             uint16                 `json:"min_count"`
 	MaxCount             uint16                 `json:"max_count"`
 	UserData             string                 `json:"user_data,omitempty"`
+	KeyName              string                 `json:"key_name,omitempty"`
+	AdminPass            string                 `json:"adminPass,omitempty"`
 }
 
 func ParseServerOptyNetworks(nics []string) []ServerOptNetwork {
