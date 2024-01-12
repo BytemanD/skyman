@@ -4,16 +4,16 @@ import "strings"
 
 type BlockDeviceMappingV2 struct {
 	BootIndex          int    `json:"boot_index"`
-	UUID               string `json:"uuid"`
-	VolumeSize         uint16 `json:"volume_size"`
-	SourceType         string `json:"source_type"`
-	DestinationType    string `json:"destination_type"`
-	VolumeType         string `json:"volume_type"`
-	DeleteOnTemination bool   `json:"delete_on_termination"`
+	UUID               string `json:"uuid,omitempty"`
+	VolumeSize         uint16 `json:"volume_size,omitempty"`
+	SourceType         string `json:"source_type,omitempty"`
+	DestinationType    string `json:"destination_type,omitempty"`
+	VolumeType         string `json:"volume_type,omitempty"`
+	DeleteOnTemination bool   `json:"delete_on_termination,omitempty"`
 }
 type ServerOptNetwork struct {
-	UUID   string `json:"uuid,omitempty"`
-	PortId string `json:"port_id,omitempty"`
+	UUID string `json:"uuid,omitempty"`
+	Port string `json:"port,omitempty"`
 }
 type ServerOpt struct {
 	Flavor               string                 `json:"flavorRef,omitempty"`
@@ -36,7 +36,7 @@ func ParseServerOptyNetworks(nics []string) []ServerOptNetwork {
 		if values[0] == "net-id" {
 			networks = append(networks, ServerOptNetwork{UUID: values[1]})
 		} else if values[0] == "port-id" {
-			networks = append(networks, ServerOptNetwork{PortId: values[1]})
+			networks = append(networks, ServerOptNetwork{Port: values[1]})
 		}
 	}
 	return networks

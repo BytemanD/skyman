@@ -11,9 +11,16 @@ server:
   name: test-server
   flavor:
     id: test.m1.2g2v
-  image:
-    id: 418f589b-d337-4ce3-ab53-1f460316ea25
-  network:
-  volumeBoot: true
-  volumeSize: 20
+  # image:
+  #   id: <image uuid>
+  networks:
+    # - uuid: <network uuid>
   availabilityZone:
+  blockDeviceMappingV2:
+   - bootIndex: 0
+     uuid: <image uuid>
+     volumeSize: 20
+     sourceType: image
+     destinationType: volume
+    #  volumeType:
+     deleteOnTermination: true

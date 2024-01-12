@@ -13,18 +13,30 @@ type BaseResource struct {
 type Default struct {
 	ServerNamePrefix string `yaml:"serverNamePrefix"`
 }
+type BlockDeviceMappingV2 struct {
+	BootIndex           int    `yaml:"bootIndex"`
+	UUID                string `yaml:"uuid"`
+	VolumeSize          uint16 `yaml:"volumeSize"`
+	SourceType          string `yaml:"sourceType"`
+	DestinationType     string `yaml:"destinationType"`
+	VolumeType          string `yaml:"volumeType"`
+	DeleteOnTermination bool   `yaml:"deleteOnTermination"`
+}
 
+type Nic struct {
+	UUID string `yaml:"uuid"`
+	Port string `yaml:"port"`
+}
 type Server struct {
-	Name             string `yaml:"name"`
-	Flavor           BaseResource
-	Image            BaseResource
-	Network          string `yaml:"network"`
-	VolumeBoot       bool   `yaml:"volumeBoot"`
-	VolumeType       string `yaml:"volumeType"`
-	VolumeSize       uint16 `yaml:"volumeSize"`
-	AvailabilityZone string `yaml:"availabilityZone"`
-	Min              uint16 `yaml:"min"`
-	Max              uint16 `yaml:"max"`
+	Name     string `yaml:"name"`
+	Flavor   BaseResource
+	Image    BaseResource
+	Networks []Nic `yaml:"networks"`
+
+	AvailabilityZone     string                 `yaml:"availabilityZone"`
+	Min                  uint16                 `yaml:"min"`
+	Max                  uint16                 `yaml:"max"`
+	BlockDeviceMappingV2 []BlockDeviceMappingV2 `yaml:"blockDeviceMappingV2,omitempty"`
 }
 
 type Flavor struct {
@@ -59,9 +71,6 @@ func LoadCreateTemplate(file string) (*CreateTemplate, error) {
 	}
 	if template.Server.Max == 0 {
 		template.Server.Max = template.Server.Min
-	}
-	if template.Server.VolumeSize == 0 {
-		template.Server.VolumeSize = 10
 	}
 	return &template, err
 }

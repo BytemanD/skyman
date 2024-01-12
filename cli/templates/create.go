@@ -83,9 +83,6 @@ var CreateCmd = &cobra.Command{
 		flavor, err := getFlavor(computClient, *createTemplate)
 		common.LogError(err, "get flavor failed", true)
 
-		img, err := getImage(imageClient, createTemplate.Server.Image)
-		common.LogError(err, "get image failed", true)
-
 		serverOption := compute.ServerOpt{
 			Name:             createTemplate.Server.Name,
 			Flavor:           flavor.Id,
@@ -93,26 +90,37 @@ var CreateCmd = &cobra.Command{
 			MinCount:         createTemplate.Server.Min,
 			MaxCount:         createTemplate.Server.Max,
 		}
-		if createTemplate.Server.VolumeBoot {
-			serverOption.BlockDeviceMappingV2 = []compute.BlockDeviceMappingV2{
-				{
-					UUID:               img.Id,
-					VolumeSize:         createTemplate.Server.VolumeSize,
-					SourceType:         "image",
-					DestinationType:    "volume",
-					DeleteOnTemination: true,
-				},
-			}
-			if createTemplate.Server.VolumeType != "" {
-				serverOption.BlockDeviceMappingV2[0].VolumeType = createTemplate.Server.VolumeType
-			}
-		} else {
+		if createTemplate.Server.Image.Id != "" || createTemplate.Server.Image.Name != "" {
+			img, err := getImage(imageClient, createTemplate.Server.Image)
+			common.LogError(err, "get image failed", true)
 			serverOption.Image = img.Id
 		}
-		if createTemplate.Server.Network != "" {
-			serverOption.Networks = []compute.ServerOptNetwork{
-				{UUID: createTemplate.Server.Network},
+		if len(createTemplate.Server.BlockDeviceMappingV2) > 0 {
+			serverOption.BlockDeviceMappingV2 = []compute.BlockDeviceMappingV2{}
+			for _, bdm := range createTemplate.Server.BlockDeviceMappingV2 {
+				serverOption.BlockDeviceMappingV2 = append(serverOption.BlockDeviceMappingV2,
+					compute.BlockDeviceMappingV2{
+						BootIndex:          bdm.BootIndex,
+						UUID:               bdm.UUID,
+						VolumeSize:         bdm.VolumeSize,
+						VolumeType:         bdm.VolumeType,
+						SourceType:         bdm.SourceType,
+						DestinationType:    bdm.DestinationType,
+						DeleteOnTemination: bdm.DeleteOnTermination,
+					},
+				)
 			}
+		}
+		if len(createTemplate.Server.Networks) > 0 {
+			networks := []compute.ServerOptNetwork{}
+			for _, nic := range createTemplate.Server.Networks {
+				if nic.UUID != "" {
+					networks = append(networks, compute.ServerOptNetwork{UUID: nic.UUID})
+				} else if nic.Port != "" {
+					networks = append(networks, compute.ServerOptNetwork{Port: nic.Port})
+				}
+			}
+			serverOption.Networks = networks
 		}
 
 		server, err := client.ComputeClient().ServerCreate(serverOption)
