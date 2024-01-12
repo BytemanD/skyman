@@ -2,6 +2,7 @@ package common
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 
 	uuid "github.com/satori/go.uuid"
 
+	"github.com/BytemanD/easygo/pkg/fileutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
@@ -120,4 +122,13 @@ func CloneHeaders(h1 map[string]string, h2 map[string]string) map[string]string 
 		clonedHeaders[k] = v
 	}
 	return clonedHeaders
+}
+
+func LoadUserData(file string) (string, error) {
+	content, err := fileutils.ReadAll(file)
+	if err != nil {
+		return "", err
+	}
+	encodedContent := base64.StdEncoding.EncodeToString([]byte(content))
+	return encodedContent, nil
 }

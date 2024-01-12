@@ -1,7 +1,6 @@
 package compute
 
 import (
-	"encoding/base64"
 	"fmt"
 	"net/url"
 	"os"
@@ -14,7 +13,6 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/fileutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
@@ -222,12 +220,9 @@ var serverCreate = &cobra.Command{
 
 		client := cli.GetClient()
 		if userDataFile != "" {
-			content, err := fileutils.ReadAll(userDataFile)
-			if err != nil {
-				logging.Fatal("read user data failed, %v", err)
-			}
-			encodedContent := base64.StdEncoding.EncodeToString([]byte(content))
-			createOption.UserData = encodedContent
+			content, err := openstackCommon.LoadUserData(userDataFile)
+			common.LogError(err, "read user data failed", true)
+			createOption.UserData = content
 		}
 		if keyName != "" {
 			createOption.KeyName = keyName

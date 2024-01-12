@@ -10,6 +10,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	openstackCommon "github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/compute"
 	"github.com/BytemanD/skyman/openstack/image"
 )
@@ -122,7 +123,11 @@ var CreateCmd = &cobra.Command{
 			}
 			serverOption.Networks = networks
 		}
-
+		if createTemplate.Server.UserData != "" {
+			content, err := openstackCommon.LoadUserData(createTemplate.Server.UserData)
+			common.LogError(err, "read user data failed", true)
+			serverOption.UserData = content
+		}
 		server, err := client.ComputeClient().ServerCreate(serverOption)
 		common.LogError(err, "create server failed", true)
 		logging.Info("creating server %s", serverOption.Name)

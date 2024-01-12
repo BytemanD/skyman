@@ -37,6 +37,7 @@ type Server struct {
 	Min                  uint16                 `yaml:"min"`
 	Max                  uint16                 `yaml:"max"`
 	BlockDeviceMappingV2 []BlockDeviceMappingV2 `yaml:"blockDeviceMappingV2,omitempty"`
+	UserData             string                 `yaml:"userData"`
 }
 
 type Flavor struct {
