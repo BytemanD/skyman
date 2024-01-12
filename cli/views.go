@@ -8,6 +8,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/compute"
+	"github.com/BytemanD/skyman/openstack/networking"
 	"github.com/jedib0t/go-pretty/v6/list"
 )
 
@@ -241,6 +242,51 @@ func printServiceTable(item interface{}) {
 			}},
 			{Name: "ForcedDown", Text: "Forced Down"},
 			{Name: "DisabledReason", Text: "Disabled Reason"},
+		},
+	}
+	common.PrintPrettyItemTable(pt)
+}
+
+func PrintRouter(router networking.Router) {
+	pt := common.PrettyItemTable{
+		Item: router,
+		ShortFields: []common.Column{
+			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
+			{Name: "AdminStateUp"},
+			{Name: "AvailabilityZoneHints"},
+			{Name: "AvailabilityZones"},
+			{Name: "Distributed"},
+			{Name: "ExternalGatewayInfo"},
+			{Name: "HA", Text: "Ha"},
+			{Name: "Status"},
+			{Name: "Tags"},
+			{Name: "ProjectId"},
+			{Name: "UpdatedAt"},
+			{Name: "CreatedAt"},
+		},
+	}
+	common.PrintPrettyItemTable(pt)
+}
+func PrintNetwork(network networking.Network) {
+	pt := common.PrettyItemTable{
+		Item: network,
+		ShortFields: []common.Column{
+			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
+			{Name: "AdminStateUp"},
+			{Name: "AvailabilityZoneHints"},
+			{Name: "AvailabilityZones"},
+			{Name: "Mtu"},
+			{Name: "Shared"},
+			{Name: "Status"},
+			{Name: "Tags"},
+			{Name: "QosPolicyId"},
+			{Name: "PortSecurityEnabled"},
+			{Name: "RouterExternal"},
+			{Name: "ProviderPhysicalNetwork"},
+			{Name: "ProviderNetworkType"},
+			{Name: "ProviderSegmentation"},
+			{Name: "ProjectId"},
+			{Name: "UpdatedAt"}, {Name: "CreatedAt"},
 		},
 	}
 	common.PrintPrettyItemTable(pt)

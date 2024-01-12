@@ -91,10 +91,36 @@ var routerDelete = &cobra.Command{
 		}
 	},
 }
+var routerCreate = &cobra.Command{
+	Use:   "create <name>",
+	Short: "Create router",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		// name, _ := cmd.Flags().GetString("name")
+		disable, _ := cmd.Flags().GetBool("disable")
+		description, _ := cmd.Flags().GetString("description")
+		params := map[string]interface{}{
+			"name": args[0],
+		}
+		if disable {
+			params["enable"] = false
+		}
+		if description != "" {
+			params["description"] = description
+		}
+		router, err := client.NetworkingClient().RouterCreate(params)
+		common.LogError(err, "create router failed", true)
+		cli.PrintRouter(*router)
+	},
+}
 
 func init() {
 	routerList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	routerList.Flags().StringP("name", "n", "", "Search by router name")
 
-	Router.AddCommand(routerList, routerShow, routerDelete)
+	routerCreate.Flags().String("description", "", "Set router description")
+	routerCreate.Flags().Bool("disable", false, "Disable router")
+
+	Router.AddCommand(routerList, routerShow, routerDelete, routerCreate)
 }

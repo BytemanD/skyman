@@ -101,10 +101,36 @@ var networkShow = &cobra.Command{
 		common.PrintPrettyItemTable(table)
 	},
 }
+var networkCreate = &cobra.Command{
+	Use:   "create <name>",
+	Short: "Create network",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		// name, _ := cmd.Flags().GetString("name")
+		disable, _ := cmd.Flags().GetBool("disable")
+		description, _ := cmd.Flags().GetString("description")
+		params := map[string]interface{}{
+			"name": args[0],
+		}
+		if disable {
+			params["enable"] = false
+		}
+		if description != "" {
+			params["description"] = description
+		}
+		network, err := client.NetworkingClient().NetworkCreate(params)
+		common.LogError(err, "create network failed", true)
+		cli.PrintNetwork(*network)
+	},
+}
 
 func init() {
 	networkList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	networkList.Flags().StringP("name", "n", "", "Search by router name")
 
-	Network.AddCommand(networkList, networkShow, networkDelete)
+	networkCreate.Flags().String("description", "", "Set router description")
+	networkCreate.Flags().Bool("disable", false, "Disable router")
+
+	Network.AddCommand(networkList, networkShow, networkDelete, networkCreate)
 }

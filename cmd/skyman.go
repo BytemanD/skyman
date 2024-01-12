@@ -146,7 +146,7 @@ func main() {
 		compute.Migration, compute.AZ, compute.Aggregate,
 		image.Image,
 		storage.Volume,
-		networking.Router, networking.Network, networking.Port,
+		networking.Router, networking.Network, networking.Subnet, networking.Port,
 		templates.CreateCmd,
 	)
 	rootCmd.Execute()
