@@ -147,7 +147,7 @@ func main() {
 		image.Image,
 		storage.Volume,
 		networking.Router, networking.Network, networking.Subnet, networking.Port,
-		templates.CreateCmd,
+		templates.CreateCmd, templates.DeleteCmd,
 	)
 	rootCmd.Execute()
 }
