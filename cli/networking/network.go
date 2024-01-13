@@ -129,7 +129,7 @@ func init() {
 	networkList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	networkList.Flags().StringP("name", "n", "", "Search by router name")
 
-	networkCreate.Flags().String("description", "", "Set router description")
+	networkCreate.Flags().String("description", "", "Set network description")
 	networkCreate.Flags().Bool("disable", false, "Disable router")
 
 	Network.AddCommand(networkList, networkShow, networkDelete, networkCreate)

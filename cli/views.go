@@ -291,3 +291,27 @@ func PrintNetwork(network networking.Network) {
 	}
 	common.PrintPrettyItemTable(pt)
 }
+func PrintSubnet(network networking.Subnet) {
+	pt := common.PrettyItemTable{
+		Item: network,
+		ShortFields: []common.Column{
+			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
+			{Name: "NetworkId"},
+			{Name: "Cidr"},
+			{Name: "IpVersion"},
+			{Name: "EnableDhcp"},
+			{Name: "AllocationPools", Slot: func(item interface{}) interface{} {
+				p, _ := item.(networking.Subnet)
+				return strings.Join(p.GetAllocationPoolsList(), ",")
+			}},
+			{Name: "GatewayIp"},
+			{Name: "RevisionNumber"},
+			{Name: "HostRouters"},
+			{Name: "Tags"},
+
+			{Name: "ProjectId"},
+			{Name: "UpdatedAt"}, {Name: "CreatedAt"},
+		},
+	}
+	common.PrintPrettyItemTable(pt)
+}

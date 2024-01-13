@@ -49,10 +49,52 @@ var subnetList = &cobra.Command{
 		common.PrintPrettyTable(pt, long)
 	},
 }
+var subnetCreate = &cobra.Command{
+	Use:   "create <name>",
+	Short: "Create subnet",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		// name, _ := cmd.Flags().GetString("name")
+		noDhcp, _ := cmd.Flags().GetBool("no-dhcp")
+		description, _ := cmd.Flags().GetString("description")
+		netIdOrName, _ := cmd.Flags().GetString("network")
+		cidr, _ := cmd.Flags().GetString("cidr")
+		ipVersion, _ := cmd.Flags().GetInt("ip-version")
+
+		network, err := client.NetworkingClient().NetworkFound(netIdOrName)
+		common.LogError(err, "create subnet failed", true)
+
+		params := map[string]interface{}{
+			"name":       args[0],
+			"cidr":       cidr,
+			"network_id": network.Id,
+			"ip_version": ipVersion,
+		}
+		if noDhcp {
+			params["enable_dhcp"] = false
+		}
+		if description != "" {
+			params["description"] = description
+		}
+		subnet, err := client.NetworkingClient().SubnetCreate(params)
+		common.LogError(err, "create subnet failed", true)
+		cli.PrintSubnet(*subnet)
+	},
+}
 
 func init() {
 	subnetList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	subnetList.Flags().StringP("name", "n", "", "Search by router name")
 
-	Subnet.AddCommand(subnetList)
+	subnetCreate.Flags().String("description", "", "Set subnet description")
+	subnetCreate.Flags().String("network", "", "Set subnet description")
+	subnetCreate.Flags().String("cidr", "", "Subnet range in CIDR notation")
+	subnetCreate.Flags().Bool("no-dhcp", false, "Disable DHCP")
+	subnetCreate.Flags().Int("ip-version", 4, "IP version (default is 4).")
+
+	subnetCreate.MarkFlagRequired("network")
+	subnetCreate.MarkFlagRequired("cidr")
+
+	Subnet.AddCommand(subnetList, subnetCreate)
 }

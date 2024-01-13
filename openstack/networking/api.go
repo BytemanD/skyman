@@ -2,6 +2,7 @@ package networking
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
 
 	"github.com/BytemanD/skyman/openstack/common"
@@ -86,6 +87,30 @@ func (client NeutronClientV2) NetworkShow(id string) (*Network, error) {
 	resp.BodyUnmarshal(&respBody)
 	return respBody["network"], nil
 }
+func (client NeutronClientV2) NetworkFound(idOrName string) (*Network, error) {
+	network, err := client.NetworkShow(idOrName)
+	if err == nil {
+		return network, nil
+	}
+	if httpError, ok := err.(*common.HttpError); ok {
+		if !httpError.IsNotFound() {
+			return nil, err
+		}
+	}
+	networks, err := client.NetworkListByName(idOrName)
+	if err != nil {
+		return nil, err
+	}
+	if len(networks) == 1 {
+		return &(networks[0]), nil
+	}
+	if len(networks) == 0 {
+		return nil, fmt.Errorf("network named %s not found", idOrName)
+	} else {
+		return nil, fmt.Errorf("found multi networks named %s", idOrName)
+	}
+}
+
 func (client NeutronClientV2) NetworkDelete(id string) error {
 	_, err := client.Request(
 		common.NewResourceDeleteRequest(client.endpoint, "networks", id, client.BaseHeaders),
@@ -120,6 +145,22 @@ func (client NeutronClientV2) SubnetList(query url.Values) ([]Subnet, error) {
 	body := map[string][]Subnet{"subnets": {}}
 	resp.BodyUnmarshal(&body)
 	return body["subnets"], nil
+}
+func (client NeutronClientV2) SubnetCreate(params map[string]interface{}) (*Subnet, error) {
+	data := map[string]interface{}{"subnet": params}
+	body, err := json.Marshal(&data)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.Request(
+		common.NewResourceCreateRequest(client.endpoint, "subnets", body, client.BaseHeaders),
+	)
+	if err != nil {
+		return nil, err
+	}
+	respBody := map[string]*Subnet{"subnet": {}}
+	err = resp.BodyUnmarshal(&respBody)
+	return respBody["subnet"], err
 }
 
 // port api
