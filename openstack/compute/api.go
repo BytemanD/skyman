@@ -143,7 +143,7 @@ func (client ComputeClientV2) ServerCreate(options ServerOpt) (*Server, error) {
 	resp.BodyUnmarshal(&respBody)
 	return respBody["server"], err
 }
-func (client ComputeClientV2) WaitServerCreate(options ServerOpt) (*Server, error) {
+func (client ComputeClientV2) ServerCreateAndWait(options ServerOpt) (*Server, error) {
 	server, err := client.ServerCreate(options)
 	if err != nil {
 		return server, err
@@ -161,7 +161,7 @@ func (client ComputeClientV2) WaitServerStatusSecond(serverId string, status str
 		if err != nil {
 			return server, err
 		}
-		logging.Debug("server stauts is %s", server.Status)
+		logging.Info("server %s status: %s, taskState: %s", server.Id, server.Status, server.TaskState)
 		switch strings.ToUpper(server.Status) {
 		case "ERROR":
 			return server, fmt.Errorf("server status is error, message: %s", server.Fault.Message)

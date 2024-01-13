@@ -24,6 +24,7 @@ type BlockDeviceMappingV2 struct {
 }
 
 type Nic struct {
+	Name string `yaml:"name"`
 	UUID string `yaml:"uuid"`
 	Port string `yaml:"port"`
 }
@@ -50,11 +51,20 @@ type Flavor struct {
 	RXTXFactor float32           `yaml:"rxtx_factor,omitempty"`
 	ExtraSpecs map[string]string `yaml:"extra_specs,omitempty"`
 }
-
+type Subnet struct {
+	Name      string `yaml:"name,omitempty"`
+	Cidr      string `yaml:"cidr,omitempty"`
+	IpVersion int    `yaml:"ipVersion,omitempty"`
+}
+type Network struct {
+	Name    string   `yaml:"name,omitempty"`
+	Subnets []Subnet `yaml:"subnets,omitempty"`
+}
 type CreateTemplate struct {
-	Default Default `yaml:"default"`
-	Flavor  Flavor  `yaml:"flavor"`
-	Server  Server  `yaml:"server"`
+	Default  Default   `yaml:"default"`
+	Flavors  []Flavor  `yaml:"flavors"`
+	Networks []Network `yaml:"networks"`
+	Servers  []Server  `yaml:"servers"`
 }
 
 func LoadCreateTemplate(file string) (*CreateTemplate, error) {
@@ -67,11 +77,13 @@ func LoadCreateTemplate(file string) (*CreateTemplate, error) {
 	if template.Default.ServerNamePrefix == "" {
 		template.Default.ServerNamePrefix = "server-"
 	}
-	if template.Server.Min == 0 {
-		template.Server.Min = 1
-	}
-	if template.Server.Max == 0 {
-		template.Server.Max = template.Server.Min
+	for i, _ := range template.Servers {
+		if template.Servers[i].Min == 0 {
+			template.Servers[i].Min = 1
+		}
+		if template.Servers[i].Max == 0 {
+			template.Servers[i].Max = template.Servers[i].Min
+		}
 	}
 	return &template, err
 }

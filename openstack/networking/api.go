@@ -162,6 +162,12 @@ func (client NeutronClientV2) SubnetCreate(params map[string]interface{}) (*Subn
 	err = resp.BodyUnmarshal(&respBody)
 	return respBody["subnet"], err
 }
+func (client NeutronClientV2) SubnetDelete(id string) error {
+	_, err := client.Request(
+		common.NewResourceDeleteRequest(client.endpoint, "subnets", id, client.BaseHeaders),
+	)
+	return err
+}
 
 // port api
 func (client NeutronClientV2) PortList(query url.Values) ([]Port, error) {

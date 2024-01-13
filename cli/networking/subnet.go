@@ -1,9 +1,11 @@
 package networking
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/networking"
@@ -82,6 +84,21 @@ var subnetCreate = &cobra.Command{
 		cli.PrintSubnet(*subnet)
 	},
 }
+var subnetDelete = &cobra.Command{
+	Use:   "delete <subnet> [subnet ...]",
+	Short: "Delete subnet(s)",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		for _, subnet := range args {
+			fmt.Printf("Reqeust to delete subnet %s\n", subnet)
+			err := client.NetworkingClient().SubnetDelete(subnet)
+			if err != nil {
+				logging.Error("Delete subnet %s failed, %s", subnet, err)
+			}
+		}
+	},
+}
 
 func init() {
 	subnetList.Flags().BoolP("long", "l", false, "List additional fields in output")
@@ -96,5 +113,5 @@ func init() {
 	subnetCreate.MarkFlagRequired("network")
 	subnetCreate.MarkFlagRequired("cidr")
 
-	Subnet.AddCommand(subnetList, subnetCreate)
+	Subnet.AddCommand(subnetList, subnetCreate, subnetDelete)
 }
