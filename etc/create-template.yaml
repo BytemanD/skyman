@@ -1,26 +1,33 @@
 default:
   serverNamePrefix: server-
 
-flavor:
-  id: test.m1.2g2v
-  name: test.m1.2g2v
-  vcpus: 2
-  ram: 2048
+flavors:
+  - id: test.m1.2g2v
+    name: test.m1.2g2v
+    vcpus: 2
+    ram: 2048
 
-server:
-  name: test-server
-  flavor:
-    id: test.m1.2g2v
-  # image:
-  #   id: <image uuid>
-  networks:
-    # - uuid: <network uuid>
-  availabilityZone:
-  blockDeviceMappingV2:
-   - bootIndex: 0
-     uuid: <image uuid>
-     volumeSize: 20
-     sourceType: image
-     destinationType: volume
-    #  volumeType:
-     deleteOnTermination: true
+networks:
+  - name: test-network-1
+    subnets:
+      - name: test-subnet-1
+        cidr: 192.168.11.0/24
+
+servers:
+  - name: test-server
+    flavor:
+      id: test.m1.2g2v
+    # image:
+    #   id: <image uuid>
+    networks:
+      - name: test-network-1
+      # - uuid: <network uuid>
+    availabilityZone:
+    blockDeviceMappingV2:
+    - bootIndex: 0
+      uuid: <image uuid>
+      volumeSize: 20
+      sourceType: image
+      destinationType: volume
+      #  volumeType:
+      deleteOnTermination: true
