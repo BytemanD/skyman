@@ -80,7 +80,7 @@ var actionShow = &cobra.Command{
 var actionSpend = &cobra.Command{
 	Use:   "spend <server>",
 	Short: "Get server actions spend time",
-	Args:  cobra.RangeArgs(1, 2),
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 		long, _ := cmd.Flags().GetBool("long")
@@ -100,15 +100,16 @@ var actionSpend = &cobra.Command{
 					p, _ := (item).(compute.InstanceActionAndEvents)
 					return p.InstanceAction.RequestId
 				}},
-				{Name: "SpendTime", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(compute.InstanceActionAndEvents)
-					spendTime, err := p.GetSpendTime()
-					if err != nil {
-						return err
-					} else {
-						return fmt.Sprintf("%.3f", spendTime)
-					}
-				}},
+				{Name: "SpendTime", Text: "Spend time (seconds)",
+					Slot: func(item interface{}) interface{} {
+						p, _ := (item).(compute.InstanceActionAndEvents)
+						spendTime, err := p.GetSpendTime()
+						if err != nil {
+							return err
+						} else {
+							return fmt.Sprintf("%.3f", spendTime)
+						}
+					}},
 			},
 		}
 		for _, actionWithEvents := range actionsWithEvents {

@@ -45,7 +45,7 @@ var networkList = &cobra.Command{
 				}},
 			},
 			LongColumns: []common.Column{
-				{Name: "Shared"}, {Name: "NetworkType"},
+				{Name: "Shared"}, {Name: "ProviderNetworkType"},
 				{Name: "AvailabilityZones"},
 			},
 			ColumnConfigs: []table.ColumnConfig{
