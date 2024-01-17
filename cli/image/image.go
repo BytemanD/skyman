@@ -89,12 +89,13 @@ var ImageShow = &cobra.Command{
 	},
 }
 var imageCreate = &cobra.Command{
-	Use:   "create <id or name>",
+	Use:   "create",
 	Short: "Create image",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.ExactArgs(0)(cmd, args); err != nil {
 			return err
 		}
+		name, _ := cmd.Flags().GetString("name")
 		containerFormat, _ := cmd.Flags().GetString("container-format")
 		diskFormat, _ := cmd.Flags().GetString("disk-format")
 		file, _ := cmd.Flags().GetString("file")
@@ -102,11 +103,13 @@ var imageCreate = &cobra.Command{
 
 		if file != "" {
 			if containerFormat == "" {
-				return fmt.Errorf("must provide --container-format where using --file")
+				return fmt.Errorf("must provide --container-format when using --file")
 			}
 			if diskFormat == "" {
 				return fmt.Errorf("must provide --disk-format when using --file")
 			}
+		} else if name == "" {
+			return fmt.Errorf("must provide --name when not using --file")
 		}
 		if containerFormat != "" && !openstackCommon.ContainsString(image.IMAGE_CONTAINER_FORMATS, containerFormat) {
 			return fmt.Errorf("invalid container format, valid: %v", image.IMAGE_CONTAINER_FORMATS)
@@ -241,7 +244,7 @@ func init() {
 	ImageList.Flags().Int("limit", 0, "Maximum number of images to get")
 	ImageList.Flags().String("visibility", "", "The visibility of the images to display.")
 
-	imageCreate.Flags().StringP("name", "n", "", "The name of image")
+	imageCreate.Flags().StringP("name", "n", "", "The name of image, if --name is empty use the name of file")
 	imageCreate.Flags().String("file", "", "Local file that contains disk image to be uploaded during creation.")
 	imageCreate.Flags().Bool("protect", false, "Prevent image from being deleted")
 	imageCreate.Flags().String("visibility", "private", "Scope of image accessibility Valid values")

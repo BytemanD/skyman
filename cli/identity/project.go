@@ -19,9 +19,9 @@ var projectList = &cobra.Command{
 		long, _ := cmd.Flags().GetBool("long")
 
 		client := cli.GetClient()
-		services, err := client.Identity.ProjectList(nil)
+		projects, err := client.Identity.ProjectList(nil)
 		if err != nil {
-			logging.Fatal("get users failed, %s", err)
+			logging.Fatal("get projects failed, %s", err)
 		}
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
@@ -32,13 +32,23 @@ var projectList = &cobra.Command{
 				{Name: "DomainId"}, {Name: "Description"},
 			},
 		}
-		pt.AddItems(services)
+		pt.AddItems(projects)
 		common.PrintPrettyTable(pt, long)
+	},
+}
+var projectDelete = &cobra.Command{
+	Use:   "delete <project id>",
+	Short: "Delete endpoints",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		err := client.Identity.ProjectDelete(args[0])
+		common.LogError(err, "delete project failed", true)
 	},
 }
 
 func init() {
 	projectList.Flags().BoolP("long", "l", false, "List additional fields in output")
 
-	Project.AddCommand(projectList)
+	Project.AddCommand(projectList, projectList)
 }

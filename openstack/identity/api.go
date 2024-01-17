@@ -80,6 +80,15 @@ func (client IdentityClientV3) ProjectList(query url.Values) ([]Project, error) 
 	resp.BodyUnmarshal(&respBody)
 	return respBody["projects"], nil
 }
+
+func (client IdentityClientV3) ProjectDelete(id string) error {
+	_, err := client.Request(
+		common.NewResourceDeleteRequest(client.endpoint,
+			"projects", id, client.BaseHeaders),
+	)
+	return err
+}
+
 func (client IdentityClientV3) RoleAssignmentList(query url.Values) ([]RoleAssigment, error) {
 	resp, err := client.Request(client.newRequest("role_assignments", "", query, nil))
 	if err != nil {

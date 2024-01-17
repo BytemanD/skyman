@@ -283,7 +283,7 @@ func (client ComputeClientV2) ServiceDisable(host string, binary string,
 func (client ComputeClientV2) ServerAction(action string, id string, params interface{}) (*common.Response, error) {
 	body, _ := json.Marshal(map[string]interface{}{action: params})
 	return client.Request(
-		client.newPutRequest(fmt.Sprintf("servers/%s", id), "action", body),
+		client.newPostRequest(fmt.Sprintf("servers/%s/action", id), body),
 	)
 }
 func (client ComputeClientV2) ServerStop(id string) error {
