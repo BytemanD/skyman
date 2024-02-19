@@ -313,7 +313,7 @@ func (client ComputeClientV2) ServerUnpause(id string) error {
 	return err
 }
 func (client ComputeClientV2) ServerShelve(id string) error {
-	_, err := client.ServerAction("unshelve", id, nil)
+	_, err := client.ServerAction("shelve", id, nil)
 	return err
 }
 func (client ComputeClientV2) ServerUnshelve(id string) error {

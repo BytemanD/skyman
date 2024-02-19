@@ -448,7 +448,7 @@ var serverUnshelve = &cobra.Command{
 		client := cli.GetClient()
 
 		for _, id := range args {
-			err := client.ComputeClient().ServerShelve(id)
+			err := client.ComputeClient().ServerUnshelve(id)
 			if err != nil {
 				logging.Error("Reqeust to unshelve server failed, %v", err)
 			} else {

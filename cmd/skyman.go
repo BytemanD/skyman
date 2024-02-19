@@ -21,6 +21,7 @@ import (
 	"github.com/BytemanD/skyman/cli/templates"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
+	openstackCommon "github.com/BytemanD/skyman/openstack/common"
 )
 
 var (
@@ -115,6 +116,11 @@ func main() {
 		Short:   "Golang OpenStack Client \n" + LOGO,
 		Version: getVersion(),
 		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
+			format, _ := cmd.Flags().GetString("format")
+			if format != "" && !openstackCommon.ContainsString(common.GetOutputFormats(), format) {
+				fmt.Printf("invalid foramt '%s'\n", format)
+				os.Exit(1)
+			}
 			conf, _ := cmd.Flags().GetString("conf")
 			if err := common.LoadConfig(conf); err != nil {
 				fmt.Printf("load config failed, %v\n", err)
@@ -131,7 +137,7 @@ func main() {
 
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, i18n.T("showDebug"))
 	rootCmd.PersistentFlags().StringP("conf", "c", "", i18n.T("thePathOfConfigFile"))
-	rootCmd.PersistentFlags().StringP("format", "f", "default",
+	rootCmd.PersistentFlags().StringP("format", "f", "table",
 		fmt.Sprintf(i18n.T("formatAndSupported"), common.GetOutputFormats()))
 
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))

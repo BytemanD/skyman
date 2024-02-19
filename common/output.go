@@ -11,7 +11,7 @@ const (
 )
 
 func GetOutputFormats() []string {
-	return []string{DEFAULT, TABLE, TABLE_LIGHT, JSON, YAML}
+	return []string{TABLE, TABLE_LIGHT, JSON, YAML}
 }
 
 func PrintPrettyTable(table PrettyTable, long bool) {
@@ -20,7 +20,7 @@ func PrintPrettyTable(table PrettyTable, long bool) {
 
 func PrintPrettyItemTable(table PrettyItemTable) {
 	switch CONF.Format {
-	case TABLE, "default", "":
+	case TABLE, "":
 		table.Print(true)
 	case TABLE_LIGHT:
 		table.Style = STYLE_LIGHT
