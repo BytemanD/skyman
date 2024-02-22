@@ -112,6 +112,16 @@ var csDown = &cobra.Command{
 		printServiceTable(*service)
 	},
 }
+var csDelete = &cobra.Command{
+	Use:   "delete <host> <binary>",
+	Short: "Delete compute service",
+	Args:  cobra.ExactArgs(2),
+	Run: func(_ *cobra.Command, args []string) {
+		client := cli.GetClient()
+		err := client.ComputeClient().ServiceDelete(args[0], args[1])
+		common.LogError(err, "Delete service failed, %v", true)
+	},
+}
 
 func init() {
 	// compute service
@@ -123,7 +133,7 @@ func init() {
 
 	csDisable.Flags().String("reason", "", "Disable reason")
 
-	computeService.AddCommand(csList, csEnable, csDisable, csUp, csDown)
+	computeService.AddCommand(csList, csEnable, csDisable, csUp, csDown, csDelete)
 
 	Compute.AddCommand(computeService)
 }

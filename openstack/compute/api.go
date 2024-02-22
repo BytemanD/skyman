@@ -278,6 +278,14 @@ func (client ComputeClientV2) ServiceDisable(host string, binary string,
 	}
 	return client.ServiceAction("disable", host, binary)
 }
+func (client ComputeClientV2) ServiceDelete(host string, binary string) error {
+	service, err := client.ServiceGetByHostBinary(host, binary)
+	if err != nil {
+		return err
+	}
+	_, err = client.Request(client.newDeleteRequest("os-services", service.Id))
+	return err
+}
 
 // server api
 func (client ComputeClientV2) ServerAction(action string, id string, params interface{}) (*common.Response, error) {
