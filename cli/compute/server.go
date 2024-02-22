@@ -492,54 +492,65 @@ var serverResume = &cobra.Command{
 	},
 }
 var serverResize = &cobra.Command{
-	Use:   "resize <server> <flavor>",
+	Use:   "resize <server1> [server2 ...] <flavor>",
 	Short: "Resize server",
-	Args:  cobra.ExactArgs(2),
+	Args:  cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		wait, _ := cmd.Flags().GetBool("wait")
 		client := cli.GetClient()
 
-		flavor, err := client.ComputeClient().FlavorShow(args[1])
+		servers := args[:len(args)-1]
+		flavorId := args[len(args)-1]
+
+		flavor, err := client.ComputeClient().FlavorShow(flavorId)
 		if err != nil {
 			logging.Fatal("Get flavor %s failed, %v", args[1], err)
 		}
-
-		err = client.ComputeClient().ServerResize(args[0], args[1])
-		common.LogError(err, "Reqeust to resize server failed", true)
+		for _, serverId := range servers {
+			err = client.ComputeClient().ServerResize(serverId, flavor.Id)
+			if err != nil {
+				common.LogError(err, "Reqeust to resize server failed", false)
+			} else {
+				logging.Info("requested to resize server %s", serverId)
+			}
+		}
 
 		if wait {
-			client.WaitServerResized(args[0], flavor.Name)
+			for _, serverId := range servers {
+				client.WaitServerResized(serverId, flavor.Name)
+			}
 		}
 	},
 }
 var serverMigrate = &cobra.Command{
-	Use:   "migrate <server>",
+	Use:   "migrate <server1> [server2]",
 	Short: "Migrate server",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 		live, _ := cmd.Flags().GetBool("live")
 		host, _ := cmd.Flags().GetString("host")
 		blockMigrate, _ := cmd.Flags().GetBool("block-migrate")
 		var err error
-		if live {
-			if host == "" {
-				err = client.ComputeClient().ServerLiveMigrate(args[0], blockMigrate)
+		for _, serverId := range args {
+			if live {
+				if host == "" {
+					err = client.ComputeClient().ServerLiveMigrate(serverId, blockMigrate)
+				} else {
+					err = client.ComputeClient().ServerLiveMigrateTo(serverId, blockMigrate, host)
+				}
 			} else {
-				err = client.ComputeClient().ServerLiveMigrateTo(args[0], blockMigrate, host)
+				if host == "" {
+					err = client.ComputeClient().ServerMigrate(serverId)
+				} else {
+					err = client.ComputeClient().ServerMigrateTo(serverId, host)
+				}
 			}
-		} else {
-			if host == "" {
-				err = client.ComputeClient().ServerMigrate(args[0])
+			if err != nil {
+				common.LogError(err, "Reqeust to migrate server failed", false)
 			} else {
-				err = client.ComputeClient().ServerMigrateTo(args[0], host)
+				fmt.Printf("Requested to migrate server: %s\n", serverId)
 			}
-		}
-
-		if err != nil {
-			logging.Error("Reqeust to migrate server failed, %v", err)
-		} else {
-			fmt.Printf("Requested to migrate server: %s\n", args[0])
 		}
 	},
 }

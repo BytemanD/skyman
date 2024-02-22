@@ -348,27 +348,33 @@ func (client ComputeClientV2) ServerMigrate(id string) error {
 	return err
 }
 func (client ComputeClientV2) ServerMigrateTo(id string, host string) error {
-	data := map[string]interface{}{
-		"host": host,
+	server, err := client.ServerShow(id)
+	if err != nil {
+		return nil
 	}
-	_, err := client.ServerAction("migrate", id, data)
+	if server.Host == host {
+		return fmt.Errorf("server %s host is %s, skip to migrate", id, server.Host)
+	}
+	data := map[string]interface{}{"host": host}
+	_, err = client.ServerAction("migrate", id, data)
 	return err
 }
 
 func (client ComputeClientV2) ServerLiveMigrate(id string, blockMigrate bool) error {
-	data := map[string]interface{}{
-		"block_migration": blockMigrate,
-		"host":            nil,
-	}
+	data := map[string]interface{}{"block_migration": blockMigrate, "host": nil}
 	_, err := client.ServerAction("os-migrateLive", id, data)
 	return err
 }
 func (client ComputeClientV2) ServerLiveMigrateTo(id string, blockMigrate bool, host string) error {
-	data := map[string]interface{}{
-		"block_migration": blockMigrate,
-		"host":            host,
+	data := map[string]interface{}{"block_migration": blockMigrate, "host": host}
+	server, err := client.ServerShow(id)
+	if err != nil {
+		return nil
 	}
-	_, err := client.ServerAction("os-migrateLive", id, data)
+	if server.Host == host {
+		return fmt.Errorf("server %s host is %s, skip to migrate", id, server.Host)
+	}
+	_, err = client.ServerAction("os-migrateLive", id, data)
 	return err
 }
 
