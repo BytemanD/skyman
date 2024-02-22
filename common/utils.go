@@ -7,7 +7,6 @@ import (
 	"os"
 	"path"
 	"strings"
-	"syscall"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -73,27 +72,6 @@ func MarshalModel(obj interface{}, indent bool) string {
 		m, _ = json.Marshal(obj)
 	}
 	return string(m)
-}
-
-func Uname() string {
-	utsname := &syscall.Utsname{}
-	syscall.Uname(utsname)
-
-	toString := func(ints [65]int8) string {
-		out := make([]byte, 0, 64)
-		for _, v := range ints {
-			if v == 0 {
-				break
-			}
-			out = append(out, uint8(v))
-		}
-		return string(out)
-	}
-
-	return fmt.Sprintf("%s %s %s %s",
-		toString(utsname.Sysname), toString(utsname.Release),
-		toString(utsname.Version), toString(utsname.Machine),
-	)
 }
 
 func PathExtSplit(file string) (string, string) {

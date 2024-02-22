@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -32,12 +31,12 @@ var (
 )
 
 var LOGO = `
-	  _                             
+      _                             
   ___| |  _ _   _ ____  _____ ____  
  /___) |_/ ) | | |    \(____ |  _ \ 
 |___ |  _ (| |_| | | | / ___ | | | |
 (___/|_| \_)\__  |_|_|_\_____|_| |_|
-		   (____/    
+           (____/
 `
 
 func getVersion() string {
@@ -54,12 +53,6 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		if GoVersion == "" {
 			GoVersion = runtime.Version()
-		}
-		if BuildDate == "" {
-			BuildDate = time.Now().Format("2006-01-02 15:04:05")
-		}
-		if BuildPlatform == "" {
-			BuildPlatform = common.Uname()
 		}
 
 		fmt.Println("Client:")
