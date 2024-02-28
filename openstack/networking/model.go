@@ -85,6 +85,7 @@ type Port struct {
 	DeviceId        string                 `json:"device_id"`
 	SecurityGroups  []string               `json:"security_groups"`
 	RevsionNumber   int                    `json:"revision_number"`
+	TenantId        string                 `json:"tenant_id,omitempty"`
 }
 
 func (port Port) MarshalVifDetails() string {

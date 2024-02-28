@@ -1,6 +1,7 @@
 package networking
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strings"
@@ -20,14 +21,26 @@ var Port = &cobra.Command{Use: "port"}
 var portList = &cobra.Command{
 	Use:   "list",
 	Short: "List ports",
+	Args: func(cmd *cobra.Command, args []string) (err error) {
+		if err = cobra.ExactArgs(0)(cmd, args); err != nil {
+			return err
+		}
+		host, _ := cmd.Flags().GetString("host")
+		noHost, _ := cmd.Flags().GetBool("no-host")
+		if host != "" && noHost {
+			return fmt.Errorf("flags --host and --no-host conflict")
+		}
+		return
+	},
 	Run: func(cmd *cobra.Command, _ []string) {
 		client := cli.GetClient()
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
 		network, _ := cmd.Flags().GetString("network")
-		server, _ := cmd.Flags().GetString("server")
-		router, _ := cmd.Flags().GetString("router")
+		device_id, _ := cmd.Flags().GetString("device-id")
+		host, _ := cmd.Flags().GetString("host")
+		noHost, _ := cmd.Flags().GetBool("no-host")
 
 		query := url.Values{}
 		if name != "" {
@@ -36,11 +49,14 @@ var portList = &cobra.Command{
 		if network != "" {
 			query.Set("network_id", network)
 		}
-		if server != "" {
-			query.Set("device_id", server)
+		if device_id != "" {
+			query.Set("device_id", device_id)
 		}
-		if router != "" {
-			query.Set("router_id", router)
+		if host != "" {
+			query.Set("binding:host_id", host)
+		}
+		if noHost {
+			query.Set("binding:host_id", "")
 		}
 		ports, err := client.NetworkingClient().PortList(query)
 		common.LogError(err, "list ports failed", true)
@@ -48,6 +64,8 @@ var portList = &cobra.Command{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name", Sort: true},
 				{Name: "Status", AutoColor: true},
+				{Name: "BindingVnicType", Text: "VnicType"},
+				{Name: "BindingVifType", Text: "VifType"},
 				{Name: "MACAddress", Text: "MAC Address"},
 				{Name: "FixedIps", Slot: func(item interface{}) interface{} {
 					p, _ := item.(networking.Port)
@@ -58,16 +76,16 @@ var portList = &cobra.Command{
 						}
 						return strings.Join(ips, ", ")
 					} else {
-						for _, fixedIp := range p.FixedIps {
-							ips = append(ips,
-								fmt.Sprintf("%s@%s", fixedIp.IpAddress, fixedIp.SubnetId))
-						}
-						return strings.Join(ips, "\n")
+						data, _ := json.Marshal(p.FixedIps)
+						return string(data)
 					}
 				}},
 				{Name: "DeviceOwner"},
+				{Name: "BindingHostId"},
 			},
 			LongColumns: []common.Column{
+				{Name: "DeviceId"},
+				{Name: "TenantId"},
 				{Name: "SecurityGroups", Slot: func(item interface{}) interface{} {
 					p, _ := item.(networking.Port)
 					return strings.Join(p.SecurityGroups, "\n")
@@ -75,8 +93,6 @@ var portList = &cobra.Command{
 			},
 			ColumnConfigs: []table.ColumnConfig{{Number: 4, Align: text.AlignRight}},
 		}
-		pt.AddItems(ports)
-		common.PrintPrettyTable(pt, long)
 		if long {
 			pt.StyleSeparateRows = true
 		}
@@ -135,9 +151,11 @@ var portDelete = &cobra.Command{
 
 func init() {
 	portList.Flags().BoolP("long", "l", false, "List additional fields in output")
-	portList.Flags().StringP("name", "n", "", "Search by router name")
+	portList.Flags().StringP("name", "n", "", "Search by port name")
 	portList.Flags().String("network", "", "Search by network")
-	portList.Flags().String("server", "", "Search by server")
+	portList.Flags().String("device-id", "", "Search by device id")
+	portList.Flags().String("host", "", "Search by binding host")
+	portList.Flags().Bool("no-host", false, "Search port with no host")
 
 	Port.AddCommand(portList, portShow, portDelete)
 }

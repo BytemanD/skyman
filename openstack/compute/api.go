@@ -85,10 +85,10 @@ func (client ComputeClientV2) ServerFound(idOrName string) (*Server, error) {
 	if err == nil {
 		return server, nil
 	}
-
 	if httpError, ok := err.(*common.HttpError); ok {
 		if httpError.IsNotFound() {
-			servers, err := client.ServerListByName(idOrName)
+			var servers []Server
+			servers, err = client.ServerListByName(idOrName)
 			if err != nil || len(servers) == 0 {
 				return nil, fmt.Errorf("server %s not found", idOrName)
 			}
