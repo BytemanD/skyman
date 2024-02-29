@@ -282,13 +282,19 @@ var serverDelete = &cobra.Command{
 		wait, _ := cmd.Flags().GetBool("wait")
 		client := cli.GetClient()
 
-		for _, id := range args {
-			err := client.ComputeClient().ServerDelete(id)
+		for _, idOrName := range args {
+			client.ComputeClient().ServerFound(idOrName)
+			s, err := client.ComputeClient().ServerFound(idOrName)
 			if err != nil {
-				logging.Fatal("Reqeust to delete server failed, %v", err)
-			} else {
-				fmt.Printf("Requested to delete server: %s\n", id)
+				common.LogError(err, "found server %s failed: %s", false)
+				continue
 			}
+			err = client.ComputeClient().ServerDelete(s.Id)
+			if err != nil {
+				common.LogError(err, "delete server %s failed %s", false)
+				continue
+			}
+			fmt.Printf("Requested to delete server: %s\n", idOrName)
 		}
 		if wait {
 			for _, id := range args {
