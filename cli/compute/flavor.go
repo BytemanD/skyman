@@ -33,26 +33,36 @@ var flavorList = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		query := url.Values{}
 		public, _ := cmd.Flags().GetBool("public")
+		name, _ := cmd.Flags().GetString("name")
+		minVcpu, _ := cmd.Flags().GetUint64("min-vcpu")
+		minRam, _ := cmd.Flags().GetUint64("min-ram")
+		minDisk, _ := cmd.Flags().GetUint64("min-disk")
+		long, _ := cmd.Flags().GetBool("long")
+
 		if public {
 			query.Set("public", "true")
 		}
-		long, _ := cmd.Flags().GetBool("long")
-		name, _ := cmd.Flags().GetString("name")
-
+		if minRam > 0 {
+			query.Set("minRam", strconv.FormatUint(minRam, 10))
+		}
+		if minDisk > 0 {
+			query.Set("minDisk", strconv.FormatUint(minDisk, 10))
+		}
 		client := cli.GetClient()
-		flavors, err := client.ComputeClient().FlavorListDetail(nil)
+		flavors, err := client.ComputeClient().FlavorListDetail(query)
 		common.LogError(err, "get server failed %s", true)
 
 		filteredFlavors := []compute.Flavor{}
-		if name != "" {
-			for _, flavor := range flavors {
-				if strings.Contains(flavor.Name, name) {
-					filteredFlavors = append(filteredFlavors, flavor)
-				}
+		for _, flavor := range flavors {
+			if name != "" && !strings.Contains(flavor.Name, name) {
+				continue
 			}
-		} else {
-			filteredFlavors = flavors
+			if minVcpu > 0 && flavor.Vcpus < int(minVcpu) {
+				continue
+			}
+			filteredFlavors = append(filteredFlavors, flavor)
 		}
+
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name"},
@@ -266,7 +276,10 @@ var flavorCopy = &cobra.Command{
 func init() {
 	// flavor list flags
 	flavorList.Flags().Bool("public", false, "List public flavors")
-	flavorList.Flags().StringP("name", "n", "", "Show flavors matched by name")
+	flavorList.Flags().StringP("name", "n", "", "Show flavors matched by name (local)")
+	flavorList.Flags().Uint64("min-vcpu", 0, "Filters the flavors by a minimum vcpu (local)")
+	flavorList.Flags().Uint64("min-ram", 0, "Filters the flavors by a minimum RAM, in MB.")
+	flavorList.Flags().Uint64("min-disk", 0, "Filters the flavors by a minimum disk space, in GiB.")
 	flavorList.Flags().BoolP("long", "l", false, "List additional fields in output")
 
 	flavorCreate.Flags().String("id", "", "Unique flavor ID, creates a UUID if empty")
