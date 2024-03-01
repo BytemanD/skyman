@@ -221,7 +221,7 @@ func (client StorageClientV2) VolumeTypeCreate(params map[string]interface{}) (*
 }
 func (client StorageClientV2) VolumeTypeDelete(id string) error {
 	_, err := client.Request(
-		common.NewResourceDeleteRequest(client.endpoint, "volume_types", id, client.BaseHeaders),
+		common.NewResourceDeleteRequest(client.endpoint, "types", id, client.BaseHeaders),
 	)
 	return err
 }

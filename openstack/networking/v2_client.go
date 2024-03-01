@@ -1,7 +1,8 @@
 package networking
 
 import (
-	"strings"
+	"os"
+	"regexp"
 
 	"github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/identity"
@@ -28,14 +29,23 @@ func (client *NeutronClientV2) GetCurrentVersion() (*identity.ApiVersion, error)
 }
 
 func GetNeutronClientV2(authClient identity.IdentityClientV3) (*NeutronClientV2, error) {
-	endpoint, err := authClient.GetServiceEndpoint(
-		keystoneauth.TYPE_NETWORK, "", keystoneauth.INTERFACE_PUBLIC)
-
-	if err != nil {
-		return nil, err
+	var endpoint string
+	if envEndpoint := os.Getenv("OS_NEUTRON_ENDPOINT"); envEndpoint != "" {
+		endpoint = envEndpoint
+	} else {
+		serviceEnv, err := authClient.GetServiceEndpoint(
+			keystoneauth.TYPE_NETWORK, "", keystoneauth.INTERFACE_PUBLIC)
+		if err != nil {
+			return nil, err
+		}
+		endpoint = serviceEnv
 	}
-	if !strings.Contains(endpoint, "/v2") {
-		endpoint += "/v2.0"
+	if matched, _ := regexp.MatchString("/v[0-9.]+", endpoint); !matched {
+		if envVersion := os.Getenv("OS_NEUTRON_VERSION"); envVersion != "" {
+			endpoint += "/" + envVersion
+		} else {
+			endpoint += "/v2.0"
+		}
 	}
 	return &NeutronClientV2{
 		IdentityClientV3: authClient,

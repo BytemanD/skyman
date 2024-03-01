@@ -95,6 +95,17 @@ var typeShow = &cobra.Command{
 		printVolumeType(*volumeType)
 	},
 }
+var typeDefault = &cobra.Command{
+	Use:   "default",
+	Short: "Show default volume type",
+	Args:  cobra.ExactArgs(0),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := cli.GetClient()
+		volumeType, err := client.StorageClient().VolumeTypeShow("default")
+		common.LogError(err, "get default volume type failed", true)
+		printVolumeType(*volumeType)
+	},
+}
 var typeCreate = &cobra.Command{
 	Use:   "create <name>",
 	Short: "Create volume type",
@@ -160,10 +171,10 @@ var typeDelete = &cobra.Command{
 				continue
 			}
 			err = client.StorageClient().VolumeTypeDelete(volumeType.Id)
-			if err == nil {
-				fmt.Printf("Requested to delete volume type %s\n", idOrName)
+			if err != nil {
+				common.LogError(err, fmt.Sprintf("delete volume type %s failed", idOrName), false)
 			} else {
-				fmt.Println(err)
+				fmt.Printf("Requested to delete volume type %s\n", idOrName)
 			}
 		}
 	},
@@ -180,6 +191,6 @@ func init() {
 	typeCreate.Flags().StringArrayP("property", "p", []string{},
 		"Set a property on this volume type (repeat option to set multiple properties)")
 
-	VolumeType.AddCommand(typeList, typeShow, typeCreate, typeDelete)
+	VolumeType.AddCommand(typeList, typeShow, typeCreate, typeDelete, typeDefault)
 	Volume.AddCommand(VolumeType)
 }
