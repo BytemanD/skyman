@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -55,9 +56,6 @@ var portList = &cobra.Command{
 		if host != "" {
 			query.Set("binding:host_id", host)
 		}
-		if noHost {
-			query.Set("binding:host_id", "")
-		}
 		ports, err := client.NetworkingClient().PortList(query)
 		common.LogError(err, "list ports failed", true)
 		pt := common.PrettyTable{
@@ -93,10 +91,21 @@ var portList = &cobra.Command{
 			},
 			ColumnConfigs: []table.ColumnConfig{{Number: 4, Align: text.AlignRight}},
 		}
+		if noHost {
+			filteredPorts := []networking.Port{}
+			for _, port := range ports {
+				if port.BindingHostId != "" {
+					continue
+				}
+				filteredPorts = append(filteredPorts, port)
+			}
+			pt.AddItems(filteredPorts)
+		} else {
+			pt.AddItems(ports)
+		}
 		if long {
 			pt.StyleSeparateRows = true
 		}
-		pt.AddItems(ports)
 		common.PrintPrettyTable(pt, long)
 	},
 }
@@ -139,13 +148,31 @@ var portDelete = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
+		wg := sync.WaitGroup{}
+		wg.Add(len(args))
+
 		for _, port := range args {
-			fmt.Printf("Reqeust to delete port %s\n", port)
-			err := client.NetworkingClient().PortDelete(port)
-			if err != nil {
-				logging.Error("Delete port %s failed, %s", port, err)
-			}
+			go func(p string, wg *sync.WaitGroup) {
+				defer wg.Done()
+				port, err := client.NetworkingClient().PortShow(p)
+				if err != nil {
+					common.LogError(err, fmt.Sprintf("Show port %s failed", p), false)
+					return
+				}
+				if port.DeviceId != "" {
+					logging.Warning("port %s is bound to %s", port.Id, port.DeviceId)
+					return
+				}
+				logging.Info("Reqeust to delete port %s\n", port.Id)
+				err = client.NetworkingClient().PortDelete(p)
+				if err != nil {
+					logging.Error("Delete port %s failed, %s", p, err)
+				} else {
+					logging.Info("Delete port %s success", p)
+				}
+			}(port, &wg)
 		}
+		wg.Wait()
 	},
 }
 
@@ -157,5 +184,5 @@ func init() {
 	portList.Flags().String("host", "", "Search by binding host")
 	portList.Flags().Bool("no-host", false, "Search port with no host")
 
-	Port.AddCommand(portList, portShow, portDelete)
+	Port.AddCommand(portList, portShow, portDelete, portPrune)
 }

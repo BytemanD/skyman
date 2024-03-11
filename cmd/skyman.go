@@ -129,7 +129,8 @@ func main() {
 	}
 
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, i18n.T("showDebug"))
-	rootCmd.PersistentFlags().StringP("conf", "c", "", i18n.T("thePathOfConfigFile"))
+	rootCmd.PersistentFlags().StringP("conf", "c", os.Getenv("SKYMAN_CONF_FILE"),
+		i18n.T("thePathOfConfigFile"))
 	rootCmd.PersistentFlags().StringP("format", "f", "table",
 		fmt.Sprintf(i18n.T("formatAndSupported"), common.GetOutputFormats()))
 

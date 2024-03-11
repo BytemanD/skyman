@@ -1,6 +1,6 @@
 debug: false
-# 输出格式，可选值: default, table, table-light, json, yaml
-format: default
+# 输出格式，可选值: table, table-light, json, yaml
+format: table
 language: en_US
 # httpTimeout: 0
 
