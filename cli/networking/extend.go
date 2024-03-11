@@ -3,6 +3,7 @@ package networking
 import (
 	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 
@@ -31,18 +32,23 @@ var portPrune = &cobra.Command{
 			}
 			filterPorts = append(filterPorts, port)
 		}
+		wg := sync.WaitGroup{}
+		wg.Add(len(filterPorts))
+
 		for _, port := range filterPorts {
-			logging.Info("delete port %s(%s)", port.Id, port.Name)
-			err := client.NetworkingClient().PortDelete(port.Id)
-			if err != nil {
-				logging.Error("delete port %s failed", err)
-			}
+			go func(port networking.Port, wg *sync.WaitGroup) {
+				defer wg.Done()
+				logging.Info("delete port %s(%s)", port.Id, port.Name)
+				err := client.NetworkingClient().PortDelete(port.Id)
+				if err != nil {
+					logging.Error("delete port %s failed: %v", port.Id, err)
+				}
+			}(port, &wg)
 		}
+		wg.Wait()
 	},
 }
 
 func init() {
 	portPrune.Flags().StringP("name", "n", "", "filter by name")
-
-	Port.AddCommand(portList, portShow, portDelete, portPrune)
 }
