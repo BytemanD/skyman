@@ -4,12 +4,17 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/BytemanD/skyman/utility"
+
 	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
-func (client StorageClientV2) VolumePrune(query url.Values, yes bool, waitDeleted bool) {
+func (client StorageClientV2) VolumePrune(query url.Values, yes bool) {
+	if query == nil {
+		query = url.Values{}
+	}
 	if len(query) == 0 {
-		query.Set("status", "error")
+		query.Add("status", "error")
 	}
 	logging.Info("查询卷: %v", query)
 	volumes, err := client.VolumeList(query)
@@ -22,26 +27,22 @@ func (client StorageClientV2) VolumePrune(query url.Values, yes bool, waitDelete
 		return
 	}
 	if !yes {
-		var confirm string
-		fmt.Println("即将删除卷:")
+		fmt.Printf("即将清理 %d 个卷:\n", len(volumes))
 		for _, server := range volumes {
 			fmt.Printf("%s (%s)\n", server.Id, server.Name)
 		}
-		for {
-			fmt.Printf("是否删除[yes/no]: ")
-			fmt.Scanf("%s %d %f", &confirm)
-			if confirm == "yes" || confirm == "y" {
-				break
-			} else if confirm == "no" || confirm == "n" {
-				return
-			} else {
-				fmt.Print("输入错误, 请重新输入!")
-			}
+		yes = utility.ScanfComfirm("是否删除?", []string{"yes", "y"}, []string{"no", "n"})
+		if !yes {
+			return
 		}
 	}
-	logging.Info("开始删除卷")
-	for _, volume := range volumes {
-		logging.Info("删除卷 %s(%s)", volume.Id, volume.Name)
-		client.VolumeDelete(volume.Id)
-	}
+	logging.Info("开始清理")
+	utility.GoroutineMap(
+		func(i interface{}) {
+			volume := i.(Volume)
+			logging.Info("删除卷 %s(%s)", volume.Id, volume.Name)
+			client.VolumeDelete(volume.Id)
+		}, volumes,
+	)
+	logging.Info("开始完成")
 }

@@ -20,7 +20,7 @@ import (
 	"github.com/BytemanD/skyman/cli/templates"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
-	openstackCommon "github.com/BytemanD/skyman/openstack/common"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var (
@@ -110,7 +110,7 @@ func main() {
 		Version: getVersion(),
 		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 			format, _ := cmd.Flags().GetString("format")
-			if format != "" && !openstackCommon.ContainsString(common.GetOutputFormats(), format) {
+			if format != "" && !utility.StringsContain(common.GetOutputFormats(), format) {
 				fmt.Printf("invalid foramt '%s'\n", format)
 				os.Exit(1)
 			}

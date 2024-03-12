@@ -10,6 +10,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/openstack/common"
+	"github.com/BytemanD/skyman/utility"
 )
 
 func (client ComputeClientV2) newRequest(resource string, id string, query url.Values, body []byte) common.RestfulRequest {
@@ -466,7 +467,7 @@ func (client ComputeClientV2) ServerActionShow(id string, requestId string) (
 ) {
 	resp, err := client.Request(
 		client.newGetRequest(
-			common.UrlJoin("servers", id, "os-instance-actions"), requestId,
+			utility.UrlJoin("servers", id, "os-instance-actions"), requestId,
 		),
 	)
 	if err != nil {
@@ -501,7 +502,7 @@ func (client ComputeClientV2) ServerRegionLiveMigrateTo(id string, destRegion st
 }
 func (client ComputeClientV2) ServerMigrationList(id string, query url.Values) ([]Migration, error) {
 	resp, err := client.Request(
-		client.newGetRequest(common.UrlJoin("servers", id, "migrations"), ""),
+		client.newGetRequest(utility.UrlJoin("servers", id, "migrations"), ""),
 	)
 	if err != nil {
 		return nil, err
@@ -543,7 +544,7 @@ func (client ComputeClientV2) FlavorListDetail(query netUrl.Values) (Flavors, er
 }
 func (client ComputeClientV2) FlavorExtraSpecsList(flavorId string) (ExtraSpecs, error) {
 	resp, err := client.Request(
-		client.newGetRequest(common.UrlJoin("flavors", flavorId, "os-extra_specs"), ""),
+		client.newGetRequest(utility.UrlJoin("flavors", flavorId, "os-extra_specs"), ""),
 	)
 	if err != nil {
 		return nil, err
@@ -577,7 +578,7 @@ func (client ComputeClientV2) FlavorShowWithExtraSpecs(flavorId string) (*Flavor
 func (client ComputeClientV2) FlavorExtraSpecsCreate(flavorId string, extraSpecs map[string]string) (ExtraSpecs, error) {
 	reqBody, _ := json.Marshal(map[string]ExtraSpecs{"extra_specs": extraSpecs})
 	resp, err := client.Request(
-		client.newPostRequest(common.UrlJoin("flavors", flavorId, "os-extra_specs"), reqBody),
+		client.newPostRequest(utility.UrlJoin("flavors", flavorId, "os-extra_specs"), reqBody),
 	)
 	if err != nil {
 		return nil, err
@@ -588,7 +589,7 @@ func (client ComputeClientV2) FlavorExtraSpecsCreate(flavorId string, extraSpecs
 }
 func (client ComputeClientV2) FlavorExtraSpecsDelete(flavorId string, extraSpec string) error {
 	_, err := client.Request(
-		client.newDeleteRequest(common.UrlJoin("flavors", flavorId, "os-extra_specs"), extraSpec),
+		client.newDeleteRequest(utility.UrlJoin("flavors", flavorId, "os-extra_specs"), extraSpec),
 	)
 	return err
 }
@@ -674,7 +675,7 @@ func (client ComputeClientV2) HypervisorShowByHostname(hostname string) (*Hyperv
 	return hypervisor, nil
 }
 func (client ComputeClientV2) HypervisorFound(idOrName string) (*Hypervisor, error) {
-	if !common.IsUUID(idOrName) {
+	if !utility.IsUUID(idOrName) {
 		return client.HypervisorShowByHostname(idOrName)
 	}
 	hypervisor, err := client.HypervisorShow(idOrName)
@@ -689,7 +690,7 @@ func (client ComputeClientV2) HypervisorUptime(id string) (*Hypervisor, error) {
 
 	resp, err := client.Request(
 		common.NewResourceListRequest(
-			client.endpoint, common.UrlJoin("os-hypervisors", id, "uptime"),
+			client.endpoint, utility.UrlJoin("os-hypervisors", id, "uptime"),
 			nil, client.BaseHeaders),
 	)
 	if err != nil {
@@ -716,7 +717,7 @@ func (client ComputeClientV2) KeypairList(query netUrl.Values) ([]Keypair, error
 func (client ComputeClientV2) ServerVolumeList(id string) ([]VolumeAttachment, error) {
 	body := map[string][]VolumeAttachment{"volumeAttachments": {}}
 	resp, err := client.Request(
-		client.newGetRequest(common.UrlJoin("servers", id, "os-volume_attachments"), ""),
+		client.newGetRequest(utility.UrlJoin("servers", id, "os-volume_attachments"), ""),
 	)
 	if err != nil {
 		return nil, err
@@ -730,7 +731,7 @@ func (client ComputeClientV2) ServerVolumeAdd(id string, volumeId string) (*Volu
 	)
 	respBody := map[string]*VolumeAttachment{"volumeAttachment": {}}
 	resp, err := client.Request(
-		client.newPostRequest(common.UrlJoin("servers", id, "os-volume_attachments"), reqBody),
+		client.newPostRequest(utility.UrlJoin("servers", id, "os-volume_attachments"), reqBody),
 	)
 	if err != nil {
 		return nil, err
@@ -740,13 +741,13 @@ func (client ComputeClientV2) ServerVolumeAdd(id string, volumeId string) (*Volu
 }
 func (client ComputeClientV2) ServerVolumeDelete(id string, volumeId string) error {
 	_, err := client.Request(
-		client.newDeleteRequest(common.UrlJoin("servers", id, "os-volume_attachments"), volumeId),
+		client.newDeleteRequest(utility.UrlJoin("servers", id, "os-volume_attachments"), volumeId),
 	)
 	return err
 }
 func (client ComputeClientV2) ServerInterfaceList(id string) ([]InterfaceAttachment, error) {
 	resp, err := client.Request(
-		client.newGetRequest(common.UrlJoin("servers", id, "os-interface"), ""),
+		client.newGetRequest(utility.UrlJoin("servers", id, "os-interface"), ""),
 	)
 	if err != nil {
 		return nil, err
@@ -760,7 +761,7 @@ func (client ComputeClientV2) ServerAddNet(id string, netId string) (*InterfaceA
 	data := map[string]string{"net_id": netId}
 	reqBody, _ := json.Marshal(map[string]interface{}{"interfaceAttachment": data})
 	resp, err := client.Request(
-		client.newPostRequest(common.UrlJoin("servers", id, "os-interface"), reqBody),
+		client.newPostRequest(utility.UrlJoin("servers", id, "os-interface"), reqBody),
 	)
 	if err != nil {
 		return nil, err
@@ -773,7 +774,7 @@ func (client ComputeClientV2) ServerAddPort(id string, portId string) (*Interfac
 	data := map[string]string{"port_id": portId}
 	reqBody, _ := json.Marshal(map[string]interface{}{"interfaceAttachment": data})
 	resp, err := client.Request(
-		client.newPostRequest(common.UrlJoin("servers", id, "os-interface"), reqBody),
+		client.newPostRequest(utility.UrlJoin("servers", id, "os-interface"), reqBody),
 	)
 	if err != nil {
 		return nil, err
@@ -785,7 +786,7 @@ func (client ComputeClientV2) ServerAddPort(id string, portId string) (*Interfac
 
 func (client ComputeClientV2) ServerInterfaceDetach(id string, portId string) error {
 	_, err := client.Request(
-		client.newDeleteRequest(common.UrlJoin("servers", id, "os-interface"), portId),
+		client.newDeleteRequest(utility.UrlJoin("servers", id, "os-interface"), portId),
 	)
 	return err
 }

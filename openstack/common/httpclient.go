@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/utility"
 )
 
 const (
@@ -147,7 +148,7 @@ func (c RestfulClient) getClient() *http.Client {
 }
 
 func (c RestfulClient) Request(req *http.Request) (*Response, error) {
-	isIoStream := ContainsString(req.Header["Content-Type"], "application/octet-stream")
+	isIoStream := utility.StringsContain(req.Header["Content-Type"], "application/octet-stream")
 	encodedHeader := encodeHeaders(getSafeHeaders(req.Header))
 	if isIoStream {
 		logging.Debug("REQ: %s %s, \n    Headers: %v \n    Body: %v",

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/openstack/common"
+	"github.com/BytemanD/skyman/utility"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 )
@@ -154,7 +154,7 @@ func (pt PrettyTable) Print(long bool) {
 			}
 			// match filter
 			if len(column.Filters) > 0 {
-				if !common.ContainsString(column.Filters, fmt.Sprintf("%v", value)) {
+				if !utility.StringsContain(column.Filters, fmt.Sprintf("%v", value)) {
 					isFiltered = true
 					break
 				}

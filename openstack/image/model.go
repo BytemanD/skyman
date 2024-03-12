@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/BytemanD/skyman/openstack/common"
+	"github.com/BytemanD/skyman/utility"
 )
 
 const (
@@ -62,7 +63,7 @@ func (img Image) GetProperties() map[string]interface{} {
 	tags := append(common.GetStructTags(img), common.GetStructTags(img.Resource)...)
 
 	for k, v := range img.raw {
-		if common.ContainsString(tags, k) {
+		if utility.StringsContain(tags, k) {
 			continue
 		}
 		proerties[k] = v

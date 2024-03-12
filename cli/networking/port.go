@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-	"sync"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -15,6 +14,7 @@ import (
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/networking"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var Port = &cobra.Command{Use: "port"}
@@ -147,32 +147,31 @@ var portDelete = &cobra.Command{
 	Short: "Delete port(s)",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		force, _ := cmd.Flags().GetBool("force")
 		client := cli.GetClient()
-		wg := sync.WaitGroup{}
-		wg.Add(len(args))
-
-		for _, port := range args {
-			go func(p string, wg *sync.WaitGroup) {
-				defer wg.Done()
+		utility.GoroutineMap(
+			func(i interface{}) {
+				p := i.(string)
 				port, err := client.NetworkingClient().PortShow(p)
 				if err != nil {
 					common.LogError(err, fmt.Sprintf("Show port %s failed", p), false)
 					return
 				}
-				if port.DeviceId != "" {
-					logging.Warning("port %s is bound to %s", port.Id, port.DeviceId)
-					return
+				if !force {
+					if port.DeviceId != "" {
+						logging.Warning("port %s is bound to %s", port.Id, port.DeviceId)
+						return
+					}
 				}
 				logging.Info("Reqeust to delete port %s\n", port.Id)
 				err = client.NetworkingClient().PortDelete(p)
 				if err != nil {
-					logging.Error("Delete port %s failed, %s", p, err)
+					common.LogError(err, fmt.Sprintf("Delete port %s failed", p), false)
 				} else {
 					logging.Info("Delete port %s success", p)
 				}
-			}(port, &wg)
-		}
-		wg.Wait()
+			}, args,
+		)
 	},
 }
 
@@ -184,5 +183,6 @@ func init() {
 	portList.Flags().String("host", "", "Search by binding host")
 	portList.Flags().Bool("no-host", false, "Search port with no host")
 
+	portDelete.Flags().Bool("force", false, "Force delete")
 	Port.AddCommand(portList, portShow, portDelete, portPrune)
 }

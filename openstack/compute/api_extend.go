@@ -50,8 +50,6 @@ func (client ComputeClientV2) ServerPrune(query url.Values, yes bool, waitDelete
 	go pw.Render()
 
 	deleteFunc := func(s Server) {
-		// logging.Info("删除虚拟机 %s(%s)", s.Id, s.Name)
-		// tracker.UpdateMessage(fmt.Sprintf("deleting %s %s", s.Id, s.Name))
 		tracker.UpdateMessage(fmt.Sprintf("Increment %d", tracker.Value()))
 		client.ServerDelete(s.Id)
 		if waitDeleted {

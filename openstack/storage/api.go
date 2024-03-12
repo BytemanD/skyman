@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/BytemanD/skyman/openstack/common"
+	"github.com/BytemanD/skyman/utility"
 )
 
 const (
@@ -16,7 +17,7 @@ const (
 var MIGRATION_POLICYS = []string{POLICY_NEVER, POLICY_ON_DEMAND}
 
 func InvalidMIgrationPoicy(policy string) error {
-	if !common.ContainsString(MIGRATION_POLICYS, policy) {
+	if !utility.StringsContain(MIGRATION_POLICYS, policy) {
 		return fmt.Errorf("Invalid migration policy: %s, supported: %s", policy, MIGRATION_POLICYS)
 	}
 	return nil

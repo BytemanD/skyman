@@ -6,8 +6,8 @@ import (
 
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	openstackCommon "github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/image"
+	"github.com/BytemanD/skyman/utility"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
@@ -23,7 +23,7 @@ var ImageList = &cobra.Command{
 			return err
 		}
 		visibility, _ := cmd.Flags().GetString("visibility")
-		if visibility != "" && !openstackCommon.ContainsString(image.IMAGE_VISIBILITIES, visibility) {
+		if visibility != "" && !utility.StringsContain(image.IMAGE_VISIBILITIES, visibility) {
 			return fmt.Errorf("invalid visibility, valid: %v", image.IMAGE_VISIBILITIES)
 		}
 		return nil
@@ -111,13 +111,13 @@ var imageCreate = &cobra.Command{
 		} else if name == "" {
 			return fmt.Errorf("must provide --name when not using --file")
 		}
-		if containerFormat != "" && !openstackCommon.ContainsString(image.IMAGE_CONTAINER_FORMATS, containerFormat) {
+		if containerFormat != "" && !utility.StringsContain(image.IMAGE_CONTAINER_FORMATS, containerFormat) {
 			return fmt.Errorf("invalid container format, valid: %v", image.IMAGE_CONTAINER_FORMATS)
 		}
-		if diskFormat != "" && !openstackCommon.ContainsString(image.IMAGE_DISK_FORMATS, diskFormat) {
+		if diskFormat != "" && !utility.StringsContain(image.IMAGE_DISK_FORMATS, diskFormat) {
 			return fmt.Errorf("invalid disk format, valid: %v", image.IMAGE_DISK_FORMATS)
 		}
-		if visibility != "" && !openstackCommon.ContainsString(image.IMAGE_VISIBILITIES, visibility) {
+		if visibility != "" && !utility.StringsContain(image.IMAGE_VISIBILITIES, visibility) {
 			return fmt.Errorf("invalid visibility, valid: %v", image.IMAGE_VISIBILITIES)
 		}
 		return nil

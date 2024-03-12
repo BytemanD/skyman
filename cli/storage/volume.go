@@ -10,7 +10,6 @@ import (
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
-	openstackCommon "github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/storage"
 	"github.com/spf13/cobra"
 )
@@ -40,9 +39,7 @@ var volumeList = &cobra.Command{
 			query.Set("all_tenants", "true")
 		}
 		volumes, err := client.StorageClient().VolumeListDetail(query)
-		if err != nil {
-			openstackCommon.RaiseIfError(err, "list volume falied")
-		}
+		common.LogError(err, "list volume falied", true)
 		table := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
@@ -102,24 +99,23 @@ var volumeDelete = &cobra.Command{
 	},
 }
 var volumePrune = &cobra.Command{
-	// TODO: support volume id or name
 	Use:   "prune",
 	Short: "Prune volume(s)",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		name, _ := cmd.Flags().GetString("name")
 		yes, _ := cmd.Flags().GetBool("yes")
-		statusList, _ := cmd.Flags().GetStringArray("status")
+		status, _ := cmd.Flags().GetString("status")
 
 		query := url.Values{}
 		if name != "" {
 			query.Set("name", name)
 		}
-		for _, status := range statusList {
+		if status != "" {
 			query.Add("status", status)
 		}
 		client := cli.GetClient()
-		client.StorageClient().VolumePrune(query, yes, false)
+		client.StorageClient().VolumePrune(query, yes)
 
 	},
 }
@@ -204,7 +200,7 @@ func init() {
 	volumeList.Flags().String("status", "", "Search by volume status")
 
 	volumePrune.Flags().StringP("name", "n", "", "Search by volume name")
-	volumePrune.Flags().StringArrayP("status", "s", nil, "Search by server status")
+	volumePrune.Flags().StringP("status", "s", "error", "Search by server status")
 	volumePrune.Flags().BoolP("yes", "y", false, i18n.T("answerYes"))
 
 	volumeCreate.Flags().Uint("size", 0, "Volume size (GB)")
