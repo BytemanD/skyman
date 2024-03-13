@@ -65,7 +65,7 @@ var versionCmd = &cobra.Command{
 		fmt.Println("Servers:")
 
 		identityVerion, err := client.Identity.GetStableVersion()
-		common.LogError(err, "get idendity veresion failed", true)
+		utility.LogError(err, "get idendity veresion failed", true)
 		if err != nil {
 			return
 		}

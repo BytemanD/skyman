@@ -8,14 +8,13 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/common"
-	osCommon "github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/compute"
 	"github.com/BytemanD/skyman/openstack/identity"
 	"github.com/BytemanD/skyman/openstack/image"
 	"github.com/BytemanD/skyman/openstack/keystoneauth"
 	"github.com/BytemanD/skyman/openstack/networking"
 	"github.com/BytemanD/skyman/openstack/storage"
+	"github.com/BytemanD/skyman/utility"
 )
 
 type OpenstackClient struct {
@@ -121,7 +120,7 @@ func (client OpenstackClient) ServerInspect(serverId string) (*ServerInspect, er
 
 	for _, volume := range serverInspect.Volumes {
 		vol, err := client.StorageClient().VolumeShow(volume.VolumeId)
-		common.LogError(err, "get volume failed", true)
+		utility.LogError(err, "get volume failed", true)
 		serverInspect.VolumeDetail[volume.VolumeId] = *vol
 	}
 	return &serverInspect, nil
@@ -155,7 +154,7 @@ func (client OpenstackClient) WaitServerRebooted(serverId string) (*compute.Serv
 
 func (client OpenstackClient) WaitServerDeleted(serverId string) error {
 	_, err := client.WaitServerStatus(serverId, "", "")
-	if httpError, ok := err.(*osCommon.HttpError); ok {
+	if httpError, ok := err.(*utility.HttpError); ok {
 		if httpError.Status == 404 {
 			return nil
 		}

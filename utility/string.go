@@ -1,8 +1,12 @@
 package utility
 
 import (
+	"bytes"
+	"encoding/json"
+	"os"
 	"strings"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -26,4 +30,35 @@ func StringsContain(stringList []string, s string) bool {
 		}
 	}
 	return false
+}
+func GetIndentJson(v interface{}) (string, error) {
+	jsonBytes, _ := json.Marshal(v)
+	var buffer bytes.Buffer
+	json.Indent(&buffer, jsonBytes, "", "  ")
+	return buffer.String(), nil
+}
+
+func RaiseIfError(err error, msg string) {
+	if err == nil {
+		return
+	}
+	if httpError, ok := err.(*HttpError); ok {
+		logging.Fatal("%s, %s, %s", msg, httpError.Reason, httpError.Message)
+	} else {
+		logging.Fatal("%s, %v", msg, err)
+	}
+}
+
+func LogError(err error, message string, exit bool) {
+	if err == nil {
+		return
+	}
+	if httpError, ok := err.(*HttpError); ok {
+		logging.Error("%s, %s: %s", message, httpError.Reason, httpError.Message)
+	} else {
+		logging.Error("%s, %v", message, err)
+	}
+	if exit {
+		os.Exit(1)
+	}
 }

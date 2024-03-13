@@ -10,6 +10,7 @@ import (
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/compute"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var serverAction = &cobra.Command{Use: "action"}
@@ -50,7 +51,7 @@ var actionShow = &cobra.Command{
 		id := args[0]
 		requestId := args[1]
 		action, err := client.ComputeClient().ServerActionShow(id, requestId)
-		common.LogError(err, "get server action failed", true)
+		utility.LogError(err, "get server action failed", true)
 		pt := common.PrettyTable{
 			Title: fmt.Sprintf("Action: %s", action.Action),
 			ShortColumns: []common.Column{
@@ -88,7 +89,7 @@ var actionSpend = &cobra.Command{
 		requestId, _ := cmd.Flags().GetString("request-id")
 
 		actionsWithEvents, err := client.ComputeClient().ServerActionsWithEvents(args[0], actionName, requestId)
-		common.LogError(err, "get server actions and events failed", true)
+		utility.LogError(err, "get server actions and events failed", true)
 
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{

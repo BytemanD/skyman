@@ -1,4 +1,4 @@
-package common
+package utility
 
 import (
 	"bufio"
@@ -15,12 +15,22 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/utility"
 )
 
 const (
 	CODE_404 = 404
 )
+
+func CloneHeaders(h1 map[string]string, h2 map[string]string) map[string]string {
+	clonedHeaders := map[string]string{}
+	for k, v := range h1 {
+		clonedHeaders[k] = v
+	}
+	for k, v := range h2 {
+		clonedHeaders[k] = v
+	}
+	return clonedHeaders
+}
 
 type BaseResponse interface {
 	BodyString()
@@ -148,7 +158,7 @@ func (c RestfulClient) getClient() *http.Client {
 }
 
 func (c RestfulClient) Request(req *http.Request) (*Response, error) {
-	isIoStream := utility.StringsContain(req.Header["Content-Type"], "application/octet-stream")
+	isIoStream := StringsContain(req.Header["Content-Type"], "application/octet-stream")
 	encodedHeader := encodeHeaders(getSafeHeaders(req.Header))
 	if isIoStream {
 		logging.Debug("REQ: %s %s, \n    Headers: %v \n    Body: %v",

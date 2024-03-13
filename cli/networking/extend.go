@@ -8,7 +8,6 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 
 	"github.com/BytemanD/skyman/cli"
-	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/networking"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
@@ -24,7 +23,7 @@ var portPrune = &cobra.Command{
 		query := url.Values{}
 		logging.Info("list ports")
 		ports, err := client.NetworkingClient().PortList(query)
-		common.LogError(err, "list ports failed", true)
+		utility.LogError(err, "list ports failed", true)
 		filterPorts := []networking.Port{}
 		for _, port := range ports {
 			if port.BindingVifType != "unbound" || port.DeviceOwner != "" {
@@ -47,17 +46,20 @@ var portPrune = &cobra.Command{
 		if !yes {
 			return
 		}
-		err = utility.GoroutineMap(
-			func(i interface{}) {
+		tg := utility.TaskGroup{
+			Func: func(i interface{}) error {
 				port := i.(networking.Port)
-				logging.Info("delete port %s(%s)", port.Id, port.Name)
+				logging.Debug("delete port %s(%s)", port.Id, port.Name)
 				err := client.NetworkingClient().PortDelete(port.Id)
 				if err != nil {
-					common.LogError(err, fmt.Sprintf("delete port %s failed", port.Id), false)
+					return fmt.Errorf("delete port %s failed: %v", port.Id, err)
 				}
+				return nil
 			},
-			filterPorts,
-		)
+			Items:        filterPorts,
+			ShowProgress: true,
+		}
+		err = tg.Start()
 		if err != nil {
 			logging.Error("清理失败: %v", err)
 		} else {

@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/BytemanD/skyman/openstack/common"
+	"github.com/BytemanD/skyman/utility"
 )
 
 const (
@@ -29,7 +29,7 @@ const (
 )
 
 type PasswordAuthPlugin struct {
-	restfulClient common.RestfulClient
+	restfulClient utility.RestfulClient
 
 	AuthUrl           string
 	Username          string
@@ -80,23 +80,23 @@ func (client *PasswordAuthPlugin) getAuthReqBody() map[string]Auth {
 	return map[string]Auth{"auth": auth}
 }
 func (plugin *PasswordAuthPlugin) Get(url string, query url.Values,
-	headers map[string]string) (*common.Response, error) {
+	headers map[string]string) (*utility.Response, error) {
 	return plugin.restfulClient.Get(url, query, headers)
 }
 func (plugin *PasswordAuthPlugin) Post(url string, body []byte,
-	headers map[string]string) (*common.Response, error) {
+	headers map[string]string) (*utility.Response, error) {
 	return plugin.restfulClient.Post(url, body, headers)
 }
 func (plugin *PasswordAuthPlugin) Put(url string, body []byte,
-	headers map[string]string) (*common.Response, error) {
+	headers map[string]string) (*utility.Response, error) {
 	return plugin.restfulClient.Put(url, body, headers)
 }
 func (plugin *PasswordAuthPlugin) Delete(url string,
-	headers map[string]string) (*common.Response, error) {
+	headers map[string]string) (*utility.Response, error) {
 	return plugin.restfulClient.Delete(url, headers)
 }
 
-func (plugin *PasswordAuthPlugin) Request(req *http.Request) (*common.Response, error) {
+func (plugin *PasswordAuthPlugin) Request(req *http.Request) (*utility.Response, error) {
 	return plugin.restfulClient.Request(req)
 }
 

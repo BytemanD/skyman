@@ -7,8 +7,8 @@ import (
 
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	openstackCommon "github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/storage"
+	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
 
@@ -51,7 +51,7 @@ var typeList = &cobra.Command{
 		if argDefault {
 			volumeType, err := client.StorageClient().VolumeTypeDefaultGet()
 			volumeTypes = append(volumeTypes, *volumeType)
-			openstackCommon.RaiseIfError(err, "list default volume falied")
+			utility.RaiseIfError(err, "list default volume falied")
 		} else {
 			query := url.Values{}
 			if public {
@@ -61,7 +61,7 @@ var typeList = &cobra.Command{
 				query.Set("is_public", "false")
 			}
 			volumeTypes, err = client.StorageClient().VolumeTypeList(query)
-			openstackCommon.RaiseIfError(err, "list volume type falied")
+			utility.RaiseIfError(err, "list volume type falied")
 		}
 
 		table := common.PrettyTable{
@@ -91,7 +91,7 @@ var typeShow = &cobra.Command{
 		client := cli.GetClient()
 		idOrName := args[0]
 		volumeType, err := client.StorageClient().VolumeTypeFound(idOrName)
-		common.LogError(err, "get volume type failed", true)
+		utility.LogError(err, "get volume type failed", true)
 		printVolumeType(*volumeType)
 	},
 }
@@ -102,7 +102,7 @@ var typeDefault = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 		volumeType, err := client.StorageClient().VolumeTypeShow("default")
-		common.LogError(err, "get default volume type failed", true)
+		utility.LogError(err, "get default volume type failed", true)
 		printVolumeType(*volumeType)
 	},
 }
@@ -153,7 +153,7 @@ var typeCreate = &cobra.Command{
 
 		client := cli.GetClient()
 		volume, err := client.StorageClient().VolumeTypeCreate(params)
-		common.LogError(err, "create volume type failed", true)
+		utility.LogError(err, "create volume type failed", true)
 		printVolumeType(*volume)
 	},
 }
@@ -167,12 +167,12 @@ var typeDelete = &cobra.Command{
 		for _, idOrName := range args {
 			volumeType, err := client.StorageClient().VolumeTypeFound(idOrName)
 			if err != nil {
-				common.LogError(err, "get volume type failed", false)
+				utility.LogError(err, "get volume type failed", false)
 				continue
 			}
 			err = client.StorageClient().VolumeTypeDelete(volumeType.Id)
 			if err != nil {
-				common.LogError(err, fmt.Sprintf("delete volume type %s failed", idOrName), false)
+				utility.LogError(err, fmt.Sprintf("delete volume type %s failed", idOrName), false)
 			} else {
 				fmt.Printf("Requested to delete volume type %s\n", idOrName)
 			}

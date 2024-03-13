@@ -37,12 +37,23 @@ func (client StorageClientV2) VolumePrune(query url.Values, yes bool) {
 		}
 	}
 	logging.Info("开始清理")
-	utility.GoroutineMap(
-		func(i interface{}) {
+	tg := utility.TaskGroup{
+		Func: func(i interface{}) error {
 			volume := i.(Volume)
-			logging.Info("删除卷 %s(%s)", volume.Id, volume.Name)
-			client.VolumeDelete(volume.Id)
-		}, volumes,
-	)
-	logging.Info("开始完成")
+			logging.Debug("delete volume %s(%s)", volume.Id, volume.Name)
+			err := client.VolumeDelete(volume.Id)
+			if err != nil {
+				return fmt.Errorf("delete volume %s failed: %v", volume.Id, err)
+			}
+			return nil
+		},
+		Items:        volumes,
+		ShowProgress: true,
+	}
+	err = tg.Start()
+	if err != nil {
+		logging.Error("清理失败: %v", err)
+	} else {
+		logging.Info("清理完成")
+	}
 }

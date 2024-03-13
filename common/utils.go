@@ -4,15 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"os"
 	"path"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
-
-	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/openstack/common"
 )
 
 func GetIndentJson(v interface{}) (string, error) {
@@ -34,19 +30,6 @@ func GetYaml(v interface{}) (string, error) {
 		return "", err
 	}
 	return string(yamlBytes), nil
-}
-func LogError(err error, message string, exit bool) {
-	if err == nil {
-		return
-	}
-	if httpError, ok := err.(*common.HttpError); ok {
-		logging.Error("%s, %s: %s", message, httpError.Reason, httpError.Message)
-	} else {
-		logging.Error("%s, %v", message, err)
-	}
-	if exit {
-		os.Exit(1)
-	}
 }
 
 func SplitKeyValue(kv string) ([]string, error) {

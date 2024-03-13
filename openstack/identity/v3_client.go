@@ -10,6 +10,7 @@ import (
 
 	"github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/keystoneauth"
+	"github.com/BytemanD/skyman/utility"
 )
 
 const (
@@ -31,15 +32,15 @@ func (client IdentityClientV3) rejectToken(req *http.Request) error {
 	return nil
 }
 
-func (client IdentityClientV3) RequestWithoutToken(restfulReq common.RestfulRequest) (*common.Response, error) {
+func (client IdentityClientV3) RequestWithoutToken(restfulReq common.RestfulRequest) (*utility.Response, error) {
 	return client.request(restfulReq, false)
 }
 
-func (client IdentityClientV3) Request(restfulReq common.RestfulRequest) (*common.Response, error) {
+func (client IdentityClientV3) Request(restfulReq common.RestfulRequest) (*utility.Response, error) {
 	return client.request(restfulReq, true)
 }
 
-func (client IdentityClientV3) request(restfulReq common.RestfulRequest, rejectToken bool) (*common.Response, error) {
+func (client IdentityClientV3) request(restfulReq common.RestfulRequest, rejectToken bool) (*utility.Response, error) {
 	url, err := restfulReq.Url()
 	if err != nil {
 		return nil, err
@@ -53,7 +54,7 @@ func (client IdentityClientV3) request(restfulReq common.RestfulRequest, rejectT
 	buffer := bytes.NewBuffer(restfulReq.Body)
 	var req *http.Request
 	if len(restfulReq.Body) > 0 && restfulReq.ShowProcess {
-		bodyWrapper := common.ReaderWithProcess{
+		bodyWrapper := utility.ReaderWithProcess{
 			Reader: buffer, Size: len(restfulReq.Body),
 		}
 		req, err = http.NewRequest(restfulReq.Method, url, &bodyWrapper)
@@ -78,9 +79,9 @@ func (client IdentityClientV3) request(restfulReq common.RestfulRequest, rejectT
 }
 func (client IdentityClientV3) FoundByIdOrName(resource string, idOrName string,
 	headers map[string]string,
-	foundById func(resp common.BaseResponse),
-	foundByName func(resp common.BaseResponse),
-) (*common.Response, error) {
+	foundById func(resp utility.BaseResponse),
+	foundByName func(resp utility.BaseResponse),
+) (*utility.Response, error) {
 	req := client.newRequest(resource, idOrName, nil, nil)
 	resp, err := client.Request(req)
 	if err != nil {
@@ -98,7 +99,7 @@ func (client IdentityClientV3) FoundByIdOrName(resource string, idOrName string,
 	return resp, err
 }
 
-func (client IdentityClientV3) Index() (*common.Response, error) {
+func (client IdentityClientV3) Index() (*utility.Response, error) {
 	req := common.NewIndexRequest(client.endpoint, nil, client.BaseHeaders)
 	return client.RequestWithoutToken(req)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/keystoneauth"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var Token = &cobra.Command{Use: "token"}
@@ -18,7 +19,7 @@ var tokenIssue = &cobra.Command{
 		client := cli.GetClient()
 
 		tokenId, err := client.Identity.Auth.GetTokenId()
-		common.LogError(err, "get token failed", true)
+		utility.LogError(err, "get token failed", true)
 		token, _ := client.Identity.Auth.GetToken()
 		pt := common.PrettyItemTable{
 			Item:            *token,

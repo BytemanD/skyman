@@ -57,7 +57,7 @@ var portList = &cobra.Command{
 			query.Set("binding:host_id", host)
 		}
 		ports, err := client.NetworkingClient().PortList(query)
-		common.LogError(err, "list ports failed", true)
+		utility.LogError(err, "list ports failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name", Sort: true},
@@ -117,7 +117,7 @@ var portShow = &cobra.Command{
 		client := cli.GetClient()
 		port, err := client.NetworkingClient().PortShow(args[0])
 		if err != nil {
-			common.LogError(err, "show port failed", true)
+			utility.LogError(err, "show port failed", true)
 		}
 		table := common.PrettyItemTable{
 			Item: *port,
@@ -149,29 +149,32 @@ var portDelete = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		force, _ := cmd.Flags().GetBool("force")
 		client := cli.GetClient()
-		utility.GoroutineMap(
-			func(i interface{}) {
+		tg := utility.TaskGroup{
+			Func: func(i interface{}) error {
 				p := i.(string)
 				port, err := client.NetworkingClient().PortShow(p)
 				if err != nil {
-					common.LogError(err, fmt.Sprintf("Show port %s failed", p), false)
-					return
+					return fmt.Errorf("Show port %s failed: %v", p, err)
 				}
 				if !force {
 					if port.DeviceId != "" {
 						logging.Warning("port %s is bound to %s", port.Id, port.DeviceId)
-						return
+						return nil
 					}
 				}
 				logging.Info("Reqeust to delete port %s\n", port.Id)
 				err = client.NetworkingClient().PortDelete(p)
 				if err != nil {
-					common.LogError(err, fmt.Sprintf("Delete port %s failed", p), false)
+					utility.LogError(err, fmt.Sprintf("Delete port %s failed", p), false)
 				} else {
 					logging.Info("Delete port %s success", p)
 				}
-			}, args,
-		)
+				return nil
+			},
+			Items:        args,
+			ShowProgress: true,
+		}
+		tg.Start()
 	},
 }
 

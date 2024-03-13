@@ -73,7 +73,7 @@ func (client StorageClientV2) VolumeFound(idOrName string) (*Volume, error) {
 	if err == nil {
 		return volume, nil
 	}
-	if httpError, ok := err.(*common.HttpError); ok {
+	if httpError, ok := err.(*utility.HttpError); ok {
 		if !httpError.IsNotFound() {
 			return nil, err
 		}
@@ -190,7 +190,7 @@ func (client StorageClientV2) VolumeTypeFound(idOrName string) (*VolumeType, err
 	if err == nil {
 		return volumeType, nil
 	}
-	if httpError, ok := err.(*common.HttpError); ok {
+	if httpError, ok := err.(*utility.HttpError); ok {
 		if !httpError.IsNotFound() {
 			return nil, err
 		}

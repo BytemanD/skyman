@@ -7,6 +7,7 @@ import (
 
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var Project = &cobra.Command{Use: "project"}
@@ -43,7 +44,7 @@ var projectDelete = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 		err := client.Identity.ProjectDelete(args[0])
-		common.LogError(err, "delete project failed", true)
+		utility.LogError(err, "delete project failed", true)
 	},
 }
 

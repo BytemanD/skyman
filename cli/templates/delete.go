@@ -7,9 +7,9 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli"
-	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/compute"
+	"github.com/BytemanD/skyman/utility"
 )
 
 func deleteFlavor(client *openstack.OpenstackClient, flavor Flavor) {
@@ -31,7 +31,7 @@ func deleteFlavor(client *openstack.OpenstackClient, flavor Flavor) {
 	}
 	logging.Info("deleting flavor %s", f.Id)
 	err = computeClient.FlavorDelete(f.Id)
-	common.LogError(err, fmt.Sprintf("delete flavor %s failed", f.Id), false)
+	utility.LogError(err, fmt.Sprintf("delete flavor %s failed", f.Id), false)
 }
 func deleteNetwork(client *openstack.OpenstackClient, network Network) {
 	networkClient := client.NetworkingClient()
@@ -42,7 +42,7 @@ func deleteNetwork(client *openstack.OpenstackClient, network Network) {
 	}
 	logging.Info("deleting network %s", network.Name)
 	err = networkClient.NetworkDelete(net.Id)
-	common.LogError(err, fmt.Sprintf("delete network %s failed: %s", network.Name, err), false)
+	utility.LogError(err, fmt.Sprintf("delete network %s failed: %s", network.Name, err), false)
 }
 
 func deleteServer(client *openstack.OpenstackClient, server Server, watch bool) {
@@ -56,7 +56,7 @@ func deleteServer(client *openstack.OpenstackClient, server Server, watch bool) 
 	}
 	logging.Info("deleting server %s", server.Name)
 	err = computeClient.ServerDelete(s.Id)
-	common.LogError(err, fmt.Sprintf("delete server %s failed", s.Name), false)
+	utility.LogError(err, fmt.Sprintf("delete server %s failed", s.Name), false)
 	if err == nil && watch {
 		client.WaitServerDeleted(s.Id)
 	}
@@ -70,7 +70,7 @@ var DeleteCmd = &cobra.Command{
 		watch, _ := cmd.Flags().GetBool("watch")
 		var err error
 		createTemplate, err := LoadCreateTemplate(args[0])
-		common.LogError(err, "load template file failed", true)
+		utility.LogError(err, "load template file failed", true)
 
 		client := cli.GetClient()
 		for _, server := range createTemplate.Servers {

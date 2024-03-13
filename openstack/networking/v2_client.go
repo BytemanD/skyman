@@ -7,6 +7,7 @@ import (
 	"github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/identity"
 	"github.com/BytemanD/skyman/openstack/keystoneauth"
+	"github.com/BytemanD/skyman/utility"
 )
 
 type NeutronClientV2 struct {
@@ -15,7 +16,7 @@ type NeutronClientV2 struct {
 	BaseHeaders map[string]string
 }
 
-func (client *NeutronClientV2) Index() (*common.Response, error) {
+func (client *NeutronClientV2) Index() (*utility.Response, error) {
 	return client.Request(common.NewIndexRequest(client.endpoint, nil, client.BaseHeaders))
 }
 func (client *NeutronClientV2) GetCurrentVersion() (*identity.ApiVersion, error) {

@@ -60,7 +60,7 @@ func (img Image) HumanSize() string {
 
 func (img Image) GetProperties() map[string]interface{} {
 	proerties := map[string]interface{}{}
-	tags := append(common.GetStructTags(img), common.GetStructTags(img.Resource)...)
+	tags := append(utility.GetStructTags(img), utility.GetStructTags(img.Resource)...)
 
 	for k, v := range img.raw {
 		if utility.StringsContain(tags, k) {

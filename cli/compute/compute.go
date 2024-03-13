@@ -9,6 +9,7 @@ import (
 
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var Compute = &cobra.Command{Use: "compute"}
@@ -119,7 +120,7 @@ var csDelete = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := cli.GetClient()
 		err := client.ComputeClient().ServiceDelete(args[0], args[1])
-		common.LogError(err, "Delete service failed, %v", true)
+		utility.LogError(err, "Delete service failed, %v", true)
 	},
 }
 

@@ -11,6 +11,7 @@ import (
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack/storage"
+	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
 
@@ -39,7 +40,7 @@ var volumeList = &cobra.Command{
 			query.Set("all_tenants", "true")
 		}
 		volumes, err := client.StorageClient().VolumeListDetail(query)
-		common.LogError(err, "list volume falied", true)
+		utility.LogError(err, "list volume falied", true)
 		table := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
@@ -72,7 +73,7 @@ var volumeShow = &cobra.Command{
 		client := cli.GetClient()
 		idOrName := args[0]
 		volume, err := client.StorageClient().VolumeFound(idOrName)
-		common.LogError(err, "get volume failed", true)
+		utility.LogError(err, "get volume failed", true)
 		printVolume(*volume)
 	},
 }
@@ -86,7 +87,7 @@ var volumeDelete = &cobra.Command{
 		for _, idOrName := range args {
 			volume, err := client.StorageClient().VolumeFound(idOrName)
 			if err != nil {
-				common.LogError(err, "get volume failed", false)
+				utility.LogError(err, "get volume failed", false)
 				continue
 			}
 			err = client.StorageClient().VolumeDelete(volume.Id)
@@ -160,10 +161,10 @@ var volumeExtend = &cobra.Command{
 		size, _ := strconv.Atoi(args[1])
 		client := cli.GetClient()
 		volume, err := client.StorageClient().VolumeFound(idOrName)
-		common.LogError(err, "get volume falied", true)
+		utility.LogError(err, "get volume falied", true)
 
 		err = client.StorageClient().VolumeExtend(volume.Id, size)
-		common.LogError(err, "extend volume falied", true)
+		utility.LogError(err, "extend volume falied", true)
 	},
 }
 var volumeRetype = &cobra.Command{
@@ -186,10 +187,10 @@ var volumeRetype = &cobra.Command{
 
 		client := cli.GetClient()
 		volume, err := client.StorageClient().VolumeFound(idOrName)
-		common.LogError(err, "get volume falied", true)
+		utility.LogError(err, "get volume falied", true)
 
 		err = client.StorageClient().VolumeRetype(volume.Id, newType, migrationPolicy)
-		common.LogError(err, "extend volume falied", true)
+		utility.LogError(err, "extend volume falied", true)
 	},
 }
 

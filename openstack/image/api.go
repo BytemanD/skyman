@@ -9,6 +9,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/openstack/common"
+	"github.com/BytemanD/skyman/utility"
 )
 
 func min(numbers ...int) int {
@@ -113,7 +114,7 @@ func (client ImageClientV2) ImageFound(idOrName string) (*Image, error) {
 	if err == nil {
 		return image, nil
 	}
-	if httpError, ok := err.(*common.HttpError); ok {
+	if httpError, ok := err.(*utility.HttpError); ok {
 		if httpError.IsNotFound() {
 			image, err = client.ImageFountByName(idOrName)
 		}
@@ -135,7 +136,7 @@ func (client ImageClientV2) ImageCreate(options Image) (*Image, error) {
 	return &image, nil
 }
 func (client ImageClientV2) ImageUpload(id string, fileName string) error {
-	headers := common.CloneHeaders(client.BaseHeaders,
+	headers := utility.CloneHeaders(client.BaseHeaders,
 		map[string]string{"Content-Type": "application/octet-stream"},
 	)
 
@@ -160,7 +161,7 @@ func (client ImageClientV2) ImageDelete(id string) error {
 }
 
 func (client ImageClientV2) ImageDownload(id string, fileName string, process bool) error {
-	headers := common.CloneHeaders(client.BaseHeaders,
+	headers := utility.CloneHeaders(client.BaseHeaders,
 		map[string]string{"Content-Type": "application/octet-stream"},
 	)
 	file, err := os.Create(fileName)

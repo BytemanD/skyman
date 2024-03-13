@@ -12,6 +12,7 @@ import (
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/networking"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var Router = &cobra.Command{Use: "router"}
@@ -29,7 +30,7 @@ var routerList = &cobra.Command{
 			query.Set("name", name)
 		}
 		routers, err := client.NetworkingClient().RouterList(query)
-		common.LogError(err, "list ports failed", true)
+		utility.LogError(err, "list ports failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name", Sort: true},
@@ -54,7 +55,7 @@ var routerShow = &cobra.Command{
 		client := cli.GetClient()
 		router, err := client.NetworkingClient().RouterShow(args[0])
 		if err != nil {
-			common.LogError(err, "show router failed", true)
+			utility.LogError(err, "show router failed", true)
 		}
 		table := common.PrettyItemTable{
 			Item: *router,
@@ -110,7 +111,7 @@ var routerCreate = &cobra.Command{
 			params["description"] = description
 		}
 		router, err := client.NetworkingClient().RouterCreate(params)
-		common.LogError(err, "create router failed", true)
+		utility.LogError(err, "create router failed", true)
 		cli.PrintRouter(*router)
 	},
 }

@@ -50,7 +50,7 @@ var ImageList = &cobra.Command{
 		}
 
 		images, err := client.ImageClient().ImageList(query, limit)
-		common.LogError(err, "get imges failed", true)
+		utility.LogError(err, "get imges failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name", Sort: true},
@@ -84,7 +84,7 @@ var ImageShow = &cobra.Command{
 		idOrName := args[0]
 		human, _ := cmd.Flags().GetBool("human")
 		image, err := client.ImageClient().ImageFound(idOrName)
-		common.LogError(err, "Get image failed", true)
+		utility.LogError(err, "Get image failed", true)
 		printImage(*image, human)
 	},
 }
@@ -147,12 +147,12 @@ var imageCreate = &cobra.Command{
 
 		imageClient := client.ImageClient()
 		image, err := imageClient.ImageCreate(reqImage)
-		common.LogError(err, "Create image faled", true)
+		utility.LogError(err, "Create image faled", true)
 		if file != "" {
 			err = imageClient.ImageUpload(image.Id, file)
-			common.LogError(err, "Upload image failed", true)
+			utility.LogError(err, "Upload image failed", true)
 			image, err = imageClient.ImageShow(image.Id)
-			common.LogError(err, "get image failed", true)
+			utility.LogError(err, "get image failed", true)
 		}
 
 		printImage(*image, true)
@@ -169,12 +169,12 @@ var imageDelete = &cobra.Command{
 		for _, idOrName := range args {
 			image, err := client.ImageClient().ImageFound(idOrName)
 			if err != nil {
-				common.LogError(err, fmt.Sprintf("get image %v failed", idOrName), false)
+				utility.LogError(err, fmt.Sprintf("get image %v failed", idOrName), false)
 				continue
 			}
 			err = client.ImageClient().ImageDelete(image.Id)
 			if err != nil {
-				common.LogError(err, fmt.Sprintf("delete image %s failed", idOrName), false)
+				utility.LogError(err, fmt.Sprintf("delete image %s failed", idOrName), false)
 				continue
 			}
 			fmt.Printf("Requested to delete image %s\n", idOrName)
@@ -190,7 +190,7 @@ var imageSave = &cobra.Command{
 		client := cli.GetClient()
 
 		image, err := client.ImageClient().ImageFound(args[0])
-		common.LogError(err, fmt.Sprintf("get image %v failed", args[0]), true)
+		utility.LogError(err, fmt.Sprintf("get image %v failed", args[0]), true)
 
 		fileName, _ := cmd.Flags().GetString("file")
 		if fileName == "" {
@@ -198,7 +198,7 @@ var imageSave = &cobra.Command{
 		}
 
 		err = client.ImageClient().ImageDownload(image.Id, fileName, true)
-		common.LogError(err, fmt.Sprintf("download image %v failed", args[0]), true)
+		utility.LogError(err, fmt.Sprintf("download image %v failed", args[0]), true)
 		fmt.Printf("Saved image to %s.\n", fileName)
 	},
 }
@@ -222,7 +222,7 @@ var imageSet = &cobra.Command{
 
 		human, _ := cmd.Flags().GetBool("human")
 		image, err := client.ImageClient().ImageFound(args[0])
-		common.LogError(err, "Get image failed", true)
+		utility.LogError(err, "Get image failed", true)
 		params := map[string]interface{}{}
 		for flag, attribute := range IMAGE_ATTRIBUTIES {
 			value, _ := cmd.Flags().GetString(flag)
@@ -232,7 +232,7 @@ var imageSet = &cobra.Command{
 			params[attribute] = value
 		}
 		image, err = client.ImageClient().ImageSet(image.Id, params)
-		common.LogError(err, "update image failed", true)
+		utility.LogError(err, "update image failed", true)
 		printImage(*image, human)
 	},
 }

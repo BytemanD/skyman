@@ -4,6 +4,7 @@ import (
 	"github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/identity"
 	"github.com/BytemanD/skyman/openstack/keystoneauth"
+	"github.com/BytemanD/skyman/utility"
 )
 
 type StorageClientV2 struct {
@@ -16,7 +17,7 @@ type StorageClientV2 struct {
 func (client StorageClientV2) UpdateVersion() {
 
 }
-func (client *StorageClientV2) Index() (*common.Response, error) {
+func (client *StorageClientV2) Index() (*utility.Response, error) {
 	return client.Request(common.NewIndexRequest(client.endpoint, nil, client.BaseHeaders))
 }
 func (client *StorageClientV2) GetCurrentVersion() (*identity.ApiVersion, error) {

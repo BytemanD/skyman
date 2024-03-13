@@ -17,9 +17,9 @@ import (
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
-	openstackCommon "github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/compute"
 	imageLib "github.com/BytemanD/skyman/openstack/image"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var Server = &cobra.Command{Use: "server"}
@@ -113,7 +113,7 @@ var serverList = &cobra.Command{
 		imageMap := map[string]imageLib.Image{}
 		for {
 			servers, err := client.ComputeClient().ServerListDetails(query)
-			common.LogError(err, "get server failed %s", true)
+			utility.LogError(err, "get server failed %s", true)
 
 			if long && verbose {
 				for i, server := range servers {
@@ -220,8 +220,8 @@ var serverCreate = &cobra.Command{
 
 		client := cli.GetClient()
 		if userDataFile != "" {
-			content, err := openstackCommon.LoadUserData(userDataFile)
-			common.LogError(err, "read user data failed", true)
+			content, err := utility.LoadUserData(userDataFile)
+			utility.LogError(err, "read user data failed", true)
 			createOption.UserData = content
 		}
 		if keyName != "" {
@@ -252,7 +252,7 @@ var serverCreate = &cobra.Command{
 		}
 		logging.Debug("networks %v", createOption.Networks)
 		server, err := client.ComputeClient().ServerCreate(createOption)
-		common.LogError(err, "create server failed", true)
+		utility.LogError(err, "create server failed", true)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -286,12 +286,12 @@ var serverDelete = &cobra.Command{
 			client.ComputeClient().ServerFound(idOrName)
 			s, err := client.ComputeClient().ServerFound(idOrName)
 			if err != nil {
-				common.LogError(err, "found server %s failed: %s", false)
+				utility.LogError(err, "found server %s failed: %s", false)
 				continue
 			}
 			err = client.ComputeClient().ServerDelete(s.Id)
 			if err != nil {
-				common.LogError(err, "delete server %s failed %s", false)
+				utility.LogError(err, "delete server %s failed %s", false)
 				continue
 			}
 			fmt.Printf("Requested to delete server: %s\n", idOrName)
@@ -314,7 +314,6 @@ var serverPrune = &cobra.Command{
 	Args:  cobra.MinimumNArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 		yes, _ := cmd.Flags().GetBool("yes")
-		wait, _ := cmd.Flags().GetBool("wait")
 		name, _ := cmd.Flags().GetString("name")
 		host, _ := cmd.Flags().GetString("host")
 		statusList, _ := cmd.Flags().GetStringArray("status")
@@ -331,7 +330,7 @@ var serverPrune = &cobra.Command{
 		}
 		client := cli.GetClient()
 
-		client.ComputeClient().ServerPrune(query, yes, wait)
+		client.ComputeClient().ServerPrune(query, yes, true)
 	},
 }
 var serverStop = &cobra.Command{
@@ -515,7 +514,7 @@ var serverResize = &cobra.Command{
 		for _, serverId := range servers {
 			err = client.ComputeClient().ServerResize(serverId, flavor.Id)
 			if err != nil {
-				common.LogError(err, "Reqeust to resize server failed", false)
+				utility.LogError(err, "Reqeust to resize server failed", false)
 			} else {
 				logging.Info("requested to resize server %s", serverId)
 			}
@@ -553,7 +552,7 @@ var serverMigrate = &cobra.Command{
 				}
 			}
 			if err != nil {
-				common.LogError(err, "Reqeust to migrate server failed", false)
+				utility.LogError(err, "Reqeust to migrate server failed", false)
 			} else {
 				fmt.Printf("Requested to migrate server: %s\n", serverId)
 			}
@@ -589,7 +588,7 @@ var serverEvacuate = &cobra.Command{
 
 		err := client.ComputeClient().ServerEvacuate(args[0], password, host, force)
 		if err != nil {
-			common.LogError(err, "Reqeust to evacuate server failed", true)
+			utility.LogError(err, "Reqeust to evacuate server failed", true)
 		} else {
 			fmt.Printf("Requested to evacuate server: %s\n", args[0])
 		}
@@ -627,7 +626,7 @@ var serverSetPassword = &cobra.Command{
 		}
 		err = client.ComputeClient().ServerSetPassword(server.Id, string(newPasswd), user)
 		if err != nil {
-			if httpError, ok := err.(*openstackCommon.HttpError); ok {
+			if httpError, ok := err.(*utility.HttpError); ok {
 				logging.Fatal("set password failed, %s, %s",
 					httpError.Reason, httpError.Message)
 			} else {
@@ -647,9 +646,9 @@ var serverSetName = &cobra.Command{
 		name := args[1]
 		client := cli.GetClient()
 		server, err := client.ComputeClient().ServerFound(idOrName)
-		common.LogError(err, "get server failed", true)
+		utility.LogError(err, "get server failed", true)
 		err = client.ComputeClient().ServerSetName(server.Id, name)
-		common.LogError(err, "set server name failed", true)
+		utility.LogError(err, "set server name failed", true)
 	},
 }
 var serverRegion = &cobra.Command{Use: "region"}
@@ -833,7 +832,6 @@ func init() {
 	serverPrune.Flags().StringP("name", "n", "", "Search by server name")
 	serverPrune.Flags().String("host", "", "Search by hostname")
 	serverPrune.Flags().StringArrayP("status", "s", nil, "Search by server status")
-	serverPrune.Flags().BoolP("wait", "w", false, "等待虚拟删除完成")
 	serverPrune.Flags().BoolP("yes", "y", false, i18n.T("answerYes"))
 
 	serverSetPassword.Flags().String("user", "", "User name")

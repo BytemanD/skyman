@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/BytemanD/skyman/openstack/common"
+	"github.com/BytemanD/skyman/utility"
 )
 
 type Router struct {
@@ -21,7 +22,7 @@ type Router struct {
 }
 
 func (router Router) MarshalExternalGatewayInfo() string {
-	jsonString, _ := common.GetIndentJson(router.ExternalGatewayInfo)
+	jsonString, _ := utility.GetIndentJson(router.ExternalGatewayInfo)
 	return jsonString
 
 }

@@ -7,11 +7,10 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli"
-	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
-	openstackCommon "github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/compute"
 	"github.com/BytemanD/skyman/openstack/image"
+	"github.com/BytemanD/skyman/utility"
 )
 
 func getImage(imageClient *image.ImageClientV2, resource BaseResource) (*image.Image, error) {
@@ -40,11 +39,11 @@ func createFlavor(client *openstack.OpenstackClient, flavor Flavor) {
 	}
 	logging.Info("creating flavor %s", newFlavor.Id)
 	f, err := computeClient.FlavorCreate(newFlavor)
-	common.LogError(err, "create flavor failed", true)
+	utility.LogError(err, "create flavor failed", true)
 	if flavor.ExtraSpecs != nil {
 		logging.Info("creating flavor extra specs")
 		_, err = computeClient.FlavorExtraSpecsCreate(f.Id, flavor.ExtraSpecs)
-		common.LogError(err, "create flavor extra specs failed", true)
+		utility.LogError(err, "create flavor extra specs failed", true)
 	}
 }
 func createNetwork(client *openstack.OpenstackClient, network Network) {
@@ -59,7 +58,7 @@ func createNetwork(client *openstack.OpenstackClient, network Network) {
 	}
 	logging.Info("creating network %s", network.Name)
 	net, err := networkClient.NetworkCreate(netParams)
-	common.LogError(err, fmt.Sprintf("create network %s failed", network.Name), true)
+	utility.LogError(err, fmt.Sprintf("create network %s failed", network.Name), true)
 	for _, subnet := range network.Subnets {
 		if subnet.IpVersion == 0 {
 			subnet.IpVersion = 4
@@ -72,7 +71,7 @@ func createNetwork(client *openstack.OpenstackClient, network Network) {
 		}
 		logging.Info("creating subnet %s (cidr: %s)", subnet.Name, subnet.Cidr)
 		_, err2 := networkClient.SubnetCreate(subnetParams)
-		common.LogError(err2, fmt.Sprintf("create subnet %s failed", subnet.Name), true)
+		utility.LogError(err2, fmt.Sprintf("create subnet %s failed", subnet.Name), true)
 	}
 }
 
@@ -105,12 +104,12 @@ func createServer(client *openstack.OpenstackClient, server Server, watch bool) 
 		logging.Info("find flavor %s", server.Flavor.Name)
 		flavor, err = computeClient.FlavorFoundByName(server.Flavor.Name)
 	}
-	common.LogError(err, "get flavor failed", true)
+	utility.LogError(err, "get flavor failed", true)
 	serverOption.Flavor = flavor.Id
 
 	if server.Image.Id != "" || server.Image.Name != "" {
 		img, err := getImage(imageClient, server.Image)
-		common.LogError(err, "get image failed", true)
+		utility.LogError(err, "get image failed", true)
 		serverOption.Image = img.Id
 	}
 
@@ -139,19 +138,19 @@ func createServer(client *openstack.OpenstackClient, server Server, watch bool) 
 				networks = append(networks, compute.ServerOptNetwork{Port: nic.Port})
 			} else if nic.Name != "" {
 				network, err := networkClient.NetworkFound(nic.Name)
-				common.LogError(err, "found network failed", true)
+				utility.LogError(err, "found network failed", true)
 				networks = append(networks, compute.ServerOptNetwork{UUID: network.Id})
 			}
 		}
 		serverOption.Networks = networks
 	}
 	if server.UserData != "" {
-		content, err := openstackCommon.LoadUserData(server.UserData)
-		common.LogError(err, "read user data failed", true)
+		content, err := utility.LoadUserData(server.UserData)
+		utility.LogError(err, "read user data failed", true)
 		serverOption.UserData = content
 	}
 	s, err = computeClient.ServerCreate(serverOption)
-	common.LogError(err, "create server failed", true)
+	utility.LogError(err, "create server failed", true)
 	logging.Info("creating server %s", serverOption.Name)
 	if watch {
 		client.WaitServerCreated(s.Id)
@@ -167,7 +166,7 @@ var CreateCmd = &cobra.Command{
 		watch, _ := cmd.Flags().GetBool("watch")
 		var err error
 		createTemplate, err := LoadCreateTemplate(args[0])
-		common.LogError(err, "load template file failed", true)
+		utility.LogError(err, "load template file failed", true)
 
 		for _, server := range createTemplate.Servers {
 			if server.Name == "" {
@@ -192,7 +191,7 @@ var CreateCmd = &cobra.Command{
 
 		for _, server := range createTemplate.Servers {
 			_, err := createServer(client, server, watch)
-			common.LogError(err, "create server failed", true)
+			utility.LogError(err, "create server failed", true)
 		}
 	},
 }

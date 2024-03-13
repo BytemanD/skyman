@@ -8,6 +8,7 @@ import (
 	"github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/identity"
 	"github.com/BytemanD/skyman/openstack/keystoneauth"
+	"github.com/BytemanD/skyman/utility"
 )
 
 type Version struct {
@@ -50,7 +51,7 @@ func (client *ComputeClientV2) MicroVersionLargeEqual(version string) bool {
 	}
 }
 
-func (client *ComputeClientV2) Index() (*common.Response, error) {
+func (client *ComputeClientV2) Index() (*utility.Response, error) {
 	return client.Request(common.NewIndexRequest(client.endpoint, nil, client.BaseHeaders))
 }
 func (client *ComputeClientV2) GetCurrentVersion() (*identity.ApiVersion, error) {

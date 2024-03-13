@@ -5,6 +5,7 @@ import (
 
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var Region = &cobra.Command{Use: "region"}
@@ -15,7 +16,7 @@ var list = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		client := cli.GetClient()
 		regions, err := client.Identity.RegionList()
-		common.LogError(err, "list region failed", true)
+		utility.LogError(err, "list region failed", true)
 
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{

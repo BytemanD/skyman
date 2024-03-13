@@ -86,7 +86,7 @@ func (client ComputeClientV2) ServerFound(idOrName string) (*Server, error) {
 	if err == nil {
 		return server, nil
 	}
-	if httpError, ok := err.(*common.HttpError); ok {
+	if httpError, ok := err.(*utility.HttpError); ok {
 		if httpError.IsNotFound() {
 			var servers []Server
 			servers, err = client.ServerListByName(idOrName)
@@ -101,10 +101,7 @@ func (client ComputeClientV2) ServerFound(idOrName string) (*Server, error) {
 
 func (client ComputeClientV2) ServerDelete(id string) error {
 	_, err := client.Request(client.newDeleteRequest("servers", id))
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (client ComputeClientV2) getBlockDeviceMappingV2(imageRef string) BlockDeviceMappingV2 {
@@ -178,10 +175,9 @@ func (client ComputeClientV2) WaitServerStatus(serverId string, status string) (
 }
 
 func (client ComputeClientV2) WaitServerDeleted(id string) {
-	client.ServerDelete(id)
 	for {
 		server, err := client.ServerShow(id)
-		if server.Id == "" || err != nil {
+		if err != nil || server.Id == "" {
 			break
 		}
 		logging.Debug("servers status is %s", server.Status)
@@ -289,7 +285,7 @@ func (client ComputeClientV2) ServiceDelete(host string, binary string) error {
 }
 
 // server api
-func (client ComputeClientV2) ServerAction(action string, id string, params interface{}) (*common.Response, error) {
+func (client ComputeClientV2) ServerAction(action string, id string, params interface{}) (*utility.Response, error) {
 	body, _ := json.Marshal(map[string]interface{}{action: params})
 	return client.Request(
 		client.newPostRequest(fmt.Sprintf("servers/%s/action", id), body),
@@ -620,7 +616,7 @@ func (client ComputeClientV2) FlavorFound(idOrName string) (*Flavor, error) {
 	if err == nil {
 		return flavor, nil
 	}
-	if httpError, ok := err.(*common.HttpError); ok {
+	if httpError, ok := err.(*utility.HttpError); ok {
 		if !httpError.IsNotFound() {
 			return nil, err
 		}
@@ -663,7 +659,7 @@ func (client ComputeClientV2) HypervisorShowByHostname(hostname string) (*Hyperv
 		return nil, err
 	}
 	if len(hypervisors) == 0 {
-		return nil, &common.HttpError{
+		return nil, &utility.HttpError{
 			Status: 404, Reason: "NotFound",
 			Message: fmt.Sprintf("hypervisor named %s not found", hostname),
 		}
@@ -679,7 +675,7 @@ func (client ComputeClientV2) HypervisorFound(idOrName string) (*Hypervisor, err
 		return client.HypervisorShowByHostname(idOrName)
 	}
 	hypervisor, err := client.HypervisorShow(idOrName)
-	if httpError, ok := err.(*common.HttpError); ok {
+	if httpError, ok := err.(*utility.HttpError); ok {
 		if httpError.Status == 404 {
 			hypervisor, err = client.HypervisorShowByHostname(idOrName)
 		}

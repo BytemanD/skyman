@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/BytemanD/skyman/openstack/common"
+	"github.com/BytemanD/skyman/utility"
 )
 
 // router api
@@ -92,7 +93,7 @@ func (client NeutronClientV2) NetworkFound(idOrName string) (*Network, error) {
 	if err == nil {
 		return network, nil
 	}
-	if httpError, ok := err.(*common.HttpError); ok {
+	if httpError, ok := err.(*utility.HttpError); ok {
 		if !httpError.IsNotFound() {
 			return nil, err
 		}

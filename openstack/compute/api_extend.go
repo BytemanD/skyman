@@ -3,11 +3,9 @@ package compute
 import (
 	"fmt"
 	"net/url"
-	"sync"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/common"
-	"github.com/jedib0t/go-pretty/v6/progress"
+	"github.com/BytemanD/skyman/utility"
 )
 
 func (client ComputeClientV2) ServerPrune(query url.Values, yes bool, waitDeleted bool) {
@@ -16,66 +14,39 @@ func (client ComputeClientV2) ServerPrune(query url.Values, yes bool, waitDelete
 	}
 	logging.Info("查询虚拟机: %v", query.Encode())
 	servers, err := client.ServerList(query)
-	common.LogError(err, "query servers failed", true)
+	utility.LogError(err, "query servers failed", true)
 	logging.Info("需要清理的虚拟机数量: %d\n", len(servers))
 	if len(servers) == 0 {
 		return
 	}
 	if !yes {
-		var confirm string
-		fmt.Println("即将删除虚拟机:")
+		fmt.Printf("即将删除 %d 个虚拟机:\n", len(servers))
 		for _, server := range servers {
-			fmt.Printf("%s (%s)\n", server.Id, server.Name)
+			fmt.Printf("    %s(%s)\n", server.Id, server.Name)
 		}
-		for {
-			fmt.Printf("是否删除[y(es)/n(o)]: ")
-			fmt.Scanln(&confirm)
-			if confirm == "yes" || confirm == "y" {
-				break
-			} else if confirm == "no" || confirm == "n" {
-				return
-			} else {
-				fmt.Print("输入错误, 请重新输入!")
-			}
-		}
+		yes = utility.ScanfComfirm("是否删除", []string{"yes", "y"}, []string{"no", "n"})
 	}
-	wg := sync.WaitGroup{}
-	workers := make(chan struct{}, 1)
-	wg.Add(len(servers))
-	pw := progress.NewWriter()
-	tracker := progress.Tracker{Total: int64(len(servers))}
-	pw.AppendTracker(&tracker)
-	pw.SetAutoStop(true)
-
-	go pw.Render()
-
-	deleteFunc := func(s Server) {
-		tracker.UpdateMessage(fmt.Sprintf("Increment %d", tracker.Value()))
-		client.ServerDelete(s.Id)
-		if waitDeleted {
-			client.WaitServerDeleted(s.Id)
-		}
-		<-workers
-		tracker.Increment(1)
-		if tracker.Value() >= tracker.Total {
-			tracker.MarkAsDone()
-		}
+	if !yes {
+		return
 	}
-
 	logging.Info("开始删除虚拟机")
-	for _, server := range servers {
-		workers <- struct{}{}
-		go deleteFunc(server)
+	tg := utility.TaskGroup{
+		Items: servers,
+		Func: func(o interface{}) error {
+			s := o.(Server)
+			fmt.Println("delete", s.Id)
+			err := client.ServerDelete(s.Id)
+			if err != nil {
+				return fmt.Errorf("delete %s failed: %v", s.Id, err)
+			}
+			if waitDeleted {
+				client.WaitServerDeleted(s.Id)
+			}
+			return nil
+		},
+		ShowProgress: true,
 	}
-	for !tracker.IsDone() {
-
-	}
-	if tracker.IsDone() {
-		tracker.Increment(1)
-		logging.Info("")
-		// pw.Stop()
-	}
-	wg.Wait()
+	tg.Start()
 }
 
 func (client ComputeClientV2) FlavorCopy(flavorId string, newName string, newId string,

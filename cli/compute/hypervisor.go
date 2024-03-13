@@ -10,6 +10,7 @@ import (
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/compute"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var Hypervisor = &cobra.Command{Use: "hypervisor"}
@@ -33,7 +34,7 @@ var hypervisorList = &cobra.Command{
 			query.Set("hypervisor_hostname_pattern", name)
 		}
 		hypervisors, err := client.ComputeClient().HypervisorListDetail(query)
-		common.LogError(err, "list hypervisors failed", true)
+		utility.LogError(err, "list hypervisors failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Hostname"}, {Name: "HostIp"},
@@ -71,7 +72,7 @@ var hypervisorShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 		hypervisor, err := client.ComputeClient().HypervisorFound(args[0])
-		common.LogError(err, "get hypervisor failed", true)
+		utility.LogError(err, "get hypervisor failed", true)
 
 		pt := common.PrettyItemTable{
 			ShortFields: []common.Column{
@@ -145,10 +146,10 @@ var hypervisorUptime = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := cli.GetClient()
 		hypervisor, err := client.ComputeClient().HypervisorFound(args[0])
-		common.LogError(err, "get hypervisor failed", true)
+		utility.LogError(err, "get hypervisor failed", true)
 
 		hypervisor, err = client.ComputeClient().HypervisorUptime(hypervisor.Id)
-		common.LogError(err, "get hypervisor uptime failed", true)
+		utility.LogError(err, "get hypervisor uptime failed", true)
 
 		pt := common.PrettyItemTable{
 			ShortFields: []common.Column{

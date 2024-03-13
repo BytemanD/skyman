@@ -9,6 +9,7 @@ import (
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/networking"
+	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +28,7 @@ var subnetList = &cobra.Command{
 			query.Set("name", name)
 		}
 		subnets, err := client.NetworkingClient().SubnetList(query)
-		common.LogError(err, "get subnets failed", true)
+		utility.LogError(err, "get subnets failed", true)
 
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
@@ -65,7 +66,7 @@ var subnetCreate = &cobra.Command{
 		ipVersion, _ := cmd.Flags().GetInt("ip-version")
 
 		network, err := client.NetworkingClient().NetworkFound(netIdOrName)
-		common.LogError(err, "create subnet failed", true)
+		utility.LogError(err, "create subnet failed", true)
 
 		params := map[string]interface{}{
 			"name":       args[0],
@@ -80,7 +81,7 @@ var subnetCreate = &cobra.Command{
 			params["description"] = description
 		}
 		subnet, err := client.NetworkingClient().SubnetCreate(params)
-		common.LogError(err, "create subnet failed", true)
+		utility.LogError(err, "create subnet failed", true)
 		cli.PrintSubnet(*subnet)
 	},
 }

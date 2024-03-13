@@ -10,6 +10,7 @@ import (
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/compute"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var serverInterface = &cobra.Command{Use: "interface"}
@@ -54,7 +55,7 @@ var interfaceAttachPort = &cobra.Command{
 		client := cli.GetClient()
 
 		attachment, err := client.ComputeClient().ServerAddPort(args[0], args[1])
-		common.LogError(err, fmt.Sprintf("Attach port %s to server failed", args[1]), true)
+		utility.LogError(err, fmt.Sprintf("Attach port %s to server failed", args[1]), true)
 		printinterfaceAttachments([]compute.InterfaceAttachment{*attachment})
 	},
 }
@@ -66,7 +67,7 @@ var interfaceAttachNet = &cobra.Command{
 		client := cli.GetClient()
 
 		attachment, err := client.ComputeClient().ServerAddNet(args[0], args[1])
-		common.LogError(err, fmt.Sprintf("Attach network %s to server failed", args[1]), true)
+		utility.LogError(err, fmt.Sprintf("Attach network %s to server failed", args[1]), true)
 		printinterfaceAttachments([]compute.InterfaceAttachment{*attachment})
 	},
 }

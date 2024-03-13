@@ -13,6 +13,7 @@ import (
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/compute"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var Flavor = &cobra.Command{Use: "flavor"}
@@ -50,7 +51,7 @@ var flavorList = &cobra.Command{
 		}
 		client := cli.GetClient()
 		flavors, err := client.ComputeClient().FlavorListDetail(query)
-		common.LogError(err, "get server failed %s", true)
+		utility.LogError(err, "get server failed %s", true)
 
 		filteredFlavors := []compute.Flavor{}
 		for _, flavor := range flavors {
@@ -102,7 +103,7 @@ var flavorShow = &cobra.Command{
 		client := cli.GetClient()
 		idOrName := args[0]
 		flavor, err := client.ComputeClient().FlavorShowWithExtraSpecs(idOrName)
-		common.LogError(err, "Show flavor failed", true)
+		utility.LogError(err, "Show flavor failed", true)
 		printFlavor(*flavor)
 	},
 }
@@ -115,9 +116,9 @@ var flavorDelete = &cobra.Command{
 		client := cli.GetClient()
 		for _, flavorId := range args {
 			flavor, err := client.ComputeClient().FlavorFound(flavorId)
-			common.LogError(err, "Get flavor failed", false)
+			utility.LogError(err, "Get flavor failed", false)
 			err = client.ComputeClient().FlavorDelete(flavor.Id)
-			common.LogError(err, "Delete flavor failed", false)
+			utility.LogError(err, "Delete flavor failed", false)
 
 			fmt.Printf("Flavor %s deleted \n", flavorId)
 		}
@@ -175,7 +176,7 @@ var flavorCreate = &cobra.Command{
 		client := cli.GetClient()
 
 		flavor, err := client.ComputeClient().FlavorCreate(reqFlavor)
-		common.LogError(err, "create flavor failed", true)
+		utility.LogError(err, "create flavor failed", true)
 
 		if len(properties) > 0 {
 			extraSpecs := getExtraSpecsMap(properties)
@@ -208,7 +209,7 @@ var flavorSet = &cobra.Command{
 		}
 
 		flavor, err := client.ComputeClient().FlavorFound(idOrName)
-		common.LogError(err, "Get flavor failed", true)
+		utility.LogError(err, "Get flavor failed", true)
 		client.ComputeClient().FlavorExtraSpecsCreate(flavor.Id, extraSpecs)
 	},
 }
@@ -221,10 +222,10 @@ var flavorUnset = &cobra.Command{
 
 		properties, _ := cmds.Flags().GetStringArray("property")
 		flavor, err := client.ComputeClient().FlavorFound(args[0])
-		common.LogError(err, "Get flavor failed", true)
+		utility.LogError(err, "Get flavor failed", true)
 		for _, property := range properties {
 			client.ComputeClient().FlavorExtraSpecsDelete(flavor.Id, property)
-			common.LogError(err, "delete extra specs failed", false)
+			utility.LogError(err, "delete extra specs failed", false)
 
 		}
 

@@ -10,6 +10,7 @@ import (
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/networking"
+	"github.com/BytemanD/skyman/utility"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
@@ -82,7 +83,7 @@ var networkShow = &cobra.Command{
 		client := cli.GetClient()
 		network, err := client.NetworkingClient().NetworkShow(args[0])
 		if err != nil {
-			common.LogError(err, "show network failed", true)
+			utility.LogError(err, "show network failed", true)
 		}
 		table := common.PrettyItemTable{
 			Item: *network,
@@ -120,7 +121,7 @@ var networkCreate = &cobra.Command{
 			params["description"] = description
 		}
 		network, err := client.NetworkingClient().NetworkCreate(params)
-		common.LogError(err, "create network failed", true)
+		utility.LogError(err, "create network failed", true)
 		cli.PrintNetwork(*network)
 	},
 }

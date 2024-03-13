@@ -7,6 +7,7 @@ import (
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/compute"
+	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +24,7 @@ var groupList = &cobra.Command{
 
 		long, _ := cmd.Flags().GetBool("long")
 		serverGroups, err := client.ComputeClient().ServerGroupList(query)
-		common.LogError(err, "Get server groups failed", true)
+		utility.LogError(err, "Get server groups failed", true)
 
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{

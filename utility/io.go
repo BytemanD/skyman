@@ -1,35 +1,14 @@
-package common
+package utility
 
 import (
-	"bytes"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io"
 	"reflect"
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/fileutils"
-	"github.com/BytemanD/easygo/pkg/global/logging"
 )
-
-func GetIndentJson(v interface{}) (string, error) {
-	jsonBytes, _ := json.Marshal(v)
-	var buffer bytes.Buffer
-	json.Indent(&buffer, jsonBytes, "", "  ")
-	return buffer.String(), nil
-}
-
-func RaiseIfError(err error, msg string) {
-	if err == nil {
-		return
-	}
-	if httpError, ok := err.(*HttpError); ok {
-		logging.Fatal("%s, %s, %s", msg, httpError.Reason, httpError.Message)
-	} else {
-		logging.Fatal("%s, %v", msg, err)
-	}
-}
 
 type ReaderWithProcess struct {
 	io.Reader
@@ -87,17 +66,6 @@ func GetStructTags(i interface{}) []string {
 		}
 	}
 	return tags
-}
-
-func CloneHeaders(h1 map[string]string, h2 map[string]string) map[string]string {
-	clonedHeaders := map[string]string{}
-	for k, v := range h1 {
-		clonedHeaders[k] = v
-	}
-	for k, v := range h2 {
-		clonedHeaders[k] = v
-	}
-	return clonedHeaders
 }
 
 func LoadUserData(file string) (string, error) {
