@@ -54,7 +54,6 @@ var versionCmd = &cobra.Command{
 		if GoVersion == "" {
 			GoVersion = runtime.Version()
 		}
-
 		fmt.Println("Client:")
 		fmt.Printf("  %-14s: %s\n", "Version", getVersion())
 		fmt.Printf("  %-14s: %s\n", "GoVersion", GoVersion)
@@ -71,34 +70,38 @@ var versionCmd = &cobra.Command{
 		}
 		fmt.Printf("  %-11s: %s\n", "Identity", identityVerion.VersoinInfo())
 
-		errors := []string{}
+		errors := 0
 		compute := client.ComputeClient()
 		computeVerion, err := compute.GetCurrentVersion()
 		if err == nil {
 			fmt.Printf("  %-11s: %s\n", "Compute", computeVerion.VersoinInfo())
 		} else {
-			errors = append(errors, fmt.Sprintf("get compute api version failed %s", err))
+			fmt.Printf("  %-11s: Unknown (%s)\n", "Compute", err)
+			errors++
 		}
 		imageVerion, err := client.ImageClient().GetCurrentVersion()
 		if err == nil {
 			fmt.Printf("  %-11s: %s\n", "Image", imageVerion.VersoinInfo())
 		} else {
-			errors = append(errors, fmt.Sprintf("get image api version failed %s", err))
+			fmt.Printf("  %-11s: Unknown (%s)\n", "Image", err)
+			errors++
 		}
 		storageVerion, err := client.StorageClient().GetCurrentVersion()
 		if err == nil {
 			fmt.Printf("  %-11s: %s\n", "Storage", storageVerion.VersoinInfo())
 		} else {
-			errors = append(errors, fmt.Sprintf("get storage api version failed %s", err))
+			fmt.Printf("  %-11s: Unknown (%s)\n", "Storage", err)
+			errors++
 		}
 		networkingVerion, err := client.NetworkingClient().GetCurrentVersion()
 		if err == nil {
 			fmt.Printf("  %-11s: %s\n", "Networking", networkingVerion.VersoinInfo())
 		} else {
-			errors = append(errors, fmt.Sprintf("get networking api version failed %s", err))
+			fmt.Printf("  %-11s: Unknown (%s)\n", "Networking", err)
+			errors++
 		}
-		for _, err := range errors {
-			logging.Error("%s", err)
+		if errors > 0 {
+			os.Exit(1)
 		}
 	},
 }

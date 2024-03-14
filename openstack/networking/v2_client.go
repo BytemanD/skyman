@@ -1,6 +1,7 @@
 package networking
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 
@@ -25,7 +26,10 @@ func (client *NeutronClientV2) GetCurrentVersion() (*identity.ApiVersion, error)
 		return nil, err
 	}
 	versions := map[string]identity.ApiVersions{"versions": {}}
-	resp.BodyUnmarshal(&versions)
+	if err := resp.BodyUnmarshal(&versions); err != nil {
+		return nil, fmt.Errorf(resp.BodyString())
+	}
+
 	return versions["versions"].Current(), nil
 }
 
