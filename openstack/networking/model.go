@@ -88,6 +88,9 @@ type Port struct {
 	RevsionNumber   int                    `json:"revision_number"`
 	TenantId        string                 `json:"tenant_id,omitempty"`
 }
+type SecurityGroup struct {
+	common.Resource
+}
 
 func (port Port) MarshalVifDetails() string {
 	bytes, _ := json.Marshal(port.BindingDetails)
@@ -106,3 +109,4 @@ func (port Port) VifDetailList() []string {
 type Routers []Router
 type Networks []Network
 type Ports []Port
+type SecurityGroups []SecurityGroup

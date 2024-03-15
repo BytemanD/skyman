@@ -8,8 +8,10 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/common"
 	"github.com/BytemanD/skyman/openstack/compute"
 	"github.com/BytemanD/skyman/openstack/image"
+	"github.com/BytemanD/skyman/openstack/networking"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -91,6 +93,14 @@ func createServer(client *openstack.OpenstackClient, server Server, watch bool) 
 		MinCount:         server.Min,
 		MaxCount:         server.Max,
 	}
+	for _, sg := range server.SecurityGroups {
+		serverOption.SecurityGroups = append(
+			serverOption.SecurityGroups,
+			networking.SecurityGroup{
+				Resource: common.Resource{Name: sg},
+			})
+	}
+
 	var flavor *compute.Flavor
 	var err error
 	if server.Flavor.Id == "" && server.Flavor.Name == "" {
@@ -181,7 +191,6 @@ var CreateCmd = &cobra.Command{
 		}
 
 		client := cli.GetClient()
-
 		for _, flavor := range createTemplate.Flavors {
 			createFlavor(client, flavor)
 		}
