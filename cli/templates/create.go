@@ -7,7 +7,9 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/glance"
+	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -89,6 +91,14 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 		MinCount:         server.Min,
 		MaxCount:         server.Max,
 	}
+	for _, sg := range server.SecurityGroups {
+		serverOption.SecurityGroups = append(
+			serverOption.SecurityGroups,
+			neutron.SecurityGroup{
+				Resource: model.Resource{Name: sg},
+			})
+	}
+
 	var flavor *nova.Flavor
 	var err error
 	if server.Flavor.Id == "" && server.Flavor.Name == "" {

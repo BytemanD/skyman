@@ -9,6 +9,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/openstack/model"
+	"github.com/BytemanD/skyman/openstack/model/neutron"
 )
 
 var POWER_STATE = []string{
@@ -61,25 +62,26 @@ func (fault *Fault) Marshal() string {
 
 type Server struct {
 	model.Resource
-	TaskState    string               `json:"OS-EXT-STS:task_state,omitempty"`
-	PowerState   int                  `json:"OS-EXT-STS:power_state,omitempty"`
-	VmState      string               `json:"OS-EXT-STS:vm_state,omitempty"`
-	Host         string               `json:"OS-EXT-SRV-ATTR:host,omitempty"`
-	AZ           string               `json:"OS-EXT-AZ:availability_zone,omitempty"`
-	Flavor       Flavor               `json:"flavor,omitempty"`
-	Image        Image                `json:"image,omitempty"`
-	Fault        Fault                `json:"fault,omitempty"`
-	Addresses    map[string][]Address `json:"addresses,omitempty"`
-	InstanceName string               `json:"OS-EXT-SRV-ATTR:instance_name,omitempty"`
-	ConfigDriver string               `json:"config_drive,omitempty"`
-	Created      string               `json:"created,omitempty"`
-	Updated      string               `json:"updated,omitempty"`
-	TerminatedAt string               `json:"OS-SRV-USG:terminated_at,omitempty"`
-	LaunchedAt   string               `json:"OS-SRV-USG:launched_at,omitempty"`
-	UserId       string               `json:"user_id,omitempty"`
-	Description  string               `json:"description,omitempty"`
-	RootBdmType  string               `json:"root_bdm_type,omitempty"`
-	KeyName      string               `json:"key_name,omitempty"`
+	TaskState      string                  `json:"OS-EXT-STS:task_state,omitempty"`
+	PowerState     int                     `json:"OS-EXT-STS:power_state,omitempty"`
+	VmState        string                  `json:"OS-EXT-STS:vm_state,omitempty"`
+	Host           string                  `json:"OS-EXT-SRV-ATTR:host,omitempty"`
+	AZ             string                  `json:"OS-EXT-AZ:availability_zone,omitempty"`
+	Flavor         Flavor                  `json:"flavor,omitempty"`
+	Image          Image                   `json:"image,omitempty"`
+	Fault          Fault                   `json:"fault,omitempty"`
+	Addresses      map[string][]Address    `json:"addresses,omitempty"`
+	InstanceName   string                  `json:"OS-EXT-SRV-ATTR:instance_name,omitempty"`
+	ConfigDriver   string                  `json:"config_drive,omitempty"`
+	Created        string                  `json:"created,omitempty"`
+	Updated        string                  `json:"updated,omitempty"`
+	TerminatedAt   string                  `json:"OS-SRV-USG:terminated_at,omitempty"`
+	LaunchedAt     string                  `json:"OS-SRV-USG:launched_at,omitempty"`
+	UserId         string                  `json:"user_id,omitempty"`
+	Description    string                  `json:"description,omitempty"`
+	RootBdmType    string                  `json:"root_bdm_type,omitempty"`
+	KeyName        string                  `json:"key_name,omitempty"`
+	SecurityGroups []neutron.SecurityGroup `json:"security_groups,omitempty"`
 }
 type Image struct {
 	Id   string `json:"id,omitempty"`

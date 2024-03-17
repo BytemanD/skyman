@@ -22,7 +22,9 @@ type BlockDeviceMappingV2 struct {
 	VolumeType          string `yaml:"volumeType"`
 	DeleteOnTermination bool   `yaml:"deleteOnTermination"`
 }
-
+type SecurityGroup struct {
+	Name string `yaml:"name,omitempty"`
+}
 type Nic struct {
 	Name string `yaml:"name"`
 	UUID string `yaml:"uuid"`
@@ -39,6 +41,7 @@ type Server struct {
 	Max                  uint16                 `yaml:"max"`
 	BlockDeviceMappingV2 []BlockDeviceMappingV2 `yaml:"blockDeviceMappingV2,omitempty"`
 	UserData             string                 `yaml:"userData"`
+	SecurityGroups       []string               `yaml:"securityGroups,omitempty"`
 }
 
 type Flavor struct {

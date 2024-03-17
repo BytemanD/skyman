@@ -183,11 +183,11 @@ func (c VolumeTypeApi) List(query url.Values) ([]cinder.VolumeType, error) {
 	if err != nil {
 		return nil, err
 	}
-	body := map[string][]cinder.VolumeType{"types": {}}
+	body := map[string][]cinder.VolumeType{"volume_types": {}}
 	if err := resp.BodyUnmarshal(&body); err != nil {
 		return nil, err
 	}
-	return body["types"], nil
+	return body["volume_types"], nil
 }
 func (c VolumeTypeApi) Show(id string) (*cinder.VolumeType, error) {
 	resp, err := c.CinderV2.Get(utility.UrlJoin("types", id), nil)

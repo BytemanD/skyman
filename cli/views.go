@@ -9,6 +9,7 @@ import (
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/openstack/model/nova"
+	"github.com/BytemanD/skyman/utility"
 	"github.com/jedib0t/go-pretty/v6/list"
 )
 
@@ -58,6 +59,17 @@ func PrintServer(server nova.Server) {
 					}
 				}},
 			{Name: "KeyName"},
+			{Name: "SecurityGroups", Slot: func(item interface{}) interface{} {
+				p, _ := item.(nova.Server)
+				sgNames := []string{}
+				for _, sg := range p.SecurityGroups {
+					if utility.StringsContain(sgNames, sg.Name) {
+						continue
+					}
+					sgNames = append(sgNames, sg.Name)
+				}
+				return strings.Join(sgNames, ", ")
+			}},
 			{Name: "AZ", Text: "AZ"}, {Name: "Host"},
 			{Name: "Status"}, {Name: "TaskState"}, {Name: "PowerState"},
 			{Name: "RootBdmType"},

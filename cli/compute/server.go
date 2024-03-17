@@ -14,7 +14,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
@@ -155,7 +154,7 @@ var serverShow = &cobra.Command{
 		if image, err := c.GlanceV2().Images().Show(server.Image.Id); err == nil {
 			server.Image.Name = image.Name
 		}
-		cli.PrintServer(*server)
+		printServer(*server)
 	},
 }
 var serverCreate = &cobra.Command{
