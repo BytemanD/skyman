@@ -3,7 +3,6 @@ package networking
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -11,9 +10,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/networking"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -34,7 +33,7 @@ var portList = &cobra.Command{
 		return
 	},
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := cli.GetClient()
+		c := openstack.DefaultClient().NeutronV2()
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
@@ -43,20 +42,12 @@ var portList = &cobra.Command{
 		host, _ := cmd.Flags().GetString("host")
 		noHost, _ := cmd.Flags().GetBool("no-host")
 
-		query := url.Values{}
-		if name != "" {
-			query.Set("name", name)
-		}
-		if network != "" {
-			query.Set("network_id", network)
-		}
-		if device_id != "" {
-			query.Set("device_id", device_id)
-		}
-		if host != "" {
-			query.Set("binding:host_id", host)
-		}
-		ports, err := client.NetworkingClient().PortList(query)
+		ports, err := c.Ports().List(utility.UrlValues(map[string]string{
+			"name":            name,
+			"network_id":      network,
+			"device_id":       device_id,
+			"binding:host_id": host,
+		}))
 		utility.LogError(err, "list ports failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
@@ -66,7 +57,7 @@ var portList = &cobra.Command{
 				{Name: "BindingVifType", Text: "VifType"},
 				{Name: "MACAddress", Text: "MAC Address"},
 				{Name: "FixedIps", Slot: func(item interface{}) interface{} {
-					p, _ := item.(networking.Port)
+					p, _ := item.(neutron.Port)
 					ips := []string{}
 					if !long {
 						for _, fixedIp := range p.FixedIps {
@@ -85,14 +76,14 @@ var portList = &cobra.Command{
 				{Name: "DeviceId"},
 				{Name: "TenantId"},
 				{Name: "SecurityGroups", Slot: func(item interface{}) interface{} {
-					p, _ := item.(networking.Port)
+					p, _ := item.(neutron.Port)
 					return strings.Join(p.SecurityGroups, "\n")
 				}},
 			},
 			ColumnConfigs: []table.ColumnConfig{{Number: 4, Align: text.AlignRight}},
 		}
 		if noHost {
-			filteredPorts := []networking.Port{}
+			filteredPorts := []neutron.Port{}
 			for _, port := range ports {
 				if port.BindingHostId != "" {
 					continue
@@ -114,8 +105,8 @@ var portShow = &cobra.Command{
 	Short: "Show port",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
-		port, err := client.NetworkingClient().PortShow(args[0])
+		c := openstack.DefaultClient().NeutronV2()
+		port, err := c.Ports().Show(args[0])
 		if err != nil {
 			utility.LogError(err, "show port failed", true)
 		}
@@ -127,7 +118,7 @@ var portShow = &cobra.Command{
 				{Name: "BindingVnicType"},
 				{Name: "BindingVifType"},
 				{Name: "BindingDetails", Slot: func(item interface{}) interface{} {
-					p, _ := item.(networking.Port)
+					p, _ := item.(neutron.Port)
 					return p.MarshalVifDetails()
 				}},
 				{Name: "BindingHostId"},
@@ -148,11 +139,11 @@ var portDelete = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		force, _ := cmd.Flags().GetBool("force")
-		client := cli.GetClient()
+		c := openstack.DefaultClient().NeutronV2()
 		tg := utility.TaskGroup{
 			Func: func(i interface{}) error {
 				p := i.(string)
-				port, err := client.NetworkingClient().PortShow(p)
+				port, err := c.Ports().Show(p)
 				if err != nil {
 					return fmt.Errorf("Show port %s failed: %v", p, err)
 				}
@@ -163,7 +154,7 @@ var portDelete = &cobra.Command{
 					}
 				}
 				logging.Info("Reqeust to delete port %s\n", port.Id)
-				err = client.NetworkingClient().PortDelete(p)
+				err = c.Ports().Delete(p)
 				if err != nil {
 					utility.LogError(err, fmt.Sprintf("Delete port %s failed", p), false)
 				} else {
@@ -187,5 +178,5 @@ func init() {
 	portList.Flags().Bool("no-host", false, "Search port with no host")
 
 	portDelete.Flags().Bool("force", false, "Force delete")
-	Port.AddCommand(portList, portShow, portDelete, portPrune)
+	Port.AddCommand(portList, portShow, portDelete)
 }

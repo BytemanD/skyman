@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack"
 )
 
 var Migration = &cobra.Command{Use: "migration"}
@@ -16,7 +16,7 @@ var migrationList = &cobra.Command{
 	Use:   "list",
 	Short: "List server migrations",
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 
 		query := url.Values{}
 		status, _ := cmd.Flags().GetString("status")
@@ -37,7 +37,7 @@ var migrationList = &cobra.Command{
 		if migration_type != "" {
 			query.Set("migration_type", migration_type)
 		}
-		migrations, err := client.ComputeClient().MigrationList(query)
+		migrations, err := client.NovaV2().Migrations().List(query)
 		if err != nil {
 			logging.Fatal("%s", err)
 		}

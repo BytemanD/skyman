@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var Service = &cobra.Command{Use: "service"}
@@ -27,11 +27,10 @@ var serviceList = &cobra.Command{
 		if serviceType != "" {
 			query.Add("type", serviceType)
 		}
-		client := cli.GetClient()
-		services, err := client.Identity.ServiceList(query)
-		if err != nil {
-			logging.Fatal("get services failed, %s", err)
-		}
+		c := openstack.DefaultClient().KeystoneV3()
+		services, err := c.Services().List(query)
+		utility.LogError(err, "list services failed", true)
+
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name", Sort: true}, {Name: "Type"},

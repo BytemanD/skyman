@@ -6,59 +6,55 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/openstack"
-	"github.com/BytemanD/skyman/openstack/compute"
+	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 )
 
-func deleteFlavor(client *openstack.OpenstackClient, flavor Flavor) {
-	computeClient := client.ComputeClient()
-	var f *compute.Flavor
+func deleteFlavor(client *openstack.Openstack, flavor Flavor) {
+	var f *nova.Flavor
 	var err error
 	if flavor.Id != "" {
-		f, err = computeClient.FlavorShow(flavor.Id)
+		f, err = client.NovaV2().Flavors().Show(flavor.Id)
 		if err != nil {
 			logging.Warning("get flavor %s failed: %s", flavor.Id, err)
 			return
 		}
 	} else if flavor.Name != "" {
-		f, err = computeClient.FlavorFoundByName(flavor.Name)
+		f, err = client.NovaV2().Flavors().Found(flavor.Name)
 		if err != nil {
 			logging.Warning("get flavor %s failed, %s", flavor.Name, err)
 			return
 		}
 	}
 	logging.Info("deleting flavor %s", f.Id)
-	err = computeClient.FlavorDelete(f.Id)
+	err = client.NovaV2().Flavors().Delete(f.Id)
 	utility.LogError(err, fmt.Sprintf("delete flavor %s failed", f.Id), false)
 }
-func deleteNetwork(client *openstack.OpenstackClient, network Network) {
-	networkClient := client.NetworkingClient()
-	net, err := networkClient.NetworkFound(network.Name)
+func deleteNetwork(client *openstack.Openstack, network Network) {
+	net, err := client.NeutronV2().Networks().Found(network.Name)
 	if err != nil {
 		logging.Warning("get network %s failed: %s", network.Name, err)
 		return
 	}
 	logging.Info("deleting network %s", network.Name)
-	err = networkClient.NetworkDelete(net.Id)
+	err = client.NeutronV2().Networks().Delete(net.Id)
 	utility.LogError(err, fmt.Sprintf("delete network %s failed: %s", network.Name, err), false)
 }
 
-func deleteServer(client *openstack.OpenstackClient, server Server, watch bool) {
-	computeClient := client.ComputeClient()
-	var s *compute.Server
+func deleteServer(client *openstack.Openstack, server Server, watch bool) {
+	var s *nova.Server
 	var err error
-	s, err = computeClient.ServerFound(server.Name)
+	err = client.NovaV2().Servers().Delete(server.Name)
 	if s == nil {
 		logging.Warning("get server %s failed, %s", server.Name, err)
 		return
 	}
 	logging.Info("deleting server %s", server.Name)
-	err = computeClient.ServerDelete(s.Id)
+	err = client.NovaV2().Servers().Delete(s.Id)
 	utility.LogError(err, fmt.Sprintf("delete server %s failed", s.Name), false)
 	if err == nil && watch {
-		client.WaitServerDeleted(s.Id)
+		client.NovaV2().Servers().WaitDeleted(s.Id)
 	}
 }
 
@@ -72,7 +68,7 @@ var DeleteCmd = &cobra.Command{
 		createTemplate, err := LoadCreateTemplate(args[0])
 		utility.LogError(err, "load template file failed", true)
 
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 		for _, server := range createTemplate.Servers {
 			deleteServer(client, server, watch)
 		}

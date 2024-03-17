@@ -3,10 +3,8 @@ package identity
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
-
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -19,11 +17,10 @@ var projectList = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		long, _ := cmd.Flags().GetBool("long")
 
-		client := cli.GetClient()
-		projects, err := client.Identity.ProjectList(nil)
-		if err != nil {
-			logging.Fatal("get projects failed, %s", err)
-		}
+		c := openstack.DefaultClient().KeystoneV3()
+		projects, err := c.Projects().List(nil)
+		utility.LogError(err, "list projects failed", true)
+
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name"},
@@ -42,8 +39,8 @@ var projectDelete = &cobra.Command{
 	Short: "Delete endpoints",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
-		err := client.Identity.ProjectDelete(args[0])
+		c := openstack.DefaultClient().KeystoneV3()
+		err := c.Projects().Delete(args[0])
 		utility.LogError(err, "delete project failed", true)
 	},
 }

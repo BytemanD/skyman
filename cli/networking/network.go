@@ -9,7 +9,8 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/networking"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -22,7 +23,7 @@ var networkList = &cobra.Command{
 	Use:   "list",
 	Short: "List networks",
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := cli.GetClient()
+		c := openstack.DefaultClient().NeutronV2()
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
@@ -30,7 +31,7 @@ var networkList = &cobra.Command{
 		if name != "" {
 			query.Set("name", name)
 		}
-		networks, err := client.NetworkingClient().NetworkList(query)
+		networks, err := c.Networks().List(query)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -41,7 +42,7 @@ var networkList = &cobra.Command{
 				{Name: "Status", AutoColor: true},
 				{Name: "AdminStateUp", AutoColor: true},
 				{Name: "Subnets", Slot: func(item interface{}) interface{} {
-					p, _ := item.(networking.Network)
+					p, _ := item.(neutron.Network)
 					return strings.Join(p.Subnets, "\n")
 				}},
 			},
@@ -65,10 +66,11 @@ var networkDelete = &cobra.Command{
 	Short: "Delete network(s)",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		c := openstack.DefaultClient().NeutronV2()
+
 		for _, net := range args {
 			fmt.Printf("Reqeust to delete network %s\n", net)
-			err := client.NetworkingClient().NetworkDelete(net)
+			err := c.Networks().Delete(net)
 			if err != nil {
 				logging.Error("Delete network %s failed, %s", net, err)
 			}
@@ -80,8 +82,9 @@ var networkShow = &cobra.Command{
 	Short: "Show network",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
-		network, err := client.NetworkingClient().NetworkShow(args[0])
+		c := openstack.DefaultClient().NeutronV2()
+
+		network, err := c.Networks().Show(args[0])
 		if err != nil {
 			utility.LogError(err, "show network failed", true)
 		}
@@ -107,7 +110,8 @@ var networkCreate = &cobra.Command{
 	Short: "Create network",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		c := openstack.DefaultClient().NeutronV2()
+
 		// name, _ := cmd.Flags().GetString("name")
 		disable, _ := cmd.Flags().GetBool("disable")
 		description, _ := cmd.Flags().GetString("description")
@@ -120,7 +124,7 @@ var networkCreate = &cobra.Command{
 		if description != "" {
 			params["description"] = description
 		}
-		network, err := client.NetworkingClient().NetworkCreate(params)
+		network, err := c.Networks().Create(params)
 		utility.LogError(err, "create network failed", true)
 		cli.PrintNetwork(*network)
 	},

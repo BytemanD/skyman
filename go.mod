@@ -7,8 +7,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require github.com/BytemanD/skyman/openstack v0.0.0
-
 require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect

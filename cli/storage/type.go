@@ -5,9 +5,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/storage"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -38,18 +38,18 @@ var typeList = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 
 		long, _ := cmd.Flags().GetBool("long")
 		public, _ := cmd.Flags().GetBool("public")
 		private, _ := cmd.Flags().GetBool("private")
 		argDefault, _ := cmd.Flags().GetBool("default")
 
-		volumeTypes := []storage.VolumeType{}
+		volumeTypes := []cinder.VolumeType{}
 		var err error
 
 		if argDefault {
-			volumeType, err := client.StorageClient().VolumeTypeDefaultGet()
+			volumeType, err := client.CinderV2().VolumeTypes().Default()
 			volumeTypes = append(volumeTypes, *volumeType)
 			utility.RaiseIfError(err, "list default volume falied")
 		} else {
@@ -60,7 +60,7 @@ var typeList = &cobra.Command{
 			if private {
 				query.Set("is_public", "false")
 			}
-			volumeTypes, err = client.StorageClient().VolumeTypeList(query)
+			volumeTypes, err = client.CinderV2().VolumeTypes().List(query)
 			utility.RaiseIfError(err, "list volume type falied")
 		}
 
@@ -71,7 +71,7 @@ var typeList = &cobra.Command{
 			LongColumns: []common.Column{
 				{Name: "Description"},
 				{Name: "ExtraSpecs", Slot: func(item interface{}) interface{} {
-					obj, _ := (item).(storage.VolumeType)
+					obj, _ := (item).(cinder.VolumeType)
 					return strings.Join(obj.GetExtraSpecsList(), "\n")
 				}},
 			},
@@ -88,9 +88,9 @@ var typeShow = &cobra.Command{
 	Short: "Show volume type",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 		idOrName := args[0]
-		volumeType, err := client.StorageClient().VolumeTypeFound(idOrName)
+		volumeType, err := client.CinderV2().VolumeTypes().Found(idOrName)
 		utility.LogError(err, "get volume type failed", true)
 		printVolumeType(*volumeType)
 	},
@@ -100,8 +100,8 @@ var typeDefault = &cobra.Command{
 	Short: "Show default volume type",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
-		volumeType, err := client.StorageClient().VolumeTypeShow("default")
+		client := openstack.DefaultClient()
+		volumeType, err := client.CinderV2().VolumeTypes().Show("default")
 		utility.LogError(err, "get default volume type failed", true)
 		printVolumeType(*volumeType)
 	},
@@ -151,8 +151,8 @@ var typeCreate = &cobra.Command{
 			params["extra_specs"] = extraSpecs
 		}
 
-		client := cli.GetClient()
-		volume, err := client.StorageClient().VolumeTypeCreate(params)
+		client := openstack.DefaultClient()
+		volume, err := client.CinderV2().VolumeTypes().Create(params)
 		utility.LogError(err, "create volume type failed", true)
 		printVolumeType(*volume)
 	},
@@ -162,15 +162,15 @@ var typeDelete = &cobra.Command{
 	Short: "Delete volume type",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 
 		for _, idOrName := range args {
-			volumeType, err := client.StorageClient().VolumeTypeFound(idOrName)
+			volumeType, err := client.CinderV2().VolumeTypes().Found(idOrName)
 			if err != nil {
 				utility.LogError(err, "get volume type failed", false)
 				continue
 			}
-			err = client.StorageClient().VolumeTypeDelete(volumeType.Id)
+			err = client.CinderV2().VolumeTypes().Delete(volumeType.Id)
 			if err != nil {
 				utility.LogError(err, fmt.Sprintf("delete volume type %s failed", idOrName), false)
 			} else {

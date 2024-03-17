@@ -8,9 +8,9 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/identity"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/keystone"
 )
 
 var Endpoint = &cobra.Command{Use: "endpoint"}
@@ -38,7 +38,7 @@ var endpointList = &cobra.Command{
 
 		query := url.Values{}
 		if current {
-			endpointRegion = common.CONF.Auth.Region.Name
+			endpointRegion = common.CONF.Auth.Region.Id
 		}
 		if endpointRegion != "" {
 			query.Set("region_id", endpointRegion)
@@ -47,10 +47,11 @@ var endpointList = &cobra.Command{
 			query.Set("interface", endpointInterface)
 		}
 
-		client := cli.GetClient()
-		serviceMap := map[string]identity.Service{}
+		c := openstack.DefaultClient().KeystoneV3()
+
+		serviceMap := map[string]keystone.Service{}
 		if serviceName != "" {
-			services, err := client.Identity.ServiceListByName(serviceName)
+			services, err := c.Services().ListByName(serviceName)
 			if err != nil {
 				logging.Fatal("get service '%s' failed, %v", serviceName, err)
 			}
@@ -62,7 +63,7 @@ var endpointList = &cobra.Command{
 				query.Add("service_id", service.Id)
 			}
 		}
-		services, err := client.Identity.EndpointList(query)
+		items, err := c.Endpoints().List(query)
 		if err != nil {
 			logging.Fatal("get services failed, %s", err)
 		}
@@ -70,9 +71,9 @@ var endpointList = &cobra.Command{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "RegionId", Sort: true},
 				{Name: "ServiceName", Sort: true, Slot: func(item interface{}) interface{} {
-					p, _ := item.(identity.Endpoint)
+					p, _ := item.(keystone.Endpoint)
 					if _, ok := serviceMap[p.ServiceId]; !ok {
-						service, _ := client.Identity.ServiceShow(p.ServiceId)
+						service, _ := c.Services().Show(p.ServiceId)
 						serviceMap[p.ServiceId] = *service
 					}
 					return serviceMap[p.ServiceId].Name
@@ -80,7 +81,7 @@ var endpointList = &cobra.Command{
 				{Name: "Interface"}, {Name: "Url"},
 			},
 		}
-		pt.AddItems(services)
+		pt.AddItems(items)
 		common.PrintPrettyTable(pt, long)
 	},
 }

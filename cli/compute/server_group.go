@@ -4,9 +4,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/compute"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -18,12 +18,12 @@ var groupList = &cobra.Command{
 	Short: "List server groups",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 
 		query := url.Values{}
 
 		long, _ := cmd.Flags().GetBool("long")
-		serverGroups, err := client.ComputeClient().ServerGroupList(query)
+		serverGroups, err := client.NovaV2().ServerGroups().List(query)
 		utility.LogError(err, "Get server groups failed", true)
 
 		pt := common.PrettyTable{
@@ -31,18 +31,18 @@ var groupList = &cobra.Command{
 				{Name: "Id"},
 				{Name: "Name", Sort: true},
 				{Name: "Policies", Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.ServerGroup)
+					p, _ := item.(nova.ServerGroup)
 					return strings.Join(p.Policies, "\n")
 				}},
 			},
 			LongColumns: []common.Column{
 				{Name: "Custom"},
 				{Name: "Members", Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.ServerGroup)
+					p, _ := item.(nova.ServerGroup)
 					return strings.Join(p.Members, "\n")
 				}},
 				{Name: "Metadata", Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.ServerGroup)
+					p, _ := item.(nova.ServerGroup)
 					return strings.Join(p.GetMetadataList(), "\n")
 				}},
 				{Name: "ProjectId"},

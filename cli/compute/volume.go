@@ -6,14 +6,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/compute"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/nova"
 )
 
 var Volume = &cobra.Command{Use: "volume"}
 
-func printVolumeAttachments(items []compute.VolumeAttachment) {
+func printVolumeAttachments(items []nova.VolumeAttachment) {
 	pt := common.PrettyTable{
 		ShortColumns: []common.Column{
 			{Name: "Id", Text: "Attachment Id"},
@@ -29,8 +29,8 @@ var volumeList = &cobra.Command{
 	Short: "List service volumes",
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client := cli.GetClient()
-		attachments, err := client.ComputeClient().ServerVolumeList(args[0])
+		client := openstack.DefaultClient()
+		attachments, err := client.NovaV2().Servers().ListVolumes(args[0])
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -44,13 +44,13 @@ var volumeAttach = &cobra.Command{
 	Short: "Attach volome to service",
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
-		client := cli.GetClient()
-		attachment, err := client.ComputeClient().ServerVolumeAdd(args[0], args[1])
+		client := openstack.DefaultClient()
+		attachment, err := client.NovaV2().Servers().AddVolume(args[0], args[1])
 		if err != nil {
 			fmt.Printf("Attach volume %s to server failed: %v", args[1], err)
 			os.Exit(1)
 		}
-		printVolumeAttachments([]compute.VolumeAttachment{*attachment})
+		printVolumeAttachments([]nova.VolumeAttachment{*attachment})
 	},
 }
 var volumeDetach = &cobra.Command{
@@ -58,8 +58,8 @@ var volumeDetach = &cobra.Command{
 	Short: "Detach volume from service",
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
-		client := cli.GetClient()
-		err := client.ComputeClient().ServerVolumeDelete(args[0], args[1])
+		client := openstack.DefaultClient()
+		err := client.NovaV2().Servers().DeleteVolume(args[0], args[1])
 		if err != nil {
 			fmt.Printf("Detach volume %s from server failed: %v", args[1], err)
 			os.Exit(1)

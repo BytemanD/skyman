@@ -3,9 +3,9 @@ package identity
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/keystoneauth"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/auth"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -16,11 +16,11 @@ var tokenIssue = &cobra.Command{
 	Short: "Issue new token",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 
-		tokenId, err := client.Identity.Auth.GetTokenId()
+		tokenId, err := client.AuthPlugin.GetTokenId()
 		utility.LogError(err, "get token failed", true)
-		token, _ := client.Identity.Auth.GetToken()
+		token, _ := client.AuthPlugin.GetToken()
 		pt := common.PrettyItemTable{
 			Item:            *token,
 			Number2WidthMax: 184,
@@ -30,11 +30,11 @@ var tokenIssue = &cobra.Command{
 					return tokenId
 				}},
 				{Name: "ProjectId", Text: "Project Id", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(keystoneauth.Token)
+					p, _ := (item).(auth.Token)
 					return p.Project.Id
 				}},
 				{Name: "UserId", Text: "User Id", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(keystoneauth.Token)
+					p, _ := (item).(auth.Token)
 					return p.User.Id
 				}},
 			},

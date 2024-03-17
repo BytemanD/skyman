@@ -10,16 +10,16 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/compute"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 )
 
 var Flavor = &cobra.Command{Use: "flavor"}
 
-func getExtraSpecsMap(extraSpecs []string) compute.ExtraSpecs {
-	extraSpecsMap := compute.ExtraSpecs{}
+func getExtraSpecsMap(extraSpecs []string) nova.ExtraSpecs {
+	extraSpecsMap := nova.ExtraSpecs{}
 	for _, property := range extraSpecs {
 		kv := strings.Split(property, "=")
 		extraSpecsMap[kv[0]] = kv[1]
@@ -49,11 +49,11 @@ var flavorList = &cobra.Command{
 		if minDisk > 0 {
 			query.Set("minDisk", strconv.FormatUint(minDisk, 10))
 		}
-		client := cli.GetClient()
-		flavors, err := client.ComputeClient().FlavorListDetail(query)
+		client := openstack.DefaultClient()
+		flavors, err := client.NovaV2().Flavors().Detail(query)
 		utility.LogError(err, "get server failed %s", true)
 
-		filteredFlavors := []compute.Flavor{}
+		filteredFlavors := []nova.Flavor{}
 		for _, flavor := range flavors {
 			if name != "" && !strings.Contains(flavor.Name, name) {
 				continue
@@ -74,7 +74,7 @@ var flavorList = &cobra.Command{
 				{Name: "Swap"}, {Name: "RXTXFactor", Text: "RXTX Factor"},
 				{Name: "ExtraSpecs",
 					Slot: func(item interface{}) interface{} {
-						p, _ := item.(compute.Flavor)
+						p, _ := item.(nova.Flavor)
 						return strings.Join(p.ExtraSpecs.GetList(), "\n")
 					},
 				},
@@ -84,7 +84,7 @@ var flavorList = &cobra.Command{
 		if long {
 			pt.StyleSeparateRows = true
 			for i, flavor := range filteredFlavors {
-				extraSpecs, err := client.ComputeClient().FlavorExtraSpecsList(flavor.Id)
+				extraSpecs, err := client.NovaV2().Flavors().ListExtraSpecs(flavor.Id)
 				if err != nil {
 					logging.Fatal("get flavor extra specs failed %s", err)
 				}
@@ -100,9 +100,9 @@ var flavorShow = &cobra.Command{
 	Short: "Show flavor",
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 		idOrName := args[0]
-		flavor, err := client.ComputeClient().FlavorShowWithExtraSpecs(idOrName)
+		flavor, err := client.NovaV2().Flavors().ShowWithExtraSpecs(idOrName)
 		utility.LogError(err, "Show flavor failed", true)
 		printFlavor(*flavor)
 	},
@@ -113,11 +113,15 @@ var flavorDelete = &cobra.Command{
 
 	Args: cobra.MinimumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
+		flavorApi := client.NovaV2().Flavors()
 		for _, flavorId := range args {
-			flavor, err := client.ComputeClient().FlavorFound(flavorId)
-			utility.LogError(err, "Get flavor failed", false)
-			err = client.ComputeClient().FlavorDelete(flavor.Id)
+			flavor, err := flavorApi.Found(flavorId)
+			if err != nil {
+				utility.LogError(err, "Get flavor failed", false)
+				continue
+			}
+			err = flavorApi.Delete(flavor.Id)
 			utility.LogError(err, "Delete flavor failed", false)
 
 			fmt.Printf("Flavor %s deleted \n", flavorId)
@@ -159,7 +163,7 @@ var flavorCreate = &cobra.Command{
 		rxtxFactor, _ := cmd.Flags().GetFloat32("rxtx-factor")
 		properties, _ := cmd.Flags().GetStringArray("property")
 
-		reqFlavor := compute.Flavor{
+		reqFlavor := nova.Flavor{
 			Name:       name,
 			Vcpus:      int(vcpus),
 			Ram:        int(ram),
@@ -173,14 +177,14 @@ var flavorCreate = &cobra.Command{
 			reqFlavor.Id = flavorId
 		}
 
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 
-		flavor, err := client.ComputeClient().FlavorCreate(reqFlavor)
+		flavor, err := client.NovaV2().Flavors().Create(reqFlavor)
 		utility.LogError(err, "create flavor failed", true)
 
 		if len(properties) > 0 {
 			extraSpecs := getExtraSpecsMap(properties)
-			createdExtraSpecs, err := client.ComputeClient().FlavorExtraSpecsCreate(flavor.Id, extraSpecs)
+			createdExtraSpecs, err := client.NovaV2().Flavors().SetExtraSpecs(flavor.Id, extraSpecs)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -195,7 +199,7 @@ var flavorSet = &cobra.Command{
 	Short: "Set flavor properties",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmds *cobra.Command, args []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 		idOrName := args[0]
 
 		extraSpecs := map[string]string{}
@@ -208,9 +212,9 @@ var flavorSet = &cobra.Command{
 			extraSpecs[splited[0]] = splited[1]
 		}
 
-		flavor, err := client.ComputeClient().FlavorFound(idOrName)
+		flavor, err := client.NovaV2().Flavors().Found(idOrName)
 		utility.LogError(err, "Get flavor failed", true)
-		client.ComputeClient().FlavorExtraSpecsCreate(flavor.Id, extraSpecs)
+		client.NovaV2().Flavors().SetExtraSpecs(flavor.Id, extraSpecs)
 	},
 }
 var flavorUnset = &cobra.Command{
@@ -218,13 +222,13 @@ var flavorUnset = &cobra.Command{
 	Short: "Unset flavor properties",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmds *cobra.Command, args []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 
 		properties, _ := cmds.Flags().GetStringArray("property")
-		flavor, err := client.ComputeClient().FlavorFound(args[0])
+		flavor, err := client.NovaV2().Flavors().Found(args[0])
 		utility.LogError(err, "Get flavor failed", true)
 		for _, property := range properties {
-			client.ComputeClient().FlavorExtraSpecsDelete(flavor.Id, property)
+			client.NovaV2().Flavors().DeleteExtraSpecs(flavor.Id, property)
 			utility.LogError(err, "delete extra specs failed", false)
 
 		}
@@ -260,9 +264,9 @@ var flavorCopy = &cobra.Command{
 		setProperties, _ := cmd.Flags().GetStringArray("set")
 		unSetProperties, _ := cmd.Flags().GetStringArray("unset")
 
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 
-		newFlavor, err := client.ComputeClient().FlavorCopy(flavorId, newName, newId,
+		newFlavor, err := client.NovaV2().Flavors().Copy(flavorId, newName, newId,
 			int(vcpus), int(ram), int(disk), int(swap), int(ephemeral), rxtxFactor,
 			getExtraSpecsMap(setProperties), unSetProperties,
 		)

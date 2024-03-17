@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -15,7 +15,7 @@ var serverInspect = &cobra.Command{
 	Short: "inspect server ",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 
 		serverId := args[0]
 		format, _ := cmd.Flags().GetString("format")
@@ -47,14 +47,13 @@ var serverFound = &cobra.Command{
 	Short: "Find server in all regions",
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client := cli.GetClient()
-		regions, err := client.Identity.RegionList()
+		c := openstack.DefaultClient()
+		regions, err := c.KeystoneV3().Regions().List(nil)
 		utility.LogError(err, "get regions failed", true)
 		for _, region := range regions {
 			logging.Info("try to find server in region '%s'", region.Id)
-			client2 := cli.GetClientWithRegion(region.Id)
-			computeClient := client2.MustGenerateComputeClient()
-			server, err := computeClient.ServerFound(args[0])
+			client2 := openstack.Client(region.Id).NovaV2()
+			server, err := client2.Servers().Found(args[0])
 			if err != nil {
 				continue
 			}

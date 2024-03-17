@@ -7,9 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/compute"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -20,7 +20,7 @@ var hypervisorList = &cobra.Command{
 	Short: "List hypervisors",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
@@ -33,7 +33,7 @@ var hypervisorList = &cobra.Command{
 		if name != "" {
 			query.Set("hypervisor_hostname_pattern", name)
 		}
-		hypervisors, err := client.ComputeClient().HypervisorListDetail(query)
+		hypervisors, err := client.NovaV2().Hypervisors().Details(query)
 		utility.LogError(err, "list hypervisors failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
@@ -51,7 +51,7 @@ var hypervisorList = &cobra.Command{
 			pt.StyleSeparateRows = true
 			pt.ShortColumns = append(pt.ShortColumns,
 				common.Column{Name: "servers", Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.Hypervisor)
+					p, _ := item.(nova.Hypervisor)
 					hypervisorServers := []string{}
 					for _, s := range p.Servers {
 						hypervisorServers = append(hypervisorServers,
@@ -70,8 +70,8 @@ var hypervisorShow = &cobra.Command{
 	Short: "Show hypervisor",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
-		hypervisor, err := client.ComputeClient().HypervisorFound(args[0])
+		client := openstack.DefaultClient()
+		hypervisor, err := client.NovaV2().Hypervisors().Found(args[0])
 		utility.LogError(err, "get hypervisor failed", true)
 
 		pt := common.PrettyItemTable{
@@ -83,28 +83,28 @@ var hypervisorShow = &cobra.Command{
 				{Name: "MemoryMB", Text: "Memory MB"},
 				{Name: "MemoryMBUsed", Text: "Memory Used MB"},
 				{Name: "ExtraResources", Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.Hypervisor)
+					p, _ := item.(nova.Hypervisor)
 					return p.ExtraResourcesMarshal(true)
 				}},
 				{Name: "CpuInfoArch",
 					Slot: func(item interface{}) interface{} {
-						p, _ := item.(compute.Hypervisor)
+						p, _ := item.(nova.Hypervisor)
 						return p.CpuInfo.Arch
 					}},
 				{Name: "CpuInfoModel",
 					Slot: func(item interface{}) interface{} {
-						p, _ := item.(compute.Hypervisor)
+						p, _ := item.(nova.Hypervisor)
 						return p.CpuInfo.Model
 					}},
 				{Name: "CpuInfoVendor",
 					Slot: func(item interface{}) interface{} {
-						p, _ := item.(compute.Hypervisor)
+						p, _ := item.(nova.Hypervisor)
 						return p.CpuInfo.Vendor
 					},
 				},
 				{Name: "CpuInfoFeature",
 					Slot: func(item interface{}) interface{} {
-						p, _ := item.(compute.Hypervisor)
+						p, _ := item.(nova.Hypervisor)
 						return p.CpuInfo.Features
 					},
 				},
@@ -144,11 +144,11 @@ var hypervisorUptime = &cobra.Command{
 	Short: "uptime hypervisor",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
-		hypervisor, err := client.ComputeClient().HypervisorFound(args[0])
+		client := openstack.DefaultClient()
+		hypervisor, err := client.NovaV2().Hypervisors().Found(args[0])
 		utility.LogError(err, "get hypervisor failed", true)
 
-		hypervisor, err = client.ComputeClient().HypervisorUptime(hypervisor.Id)
+		hypervisor, err = client.NovaV2().Hypervisors().Uptime(hypervisor.Id)
 		utility.LogError(err, "get hypervisor uptime failed", true)
 
 		pt := common.PrettyItemTable{

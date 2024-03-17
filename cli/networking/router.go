@@ -11,7 +11,8 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/networking"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -21,7 +22,7 @@ var routerList = &cobra.Command{
 	Use:   "list",
 	Short: "List routers",
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := cli.GetClient()
+		c := openstack.DefaultClient().NeutronV2()
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
@@ -29,7 +30,7 @@ var routerList = &cobra.Command{
 		if name != "" {
 			query.Set("name", name)
 		}
-		routers, err := client.NetworkingClient().RouterList(query)
+		routers, err := c.Routers().List(query)
 		utility.LogError(err, "list ports failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
@@ -52,8 +53,8 @@ var routerShow = &cobra.Command{
 	Short: "Show router",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
-		router, err := client.NetworkingClient().RouterShow(args[0])
+		c := openstack.DefaultClient().NeutronV2()
+		router, err := c.Routers().Show(args[0])
 		if err != nil {
 			utility.LogError(err, "show router failed", true)
 		}
@@ -65,7 +66,7 @@ var routerShow = &cobra.Command{
 				{Name: "Distributed"}, {Name: "HA", Text: "HA"},
 				{Name: "AdminStateUp"},
 				{Name: "ExternalGatewayinfo", Slot: func(item interface{}) interface{} {
-					p, _ := item.(networking.Router)
+					p, _ := item.(neutron.Router)
 					return p.MarshalExternalGatewayInfo()
 				}},
 				{Name: "AvailabilityZones"},
@@ -82,10 +83,10 @@ var routerDelete = &cobra.Command{
 	Short: "Delete router(s)",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		c := openstack.DefaultClient().NeutronV2()
 		for _, router := range args {
 			fmt.Printf("Reqeust to delete router %s\n", router)
-			err := client.NetworkingClient().RouterDelete(router)
+			err := c.Routers().Delete(router)
 			if err != nil {
 				logging.Error("Delete router %s failed, %s", router, err)
 			}
@@ -97,7 +98,7 @@ var routerCreate = &cobra.Command{
 	Short: "Create router",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		c := openstack.DefaultClient().NeutronV2()
 		// name, _ := cmd.Flags().GetString("name")
 		disable, _ := cmd.Flags().GetBool("disable")
 		description, _ := cmd.Flags().GetString("description")
@@ -110,7 +111,7 @@ var routerCreate = &cobra.Command{
 		if description != "" {
 			params["description"] = description
 		}
-		router, err := client.NetworkingClient().RouterCreate(params)
+		router, err := c.Routers().Create(params)
 		utility.LogError(err, "create router failed", true)
 		cli.PrintRouter(*router)
 	},

@@ -7,50 +7,50 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/compute"
-	"github.com/BytemanD/skyman/openstack/networking"
+	"github.com/BytemanD/skyman/openstack/model/neutron"
+	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/jedib0t/go-pretty/v6/list"
 )
 
-func PrintServer(server compute.Server) {
+func PrintServer(server nova.Server) {
 	pt := common.PrettyItemTable{
 		Item: server,
 		ShortFields: []common.Column{
 			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 			{Name: "Flavor:original_name", Text: "Flavor:original_name",
 				Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.Server)
+					p, _ := item.(nova.Server)
 					return p.Flavor.OriginalName
 				}},
 			{Name: "Flavor:ram", Text: "Flavor:ram",
 				Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.Server)
+					p, _ := item.(nova.Server)
 					return p.Flavor.Ram
 				}},
 			{Name: "Flavor:vcpus", Text: "Flavor:vcpus",
 				Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.Server)
+					p, _ := item.(nova.Server)
 					return p.Flavor.Vcpus
 				}},
 			{Name: "Flavor:disk", Text: "Flavor:disk",
 				Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.Server)
+					p, _ := item.(nova.Server)
 					return p.Flavor.Disk
 				}},
 			{Name: "Flavor:swap", Text: "Flavor:swap",
 				Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.Server)
+					p, _ := item.(nova.Server)
 					return p.Flavor.Swap
 				}},
 			{Name: "Flavor:extra_specs", Text: "Flavor:extra_specs",
 				Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.Server)
+					p, _ := item.(nova.Server)
 					return p.GetFlavorExtraSpecsString()
 
 				}},
 			{Name: "Image",
 				Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.Server)
+					p, _ := item.(nova.Server)
 					if p.Image.Name != "" {
 						return fmt.Sprintf("%s (%s)", p.Image.Name, p.Image.Id)
 					} else {
@@ -65,17 +65,17 @@ func PrintServer(server compute.Server) {
 
 			{Name: "Fault:code", Text: "Fault:code",
 				Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.Server)
+					p, _ := item.(nova.Server)
 					return p.Fault.Code
 				}},
 			{Name: "Fault:message", Text: "Fault:message",
 				Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.Server)
+					p, _ := item.(nova.Server)
 					return p.Fault.Message
 				}},
 			{Name: "Fault:details", Text: "Fault:details",
 				Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.Server)
+					p, _ := item.(nova.Server)
 					return p.Fault.Details
 				}},
 			{Name: "UserId"},
@@ -84,7 +84,7 @@ func PrintServer(server compute.Server) {
 	common.PrintPrettyItemTable(pt)
 }
 
-func printFlavor(server compute.Flavor) {
+func printFlavor(server nova.Flavor) {
 	pt := common.PrettyItemTable{
 		Item: server,
 		ShortFields: []common.Column{
@@ -93,21 +93,21 @@ func printFlavor(server compute.Flavor) {
 			{Name: "RXTXFactor", Text: "RXTXFactor"},
 			{Name: "OS-FLV-EXT-DATA:ephemeral", Text: "OS-FLV-EXT-DATA:ephemeral",
 				Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.Flavor)
+					p, _ := item.(nova.Flavor)
 					return p.Ephemeral
 				}},
 			{Name: "os-flavor-access:is_public", Text: "os-flavor-access:is_public",
 				Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.Flavor)
+					p, _ := item.(nova.Flavor)
 					return p.IsPublic
 				}},
 			{Name: "OS-FLV-DISABLED:disabled", Text: "OS-FLV-DISABLED:disabled",
 				Slot: func(item interface{}) interface{} {
-					p, _ := item.(compute.Flavor)
+					p, _ := item.(nova.Flavor)
 					return p.Disabled
 				}},
 			{Name: "ExtraSpecs", Slot: func(item interface{}) interface{} {
-				p, _ := item.(compute.Flavor)
+				p, _ := item.(nova.Flavor)
 				return strings.Join(p.ExtraSpecs.GetList(), "\n")
 			}},
 		},
@@ -125,7 +125,7 @@ type AZHost struct {
 	ServiceUpdatedAt string
 }
 
-func printAZInfo(azList []compute.AvailabilityZone) {
+func printAZInfo(azList []nova.AvailabilityZone) {
 	azHostList := []AZHost{}
 	for _, az := range azList {
 		for hostName, services := range az.Hosts {
@@ -167,7 +167,7 @@ func printAZInfo(azList []compute.AvailabilityZone) {
 	pt.AddItems(azHostList)
 	common.PrintPrettyTable(pt, false)
 }
-func printAZInfoTree(azList []compute.AvailabilityZone) {
+func printAZInfoTree(azList []nova.AvailabilityZone) {
 	tw := list.NewWriter()
 	tw.SetOutputMirror(os.Stdout)
 	tw.SetStyle(list.StyleConnectedRounded)
@@ -211,7 +211,7 @@ func printAZInfoTree(azList []compute.AvailabilityZone) {
 	tw.Render()
 }
 
-func printAzInfoJson(azInfo []compute.AvailabilityZone) {
+func printAzInfoJson(azInfo []nova.AvailabilityZone) {
 	jsonString, err := common.GetIndentJson(azInfo)
 	if err != nil {
 		logging.Fatal("get json string failed, %v", err)
@@ -219,7 +219,7 @@ func printAzInfoJson(azInfo []compute.AvailabilityZone) {
 	fmt.Println(jsonString)
 }
 
-func printAzInfoYaml(azInfo []compute.AvailabilityZone) {
+func printAzInfoYaml(azInfo []nova.AvailabilityZone) {
 	yamlString, err := common.GetYaml(azInfo)
 	if err != nil {
 		logging.Fatal("get yaml string failed, %v", err)
@@ -233,11 +233,11 @@ func printServiceTable(item interface{}) {
 		ShortFields: []common.Column{
 			{Name: "Id"}, {Name: "Binary"}, {Name: "Host"},
 			{Name: "Status", Slot: func(item interface{}) interface{} {
-				p, _ := (item).(compute.Service)
+				p, _ := (item).(nova.Service)
 				return common.BaseColorFormatter.Format(p.Status)
 			}},
 			{Name: "State", Slot: func(item interface{}) interface{} {
-				p, _ := item.(compute.Service)
+				p, _ := item.(nova.Service)
 				return common.BaseColorFormatter.Format(p.State)
 			}},
 			{Name: "ForcedDown", Text: "Forced Down"},
@@ -247,7 +247,7 @@ func printServiceTable(item interface{}) {
 	common.PrintPrettyItemTable(pt)
 }
 
-func PrintRouter(router networking.Router) {
+func PrintRouter(router neutron.Router) {
 	pt := common.PrettyItemTable{
 		Item: router,
 		ShortFields: []common.Column{
@@ -267,7 +267,7 @@ func PrintRouter(router networking.Router) {
 	}
 	common.PrintPrettyItemTable(pt)
 }
-func PrintNetwork(network networking.Network) {
+func PrintNetwork(network neutron.Network) {
 	pt := common.PrettyItemTable{
 		Item: network,
 		ShortFields: []common.Column{
@@ -291,7 +291,7 @@ func PrintNetwork(network networking.Network) {
 	}
 	common.PrintPrettyItemTable(pt)
 }
-func PrintSubnet(network networking.Subnet) {
+func PrintSubnet(network neutron.Subnet) {
 	pt := common.PrettyItemTable{
 		Item: network,
 		ShortFields: []common.Column{
@@ -301,7 +301,7 @@ func PrintSubnet(network networking.Subnet) {
 			{Name: "IpVersion"},
 			{Name: "EnableDhcp"},
 			{Name: "AllocationPools", Slot: func(item interface{}) interface{} {
-				p, _ := item.(networking.Subnet)
+				p, _ := item.(neutron.Subnet)
 				return strings.Join(p.GetAllocationPoolsList(), ",")
 			}},
 			{Name: "GatewayIp"},

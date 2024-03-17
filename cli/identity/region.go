@@ -3,8 +3,8 @@ package identity
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -14,8 +14,8 @@ var list = &cobra.Command{
 	Use:   "list",
 	Short: "List regions",
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := cli.GetClient()
-		regions, err := client.Identity.RegionList()
+		c := openstack.DefaultClient().KeystoneV3()
+		regions, err := c.Regions().List(nil)
 		utility.LogError(err, "list region failed", true)
 
 		pt := common.PrettyTable{

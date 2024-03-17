@@ -4,7 +4,8 @@ import (
 	"strings"
 
 	"github.com/BytemanD/skyman/common/i18n"
-	"github.com/BytemanD/skyman/openstack/identity"
+	"github.com/BytemanD/skyman/openstack/auth"
+	"github.com/BytemanD/skyman/openstack/model/keystone"
 	"github.com/spf13/viper"
 )
 
@@ -33,11 +34,11 @@ type ConfGroup struct {
 	Auth Auth `yaml:"auth"`
 }
 type Auth struct {
-	Url             string           `yaml:"url"`
-	Region          identity.Region  `yaml:"region"`
-	User            identity.User    `yaml:"user"`
-	Project         identity.Project `yaml:"project"`
-	TokenExpireTime int              `yaml:"tokenExpireTime"`
+	Url             string          `yaml:"url"`
+	Region          keystone.Region `yaml:"region"`
+	User            auth.User       `yaml:"user"`
+	Project         auth.Project    `yaml:"project"`
+	TokenExpireTime int             `yaml:"tokenExpireTime"`
 }
 
 type Server struct {

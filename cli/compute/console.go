@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack"
 )
 
 var Console = &cobra.Command{Use: "console"}
@@ -17,9 +17,9 @@ var consoleLog = &cobra.Command{
 	Short: "Show console log of server",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 		lines, _ := cmd.Flags().GetUint("lines")
-		consoleLog, err := client.ComputeClient().ServerConsoleLog(args[0], lines)
+		consoleLog, err := client.NovaV2().Servers().ConsoleLog(args[0], lines)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -35,7 +35,7 @@ var consoleUrl = &cobra.Command{
 	Short: "Show console url of server",
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 		var isTypeValid bool
 		for _, item := range validType {
 			if args[1] == item {
@@ -48,7 +48,7 @@ var consoleUrl = &cobra.Command{
 			os.Exit(1)
 		}
 
-		console, err := client.ComputeClient().ServerConsoleUrl(args[0], args[1])
+		console, err := client.NovaV2().Servers().ConsoleUrl(args[0], args[1])
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

@@ -46,17 +46,19 @@ type Response struct {
 	bodyReader io.ReadCloser
 }
 
+func (resp *Response) SetBodyReader(reader io.ReadCloser) {
+	resp.bodyReader = reader
+}
+
 func (resp Response) BodyString() string {
 	return string(resp.Body)
 }
 
 func (resp *Response) ReadAll() error {
-	bodyBytes, err := io.ReadAll(resp.bodyReader)
-	if err != nil {
-		return err
-	}
-	resp.Body = bodyBytes
-	return nil
+	var err error
+	resp.Body, err = io.ReadAll(resp.bodyReader)
+	defer resp.bodyReader.Close()
+	return err
 }
 
 func (resp Response) GetHeader(key string) string {
@@ -72,9 +74,7 @@ func (resp Response) GetContentLength() int {
 }
 func (resp Response) SaveBody(file *os.File, process bool) error {
 	defer resp.bodyReader.Close()
-
 	var reader io.Reader
-
 	if process && resp.GetContentLength() > 0 {
 		reader = &ReaderWithProcess{
 			Reader: bufio.NewReaderSize(resp.bodyReader, 1024*32),
@@ -90,6 +90,13 @@ func (resp Response) SaveBody(file *os.File, process bool) error {
 
 func (resp Response) IsNotFound() bool {
 	return resp.Status == 404
+}
+func EncodeHeaders(headers http.Header) string {
+	headersString := []string{}
+	for k, v := range getSafeHeaders(headers) {
+		headersString = append(headersString, fmt.Sprintf("%s:%s", k, strings.Join(v, ",")))
+	}
+	return strings.Join(headersString, ", ")
 }
 
 type Session struct {
@@ -109,7 +116,7 @@ func getSafeHeaders(headers http.Header) http.Header {
 }
 func encodeHeaders(headers http.Header) string {
 	headersString := []string{}
-	for k, v := range headers {
+	for k, v := range getSafeHeaders(headers) {
 		headersString = append(headersString, fmt.Sprintf("%s:%s", k, strings.Join(v, ",")))
 	}
 	return strings.Join(headersString, " ")
@@ -228,4 +235,26 @@ func (c RestfulClient) Delete(url string, headers map[string]string) (*Response,
 	}
 	c.setHeader(req, headers)
 	return c.Request(req)
+}
+func ReadResponseBody(resp *http.Response) string {
+	bytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		logging.Error("read reponse body failed: %s", err)
+	}
+	return string(bytes)
+}
+
+func UnmarshalResponse(resp *http.Response, o interface{}) error {
+	bytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(bytes, &o)
+}
+
+type Request struct {
+	Url     string
+	Body    []byte
+	Query   url.Values
+	Headers map[string]string
 }

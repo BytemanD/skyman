@@ -1,20 +1,35 @@
-go run cmd/skyman.go service list           || exit 1
-go run cmd/skyman.go endpoint list          || exit 1
+cat  > /tmp/test_list.txt <<EOF
+service list
+endpoint list
+project list
+user list
 
-go run cmd/skyman.go image list             || exit 1
+image list
 
-go run cmd/skyman.go volume list            || exit 1
-go run cmd/skyman.go volume type list       || exit 1
+volume list
+volume type list
 
-go run cmd/skyman.go server list            || exit 1
-go run cmd/skyman.go flavor list            || exit 1
-go run cmd/skyman.go compute service list   || exit 1
-go run cmd/skyman.go hypervisor list        || exit 1
-go run cmd/skyman.go aggregate list         || exit 1
-go run cmd/skyman.go az list                || exit 1
-go run cmd/skyman.go az list --tree         || exit 1
+server list
+flavor list
+compute service list
+hypervisor list
+aggregate list
+az list
+az list --tree
 
-go run cmd/skyman.go router list            || exit 1
-go run cmd/skyman.go network list           || exit 1
-go run cmd/skyman.go port list              || exit 1
+router list
+network list
+port list
+EOF
 
+while read line
+do
+    if [[ "$line" == "" ]]; then
+        continue
+    fi
+    echo "#### $line ####"
+    go run cmd/skyman.go $line || break
+done < /tmp/test_list.txt
+
+
+rm -f /tmp/test_list.txt

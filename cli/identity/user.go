@@ -5,8 +5,9 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var User = &cobra.Command{Use: "user"}
@@ -19,7 +20,6 @@ var userList = &cobra.Command{
 		long, _ := cmd.Flags().GetBool("long")
 		project, _ := cmd.Flags().GetString("project")
 
-		client := cli.GetClient()
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name"},
@@ -31,14 +31,13 @@ var userList = &cobra.Command{
 			},
 		}
 
+		c := openstack.DefaultClient().KeystoneV3()
 		if project == "" {
-			users, err := client.Identity.UserList(nil)
-			if err != nil {
-				logging.Fatal("get users failed, %s", err)
-			}
+			users, err := c.Users().List(nil)
+			utility.LogError(err, "list users failed", true)
 			pt.AddItems(users)
 		} else {
-			users, err := client.Identity.UserListByProjectId(project)
+			users, err := c.Users().ListByProjectId(project)
 			if err != nil {
 				logging.Fatal("get users failed, %s", err)
 			}

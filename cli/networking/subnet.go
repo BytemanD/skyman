@@ -8,7 +8,8 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/networking"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -19,7 +20,7 @@ var subnetList = &cobra.Command{
 	Use:   "list",
 	Short: "List subnets",
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := cli.GetClient()
+		c := openstack.DefaultClient().NeutronV2()
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
@@ -27,7 +28,7 @@ var subnetList = &cobra.Command{
 		if name != "" {
 			query.Set("name", name)
 		}
-		subnets, err := client.NetworkingClient().SubnetList(query)
+		subnets, err := c.Subnets().List(query)
 		utility.LogError(err, "get subnets failed", true)
 
 		pt := common.PrettyTable{
@@ -38,17 +39,15 @@ var subnetList = &cobra.Command{
 			LongColumns: []common.Column{
 				{Name: "EnableDhcp", Text: "Dhcp"},
 				{Name: "AllocationPools", Slot: func(item interface{}) interface{} {
-					p, _ := item.(networking.Subnet)
+					p, _ := item.(neutron.Subnet)
 					return strings.Join(p.GetAllocationPoolsList(), ",")
 				}},
 				{Name: "IpVersion"},
 				{Name: "GatewayIp"},
 			},
+			StyleSeparateRows: long,
 		}
 		pt.AddItems(subnets)
-		if long {
-			pt.StyleSeparateRows = true
-		}
 		common.PrintPrettyTable(pt, long)
 	},
 }
@@ -57,16 +56,16 @@ var subnetCreate = &cobra.Command{
 	Short: "Create subnet",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
-		// name, _ := cmd.Flags().GetString("name")
+		c := openstack.DefaultClient().NeutronV2()
+
 		noDhcp, _ := cmd.Flags().GetBool("no-dhcp")
 		description, _ := cmd.Flags().GetString("description")
 		netIdOrName, _ := cmd.Flags().GetString("network")
 		cidr, _ := cmd.Flags().GetString("cidr")
 		ipVersion, _ := cmd.Flags().GetInt("ip-version")
 
-		network, err := client.NetworkingClient().NetworkFound(netIdOrName)
-		utility.LogError(err, "create subnet failed", true)
+		network, err := c.Networks().Found(netIdOrName)
+		utility.LogError(err, "get network failed", true)
 
 		params := map[string]interface{}{
 			"name":       args[0],
@@ -80,7 +79,7 @@ var subnetCreate = &cobra.Command{
 		if description != "" {
 			params["description"] = description
 		}
-		subnet, err := client.NetworkingClient().SubnetCreate(params)
+		subnet, err := c.Subnets().Create(params)
 		utility.LogError(err, "create subnet failed", true)
 		cli.PrintSubnet(*subnet)
 	},
@@ -90,10 +89,10 @@ var subnetDelete = &cobra.Command{
 	Short: "Delete subnet(s)",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		c := openstack.DefaultClient().NeutronV2()
 		for _, subnet := range args {
 			fmt.Printf("Reqeust to delete subnet %s\n", subnet)
-			err := client.NetworkingClient().SubnetDelete(subnet)
+			err := c.Subnets().Delete(subnet)
 			if err != nil {
 				logging.Error("Delete subnet %s failed, %s", subnet, err)
 			}

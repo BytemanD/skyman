@@ -4,10 +4,10 @@ import (
 	"strings"
 
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/image"
+	"github.com/BytemanD/skyman/openstack/model/glance"
 )
 
-func printImage(img image.Image, human bool) {
+func printImage(img glance.Image, human bool) {
 	pt := common.PrettyItemTable{
 		Item: img,
 		ShortFields: []common.Column{
@@ -17,7 +17,7 @@ func printImage(img image.Image, human bool) {
 			{Name: "ContainerFormat"}, {Name: "DiskFormat"},
 			{Name: "File"},
 			{Name: "Size", Slot: func(item interface{}) interface{} {
-				p, _ := item.(image.Image)
+				p, _ := item.(glance.Image)
 				if human {
 					return p.HumanSize()
 				} else {
@@ -25,7 +25,7 @@ func printImage(img image.Image, human bool) {
 				}
 			}},
 			{Name: "Properties", Slot: func(item interface{}) interface{} {
-				p, _ := item.(image.Image)
+				p, _ := item.(glance.Image)
 				return strings.Join(p.GetPropertyList(), "\n")
 			}},
 			{Name: "VirtualSize"}, {Name: "ProcessInfo"}, {Name: "Protected"},

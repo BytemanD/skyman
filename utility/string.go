@@ -3,6 +3,8 @@ package utility
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"net/url"
 	"os"
 	"strings"
 
@@ -56,9 +58,17 @@ func LogError(err error, message string, exit bool) {
 	if httpError, ok := err.(*HttpError); ok {
 		logging.Error("%s, %s: %s", message, httpError.Reason, httpError.Message)
 	} else {
-		logging.Error("%s, %v", message, err)
+		logging.Error("%s: %v", message, err)
 	}
 	if exit {
 		os.Exit(1)
 	}
+}
+
+func VersionUrl(endpoint, version string) string {
+	parsedUrl, _ := url.Parse(endpoint)
+	if !strings.HasPrefix(parsedUrl.Path, fmt.Sprintf("/%s", version)) {
+		return UrlJoin(endpoint, version)
+	}
+	return endpoint
 }

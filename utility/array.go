@@ -1,5 +1,7 @@
 package utility
 
+import "net/url"
+
 type ObjectArray []interface{}
 
 func CopyToInterfaceSlice(list ObjectArray) []interface{} {
@@ -30,4 +32,24 @@ func Range(args ...int) []int {
 		items = append(items, i)
 	}
 	return items
+}
+
+func UrlValues(m map[string]string) url.Values {
+	query := url.Values{}
+	for k, v := range m {
+		if v == "" {
+			continue
+		}
+		query.Set(k, v)
+	}
+	return query
+}
+func min(numbers ...int) int {
+	minNumber := numbers[0]
+	for _, number := range numbers[1:] {
+		if number < minNumber {
+			minNumber = number
+		}
+	}
+	return minNumber
 }

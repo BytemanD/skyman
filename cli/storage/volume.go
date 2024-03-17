@@ -7,10 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/common/i18n"
-	"github.com/BytemanD/skyman/openstack/storage"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -22,7 +21,7 @@ var volumeList = &cobra.Command{
 	Short: "List volumes",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
@@ -39,20 +38,20 @@ var volumeList = &cobra.Command{
 		if all {
 			query.Set("all_tenants", "true")
 		}
-		volumes, err := client.StorageClient().VolumeListDetail(query)
+		volumes, err := client.CinderV2().Volumes().Detail(query)
 		utility.LogError(err, "list volume falied", true)
 		table := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
 				{Name: "Size"}, {Name: "Bootable"}, {Name: "VolumeType"},
 				{Name: "Attachments", Slot: func(item interface{}) interface{} {
-					obj, _ := (item).(storage.Volume)
+					obj, _ := (item).(cinder.Volume)
 					return strings.Join(obj.GetAttachmentList(), "\n")
 				}},
 			},
 			LongColumns: []common.Column{
 				{Name: "Metadata", Slot: func(item interface{}) interface{} {
-					obj, _ := (item).(storage.Volume)
+					obj, _ := (item).(cinder.Volume)
 					return strings.Join(obj.GetMetadataList(), "\n")
 				}},
 			},
@@ -70,9 +69,9 @@ var volumeShow = &cobra.Command{
 	Short: "Show volume",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 		idOrName := args[0]
-		volume, err := client.StorageClient().VolumeFound(idOrName)
+		volume, err := client.CinderV2().Volumes().Found(idOrName)
 		utility.LogError(err, "get volume failed", true)
 		printVolume(*volume)
 	},
@@ -82,15 +81,15 @@ var volumeDelete = &cobra.Command{
 	Short: "Delete volume",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 
 		for _, idOrName := range args {
-			volume, err := client.StorageClient().VolumeFound(idOrName)
+			volume, err := client.CinderV2().Volumes().Found(idOrName)
 			if err != nil {
 				utility.LogError(err, "get volume failed", false)
 				continue
 			}
-			err = client.StorageClient().VolumeDelete(volume.Id)
+			err = client.CinderV2().Volumes().Delete(volume.Id)
 			if err == nil {
 				fmt.Printf("Requested to delete volume %s\n", idOrName)
 			} else {
@@ -99,27 +98,7 @@ var volumeDelete = &cobra.Command{
 		}
 	},
 }
-var volumePrune = &cobra.Command{
-	Use:   "prune",
-	Short: "Prune volume(s)",
-	Args:  cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
-		name, _ := cmd.Flags().GetString("name")
-		yes, _ := cmd.Flags().GetBool("yes")
-		status, _ := cmd.Flags().GetString("status")
 
-		query := url.Values{}
-		if name != "" {
-			query.Set("name", name)
-		}
-		if status != "" {
-			query.Add("status", status)
-		}
-		client := cli.GetClient()
-		client.StorageClient().VolumePrune(query, yes)
-
-	},
-}
 var volumeCreate = &cobra.Command{
 	Use:   "create <name>",
 	Short: "Create volume",
@@ -134,9 +113,9 @@ var volumeCreate = &cobra.Command{
 			params["size"] = size
 		}
 
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 
-		volume, err := client.StorageClient().VolumeCreate(params)
+		volume, err := client.CinderV2().Volumes().Create(params)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -159,11 +138,11 @@ var volumeExtend = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		idOrName := args[0]
 		size, _ := strconv.Atoi(args[1])
-		client := cli.GetClient()
-		volume, err := client.StorageClient().VolumeFound(idOrName)
+		client := openstack.DefaultClient()
+		volume, err := client.CinderV2().Volumes().Found(idOrName)
 		utility.LogError(err, "get volume falied", true)
 
-		err = client.StorageClient().VolumeExtend(volume.Id, size)
+		err = client.CinderV2().Volumes().Extend(volume.Id, size)
 		utility.LogError(err, "extend volume falied", true)
 	},
 }
@@ -175,7 +154,7 @@ var volumeRetype = &cobra.Command{
 			return err
 		}
 		migrationPolicy, _ := cmd.Flags().GetString("migration-policy")
-		if err := storage.InvalidMIgrationPoicy(migrationPolicy); err != nil {
+		if err := openstack.InvalidMIgrationPoicy(migrationPolicy); err != nil {
 			return err
 		}
 		return nil
@@ -185,11 +164,11 @@ var volumeRetype = &cobra.Command{
 		newType := args[1]
 		migrationPolicy, _ := cmd.Flags().GetString("migration-policy")
 
-		client := cli.GetClient()
-		volume, err := client.StorageClient().VolumeFound(idOrName)
+		client := openstack.DefaultClient()
+		volume, err := client.CinderV2().Volumes().Found(idOrName)
 		utility.LogError(err, "get volume falied", true)
 
-		err = client.StorageClient().VolumeRetype(volume.Id, newType, migrationPolicy)
+		err = client.CinderV2().Volumes().Retype(volume.Id, newType, migrationPolicy)
 		utility.LogError(err, "extend volume falied", true)
 	},
 }
@@ -200,19 +179,15 @@ func init() {
 	volumeList.Flags().StringP("name", "n", "", "Search by volume name")
 	volumeList.Flags().String("status", "", "Search by volume status")
 
-	volumePrune.Flags().StringP("name", "n", "", "Search by volume name")
-	volumePrune.Flags().StringP("status", "s", "error", "Search by server status")
-	volumePrune.Flags().BoolP("yes", "y", false, i18n.T("answerYes"))
-
 	volumeCreate.Flags().Uint("size", 0, "Volume size (GB)")
 	volumeCreate.MarkFlagRequired("size")
 
 	volumeRetype.Flags().StringP("migration-policy", "p", "never",
 		fmt.Sprintf("Migration policy during retype of volume,\ninvalid values: %s",
-			storage.MIGRATION_POLICYS))
+			openstack.MIGRATION_POLICYS))
 
 	Volume.AddCommand(
 		volumeList, volumeShow, volumeCreate, volumeExtend, volumeRetype,
-		volumeDelete, volumePrune,
+		volumeDelete,
 	)
 }

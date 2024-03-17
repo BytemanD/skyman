@@ -5,9 +5,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/compute"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/nova"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var Aggregate = &cobra.Command{Use: "aggregate"}
@@ -20,9 +21,9 @@ var aggList = &cobra.Command{
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
 
-		client := cli.GetClient()
-		aggregates, err := client.ComputeClient().AggregateList(nil)
-		cli.ExitIfError(err)
+		client := openstack.DefaultClient()
+		aggregates, err := client.NovaV2().Aggregates().List(nil)
+		utility.LogError(err, "list aggregates failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"},
@@ -31,16 +32,16 @@ var aggList = &cobra.Command{
 			},
 			LongColumns: []common.Column{
 				{Name: "HostNum", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(compute.Aggregate)
+					p, _ := (item).(nova.Aggregate)
 					return len(p.Hosts)
 				}},
 				{Name: "Metadata", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(compute.Aggregate)
+					p, _ := (item).(nova.Aggregate)
 					return p.MarshalMetadata()
 				}},
 			},
 		}
-		filteredAggs := []compute.Aggregate{}
+		filteredAggs := []nova.Aggregate{}
 		if name != "" {
 			for _, agg := range aggregates {
 				if !strings.Contains(agg.Name, name) {
@@ -62,19 +63,19 @@ var aggShow = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		agg := args[0]
 
-		client := cli.GetClient()
-		aggregate, err := client.ComputeClient().AggregateShow(agg)
-		cli.ExitIfError(err)
+		client := openstack.DefaultClient()
+		aggregate, err := client.NovaV2().Aggregates().Show(agg)
+		utility.LogError(err, "show aggregate failed", true)
 		pt := common.PrettyItemTable{
 			Item: *aggregate,
 			ShortFields: []common.Column{
 				{Name: "Id"}, {Name: "Name"}, {Name: "AvailabilityZone"},
 				{Name: "Hosts", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(compute.Aggregate)
+					p, _ := (item).(nova.Aggregate)
 					return strings.Join(p.Hosts, "\n")
 				}},
 				{Name: "Metadata", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(compute.Aggregate)
+					p, _ := (item).(nova.Aggregate)
 					return p.MarshalMetadata()
 				}},
 				{Name: "CreatedAt"}, {Name: "UpdatedAt"},

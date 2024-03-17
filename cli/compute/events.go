@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/compute"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -20,9 +20,9 @@ var actionList = &cobra.Command{
 	Short: "List server actions",
 	Args:  cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 		long, _ := cmd.Flags().GetBool("long")
-		actions, err := client.ComputeClient().ServerActionList(args[0])
+		actions, err := client.NovaV2().Servers().ListActions(args[0])
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -46,11 +46,11 @@ var actionShow = &cobra.Command{
 	Short: "Show server action",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 		long, _ := cmd.Flags().GetBool("long")
 		id := args[0]
 		requestId := args[1]
-		action, err := client.ComputeClient().ServerActionShow(id, requestId)
+		action, err := client.NovaV2().Servers().ShowAction(id, requestId)
 		utility.LogError(err, "get server action failed", true)
 		pt := common.PrettyTable{
 			Title: fmt.Sprintf("Action: %s", action.Action),
@@ -83,27 +83,27 @@ var actionSpend = &cobra.Command{
 	Short: "Get server actions spend time",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
 		long, _ := cmd.Flags().GetBool("long")
 		actionName, _ := cmd.Flags().GetString("name")
 		requestId, _ := cmd.Flags().GetString("request-id")
 
-		actionsWithEvents, err := client.ComputeClient().ServerActionsWithEvents(args[0], actionName, requestId)
+		actionsWithEvents, err := client.NovaV2().Servers().ListActionsWithEvents(args[0], actionName, requestId)
 		utility.LogError(err, "get server actions and events failed", true)
 
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Name", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(compute.InstanceActionAndEvents)
+					p, _ := (item).(nova.InstanceActionAndEvents)
 					return p.InstanceAction.Action
 				}},
 				{Name: "RequestId", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(compute.InstanceActionAndEvents)
+					p, _ := (item).(nova.InstanceActionAndEvents)
 					return p.InstanceAction.RequestId
 				}},
 				{Name: "SpendTime", Text: "Spend time (seconds)",
 					Slot: func(item interface{}) interface{} {
-						p, _ := (item).(compute.InstanceActionAndEvents)
+						p, _ := (item).(nova.InstanceActionAndEvents)
 						spendTime, err := p.GetSpendTime()
 						if err != nil {
 							return err
@@ -121,7 +121,7 @@ var actionSpend = &cobra.Command{
 						common.Column{
 							Name: event.Event,
 							SlotColumn: func(item interface{}, column common.Column) interface{} {
-								p, _ := (item).(compute.InstanceActionAndEvents)
+								p, _ := (item).(nova.InstanceActionAndEvents)
 								for _, e := range p.Events {
 									if e.Event == column.Name {
 										spendTime, err := e.GetSpendTime()

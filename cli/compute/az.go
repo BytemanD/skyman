@@ -3,8 +3,9 @@ package compute
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var AZ = &cobra.Command{Use: "az"}
@@ -15,9 +16,10 @@ var azList = &cobra.Command{
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 		tree, _ := cmd.Flags().GetBool("tree")
-		client := cli.GetClient()
-		azInfo, err := client.ComputeClient().AZListDetail(nil)
-		cli.ExitIfError(err)
+		client := openstack.DefaultClient()
+		azInfo, err := client.NovaV2().AvailabilityZones().Detail(nil)
+		utility.LogError(err, "list availability zones failed", true)
+
 		if tree {
 			printAZInfoTree(azInfo)
 		} else {

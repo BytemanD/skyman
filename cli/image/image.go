@@ -2,11 +2,10 @@ package image
 
 import (
 	"fmt"
-	"net/url"
 
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/image"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/glance"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -23,14 +22,12 @@ var ImageList = &cobra.Command{
 			return err
 		}
 		visibility, _ := cmd.Flags().GetString("visibility")
-		if visibility != "" && !utility.StringsContain(image.IMAGE_VISIBILITIES, visibility) {
-			return fmt.Errorf("invalid visibility, valid: %v", image.IMAGE_VISIBILITIES)
+		if visibility != "" && !utility.StringsContain(glance.IMAGE_VISIBILITIES, visibility) {
+			return fmt.Errorf("invalid visibility, valid: %v", glance.IMAGE_VISIBILITIES)
 		}
 		return nil
 	},
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := cli.GetClient()
-
 		long, _ := cmd.Flags().GetBool("long")
 		human, _ := cmd.Flags().GetBool("human")
 		name, _ := cmd.Flags().GetString("name")
@@ -38,25 +35,23 @@ var ImageList = &cobra.Command{
 		pageSize, _ := cmd.Flags().GetUint("page-size")
 		visibility, _ := cmd.Flags().GetString("visibility")
 
-		query := url.Values{}
-		if name != "" {
-			query.Set("name", name)
-		}
+		query := utility.UrlValues(map[string]string{
+			"name":       name,
+			"visibility": visibility,
+		})
 		if pageSize != 0 {
 			query.Set("limit", fmt.Sprintf("%d", pageSize))
 		}
-		if visibility != "" {
-			query.Set("visibility", visibility)
-		}
 
-		images, err := client.ImageClient().ImageList(query, limit)
+		c := openstack.DefaultClient().GlanceV2()
+		images, err := c.Images().List(query, limit)
 		utility.LogError(err, "get imges failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name", Sort: true},
 				{Name: "Status", AutoColor: true},
 				{Name: "Size", Slot: func(item interface{}) interface{} {
-					p, _ := item.(image.Image)
+					p, _ := item.(glance.Image)
 					if human {
 						return p.HumanSize()
 					} else {
@@ -80,10 +75,11 @@ var ImageShow = &cobra.Command{
 	Short: "Show image",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
 		idOrName := args[0]
 		human, _ := cmd.Flags().GetBool("human")
-		image, err := client.ImageClient().ImageFound(idOrName)
+		c := openstack.DefaultClient().GlanceV2()
+
+		image, err := c.Images().Found(idOrName)
 		utility.LogError(err, "Get image failed", true)
 		printImage(*image, human)
 	},
@@ -111,19 +107,19 @@ var imageCreate = &cobra.Command{
 		} else if name == "" {
 			return fmt.Errorf("must provide --name when not using --file")
 		}
-		if containerFormat != "" && !utility.StringsContain(image.IMAGE_CONTAINER_FORMATS, containerFormat) {
-			return fmt.Errorf("invalid container format, valid: %v", image.IMAGE_CONTAINER_FORMATS)
+		if containerFormat != "" && !utility.StringsContain(glance.IMAGE_CONTAINER_FORMATS, containerFormat) {
+			return fmt.Errorf("invalid container format, valid: %v", glance.IMAGE_CONTAINER_FORMATS)
 		}
-		if diskFormat != "" && !utility.StringsContain(image.IMAGE_DISK_FORMATS, diskFormat) {
-			return fmt.Errorf("invalid disk format, valid: %v", image.IMAGE_DISK_FORMATS)
+		if diskFormat != "" && !utility.StringsContain(glance.IMAGE_DISK_FORMATS, diskFormat) {
+			return fmt.Errorf("invalid disk format, valid: %v", glance.IMAGE_DISK_FORMATS)
 		}
-		if visibility != "" && !utility.StringsContain(image.IMAGE_VISIBILITIES, visibility) {
-			return fmt.Errorf("invalid visibility, valid: %v", image.IMAGE_VISIBILITIES)
+		if visibility != "" && !utility.StringsContain(glance.IMAGE_VISIBILITIES, visibility) {
+			return fmt.Errorf("invalid visibility, valid: %v", glance.IMAGE_VISIBILITIES)
 		}
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		client := openstack.DefaultClient().GlanceV2()
 
 		name, _ := cmd.Flags().GetString("name")
 		containerFormat, _ := cmd.Flags().GetString("container-format")
@@ -134,7 +130,7 @@ var imageCreate = &cobra.Command{
 		visibility, _ := cmd.Flags().GetString("visibility")
 		// osDistro, _ := cmd.Flags().GetString("os-distro")
 
-		reqImage := image.Image{
+		reqImage := glance.Image{
 			ContainerFormat: containerFormat,
 			DiskFormat:      diskFormat,
 			Protected:       protect,
@@ -145,13 +141,14 @@ var imageCreate = &cobra.Command{
 		}
 		reqImage.Name = name
 
-		imageClient := client.ImageClient()
-		image, err := imageClient.ImageCreate(reqImage)
+		c := openstack.DefaultClient().GlanceV2()
+
+		image, err := c.Images().Create(reqImage)
 		utility.LogError(err, "Create image faled", true)
 		if file != "" {
-			err = imageClient.ImageUpload(image.Id, file)
+			err = client.Images().Upload(image.Id, file)
 			utility.LogError(err, "Upload image failed", true)
-			image, err = imageClient.ImageShow(image.Id)
+			image, err = c.Images().Show(image.Id)
 			utility.LogError(err, "get image failed", true)
 		}
 
@@ -164,15 +161,15 @@ var imageDelete = &cobra.Command{
 	Short: "Delete image",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		c := openstack.DefaultClient().GlanceV2()
 
 		for _, idOrName := range args {
-			image, err := client.ImageClient().ImageFound(idOrName)
+			image, err := c.Images().Found(idOrName)
 			if err != nil {
 				utility.LogError(err, fmt.Sprintf("get image %v failed", idOrName), false)
 				continue
 			}
-			err = client.ImageClient().ImageDelete(image.Id)
+			err = c.Images().Delete(image.Id)
 			if err != nil {
 				utility.LogError(err, fmt.Sprintf("delete image %s failed", idOrName), false)
 				continue
@@ -187,9 +184,9 @@ var imageSave = &cobra.Command{
 	Short: "Save image",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		c := openstack.DefaultClient().GlanceV2()
 
-		image, err := client.ImageClient().ImageFound(args[0])
+		image, err := c.Images().Found(args[0])
 		utility.LogError(err, fmt.Sprintf("get image %v failed", args[0]), true)
 
 		fileName, _ := cmd.Flags().GetString("file")
@@ -197,7 +194,7 @@ var imageSave = &cobra.Command{
 			fileName = fmt.Sprintf("%s.%s", image.Name, image.DiskFormat)
 		}
 
-		err = client.ImageClient().ImageDownload(image.Id, fileName, true)
+		err = c.Images().Download(image.Id, fileName, true)
 		utility.LogError(err, fmt.Sprintf("download image %v failed", args[0]), true)
 		fmt.Printf("Saved image to %s.\n", fileName)
 	},
@@ -218,10 +215,10 @@ var imageSet = &cobra.Command{
 	Short: "Set image properties",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := cli.GetClient()
+		c := openstack.DefaultClient().GlanceV2()
 
 		human, _ := cmd.Flags().GetBool("human")
-		image, err := client.ImageClient().ImageFound(args[0])
+		image, err := c.Images().Found(args[0])
 		utility.LogError(err, "Get image failed", true)
 		params := map[string]interface{}{}
 		for flag, attribute := range IMAGE_ATTRIBUTIES {
@@ -231,7 +228,7 @@ var imageSet = &cobra.Command{
 			}
 			params[attribute] = value
 		}
-		image, err = client.ImageClient().ImageSet(image.Id, params)
+		image, err = c.Images().Set(image.Id, params)
 		utility.LogError(err, "update image failed", true)
 		printImage(*image, human)
 	},
@@ -252,8 +249,8 @@ func init() {
 	imageCreate.Flags().String("os-distro", "", "Common name of operating system distribution")
 
 	// TODO: show valid values.
-	imageCreate.Flags().String("container-format", "", fmt.Sprintf("Format of the container. Valid:\n%v", image.IMAGE_CONTAINER_FORMATS))
-	imageCreate.Flags().String("disk-format", "", fmt.Sprintf("Format of the disk. Valid:\n%v", image.IMAGE_DISK_FORMATS))
+	imageCreate.Flags().String("container-format", "", fmt.Sprintf("Format of the container. Valid:\n%v", glance.IMAGE_CONTAINER_FORMATS))
+	imageCreate.Flags().String("disk-format", "", fmt.Sprintf("Format of the disk. Valid:\n%v", glance.IMAGE_DISK_FORMATS))
 
 	imageSave.Flags().String("file", "", "Downloaded image save filename.")
 	Image.PersistentFlags().Bool("human", false, "Human size")

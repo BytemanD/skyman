@@ -11,15 +11,16 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/gitutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 
-	"github.com/BytemanD/skyman/cli"
 	"github.com/BytemanD/skyman/cli/compute"
 	"github.com/BytemanD/skyman/cli/identity"
 	"github.com/BytemanD/skyman/cli/image"
 	"github.com/BytemanD/skyman/cli/networking"
+	"github.com/BytemanD/skyman/cli/prune"
 	"github.com/BytemanD/skyman/cli/storage"
 	"github.com/BytemanD/skyman/cli/templates"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
+	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -46,6 +47,8 @@ func getVersion() string {
 	return fmt.Sprint(Version)
 }
 
+var pruneCmd = &cobra.Command{Use: "prune", Short: "prune resources"}
+
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Version of client and server",
@@ -60,10 +63,11 @@ var versionCmd = &cobra.Command{
 		fmt.Printf("  %-14s: %s\n", "BuildDate", BuildDate)
 		fmt.Printf("  %-14s: %s\n", "BuildPlatform", BuildPlatform)
 
-		client := cli.GetClient()
+		client := openstack.DefaultClient()
+
 		fmt.Println("Servers:")
 
-		identityVerion, err := client.Identity.GetStableVersion()
+		identityVerion, err := client.KeystoneV3().GetStableVersion()
 		utility.LogError(err, "get idendity veresion failed", true)
 		if err != nil {
 			return
@@ -71,29 +75,28 @@ var versionCmd = &cobra.Command{
 		fmt.Printf("  %-11s: %s\n", "Identity", identityVerion.VersoinInfo())
 
 		errors := 0
-		compute := client.ComputeClient()
-		computeVerion, err := compute.GetCurrentVersion()
+		computeVerion, err := client.NovaV2().GetCurrentVersion()
 		if err == nil {
 			fmt.Printf("  %-11s: %s\n", "Compute", computeVerion.VersoinInfo())
 		} else {
 			fmt.Printf("  %-11s: Unknown (%s)\n", "Compute", err)
 			errors++
 		}
-		imageVerion, err := client.ImageClient().GetCurrentVersion()
+		imageVerion, err := client.GlanceV2().GetCurrentVersion()
 		if err == nil {
 			fmt.Printf("  %-11s: %s\n", "Image", imageVerion.VersoinInfo())
 		} else {
 			fmt.Printf("  %-11s: Unknown (%s)\n", "Image", err)
 			errors++
 		}
-		storageVerion, err := client.StorageClient().GetCurrentVersion()
+		storageVerion, err := client.CinderV2().GetCurrentVersion()
 		if err == nil {
 			fmt.Printf("  %-11s: %s\n", "Storage", storageVerion.VersoinInfo())
 		} else {
 			fmt.Printf("  %-11s: Unknown (%s)\n", "Storage", err)
 			errors++
 		}
-		networkingVerion, err := client.NetworkingClient().GetCurrentVersion()
+		networkingVerion, err := client.NeutronV2().GetCurrentVersion()
 		if err == nil {
 			fmt.Printf("  %-11s: %s\n", "Networking", networkingVerion.VersoinInfo())
 		} else {
@@ -139,6 +142,13 @@ func main() {
 
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	viper.BindPFlag("format", rootCmd.PersistentFlags().Lookup("format"))
+
+	pruneCmd.AddCommand(
+		prune.PortPrune,
+		prune.ServerPrune,
+		prune.VolumePrune,
+	)
+
 	rootCmd.AddCommand(
 		versionCmd,
 		identity.Token,
@@ -151,6 +161,7 @@ func main() {
 		storage.Volume,
 		networking.Router, networking.Network, networking.Subnet, networking.Port,
 		templates.CreateCmd, templates.DeleteCmd,
+		pruneCmd,
 	)
 	rootCmd.Execute()
 }
