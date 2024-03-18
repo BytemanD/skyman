@@ -10,7 +10,7 @@ type OpenstackClientInterface interface {
 }
 
 type Openstack struct {
-	keystoneClient *NeutronV2
+	keystoneClient *KeystoneV3
 	glanceClient   *Glance
 	neutronClient  *NeutronV2
 	cinderClient   *CinderV2

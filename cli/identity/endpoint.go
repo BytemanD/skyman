@@ -25,7 +25,7 @@ var endpointList = &cobra.Command{
 		current, _ := cmd.Flags().GetBool("current")
 		region, _ := cmd.Flags().GetString("region")
 		if current && region != "" {
-			return fmt.Errorf("flags --current and --region conflict.")
+			return fmt.Errorf("flags --current and --region conflict")
 		}
 		return nil
 	},

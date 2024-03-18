@@ -3,6 +3,7 @@ package image
 import (
 	"fmt"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/glance"
@@ -143,9 +144,11 @@ var imageCreate = &cobra.Command{
 
 		c := openstack.DefaultClient().GlanceV2()
 
+		logging.Info("create image")
 		image, err := c.Images().Create(reqImage)
-		utility.LogError(err, "Create image faled", true)
+		utility.LogError(err, "Create image failed", true)
 		if file != "" {
+			logging.Info("upload image")
 			err = client.Images().Upload(image.Id, file)
 			utility.LogError(err, "Upload image failed", true)
 			image, err = c.Images().Show(image.Id)
@@ -184,19 +187,19 @@ var imageSave = &cobra.Command{
 	Short: "Save image",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().GlanceV2()
+		fileName, _ := cmd.Flags().GetString("file")
 
+		c := openstack.DefaultClient().GlanceV2()
 		image, err := c.Images().Found(args[0])
 		utility.LogError(err, fmt.Sprintf("get image %v failed", args[0]), true)
-
-		fileName, _ := cmd.Flags().GetString("file")
 		if fileName == "" {
 			fileName = fmt.Sprintf("%s.%s", image.Name, image.DiskFormat)
 		}
 
+		logging.Info("Saving image to %s", fileName)
 		err = c.Images().Download(image.Id, fileName, true)
 		utility.LogError(err, fmt.Sprintf("download image %v failed", args[0]), true)
-		fmt.Printf("Saved image to %s.\n", fileName)
+		logging.Info("Image saved")
 	},
 }
 

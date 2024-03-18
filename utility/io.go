@@ -1,58 +1,39 @@
 package utility
 
 import (
+	"bufio"
 	"encoding/base64"
-	"fmt"
 	"io"
 	"reflect"
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/fileutils"
+	"github.com/cheggaaa/pb/v3"
 )
 
 type ReaderWithProcess struct {
 	io.Reader
-	Size      int
-	completed int
+	Bar *pb.ProgressBar
 }
 
-func (reader *ReaderWithProcess) PrintProcess(r int) {
-	if r == 0 {
-		return
-	}
-	reader.completed = reader.completed + r
-	percent := reader.completed * 100 / reader.Size
-	fmt.Printf("\r[%-50s]", strings.Repeat("=", percent/2)+">")
-	if percent >= 100 {
-		fmt.Println()
+func (reader *ReaderWithProcess) increment(n int) {
+	reader.Bar.Add(n)
+	if reader.Bar.Current() >= reader.Bar.Total() {
+		reader.Bar.Finish()
 	}
 }
 
-func (reader *ReaderWithProcess) Read(p []byte) (n int, err error) {
-	n, err = reader.Reader.Read(p)
-	reader.PrintProcess(n)
+func (reader *ReaderWithProcess) Read(p []byte) (int, error) {
+	n, err := reader.Reader.Read(p)
+	defer reader.increment(n)
 	return n, err
 }
 
-type WriterWithProces struct {
-	io.Writer
-	Size      int
-	completed int
-}
-
-func (reader *WriterWithProces) PrintProcess(r int) {
-	reader.completed = reader.completed + r
-	percent := reader.completed * 100 / reader.Size
-	fmt.Printf("\r[%-50s]", strings.Repeat("=", percent/2)+">")
-	if r == 0 {
-		fmt.Println()
+func NewProcessReader(reader io.ReadCloser, size int) *ReaderWithProcess {
+	return &ReaderWithProcess{
+		Reader: bufio.NewReaderSize(reader, 1024*32),
+		Bar:    pb.StartNew(size),
 	}
-}
-
-func (reader *WriterWithProces) Write(p []byte) (n int, err error) {
-	n, err = reader.Writer.Write(p)
-	reader.PrintProcess(n)
-	return n, err
 }
 
 func GetStructTags(i interface{}) []string {

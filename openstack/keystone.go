@@ -35,16 +35,19 @@ type RegionApi struct {
 	KeystoneV3
 }
 
-func (o Openstack) KeystoneV3() KeystoneV3 {
-	endpoint, err := o.AuthPlugin.GetServiceEndpoint("identity", "keystone", "public")
-	if err != nil {
-		logging.Fatal("get compute endpoint falied: %v", err)
+func (o *Openstack) KeystoneV3() *KeystoneV3 {
+	if o.keystoneClient == nil {
+		endpoint, err := o.AuthPlugin.GetServiceEndpoint("identity", "keystone", "public")
+		if err != nil {
+			logging.Fatal("get keystone endpoint falied: %v", err)
+		}
+		o.keystoneClient = &KeystoneV3{
+			RestClient{
+				BaseUrl:    utility.VersionUrl(endpoint, V3),
+				AuthPlugin: o.AuthPlugin},
+		}
 	}
-	return KeystoneV3{
-		RestClient{
-			BaseUrl:    utility.VersionUrl(endpoint, V3),
-			AuthPlugin: o.AuthPlugin},
-	}
+	return o.keystoneClient
 }
 
 func (c KeystoneV3) Endpoints() EndpointApi {

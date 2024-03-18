@@ -76,10 +76,7 @@ func (resp Response) SaveBody(file *os.File, process bool) error {
 	defer resp.bodyReader.Close()
 	var reader io.Reader
 	if process && resp.GetContentLength() > 0 {
-		reader = &ReaderWithProcess{
-			Reader: bufio.NewReaderSize(resp.bodyReader, 1024*32),
-			Size:   resp.GetContentLength(),
-		}
+		reader = NewProcessReader(resp.bodyReader, resp.GetContentLength())
 	} else {
 		reader = bufio.NewReaderSize(resp.bodyReader, 1024*32)
 	}
@@ -253,8 +250,10 @@ func UnmarshalResponse(resp *http.Response, o interface{}) error {
 }
 
 type Request struct {
-	Url     string
-	Body    []byte
-	Query   url.Values
-	Headers map[string]string
+	Method   string
+	Url      string
+	Body     []byte
+	Query    url.Values
+	Headers  map[string]string
+	BodyBuff *bytes.Buffer
 }

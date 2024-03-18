@@ -36,7 +36,7 @@ var projectList = &cobra.Command{
 }
 var projectDelete = &cobra.Command{
 	Use:   "delete <project id>",
-	Short: "Delete endpoints",
+	Short: "Delete project",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().KeystoneV3()
@@ -48,5 +48,5 @@ var projectDelete = &cobra.Command{
 func init() {
 	projectList.Flags().BoolP("long", "l", false, "List additional fields in output")
 
-	Project.AddCommand(projectList, projectList)
+	Project.AddCommand(projectList, projectDelete)
 }

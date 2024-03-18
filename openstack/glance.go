@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
 	"strconv"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -19,14 +20,17 @@ type ImageApi struct {
 	Glance
 }
 
-func (o Openstack) GlanceV2() Glance {
-	endpoint, err := o.AuthPlugin.GetServiceEndpoint("image", "glance", "public")
-	if err != nil {
-		logging.Fatal("get compute endpoint falied: %v", err)
+func (o *Openstack) GlanceV2() *Glance {
+	if o.glanceClient == nil {
+		endpoint, err := o.AuthPlugin.GetServiceEndpoint("image", "glance", "public")
+		if err != nil {
+			logging.Fatal("get compute endpoint falied: %v", err)
+		}
+		o.glanceClient = &Glance{
+			RestClient{BaseUrl: utility.VersionUrl(endpoint, "v2"), AuthPlugin: o.AuthPlugin},
+		}
 	}
-	return Glance{
-		RestClient{BaseUrl: utility.VersionUrl(endpoint, "v2"), AuthPlugin: o.AuthPlugin},
-	}
+	return o.glanceClient
 }
 func (c Glance) GetCurrentVersion() (*model.ApiVersion, error) {
 	resp, err := c.Index()
@@ -179,39 +183,26 @@ func (c ImageApi) Set(id string, params map[string]interface{}) (*glance.Image, 
 	return &image, nil
 }
 func (c ImageApi) Upload(id string, fileName string) error {
-	// headers := utility.CloneHeaders(client.BaseHeaders,
-	// 	map[string]string{"Content-Type": "application/octet-stream"},
-	// )
-
-	// file, err := os.Open(fileName)
-	// if err != nil {
-	// 	return err
-	// }
-	// fileStat, err := file.Stat()
-	// buffer := make([]byte, fileStat.Size())
-	// file.Read(buffer)
-
-	// req := common.NewResourcePutRequest(client.endpoint, "images", id+"/file", buffer, headers)
-	// req.ShowProcess = true
-	// _, err = client.Request(req)
-	// return err
-	return fmt.Errorf("not impleted")
+	req := utility.Request{
+		Url:     utility.UrlJoin("images", id, "file"),
+		Headers: map[string]string{"Content-Type": "application/octet-stream"},
+	}
+	_, err := c.Glance.PutFile(req, fileName)
+	return err
 }
 
 func (c ImageApi) Download(id string, fileName string, process bool) error {
-	// headers := utility.CloneHeaders(client.BaseHeaders,
-	// 	map[string]string{"Content-Type": "application/octet-stream"},
-	// )
-	// file, err := os.Create(fileName)
-	// if err != nil {
-	// 	return err
-	// }
-	// req := common.NewResourceShowRequest(client.endpoint, "images", id+"/file", headers)
-	// req.ShowProcess = true
-	// resp, err := client.Request(req)
-	// if err != nil {
-	// 	return err
-	// }
-	// resp.SaveBody(file, process)
-	return fmt.Errorf("not impleted")
+	req := utility.Request{
+		Url:     utility.UrlJoin("images", id, "file"),
+		Headers: map[string]string{"Content-Type": "application/octet-stream"},
+	}
+	resp, err := c.Glance.GetReq(req)
+	if err != nil {
+		return err
+	}
+	file, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	return resp.SaveBody(file, process)
 }

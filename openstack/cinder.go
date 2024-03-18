@@ -38,23 +38,26 @@ func InvalidMIgrationPoicy(policy string) error {
 	return nil
 }
 
-func (o Openstack) CinderV2() CinderV2 {
-	var (
-		endpoint string
-		err      error
-	)
-	for k, v := range map[string]string{"volumev2": "cinderv2", "volume": "cinder"} {
-		endpoint, err = o.AuthPlugin.GetServiceEndpoint(k, v, "public")
-		if err == nil {
-			break
+func (o *Openstack) CinderV2() *CinderV2 {
+	if o.cinderClient == nil {
+		var (
+			endpoint string
+			err      error
+		)
+		for k, v := range map[string]string{"volumev2": "cinderv2", "volume": "cinder"} {
+			endpoint, err = o.AuthPlugin.GetServiceEndpoint(k, v, "public")
+			if err == nil {
+				break
+			}
+		}
+		if err != nil {
+			logging.Warning("get endpoint falied: %v", err)
+		}
+		o.cinderClient = &CinderV2{
+			RestClient{BaseUrl: utility.VersionUrl(endpoint, V2), AuthPlugin: o.AuthPlugin},
 		}
 	}
-	if err != nil {
-		logging.Warning("get endpoint falied: %v", err)
-	}
-	return CinderV2{
-		RestClient{BaseUrl: utility.VersionUrl(endpoint, V2), AuthPlugin: o.AuthPlugin},
-	}
+	return o.cinderClient
 }
 func (c CinderV2) GetCurrentVersion() (*model.ApiVersion, error) {
 	resp, err := c.Index()

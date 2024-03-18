@@ -44,12 +44,3 @@ func UrlValues(m map[string]string) url.Values {
 	}
 	return query
 }
-func min(numbers ...int) int {
-	minNumber := numbers[0]
-	for _, number := range numbers[1:] {
-		if number < minNumber {
-			minNumber = number
-		}
-	}
-	return minNumber
-}

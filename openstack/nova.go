@@ -89,7 +89,7 @@ func (c NovaV2) ServerGroups() ServerGroupApi {
 func (c NovaV2) Aggregates() AggregateApi {
 	return AggregateApi{c}
 }
-func (o Openstack) NovaV2() *NovaV2 {
+func (o *Openstack) NovaV2() *NovaV2 {
 	if o.novaClient == nil {
 		endpoint, err := o.AuthPlugin.GetServiceEndpoint("compute", "nova", "public")
 		if err != nil {
