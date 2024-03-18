@@ -72,35 +72,35 @@ var versionCmd = &cobra.Command{
 		if err != nil {
 			return
 		}
-		fmt.Printf("  %-11s: %s\n", "Identity", identityVerion.VersoinInfo())
+		fmt.Printf("  %-11s: %s\n", "Keystone", identityVerion.VersoinInfo())
 
 		errors := 0
 		computeVerion, err := client.NovaV2().GetCurrentVersion()
 		if err == nil {
-			fmt.Printf("  %-11s: %s\n", "Compute", computeVerion.VersoinInfo())
+			fmt.Printf("  %-11s: %s\n", "Nova", computeVerion.VersoinInfo())
 		} else {
-			fmt.Printf("  %-11s: Unknown (%s)\n", "Compute", err)
+			fmt.Printf("  %-11s: Unknown (%s)\n", "Nova", err)
 			errors++
 		}
 		imageVerion, err := client.GlanceV2().GetCurrentVersion()
 		if err == nil {
-			fmt.Printf("  %-11s: %s\n", "Image", imageVerion.VersoinInfo())
+			fmt.Printf("  %-11s: %s\n", "Glance", imageVerion.VersoinInfo())
 		} else {
-			fmt.Printf("  %-11s: Unknown (%s)\n", "Image", err)
+			fmt.Printf("  %-11s: Unknown (%s)\n", "Glance", err)
 			errors++
 		}
 		storageVerion, err := client.CinderV2().GetCurrentVersion()
 		if err == nil {
-			fmt.Printf("  %-11s: %s\n", "Storage", storageVerion.VersoinInfo())
+			fmt.Printf("  %-11s: %s\n", "Cinder", storageVerion.VersoinInfo())
 		} else {
-			fmt.Printf("  %-11s: Unknown (%s)\n", "Storage", err)
+			fmt.Printf("  %-11s: Unknown (%s)\n", "Cinder", err)
 			errors++
 		}
 		networkingVerion, err := client.NeutronV2().GetCurrentVersion()
 		if err == nil {
-			fmt.Printf("  %-11s: %s\n", "Networking", networkingVerion.VersoinInfo())
+			fmt.Printf("  %-11s: %s\n", "Neutron", networkingVerion.VersoinInfo())
 		} else {
-			fmt.Printf("  %-11s: Unknown (%s)\n", "Networking", err)
+			fmt.Printf("  %-11s: Unknown (%s)\n", "Neutron", err)
 			errors++
 		}
 		if errors > 0 {

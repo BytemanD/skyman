@@ -56,8 +56,21 @@ func (o Openstack) CinderV2() CinderV2 {
 		RestClient{BaseUrl: utility.VersionUrl(endpoint, V2), AuthPlugin: o.AuthPlugin},
 	}
 }
-func (c CinderV2) GetCurrentVersion() (model.ApiVersion, error) {
-	return model.ApiVersion{}, nil
+func (c CinderV2) GetCurrentVersion() (*model.ApiVersion, error) {
+	resp, err := c.Index()
+	if err != nil {
+		return nil, err
+	}
+	apiVersions := struct{ Versions []model.ApiVersion }{}
+	if err := resp.BodyUnmarshal(&apiVersions); err != nil {
+		return nil, err
+	}
+	for _, version := range apiVersions.Versions {
+		if version.Status == "CURRENT" {
+			return &version, nil
+		}
+	}
+	return nil, fmt.Errorf("current version not found")
 }
 
 func (c CinderV2) Volumes() VolumeApi {

@@ -13,6 +13,7 @@ import (
 
 type NeutronV2 struct {
 	RestClient
+	currentVersion *model.ApiVersion
 }
 type RouterApi struct {
 	NeutronV2
@@ -40,20 +41,40 @@ func (c NeutronV2) Subnets() SubnetApi {
 func (c NeutronV2) Ports() PortApi {
 	return PortApi{c}
 }
-func (o Openstack) NeutronV2() *NeutronV2 {
+func (o *Openstack) NeutronV2() *NeutronV2 {
 	if o.neutronClient == nil {
 		endpoint, err := o.AuthPlugin.GetServiceEndpoint("network", "neutron", "public")
 		if err != nil {
 			logging.Fatal("get compute endpoint falied: %v", err)
 		}
 		o.neutronClient = &NeutronV2{
-			RestClient{BaseUrl: utility.VersionUrl(endpoint, "v2.0"), AuthPlugin: o.AuthPlugin},
+			RestClient: RestClient{
+				BaseUrl:    utility.VersionUrl(endpoint, "v2.0"),
+				AuthPlugin: o.AuthPlugin},
 		}
 	}
 	return o.neutronClient
 }
-func (c NeutronV2) GetCurrentVersion() (model.ApiVersion, error) {
-	return model.ApiVersion{}, nil
+func (c *NeutronV2) GetCurrentVersion() (*model.ApiVersion, error) {
+	if c.currentVersion == nil {
+		resp, err := c.Index()
+		if err != nil {
+			return nil, err
+		}
+		apiVersions := struct{ Versions []model.ApiVersion }{}
+		if err := resp.BodyUnmarshal(&apiVersions); err != nil {
+			return nil, err
+		}
+		for _, version := range apiVersions.Versions {
+			if version.Status == "CURRENT" {
+				c.currentVersion = &version
+			}
+		}
+	}
+	if c.currentVersion != nil {
+		return c.currentVersion, nil
+	}
+	return nil, fmt.Errorf("current version not found")
 }
 
 // router api

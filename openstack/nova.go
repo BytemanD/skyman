@@ -31,7 +31,8 @@ func getMicroVersion(vertionStr string) microVersion {
 
 type NovaV2 struct {
 	RestClient
-	MicroVersion model.ApiVersion
+	currentVersion *model.ApiVersion
+	MicroVersion   model.ApiVersion
 }
 type ServersApi struct {
 	NovaV2
@@ -124,19 +125,24 @@ func (c *NovaV2) MicroVersionLargeEqual(version string) bool {
 		return false
 	}
 }
-func (c NovaV2) GetCurrentVersion() (*model.ApiVersion, error) {
-	resp, err := c.Index()
-	if err != nil {
-		return nil, err
-	}
-	apiVersions := struct{ Versions []model.ApiVersion }{}
-	if err := resp.BodyUnmarshal(&apiVersions); err != nil {
-		return nil, err
-	}
-	for _, version := range apiVersions.Versions {
-		if version.Status == "CURRENT" {
-			return &version, nil
+func (c *NovaV2) GetCurrentVersion() (*model.ApiVersion, error) {
+	if c.currentVersion == nil {
+		resp, err := c.Index()
+		if err != nil {
+			return nil, err
 		}
+		apiVersions := struct{ Versions []model.ApiVersion }{}
+		if err := resp.BodyUnmarshal(&apiVersions); err != nil {
+			return nil, err
+		}
+		for _, version := range apiVersions.Versions {
+			if version.Status == "CURRENT" {
+				return &version, nil
+			}
+		}
+	}
+	if c.currentVersion != nil {
+		return c.currentVersion, nil
 	}
 	return nil, fmt.Errorf("current version not found")
 }
