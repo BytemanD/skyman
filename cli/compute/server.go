@@ -281,7 +281,7 @@ var serverDelete = &cobra.Command{
 			client.NovaV2().Servers().Found(idOrName)
 			s, err := client.NovaV2().Servers().Found(idOrName)
 			if err != nil {
-				utility.LogError(err, "found server %s failed: %s", false)
+				utility.LogError(err, fmt.Sprintf("found server %s failed", idOrName), false)
 				continue
 			}
 			err = client.NovaV2().Servers().Delete(s.Id)

@@ -43,10 +43,8 @@ func deleteNetwork(client *openstack.Openstack, network Network) {
 }
 
 func deleteServer(client *openstack.Openstack, server Server, watch bool) {
-	var s *nova.Server
-	var err error
-	err = client.NovaV2().Servers().Delete(server.Name)
-	if s == nil {
+	s, err := client.NovaV2().Servers().Found(server.Name)
+	if err != nil {
 		logging.Warning("get server %s failed, %s", server.Name, err)
 		return
 	}

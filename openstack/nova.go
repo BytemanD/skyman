@@ -202,6 +202,8 @@ func (c ServersApi) Found(idOrName string) (*nova.Server, error) {
 			servers, err = c.Servers().ListByName(idOrName)
 			if err != nil || len(servers) == 0 {
 				return nil, fmt.Errorf("server %s not found", idOrName)
+			} else if len(servers) >= 2 {
+				return nil, fmt.Errorf("multi server named %s", idOrName)
 			}
 			server, err = c.Servers().Show(servers[0].Id)
 		}
@@ -302,7 +304,7 @@ func (c ServersApi) DeleteInterface(id string, portId string) error {
 }
 func (c ServersApi) doAction(action string, id string, params interface{}) (*utility.Response, error) {
 	body, _ := json.Marshal(map[string]interface{}{action: params})
-	return c.NovaV2.Post(utility.UrlJoin("servers", id, "action", id), body, nil)
+	return c.NovaV2.Post(utility.UrlJoin("servers", id, "action"), body, nil)
 }
 func (c ServersApi) Stop(id string) error {
 	_, err := c.doAction("os-stop", id, nil)

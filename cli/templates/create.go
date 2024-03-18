@@ -95,7 +95,7 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 		serverOption.SecurityGroups = append(
 			serverOption.SecurityGroups,
 			neutron.SecurityGroup{
-				Resource: model.Resource{Name: sg},
+				Resource: model.Resource{Name: sg.Name},
 			})
 	}
 

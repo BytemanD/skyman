@@ -117,7 +117,11 @@ func (pt PrettyTable) GetLongColumnIndex(column string) int {
 }
 func (pt PrettyTable) Print(long bool) {
 	tableWriter := pt.getTableWriter()
-
+	if pt.Title != "" {
+		fmt.Println(pt.Title)
+		// tableWriter.SetTitle("%s", pt.Title)
+		// tableWriter.Style().Title.Align = text.AlignCenter
+	}
 	headerRow := table.Row{}
 	columns := pt.ShortColumns
 	if long {
@@ -172,10 +176,7 @@ func (pt PrettyTable) Print(long bool) {
 		}
 		tableWriter.AppendRow(row)
 	}
-	if pt.Title != "" {
-		tableWriter.SetTitle(pt.Title)
-		tableWriter.Style().Title.Align = text.AlignCenter
-	}
+
 	// TODO: 当前只能按Columns 顺序排序
 	tableWriter.SortBy(sortBy)
 	tableWriter.Render()
