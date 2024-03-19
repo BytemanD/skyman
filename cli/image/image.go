@@ -8,7 +8,6 @@ import (
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/glance"
 	"github.com/BytemanD/skyman/utility"
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 )
@@ -51,20 +50,20 @@ var ImageList = &cobra.Command{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name", Sort: true},
 				{Name: "Status", AutoColor: true},
-				{Name: "Size", Slot: func(item interface{}) interface{} {
-					p, _ := item.(glance.Image)
-					if human {
-						return p.HumanSize()
-					} else {
-						return p.Size
-					}
-				}},
+				{Name: "Size", Align: text.AlignRight,
+					Slot: func(item interface{}) interface{} {
+						p, _ := item.(glance.Image)
+						if human {
+							return p.HumanSize()
+						} else {
+							return p.Size
+						}
+					}},
 				{Name: "DiskFormat"}, {Name: "ContainerFormat"},
 			},
 			LongColumns: []common.Column{
 				{Name: "Visibility"}, {Name: "Protected"},
 			},
-			ColumnConfigs: []table.ColumnConfig{{Number: 4, Align: text.AlignRight}},
 		}
 
 		pt.AddItems(images)

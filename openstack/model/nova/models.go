@@ -60,6 +60,16 @@ func (fault *Fault) Marshal() string {
 	return string(faltMarshal)
 }
 
+type AddressList []Address
+
+func (a AddressList) Addrs() []string {
+	addrs := []string{}
+	for _, address := range a {
+		addrs = append(addrs, address.Addr)
+	}
+	return addrs
+}
+
 type Server struct {
 	model.Resource
 	TaskState      string                  `json:"OS-EXT-STS:task_state,omitempty"`
@@ -70,7 +80,7 @@ type Server struct {
 	Flavor         Flavor                  `json:"flavor,omitempty"`
 	Image          Image                   `json:"image,omitempty"`
 	Fault          Fault                   `json:"fault,omitempty"`
-	Addresses      map[string][]Address    `json:"addresses,omitempty"`
+	Addresses      map[string]AddressList  `json:"addresses,omitempty"`
 	InstanceName   string                  `json:"OS-EXT-SRV-ATTR:instance_name,omitempty"`
 	ConfigDriver   string                  `json:"config_drive,omitempty"`
 	Created        string                  `json:"created,omitempty"`
@@ -106,11 +116,14 @@ func (server *Server) GetTaskState() string {
 	return server.TaskState
 }
 func (server *Server) GetNetworks() []string {
-	var networks []string
+	networksMap := map[string]string{}
+
 	for net, addresses := range server.Addresses {
-		for _, address := range addresses {
-			networks = append(networks, fmt.Sprintf("%s=%s", net, address.Addr))
-		}
+		networksMap[net] = strings.Join(addresses.Addrs(), ", ")
+	}
+	networks := []string{}
+	for k, v := range networksMap {
+		networks = append(networks, fmt.Sprintf("%s=%s", k, v))
 	}
 	return networks
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 )
 
@@ -43,7 +44,8 @@ var volumeList = &cobra.Command{
 		table := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
-				{Name: "Size"}, {Name: "Bootable"}, {Name: "VolumeType"},
+				{Name: "Size", Align: text.AlignRight},
+				{Name: "Bootable"}, {Name: "VolumeType"},
 				{Name: "Attachments", Slot: func(item interface{}) interface{} {
 					obj, _ := (item).(cinder.Volume)
 					return strings.Join(obj.GetAttachmentList(), "\n")

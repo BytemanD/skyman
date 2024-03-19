@@ -76,7 +76,7 @@ var serverList = &cobra.Command{
 					p, _ := (item).(nova.Server)
 					return p.GetPowerState()
 				}},
-				{Name: "Addresses", Text: "Networks", Slot: func(item interface{}) interface{} {
+				{Name: "Addresses", Text: "Networks", WidthMax: 70, Slot: func(item interface{}) interface{} {
 					p, _ := (item).(nova.Server)
 					return strings.Join(p.GetNetworks(), "\n")
 				}},

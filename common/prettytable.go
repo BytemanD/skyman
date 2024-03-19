@@ -41,6 +41,8 @@ type Column struct {
 	SortMode   table.SortMode
 	Filters    []string
 	Marshal    bool
+	WidthMax   int
+	Align      text.Align
 }
 
 type PrettyTable struct {
@@ -142,6 +144,16 @@ func (pt PrettyTable) Print(long bool) {
 		headerRow = append(headerRow, title)
 	}
 	tableWriter.AppendHeader(headerRow)
+	colConfigs := []table.ColumnConfig{}
+	for i, column := range columns {
+		colConfigs = append(colConfigs, table.ColumnConfig{
+			Number:   i + 1,
+			WidthMax: column.WidthMax,
+			Align:    column.Align,
+		})
+	}
+	tableWriter.SetColumnConfigs(colConfigs)
+
 	for _, item := range pt.Items {
 		reflectValue := reflect.ValueOf(item)
 		row := table.Row{}
