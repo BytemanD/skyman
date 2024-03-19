@@ -250,10 +250,9 @@ func UnmarshalResponse(resp *http.Response, o interface{}) error {
 }
 
 type Request struct {
-	Method   string
-	Url      string
-	Body     []byte
-	Query    url.Values
-	Headers  map[string]string
-	BodyBuff *bytes.Buffer
+	Method  string
+	Url     string
+	Body    []byte
+	Query   url.Values
+	Headers map[string]string
 }

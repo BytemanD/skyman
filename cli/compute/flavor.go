@@ -228,9 +228,10 @@ var flavorUnset = &cobra.Command{
 		flavor, err := client.NovaV2().Flavors().Found(args[0])
 		utility.LogError(err, "Get flavor failed", true)
 		for _, property := range properties {
-			client.NovaV2().Flavors().DeleteExtraSpecs(flavor.Id, property)
-			utility.LogError(err, "delete extra specs failed", false)
-
+			err := client.NovaV2().Flavors().DeleteExtraSpec(flavor.Id, property)
+			if err != nil {
+				utility.LogError(err, "delete extra spec failed", false)
+			}
 		}
 
 	},

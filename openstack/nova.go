@@ -596,8 +596,8 @@ func (c FlavorApi) SetExtraSpecs(id string, extraSpecs map[string]string) (nova.
 	resp.BodyUnmarshal(&respBody)
 	return respBody["extra_specs"], nil
 }
-func (c FlavorApi) DeleteExtraSpecs(id string, extraSpec string) error {
-	_, err := c.NovaV2.Post(utility.UrlJoin("flavors", id, "os-extra_specs", extraSpec), nil, nil)
+func (c FlavorApi) DeleteExtraSpec(id string, extraSpec string) error {
+	_, err := c.NovaV2.Delete(utility.UrlJoin("flavors", id, "os-extra_specs", extraSpec), nil)
 	return err
 }
 func (c FlavorApi) Delete(id string) (err error) {
