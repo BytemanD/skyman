@@ -48,9 +48,7 @@ func (o *Openstack) NeutronV2() *NeutronV2 {
 			logging.Fatal("get compute endpoint falied: %v", err)
 		}
 		o.neutronClient = &NeutronV2{
-			RestClient: RestClient{
-				BaseUrl:    utility.VersionUrl(endpoint, "v2.0"),
-				AuthPlugin: o.AuthPlugin},
+			RestClient: NewRestClient(utility.VersionUrl(endpoint, "v2.0"), o.AuthPlugin),
 		}
 	}
 	return o.neutronClient

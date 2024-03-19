@@ -42,9 +42,7 @@ func (o *Openstack) KeystoneV3() *KeystoneV3 {
 			logging.Fatal("get keystone endpoint falied: %v", err)
 		}
 		o.keystoneClient = &KeystoneV3{
-			RestClient{
-				BaseUrl:    utility.VersionUrl(endpoint, V3),
-				AuthPlugin: o.AuthPlugin},
+			NewRestClient(utility.VersionUrl(endpoint, V3), o.AuthPlugin),
 		}
 	}
 	return o.keystoneClient

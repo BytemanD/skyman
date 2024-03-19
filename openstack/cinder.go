@@ -54,7 +54,7 @@ func (o *Openstack) CinderV2() *CinderV2 {
 			logging.Warning("get endpoint falied: %v", err)
 		}
 		o.cinderClient = &CinderV2{
-			RestClient{BaseUrl: utility.VersionUrl(endpoint, V2), AuthPlugin: o.AuthPlugin},
+			NewRestClient(utility.VersionUrl(endpoint, V2), o.AuthPlugin),
 		}
 	}
 	return o.cinderClient

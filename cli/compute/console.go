@@ -8,6 +8,7 @@ import (
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var Console = &cobra.Command{Use: "console"}
@@ -20,10 +21,7 @@ var consoleLog = &cobra.Command{
 		client := openstack.DefaultClient()
 		lines, _ := cmd.Flags().GetUint("lines")
 		consoleLog, err := client.NovaV2().Servers().ConsoleLog(args[0], lines)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		utility.LogError(err, "get console log failed", true)
 		fmt.Println(consoleLog.Output)
 	},
 }

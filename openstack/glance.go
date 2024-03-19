@@ -27,7 +27,7 @@ func (o *Openstack) GlanceV2() *Glance {
 			logging.Fatal("get compute endpoint falied: %v", err)
 		}
 		o.glanceClient = &Glance{
-			RestClient{BaseUrl: utility.VersionUrl(endpoint, "v2"), AuthPlugin: o.AuthPlugin},
+			NewRestClient(utility.VersionUrl(endpoint, V2), o.AuthPlugin),
 		}
 	}
 	return o.glanceClient

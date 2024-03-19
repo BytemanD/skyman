@@ -231,3 +231,11 @@ func (rest *RestClient) Patch(req utility.Request) (*utility.Response, error) {
 	}
 	return rest.doRequest(http.MethodPatch, rest.versionUrl(req.Url), req.Query, req.Body, req.Headers)
 }
+
+func NewRestClient(baseUrl string, authPlugin auth.AuthPlugin) RestClient {
+	return RestClient{
+		BaseUrl:    baseUrl,
+		AuthPlugin: authPlugin,
+		Headers:    map[string]string{"Content-Type": "application/json"},
+	}
+}
