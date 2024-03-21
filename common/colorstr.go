@@ -7,16 +7,16 @@ import (
 // TODO: use easygo
 
 func GetRedText(text string) string {
-	return fmt.Sprintf("\033[1;31;40m%s\033[0m", text)
+	return fmt.Sprintf("\033[31m%s\033[0m", text)
 }
 func GetGreenText(text string) string {
-	return fmt.Sprintf("\033[1;32;40m%s\033[0m", text)
+	return fmt.Sprintf("\033[32m%s\033[0m", text)
 }
 func GetYellowText(text string) string {
-	return fmt.Sprintf("\033[1;33;40m%s\033[0m", text)
+	return fmt.Sprintf("\033[33m%s\033[0m", text)
 }
 func GetBlueText(text string) string {
-	return fmt.Sprintf("\033[1;34;40m%s\033[0m", text)
+	return fmt.Sprintf("\033[34m%s\033[0m", text)
 }
 
 type ColorFormater struct {

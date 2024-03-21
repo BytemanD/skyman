@@ -44,12 +44,7 @@ func (o *Openstack) CinderV2() *CinderV2 {
 			endpoint string
 			err      error
 		)
-		for k, v := range map[string]string{"volumev2": "cinderv2", "volume": "cinder"} {
-			endpoint, err = o.AuthPlugin.GetServiceEndpoint(k, v, "public")
-			if err == nil {
-				break
-			}
-		}
+		endpoint, err = o.AuthPlugin.GetServiceEndpoint("volumev2", "cinderv2", "public")
 		if err != nil {
 			logging.Warning("get endpoint falied: %v", err)
 		}

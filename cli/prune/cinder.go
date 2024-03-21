@@ -26,7 +26,6 @@ var VolumePrune = &cobra.Command{
 		}
 		client := openstack.DefaultClient()
 		client.CinderV2().Volumes().Prune(query, yes)
-
 	},
 }
 
