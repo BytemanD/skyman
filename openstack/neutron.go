@@ -308,7 +308,7 @@ func (c PortApi) Found(idOrName string) (*neutron.Port, error) {
 	}
 }
 func (c PortApi) Create(params map[string]interface{}) (*neutron.Port, error) {
-	data := map[string]interface{}{"subnet": params}
+	data := map[string]interface{}{"port": params}
 	body, err := json.Marshal(&data)
 	if err != nil {
 		return nil, err
@@ -319,7 +319,7 @@ func (c PortApi) Create(params map[string]interface{}) (*neutron.Port, error) {
 	}
 	respBody := map[string]*neutron.Port{"subnet": {}}
 	err = resp.BodyUnmarshal(&respBody)
-	return respBody["subnet"], err
+	return respBody["port"], err
 }
 
 func (c PortApi) Delete(id string) (err error) {

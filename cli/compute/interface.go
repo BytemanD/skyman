@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/spf13/cobra"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -85,11 +88,83 @@ var interfaceDetach = &cobra.Command{
 		}
 	},
 }
+var interfaceAttachPorts = &cobra.Command{
+	Use:   "attach-ports <server> <network id>",
+	Short: "Attach ports to server",
+	Args:  cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		nums, _ := cmd.Flags().GetInt("nums")
+		workers, _ := cmd.Flags().GetInt("workers")
+
+		client := openstack.DefaultClient()
+		neutronClient := client.NeutronV2()
+		server, err := client.NovaV2().Servers().Show(args[0])
+		utility.LogError(err, "show server failed:", true)
+
+		ports := []neutron.Port{}
+		mu := sync.Mutex{}
+
+		taskGroup := utility.TaskGroup{
+			Items:     utility.Range(1, nums+1),
+			MaxWorker: workers,
+			Func: func(item interface{}) error {
+				p := item.(int)
+				name := fmt.Sprintf("skyman-port-%d", p)
+				logging.Info("creating port %s", name)
+				port, err := neutronClient.Ports().Create(
+					map[string]interface{}{"name": name, "network_id": args[1]})
+				if err != nil {
+					logging.Error("create port failed: %v", err)
+					return err
+				}
+				logging.Debug("created port: %v %v", port.Id, port.Name)
+				mu.Lock()
+				ports = append(ports, *port)
+				mu.Unlock()
+				return nil
+			},
+		}
+		logging.Info("creating %d port(s), waiting ...", nums)
+		taskGroup.Start()
+
+		taskGroup2 := utility.TaskGroup{
+			Items:     ports,
+			MaxWorker: workers,
+			Func: func(item interface{}) error {
+				p := item.(neutron.Port)
+				logging.Info("[port: %s] attaching", p.Id)
+				_, err := client.NovaV2().Servers().AddInterface(server.Id, "", p.Id)
+				if err != nil {
+					logging.Info("[port: %s] attach failed: %v", p.Id, err)
+					return err
+				}
+				interfaces, err := client.NovaV2().Servers().ListInterfaces(server.Id)
+				if err != nil {
+					utility.LogError(err, "list server interfaces failed:", false)
+					return err
+				}
+				for _, vif := range interfaces {
+					if vif.PortId == p.Id {
+						logging.Info("[port: %s] attach success", p.Id)
+						return nil
+					}
+				}
+				logging.Error("[port: %s] attach failed", p.Id)
+				return nil
+			},
+		}
+		taskGroup2.Start()
+	},
+}
 
 func init() {
+	interfaceAttachPorts.Flags().Int("nums", 1, "nums of interfaces")
+	interfaceAttachPorts.Flags().Int("workers", 1, "nums of workers")
 	serverInterface.AddCommand(
 		interfaceList, interfaceAttachNet, interfaceAttachPort,
-		interfaceDetach)
+		interfaceDetach,
+		interfaceAttachPorts,
+	)
 
 	Server.AddCommand(serverInterface)
 }

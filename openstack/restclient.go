@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -72,9 +73,18 @@ func (rest *RestClient) doRequest(method, reqUrl string, query url.Values,
 		logging.Debug("REQ: %s %s, \n    Headers: %v \n    Body: %v",
 			req.Method, req.URL, utility.EncodeHeaders(req.Header), req.Body)
 	}
-	resp, err := rest.getClient().Do(req)
-	if err != nil {
+	var resp *http.Response
+	for i := 0; i < 3; i++ {
+		resp, err = rest.getClient().Do(req)
+		if err == nil {
+			break
+		}
+		if strings.Contains(err.Error(), "connect: connection refused") {
+			logging.Warning("retry request: %s %s", req.Method, req.URL)
+			continue
+		}
 		return nil, err
+
 	}
 	response := utility.Response{
 		Status:  resp.StatusCode,

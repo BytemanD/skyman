@@ -317,7 +317,7 @@ func (c ServersApi) Start(id string) error {
 	return err
 }
 func (c ServersApi) Reboot(id string, hard bool) error {
-	rebootTypes := map[bool]string{false: "soft",true: "hard",}
+	rebootTypes := map[bool]string{false: "soft", true: "hard"}
 	body := map[string]string{"type": rebootTypes[hard]}
 	_, err := c.doAction("reboot", id, body)
 	return err

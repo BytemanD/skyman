@@ -10,10 +10,10 @@ import (
 
 func (o Openstack) PrunePorts(ports []neutron.Port) {
 	c := o.NeutronV2()
-	fmt.Printf("即将清理 %d 个Port(s):\n", len(ports))
 	for _, port := range ports {
 		fmt.Printf("%s (%s)\n", port.Id, port.Name)
 	}
+	fmt.Printf("即将清理 %d 个Port(s)\n", len(ports))
 	yes := utility.ScanfComfirm("是否清理?", []string{"yes", "y"}, []string{"no", "n"})
 	if !yes {
 		return
