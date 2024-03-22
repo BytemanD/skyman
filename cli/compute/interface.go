@@ -156,14 +156,77 @@ var interfaceAttachPorts = &cobra.Command{
 		taskGroup2.Start()
 	},
 }
+var interfaceAttachNets = &cobra.Command{
+	Use:   "attach-nets <server> <network1> [<network2>...]",
+	Short: "Attach nets to server",
+	Args:  cobra.MinimumNArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		nums, _ := cmd.Flags().GetInt("nums")
+		workers, _ := cmd.Flags().GetInt("workers")
+
+		usedNets := args[1:]
+
+		client := openstack.DefaultClient()
+		server, err := client.NovaV2().Servers().Show(args[0])
+		utility.LogError(err, "show server failed:", true)
+
+		nets := []string{}
+		index := 0
+
+		for {
+			if len(nets) >= nums {
+				break
+			}
+			nets = append(nets, usedNets[index])
+			index++
+			if index >= len(usedNets)-1 {
+				index = 0
+			}
+		}
+		logging.Debug("attach nets: %s", nets)
+		taskGroup := utility.TaskGroup{
+			Items:     nets,
+			MaxWorker: workers,
+			Func: func(item interface{}) error {
+				p := item.(string)
+				logging.Info("[net: %s] attaching", p)
+				attachment, err := client.NovaV2().Servers().AddInterface(server.Id, p, "")
+
+				if err != nil {
+					logging.Info("[net: %s] attach failed: %v", p, err)
+					return err
+				}
+				interfaces, err := client.NovaV2().Servers().ListInterfaces(server.Id)
+				if err != nil {
+					utility.LogError(err, "list server interfaces failed:", false)
+					return err
+				}
+				for _, vif := range interfaces {
+					if vif.PortId == attachment.PortId {
+						logging.Info("[port: %s] attach success", attachment.PortId)
+						return nil
+					}
+				}
+				logging.Error("[net: %s] attach failed", p)
+				return nil
+			},
+		}
+		taskGroup.Start()
+	},
+}
 
 func init() {
 	interfaceAttachPorts.Flags().Int("nums", 1, "nums of interfaces")
 	interfaceAttachPorts.Flags().Int("workers", 1, "nums of workers")
+
+	interfaceAttachNets.Flags().Int("nums", 1, "nums of interfaces")
+	interfaceAttachNets.Flags().Int("workers", 1, "nums of workers")
+
 	serverInterface.AddCommand(
 		interfaceList, interfaceAttachNet, interfaceAttachPort,
 		interfaceDetach,
 		interfaceAttachPorts,
+		interfaceAttachNets,
 	)
 
 	Server.AddCommand(serverInterface)

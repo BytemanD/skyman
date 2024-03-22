@@ -286,7 +286,7 @@ func (c ServersApi) AddInterface(id string, netId, portId string) (*nova.Interfa
 		return nil, errors.New("invalid params: portId or netId is required")
 	}
 	if netId != "" {
-		params["net_id"] = portId
+		params["net_id"] = netId
 	}
 	if portId != "" {
 		params["port_id"] = portId
