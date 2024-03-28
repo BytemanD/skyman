@@ -6,6 +6,8 @@ import (
 	"net/url"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/utility"
@@ -32,7 +34,7 @@ const (
 var MIGRATION_POLICYS = []string{POLICY_NEVER, POLICY_ON_DEMAND}
 
 func InvalidMIgrationPoicy(policy string) error {
-	if !utility.StringsContain(MIGRATION_POLICYS, policy) {
+	if !stringutils.ContainsString(MIGRATION_POLICYS, policy) {
 		return fmt.Errorf("invalid migration policy: %s, supported: %s", policy, MIGRATION_POLICYS)
 	}
 	return nil
@@ -287,13 +289,13 @@ func (c VolumeApi) Prune(query url.Values, yes bool) {
 		for _, server := range volumes {
 			fmt.Printf("%s (%s)\n", server.Id, server.Name)
 		}
-		yes = utility.ScanfComfirm("是否删除?", []string{"yes", "y"}, []string{"no", "n"})
+		yes = stringutils.ScanfComfirm("是否删除?", []string{"yes", "y"}, []string{"no", "n"})
 		if !yes {
 			return
 		}
 	}
 	logging.Info("开始清理")
-	tg := utility.TaskGroup{
+	tg := syncutils.TaskGroup{
 		Func: func(i interface{}) error {
 			volume := i.(cinder.Volume)
 			logging.Debug("delete volume %s(%s)", volume.Id, volume.Name)

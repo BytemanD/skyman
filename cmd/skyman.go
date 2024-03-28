@@ -10,6 +10,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/gitutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/stringutils"
 
 	"github.com/BytemanD/skyman/cli/compute"
 	"github.com/BytemanD/skyman/cli/identity"
@@ -116,7 +117,7 @@ func main() {
 		Version: getVersion(),
 		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 			format, _ := cmd.Flags().GetString("format")
-			if format != "" && !utility.StringsContain(common.GetOutputFormats(), format) {
+			if format != "" && !stringutils.ContainsString(common.GetOutputFormats(), format) {
 				fmt.Printf("invalid foramt '%s'\n", format)
 				os.Exit(1)
 			}

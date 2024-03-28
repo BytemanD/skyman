@@ -1,24 +1,18 @@
 package common
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"path"
 	"strings"
 
+	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
 
-func GetIndentJson(v interface{}) (string, error) {
-	jsonBytes, _ := json.Marshal(v)
-	var buffer bytes.Buffer
-	json.Indent(&buffer, jsonBytes, "", "    ")
-	return buffer.String(), nil
-}
 func GetYaml(v interface{}) (string, error) {
-	jsonString, err := GetIndentJson(v)
+	jsonString, err := stringutils.JsonDumpsIndent(v)
 	if err != nil {
 		return "", nil
 	}

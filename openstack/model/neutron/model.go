@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/openstack/model"
-
-	"github.com/BytemanD/skyman/utility"
 )
 
 type Router struct {
@@ -23,7 +22,7 @@ type Router struct {
 }
 
 func (router Router) MarshalExternalGatewayInfo() string {
-	jsonString, _ := utility.GetIndentJson(router.ExternalGatewayInfo)
+	jsonString, _ := stringutils.JsonDumpsIndent(router.ExternalGatewayInfo)
 	return jsonString
 
 }

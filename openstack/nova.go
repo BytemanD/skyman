@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
@@ -764,7 +766,7 @@ func (c HypervisorApi) ShowByHostname(hostname string) (*nova.Hypervisor, error)
 	return c.Show(hypervisors[0].Id)
 }
 func (c HypervisorApi) Found(idOrHostName string) (*nova.Hypervisor, error) {
-	if !utility.IsUUID(idOrHostName) {
+	if !stringutils.IsUUID(idOrHostName) {
 		return c.ShowByHostname(idOrHostName)
 	}
 	hypervisors, err := c.ListByName(idOrHostName)
@@ -1061,13 +1063,13 @@ func (c ServersApi) Prune(query url.Values, yes bool, waitDeleted bool) {
 		for _, server := range servers {
 			fmt.Printf("    %s(%s)\n", server.Id, server.Name)
 		}
-		yes = utility.ScanfComfirm("是否删除", []string{"yes", "y"}, []string{"no", "n"})
+		yes = stringutils.ScanfComfirm("是否删除", []string{"yes", "y"}, []string{"no", "n"})
 	}
 	if !yes {
 		return
 	}
 	logging.Info("开始删除虚拟机")
-	tg := utility.TaskGroup{
+	tg := syncutils.TaskGroup{
 		Items: servers,
 		Func: func(o interface{}) error {
 			s := o.(nova.Server)

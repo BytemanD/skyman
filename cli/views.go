@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/openstack/model/nova"
-	"github.com/BytemanD/skyman/utility"
 	"github.com/jedib0t/go-pretty/v6/list"
 )
 
@@ -63,7 +63,7 @@ func PrintServer(server nova.Server) {
 				p, _ := item.(nova.Server)
 				sgNames := []string{}
 				for _, sg := range p.SecurityGroups {
-					if utility.StringsContain(sgNames, sg.Name) {
+					if stringutils.ContainsString(sgNames, sg.Name) {
 						continue
 					}
 					sgNames = append(sgNames, sg.Name)
@@ -224,7 +224,7 @@ func printAZInfoTree(azList []nova.AvailabilityZone) {
 }
 
 func printAzInfoJson(azInfo []nova.AvailabilityZone) {
-	jsonString, err := common.GetIndentJson(azInfo)
+	jsonString, err := stringutils.JsonDumpsIndent(azInfo)
 	if err != nil {
 		logging.Fatal("get json string failed, %v", err)
 	}

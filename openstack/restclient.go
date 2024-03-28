@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/openstack/auth"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -65,7 +66,7 @@ func (rest *RestClient) doRequest(method, reqUrl string, query url.Values,
 		rest.AuthPlugin.AuthRequest(req)
 	}
 
-	isIoStream := utility.StringsContain(req.Header["Content-Type"], "application/octet-stream")
+	isIoStream := stringutils.ContainsString(req.Header["Content-Type"], "application/octet-stream")
 	if isIoStream {
 		logging.Debug("REQ: %s %s, \n    Headers: %v \n    Body: %v",
 			req.Method, req.URL, utility.EncodeHeaders(req.Header), "<Omitted, octet-stream>")
@@ -111,7 +112,7 @@ func (rest *RestClient) DoRequest(req *http.Request) (*utility.Response, error) 
 		rest.AuthPlugin.AuthRequest(req)
 	}
 
-	isIoStream := utility.StringsContain(req.Header["Content-Type"], "application/octet-stream")
+	isIoStream := stringutils.ContainsString(req.Header["Content-Type"], "application/octet-stream")
 	if isIoStream {
 		logging.Debug("REQ: %s %s, \n    Headers: %v \n    Body: %v",
 			req.Method, req.URL, utility.EncodeHeaders(req.Header), "<Omitted, octet-stream>")

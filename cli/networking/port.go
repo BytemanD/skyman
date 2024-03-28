@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
@@ -140,12 +141,12 @@ var portDelete = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		force, _ := cmd.Flags().GetBool("force")
 		c := openstack.DefaultClient().NeutronV2()
-		tg := utility.TaskGroup{
+		tg := syncutils.TaskGroup{
 			Func: func(i interface{}) error {
 				p := i.(string)
 				port, err := c.Ports().Show(p)
 				if err != nil {
-					return fmt.Errorf("Show port %s failed: %v", p, err)
+					return fmt.Errorf("show port %s failed: %v", p, err)
 				}
 				if !force {
 					if port.DeviceId != "" {

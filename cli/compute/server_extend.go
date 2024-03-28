@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
@@ -25,7 +26,7 @@ var serverInspect = &cobra.Command{
 
 		switch format {
 		case "json":
-			output, err := common.GetIndentJson(serverInspect)
+			output, err := stringutils.JsonDumpsIndent(serverInspect)
 			if err != nil {
 				logging.Fatal("print json failed, %s", err)
 			}

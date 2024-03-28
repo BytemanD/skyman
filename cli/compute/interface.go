@@ -8,7 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/BytemanD/easygo/pkg/arrayutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
@@ -104,8 +106,8 @@ var interfaceAttachPorts = &cobra.Command{
 		ports := []neutron.Port{}
 		mu := sync.Mutex{}
 
-		taskGroup := utility.TaskGroup{
-			Items:     utility.Range(1, nums+1),
+		taskGroup := syncutils.TaskGroup{
+			Items:     arrayutils.Range(1, nums+1),
 			MaxWorker: workers,
 			Func: func(item interface{}) error {
 				p := item.(int)
@@ -127,7 +129,7 @@ var interfaceAttachPorts = &cobra.Command{
 		logging.Info("creating %d port(s), waiting ...", nums)
 		taskGroup.Start()
 
-		taskGroup2 := utility.TaskGroup{
+		taskGroup2 := syncutils.TaskGroup{
 			Items:     ports,
 			MaxWorker: workers,
 			Func: func(item interface{}) error {
@@ -184,7 +186,7 @@ var interfaceAttachNets = &cobra.Command{
 			}
 		}
 		logging.Debug("attach nets: %s", nets)
-		taskGroup := utility.TaskGroup{
+		taskGroup := syncutils.TaskGroup{
 			Items:     nets,
 			MaxWorker: workers,
 			Func: func(item interface{}) error {

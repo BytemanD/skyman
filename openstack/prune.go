@@ -4,8 +4,9 @@ import (
 	"fmt"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
-	"github.com/BytemanD/skyman/utility"
 )
 
 func (o Openstack) PrunePorts(ports []neutron.Port) {
@@ -14,11 +15,11 @@ func (o Openstack) PrunePorts(ports []neutron.Port) {
 		fmt.Printf("%s (%s)\n", port.Id, port.Name)
 	}
 	fmt.Printf("即将清理 %d 个Port(s)\n", len(ports))
-	yes := utility.ScanfComfirm("是否清理?", []string{"yes", "y"}, []string{"no", "n"})
+	yes := stringutils.ScanfComfirm("是否清理?", []string{"yes", "y"}, []string{"no", "n"})
 	if !yes {
 		return
 	}
-	tg := utility.TaskGroup{
+	tg := syncutils.TaskGroup{
 		Func: func(i interface{}) error {
 			port := i.(neutron.Port)
 			logging.Debug("delete port %s(%s)", port.Id, port.Name)

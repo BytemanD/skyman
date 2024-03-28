@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/glance"
@@ -22,7 +23,7 @@ var ImageList = &cobra.Command{
 			return err
 		}
 		visibility, _ := cmd.Flags().GetString("visibility")
-		if visibility != "" && !utility.StringsContain(glance.IMAGE_VISIBILITIES, visibility) {
+		if visibility != "" && !stringutils.ContainsString(glance.IMAGE_VISIBILITIES, visibility) {
 			return fmt.Errorf("invalid visibility, valid: %v", glance.IMAGE_VISIBILITIES)
 		}
 		return nil
@@ -107,13 +108,13 @@ var imageCreate = &cobra.Command{
 		} else if name == "" {
 			return fmt.Errorf("must provide --name when not using --file")
 		}
-		if containerFormat != "" && !utility.StringsContain(glance.IMAGE_CONTAINER_FORMATS, containerFormat) {
+		if containerFormat != "" && !stringutils.ContainsString(glance.IMAGE_CONTAINER_FORMATS, containerFormat) {
 			return fmt.Errorf("invalid container format, valid: %v", glance.IMAGE_CONTAINER_FORMATS)
 		}
-		if diskFormat != "" && !utility.StringsContain(glance.IMAGE_DISK_FORMATS, diskFormat) {
+		if diskFormat != "" && !stringutils.ContainsString(glance.IMAGE_DISK_FORMATS, diskFormat) {
 			return fmt.Errorf("invalid disk format, valid: %v", glance.IMAGE_DISK_FORMATS)
 		}
-		if visibility != "" && !utility.StringsContain(glance.IMAGE_VISIBILITIES, visibility) {
+		if visibility != "" && !stringutils.ContainsString(glance.IMAGE_VISIBILITIES, visibility) {
 			return fmt.Errorf("invalid visibility, valid: %v", glance.IMAGE_VISIBILITIES)
 		}
 		return nil

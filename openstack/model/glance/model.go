@@ -3,6 +3,7 @@ package glance
 import (
 	"fmt"
 
+	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -67,7 +68,7 @@ func (img Image) GetProperties() map[string]interface{} {
 	tags := append(utility.GetStructTags(img), utility.GetStructTags(img.Resource)...)
 
 	for k, v := range img.raw {
-		if utility.StringsContain(tags, k) {
+		if stringutils.ContainsString(tags, k) {
 			continue
 		}
 		proerties[k] = v

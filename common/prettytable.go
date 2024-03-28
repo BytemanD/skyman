@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/utility"
+	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 )
@@ -170,7 +170,7 @@ func (pt PrettyTable) Print(long bool) {
 			}
 			// match filter
 			if len(column.Filters) > 0 {
-				if !utility.StringsContain(column.Filters, fmt.Sprintf("%v", value)) {
+				if !stringutils.ContainsString(column.Filters, fmt.Sprintf("%v", value)) {
 					isFiltered = true
 					break
 				}
@@ -202,7 +202,7 @@ func (pt PrettyTable) FormatString(s string) string {
 }
 
 func (pt PrettyTable) PrintJson() {
-	output, err := GetIndentJson(pt.Items)
+	output, err := stringutils.JsonDumpsIndent(pt.Items)
 	if err != nil {
 		logging.Fatal("print json failed, %s", err)
 	}
@@ -284,7 +284,7 @@ func (pt PrettyItemTable) Print(long bool) {
 	tableWriter.Render()
 }
 func (dt PrettyItemTable) PrintJson() {
-	output, err := GetIndentJson(dt.Item)
+	output, err := stringutils.JsonDumpsIndent(dt.Item)
 	if err != nil {
 		logging.Fatal("print json failed, %s", err)
 	}
