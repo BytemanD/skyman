@@ -9,6 +9,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/BytemanD/skyman/utility"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 )
@@ -179,7 +180,7 @@ func (pt PrettyTable) Print(long bool) {
 				matchedCount -= 1
 			}
 			if column.ForceColor || (column.AutoColor && pt.Style == STYLE_LIGHT) {
-				value = pt.FormatString(fmt.Sprint(value))
+				value = utility.ColorString(fmt.Sprint(value))
 			}
 			row = append(row, value)
 		}
@@ -195,10 +196,6 @@ func (pt PrettyTable) Print(long bool) {
 	if !pt.HideTotalItems {
 		fmt.Printf("Total items: %d\n", len(pt.Items))
 	}
-}
-
-func (pt PrettyTable) FormatString(s string) string {
-	return BaseColorFormatter.Format(s)
 }
 
 func (pt PrettyTable) PrintJson() {

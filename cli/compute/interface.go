@@ -107,19 +107,20 @@ var interfaceAttachPorts = &cobra.Command{
 		mu := sync.Mutex{}
 
 		taskGroup := syncutils.TaskGroup{
-			Items:     arrayutils.Range(1, nums+1),
-			MaxWorker: workers,
+			Items:        arrayutils.Range(1, nums+1),
+			MaxWorker:    workers,
+			ShowProgress: true,
 			Func: func(item interface{}) error {
 				p := item.(int)
 				name := fmt.Sprintf("skyman-port-%d", p)
-				logging.Info("creating port %s", name)
+				logging.Debug("creating port %s", name)
 				port, err := neutronClient.Ports().Create(
 					map[string]interface{}{"name": name, "network_id": args[1]})
 				if err != nil {
 					logging.Error("create port failed: %v", err)
 					return err
 				}
-				logging.Debug("created port: %v %v", port.Id, port.Name)
+				logging.Info("created port: %v (%v)", port.Name, port.Id)
 				mu.Lock()
 				ports = append(ports, *port)
 				mu.Unlock()
@@ -130,14 +131,15 @@ var interfaceAttachPorts = &cobra.Command{
 		taskGroup.Start()
 
 		taskGroup2 := syncutils.TaskGroup{
-			Items:     ports,
-			MaxWorker: workers,
+			Items:        ports,
+			MaxWorker:    workers,
+			ShowProgress: true,
 			Func: func(item interface{}) error {
 				p := item.(neutron.Port)
-				logging.Info("[port: %s] attaching", p.Id)
+				logging.Debug("[port: %s] attaching", p.Id)
 				_, err := client.NovaV2().Servers().AddInterface(server.Id, "", p.Id)
 				if err != nil {
-					logging.Info("[port: %s] attach failed: %v", p.Id, err)
+					logging.Error("[port: %s] attach failed: %v", p.Id, err)
 					return err
 				}
 				interfaces, err := client.NovaV2().Servers().ListInterfaces(server.Id)
@@ -155,6 +157,7 @@ var interfaceAttachPorts = &cobra.Command{
 				return nil
 			},
 		}
+		logging.Info("attaching ...")
 		taskGroup2.Start()
 	},
 }
@@ -219,7 +222,7 @@ var interfaceAttachNets = &cobra.Command{
 
 func init() {
 	interfaceAttachPorts.Flags().Int("nums", 1, "nums of interfaces")
-	interfaceAttachPorts.Flags().Int("workers", 1, "nums of workers")
+	interfaceAttachPorts.Flags().Int("workers", 0, "nums of workers")
 
 	interfaceAttachNets.Flags().Int("nums", 1, "nums of interfaces")
 	interfaceAttachNets.Flags().Int("workers", 1, "nums of workers")

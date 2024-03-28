@@ -10,6 +10,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/model/nova"
+	"github.com/BytemanD/skyman/utility"
 	"github.com/jedib0t/go-pretty/v6/list"
 )
 
@@ -180,9 +181,9 @@ func printAZInfoTree(azList []nova.AvailabilityZone) {
 	for _, az := range azList {
 		var zoneState string
 		if az.ZoneState.Available {
-			zoneState = common.BaseColorFormatter.Format("available")
+			zoneState = utility.ColorString("available")
 		} else {
-			zoneState = common.BaseColorFormatter.Format("disabled")
+			zoneState = utility.ColorString("disabled")
 		}
 		tw.AppendItem(fmt.Sprintf("%s %v", az.ZoneName, zoneState))
 		tw.Indent()
@@ -195,14 +196,14 @@ func printAZInfoTree(azList []nova.AvailabilityZone) {
 					serviceAvailable string
 				)
 				if service.Active {
-					serviceStatus = common.BaseColorFormatter.Format("enabled")
+					serviceStatus = utility.ColorString("enabled")
 				} else {
-					serviceStatus = common.BaseColorFormatter.Format("disabled")
+					serviceStatus = utility.ColorString("disabled")
 				}
 				if service.Available {
-					serviceAvailable = common.BaseColorFormatter.Format(":)")
+					serviceAvailable = utility.ColorString(":)")
 				} else {
-					serviceAvailable = common.BaseColorFormatter.Format("XXX")
+					serviceAvailable = utility.ColorString("XXX")
 				}
 				tw.AppendItem(
 					fmt.Sprintf("%-20s %-10s %s", serviceName, serviceStatus, serviceAvailable),
@@ -239,11 +240,11 @@ func printServiceTable(item interface{}) {
 			{Name: "Id"}, {Name: "Binary"}, {Name: "Host"},
 			{Name: "Status", Slot: func(item interface{}) interface{} {
 				p, _ := (item).(nova.Service)
-				return common.BaseColorFormatter.Format(p.Status)
+				return utility.ColorString(p.Status)
 			}},
 			{Name: "State", Slot: func(item interface{}) interface{} {
 				p, _ := item.(nova.Service)
-				return common.BaseColorFormatter.Format(p.State)
+				return utility.ColorString(p.State)
 			}},
 			{Name: "ForcedDown", Text: "Forced Down"},
 			{Name: "DisabledReason", Text: "Disabled Reason"},
