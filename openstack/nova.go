@@ -735,10 +735,10 @@ func (c HypervisorApi) Details(query url.Values) ([]nova.Hypervisor, error) {
 	}
 	return body["hypervisors"], nil
 }
-func (c HypervisorApi) ListByName(name string) ([]nova.Hypervisor, error) {
-	query := url.Values{}
-	query.Set("name", name)
-	return c.List(query)
+func (c HypervisorApi) ListByName(hostname string) ([]nova.Hypervisor, error) {
+	return c.List(utility.UrlValues(map[string]string{
+		"hypervisor_hostname_pattern": hostname,
+	}))
 }
 
 func (c HypervisorApi) Show(id string) (*nova.Hypervisor, error) {
@@ -746,14 +746,12 @@ func (c HypervisorApi) Show(id string) (*nova.Hypervisor, error) {
 	if err != nil {
 		return nil, err
 	}
-	body := map[string]*nova.Hypervisor{"flavor": {}}
+	body := map[string]*nova.Hypervisor{"hypervisor": {}}
 	resp.BodyUnmarshal(&body)
-	return body["flavor"], err
+	return body["hypervisor"], err
 }
 func (c HypervisorApi) ShowByHostname(hostname string) (*nova.Hypervisor, error) {
-	hypervisors, err := c.List(utility.UrlValues(map[string]string{
-		"hypervisor_hostname_pattern": hostname,
-	}))
+	hypervisors, err := c.ListByName(hostname)
 	if err != nil {
 		return nil, err
 	}
@@ -766,17 +764,13 @@ func (c HypervisorApi) ShowByHostname(hostname string) (*nova.Hypervisor, error)
 	return c.Show(hypervisors[0].Id)
 }
 func (c HypervisorApi) Found(idOrHostName string) (*nova.Hypervisor, error) {
-	if !stringutils.IsUUID(idOrHostName) {
-		return c.ShowByHostname(idOrHostName)
+	if stringutils.IsUUID(idOrHostName) {
+		hypervisor, err := c.Show(idOrHostName)
+		if err == nil {
+			return hypervisor, nil
+		}
 	}
-	hypervisors, err := c.ListByName(idOrHostName)
-	if err != nil {
-		return nil, err
-	}
-	if len(hypervisors) == 0 {
-		return nil, fmt.Errorf("hypervisor %s not found", idOrHostName)
-	}
-	return c.Show(hypervisors[0].Id)
+	return c.ShowByHostname(idOrHostName)
 }
 func (c HypervisorApi) Delete(id string) (err error) {
 	_, err = c.NovaV2.Delete(utility.UrlJoin("os-hypervisors", id), nil)
