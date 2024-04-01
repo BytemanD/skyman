@@ -482,13 +482,17 @@ func (c ServersApi) ShowAction(id, requestId string) (*nova.InstanceAction, erro
 	resp.BodyUnmarshal(&body)
 	return body["instanceAction"], nil
 }
-func (c ServersApi) ListActionsWithEvents(id string, actionName string, requestId string) ([]nova.InstanceActionAndEvents, error) {
+func (c ServersApi) ListActionsWithEvents(id string, actionName string, requestId string, last int) ([]nova.InstanceActionAndEvents, error) {
 	serverActions, err := c.ListActions(id)
 	if err != nil {
 		return nil, err
 	}
+	if last == 0 {
+		last = len(serverActions)
+	}
+	start := len(serverActions) - last
 	var actionEvents []nova.InstanceActionAndEvents
-	for _, action := range serverActions {
+	for _, action := range serverActions[start:] {
 		if requestId != "" && action.RequestId != requestId {
 			continue
 		}

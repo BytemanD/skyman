@@ -87,8 +87,10 @@ var actionSpend = &cobra.Command{
 		long, _ := cmd.Flags().GetBool("long")
 		actionName, _ := cmd.Flags().GetString("name")
 		requestId, _ := cmd.Flags().GetString("request-id")
+		last, _ := cmd.Flags().GetInt("last")
 
-		actionsWithEvents, err := client.NovaV2().Servers().ListActionsWithEvents(args[0], actionName, requestId)
+		actionsWithEvents, err := client.NovaV2().Servers().ListActionsWithEvents(
+			args[0], actionName, requestId, last)
 		utility.LogError(err, "get server actions and events failed", true)
 
 		pt := common.PrettyTable{
@@ -100,6 +102,10 @@ var actionSpend = &cobra.Command{
 				{Name: "RequestId", Slot: func(item interface{}) interface{} {
 					p, _ := (item).(nova.InstanceActionAndEvents)
 					return p.InstanceAction.RequestId
+				}},
+				{Name: "StartTime", Slot: func(item interface{}) interface{} {
+					p, _ := item.(nova.InstanceActionAndEvents)
+					return p.InstanceAction.StartTime
 				}},
 				{Name: "SpendTime", Text: "Spend time (seconds)",
 					Slot: func(item interface{}) interface{} {
@@ -116,27 +122,28 @@ var actionSpend = &cobra.Command{
 		for _, actionWithEvents := range actionsWithEvents {
 			for _, event := range actionWithEvents.Events {
 				columnIndex := pt.GetLongColumnIndex(event.Event)
-				if columnIndex < 0 {
-					pt.LongColumns = append(pt.LongColumns,
-						common.Column{
-							Name: event.Event,
-							SlotColumn: func(item interface{}, column common.Column) interface{} {
-								p, _ := (item).(nova.InstanceActionAndEvents)
-								for _, e := range p.Events {
-									if e.Event == column.Name {
-										spendTime, err := e.GetSpendTime()
-										if err != nil {
-											return err
-										} else {
-											return fmt.Sprintf("%.3f", spendTime)
-										}
+				if columnIndex >= 0 {
+					continue
+				}
+				pt.LongColumns = append(pt.LongColumns,
+					common.Column{
+						Name: event.Event,
+						SlotColumn: func(item interface{}, column common.Column) interface{} {
+							p, _ := (item).(nova.InstanceActionAndEvents)
+							for _, e := range p.Events {
+								if e.Event == column.Name {
+									spendTime, err := e.GetSpendTime()
+									if err != nil {
+										return err
+									} else {
+										return fmt.Sprintf("%.3f", spendTime)
 									}
 								}
-								return "-"
-							},
+							}
+							return "-"
 						},
-					)
-				}
+					},
+				)
 			}
 		}
 		pt.AddItems(actionsWithEvents)
@@ -149,6 +156,7 @@ func init() {
 
 	actionSpend.Flags().StringP("name", "n", "", "Filter by action name")
 	actionSpend.Flags().StringP("request-id", "r", "", "Filter by request id")
+	actionSpend.Flags().Int("last", 0, "Get last N actions")
 
 	serverAction.AddCommand(actionList, actionShow, actionSpend)
 
