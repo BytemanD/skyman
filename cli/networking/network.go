@@ -92,8 +92,8 @@ var networkShow = &cobra.Command{
 			Item: *network,
 			ShortFields: []common.Column{
 				{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
-				{Name: "NetworkType"},
-				{Name: "PhysicalNetwork"},
+				{Name: "ProviderNetworkType"},
+				{Name: "ProviderPhysicalNetwork"},
 				{Name: "Status"}, {Name: "AdminStateUp"},
 				{Name: "Shared"}, {Name: "Subnets"},
 				{Name: "Mtu"},

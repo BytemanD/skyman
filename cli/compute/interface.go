@@ -96,7 +96,7 @@ var interfaceAttachPorts = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		nums, _ := cmd.Flags().GetInt("nums")
-		workers, _ := cmd.Flags().GetInt("workers")
+		parallel, _ := cmd.Flags().GetInt("parallel")
 
 		client := openstack.DefaultClient()
 		neutronClient := client.NeutronV2()
@@ -108,7 +108,7 @@ var interfaceAttachPorts = &cobra.Command{
 
 		taskGroup := syncutils.TaskGroup{
 			Items:        arrayutils.Range(1, nums+1),
-			MaxWorker:    workers,
+			MaxWorker:    parallel,
 			ShowProgress: true,
 			Func: func(item interface{}) error {
 				p := item.(int)
@@ -132,7 +132,7 @@ var interfaceAttachPorts = &cobra.Command{
 
 		taskGroup2 := syncutils.TaskGroup{
 			Items:        ports,
-			MaxWorker:    workers,
+			MaxWorker:    parallel,
 			ShowProgress: true,
 			Func: func(item interface{}) error {
 				p := item.(neutron.Port)
@@ -222,10 +222,10 @@ var interfaceAttachNets = &cobra.Command{
 
 func init() {
 	interfaceAttachPorts.Flags().Int("nums", 1, "nums of interfaces")
-	interfaceAttachPorts.Flags().Int("workers", 0, "nums of workers")
+	interfaceAttachPorts.Flags().Int("parallel", 0, "nums of parallel")
 
 	interfaceAttachNets.Flags().Int("nums", 1, "nums of interfaces")
-	interfaceAttachNets.Flags().Int("workers", 1, "nums of workers")
+	interfaceAttachNets.Flags().Int("parallel", 1, "nums of parallel")
 
 	serverInterface.AddCommand(
 		interfaceList, interfaceAttachNet, interfaceAttachPort,

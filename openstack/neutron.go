@@ -126,15 +126,15 @@ func (c RouterApi) Delete(id string) (err error) {
 // subnet api
 
 func (c NetworkApi) List(query url.Values) ([]neutron.Network, error) {
-	resp, err := c.NeutronV2.Get("subnets", query)
+	resp, err := c.NeutronV2.Get("networks", query)
 	if err != nil {
 		return nil, err
 	}
-	body := map[string][]neutron.Network{"subnets": {}}
+	body := map[string][]neutron.Network{"networks": {}}
 	if err := resp.BodyUnmarshal(&body); err != nil {
 		return nil, err
 	}
-	return body["subnets"], nil
+	return body["networks"], nil
 }
 func (c NetworkApi) ListByName(name string) ([]neutron.Network, error) {
 	return c.List(utility.UrlValues(map[string]string{
@@ -147,9 +147,9 @@ func (c NetworkApi) Show(id string) (*neutron.Network, error) {
 	if err != nil {
 		return nil, err
 	}
-	body := map[string]*neutron.Network{"networks": {}}
+	body := map[string]*neutron.Network{"network": {}}
 	resp.BodyUnmarshal(&body)
-	return body["networks"], err
+	return body["network"], err
 }
 func (c NetworkApi) Found(idOrName string) (*neutron.Network, error) {
 	network, err := c.Show(idOrName)
