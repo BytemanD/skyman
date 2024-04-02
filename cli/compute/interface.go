@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -97,6 +98,7 @@ var interfaceAttachPorts = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		nums, _ := cmd.Flags().GetInt("nums")
 		parallel, _ := cmd.Flags().GetInt("parallel")
+		clean, _ := cmd.Flags().GetBool("clean")
 
 		client := openstack.DefaultClient()
 		neutronClient := client.NeutronV2()
@@ -159,6 +161,63 @@ var interfaceAttachPorts = &cobra.Command{
 		}
 		logging.Info("attaching ...")
 		taskGroup2.Start()
+		if !clean {
+			return
+		}
+		taskGroup3 := syncutils.TaskGroup{
+			Items:        ports,
+			MaxWorker:    parallel,
+			ShowProgress: true,
+			Func: func(item interface{}) error {
+				p := item.(neutron.Port)
+				logging.Debug("[port: %s] detaching", p.Id)
+				err := client.NovaV2().Servers().DeleteInterface(server.Id, p.Id)
+				if err != nil {
+					logging.Error("[port: %s] attach failed: %v", p.Id, err)
+					return err
+				}
+				for {
+					interfaces, err := client.NovaV2().Servers().ListInterfaces(server.Id)
+					if err != nil {
+						utility.LogError(err, "list server interfaces failed:", false)
+						time.Sleep(time.Second * 1)
+						continue
+					}
+					detached := true
+					for _, vif := range interfaces {
+						if vif.PortId == p.Id {
+							detached = false
+							break
+						}
+					}
+					if detached {
+						logging.Error("[port: %s] detached", p.Id)
+						break
+					} else {
+						time.Sleep(time.Second * 5)
+					}
+				}
+				return nil
+			},
+		}
+		logging.Info("detaching ...")
+		taskGroup3.Start()
+		taskGroup4 := syncutils.TaskGroup{
+			Items:        ports,
+			MaxWorker:    parallel,
+			ShowProgress: true,
+			Func: func(item interface{}) error {
+				p := item.(neutron.Port)
+				err := client.NeutronV2().Ports().Delete(p.Id)
+				if err != nil {
+					logging.Error("[port: %s] delete failed: %v", p.Id, err)
+					return err
+				}
+				return nil
+			},
+		}
+		logging.Info("cleaning ...")
+		taskGroup4.Start()
 	},
 }
 var interfaceAttachNets = &cobra.Command{
@@ -223,6 +282,7 @@ var interfaceAttachNets = &cobra.Command{
 func init() {
 	interfaceAttachPorts.Flags().Int("nums", 1, "nums of interfaces")
 	interfaceAttachPorts.Flags().Int("parallel", 0, "nums of parallel")
+	interfaceAttachPorts.Flags().Bool("clean", false, "detach and delete interfaces")
 
 	interfaceAttachNets.Flags().Int("nums", 1, "nums of interfaces")
 	interfaceAttachNets.Flags().Int("parallel", 1, "nums of parallel")
