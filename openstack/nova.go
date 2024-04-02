@@ -487,18 +487,23 @@ func (c ServersApi) ListActionsWithEvents(id string, actionName string, requestI
 	if err != nil {
 		return nil, err
 	}
-	if last == 0 {
-		last = len(serverActions)
-	}
-	start := len(serverActions) - last
-	var actionEvents []nova.InstanceActionAndEvents
-	for _, action := range serverActions[start:] {
+	filterActions := []nova.InstanceAction{}
+	for _, action := range serverActions {
 		if requestId != "" && action.RequestId != requestId {
 			continue
 		}
 		if actionName != "" && action.Action != actionName {
 			continue
 		}
+		filterActions = append(filterActions, action)
+	}
+
+	if last == 0 {
+		last = len(filterActions)
+	}
+	start := max(len(filterActions)-last, 0)
+	var actionEvents []nova.InstanceActionAndEvents
+	for _, action := range filterActions[start:] {
 		serverAction, err := c.ShowAction(id, action.RequestId)
 		if err != nil {
 			logging.Error("get server action %s failed: %s", action.RequestId, err)
