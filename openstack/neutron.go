@@ -266,11 +266,13 @@ func (c PortApi) List(query url.Values) ([]neutron.Port, error) {
 	if err != nil {
 		return nil, err
 	}
-	body := map[string][]neutron.Port{"ports": {}}
+	body := struct {
+		Ports []neutron.Port `json:"ports"`
+	}{}
 	if err := resp.BodyUnmarshal(&body); err != nil {
 		return nil, err
 	}
-	return body["ports"], nil
+	return body.Ports, nil
 }
 func (c PortApi) ListByName(name string) ([]neutron.Port, error) {
 	return c.List(utility.UrlValues(map[string]string{
@@ -283,9 +285,12 @@ func (c PortApi) Show(id string) (*neutron.Port, error) {
 	if err != nil {
 		return nil, err
 	}
-	body := map[string]*neutron.Port{"ports": {}}
+	body := struct {
+		Port *neutron.Port `json:"port"`
+	}{}
+	// body := map[string]*neutron.Port{"ports": {}}
 	resp.BodyUnmarshal(&body)
-	return body["ports"], err
+	return body.Port, err
 }
 func (c PortApi) Found(idOrName string) (*neutron.Port, error) {
 	subnet, err := c.Show(idOrName)
