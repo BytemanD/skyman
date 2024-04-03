@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var VolumePrune = &cobra.Command{
+var volumePrune = &cobra.Command{
 	Use:   "volume",
 	Short: "Prune volume(s)",
 	Args:  cobra.NoArgs,
@@ -30,7 +30,7 @@ var VolumePrune = &cobra.Command{
 }
 
 func init() {
-	VolumePrune.Flags().StringP("name", "n", "", "Search by volume name")
-	VolumePrune.Flags().StringP("status", "s", "error", "Search by server status")
-	VolumePrune.Flags().BoolP("yes", "y", false, i18n.T("answerYes"))
+	volumePrune.Flags().StringP("name", "n", "", "Search by volume name")
+	volumePrune.Flags().StringP("status", "s", "error", "Search by server status")
+	volumePrune.Flags().BoolP("yes", "y", false, i18n.T("answerYes"))
 }

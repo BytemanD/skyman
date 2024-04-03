@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var ServerPrune = &cobra.Command{
+var serverPrune = &cobra.Command{
 	Use:   "server",
 	Short: "Prune server(s)",
 	Args:  cobra.MinimumNArgs(0),
@@ -34,8 +34,8 @@ var ServerPrune = &cobra.Command{
 }
 
 func init() {
-	ServerPrune.Flags().StringP("name", "n", "", "Search by server name")
-	ServerPrune.Flags().String("host", "", "Search by hostname")
-	ServerPrune.Flags().StringArrayP("status", "s", nil, "Search by server status")
-	ServerPrune.Flags().BoolP("yes", "y", false, i18n.T("answerYes"))
+	serverPrune.Flags().StringP("name", "n", "", "Search by server name")
+	serverPrune.Flags().String("host", "", "Search by hostname")
+	serverPrune.Flags().StringArrayP("status", "s", nil, "Search by server status")
+	serverPrune.Flags().BoolP("yes", "y", false, i18n.T("answerYes"))
 }

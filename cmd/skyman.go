@@ -19,6 +19,7 @@ import (
 	"github.com/BytemanD/skyman/cli/prune"
 	"github.com/BytemanD/skyman/cli/storage"
 	"github.com/BytemanD/skyman/cli/templates"
+	"github.com/BytemanD/skyman/cli/test"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
@@ -47,8 +48,6 @@ func getVersion() string {
 	}
 	return fmt.Sprint(Version)
 }
-
-var pruneCmd = &cobra.Command{Use: "prune", Short: "prune resources"}
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
@@ -144,12 +143,6 @@ func main() {
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	viper.BindPFlag("format", rootCmd.PersistentFlags().Lookup("format"))
 
-	pruneCmd.AddCommand(
-		prune.PortPrune,
-		prune.ServerPrune,
-		prune.VolumePrune,
-	)
-
 	rootCmd.AddCommand(
 		versionCmd,
 		identity.Token,
@@ -162,7 +155,8 @@ func main() {
 		storage.Volume,
 		networking.Router, networking.Network, networking.Subnet, networking.Port,
 		templates.CreateCmd, templates.DeleteCmd,
-		pruneCmd,
+		prune.PruneCmd,
+		test.TestCmd,
 	)
 	rootCmd.Execute()
 }

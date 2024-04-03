@@ -11,9 +11,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var PortPrune = &cobra.Command{
+var portPrune = &cobra.Command{
 	Use:   "port",
-	Short: "Prune ports(unbond)",
+	Short: "Prune unbond port(s)",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 		c := openstack.DefaultClient()
@@ -43,5 +43,5 @@ var PortPrune = &cobra.Command{
 }
 
 func init() {
-	PortPrune.Flags().StringP("name", "n", "", "filter by name")
+	portPrune.Flags().StringP("name", "n", "", "filter by name")
 }
