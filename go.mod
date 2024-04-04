@@ -5,6 +5,7 @@ go 1.21
 require (
 	github.com/spf13/cobra v1.7.0
 	gopkg.in/yaml.v3 v3.0.1
+	libvirt.org/go/libvirt v1.10001.0
 )
 
 require (
@@ -23,17 +24,17 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
-	golang.org/x/term v0.8.0 // indirect
-	golang.org/x/text v0.9.0
+	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/term v0.16.0 // indirect
+	golang.org/x/text v0.14.0
 	gopkg.in/ini.v1 v1.67.0 // indirect
 )
 
 require (
-	github.com/BytemanD/easygo/pkg v0.0.6
+	github.com/BytemanD/easygo/pkg v0.0.7
 	github.com/MichaelMure/go-term-markdown v0.1.4
 	github.com/cheggaaa/pb/v3 v3.1.5
-	github.com/jedib0t/go-pretty/v6 v6.4.7
+	github.com/jedib0t/go-pretty/v6 v6.5.6
 	github.com/nicksnyder/go-i18n/v2 v2.2.1
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/spf13/viper v1.16.0
