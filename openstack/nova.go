@@ -306,6 +306,33 @@ func (c ServersApi) DeleteInterface(id string, portId string) error {
 	_, err := c.NovaV2.Delete(utility.UrlJoin("servers", id, "os-interface", portId), nil)
 	return err
 }
+func (c ServersApi) DeleteInterfaceAndWait(id string, portId string, waitSeconds int) error {
+	_, err := c.NovaV2.Delete(utility.UrlJoin("servers", id, "os-interface", portId), nil)
+	if err != nil {
+		return err
+	}
+	startTime := time.Now()
+	for {
+		detached := true
+		interfaces, err := c.ListInterfaces(id)
+		if err != nil {
+			return fmt.Errorf("list server interfaces failed: %s", err)
+		}
+		for _, vif := range interfaces {
+			if vif.PortId == portId {
+				detached = false
+				break
+			}
+		}
+		if detached {
+			return nil
+		}
+		if time.Since(startTime) >= time.Second*time.Duration(waitSeconds) {
+			return fmt.Errorf("interface %s is not detached after %d seconds", portId, waitSeconds)
+		}
+		time.Sleep(time.Second * 2)
+	}
+}
 func (c ServersApi) doAction(action string, id string, params interface{}) (*utility.Response, error) {
 	body, _ := json.Marshal(map[string]interface{}{action: params})
 	return c.NovaV2.Post(utility.UrlJoin("servers", id, "action"), body, nil)
