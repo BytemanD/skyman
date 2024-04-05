@@ -68,6 +68,15 @@ func (volume Volume) GetImageMetadataList() []string {
 	}
 	return metadataList
 }
+func (volume Volume) IsError() bool {
+	return volume.Status == "error"
+}
+func (volume Volume) IsAvailable() bool {
+	return volume.Status == "available"
+}
+func (volume Volume) IsInuse() bool {
+	return volume.Status == "in-use"
+}
 
 type VolumeType struct {
 	model.Resource

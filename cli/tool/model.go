@@ -15,3 +15,16 @@ func (i Interface) String() string {
 		return fmt.Sprintf("net: %s", i.NetId)
 	}
 }
+
+type Volume struct {
+	Id   string
+	Name string
+}
+
+func (i Volume) String() string {
+	if i.Name != "" {
+		return fmt.Sprintf("id: %s", i.Name)
+	} else {
+		return fmt.Sprintf("id: %s", i.Id)
+	}
+}

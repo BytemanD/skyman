@@ -11,7 +11,7 @@ import (
 	"github.com/BytemanD/skyman/openstack/model/nova"
 )
 
-var Volume = &cobra.Command{Use: "volume"}
+var Volume = &cobra.Command{Use: "volume", Short: "Update server volume"}
 
 func printVolumeAttachments(items []nova.VolumeAttachment) {
 	pt := common.PrettyTable{

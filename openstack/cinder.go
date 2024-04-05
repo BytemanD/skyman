@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
@@ -120,7 +121,7 @@ func (c VolumeApi) Show(id string) (*cinder.Volume, error) {
 	if err := resp.BodyUnmarshal(&body); err != nil {
 		return nil, err
 	}
-	return body["volumes"], nil
+	return body["volume"], nil
 }
 
 func (c VolumeApi) Found(idOrName string) (*cinder.Volume, error) {
@@ -146,7 +147,12 @@ func (c VolumeApi) Found(idOrName string) (*cinder.Volume, error) {
 	return nil, err
 }
 func (c VolumeApi) Create(options map[string]interface{}) (*cinder.Volume, error) {
-	reqBody, err := json.Marshal(&options)
+	volumeData := struct {
+		Volume map[string]interface{} `json:"volume"`
+	}{
+		Volume: options,
+	}
+	reqBody, err := json.Marshal(&volumeData)
 	if err != nil {
 		return nil, err
 	}
@@ -154,9 +160,34 @@ func (c VolumeApi) Create(options map[string]interface{}) (*cinder.Volume, error
 	if err != nil {
 		return nil, err
 	}
-	image := cinder.Volume{}
-	resp.BodyUnmarshal(&image)
-	return &image, nil
+	respBody := struct {
+		Volume cinder.Volume `json:"volume"`
+	}{Volume: cinder.Volume{}}
+	resp.BodyUnmarshal(&respBody)
+	return &respBody.Volume, nil
+}
+func (c VolumeApi) CreateAndWait(options map[string]interface{}, timeoutSeconds int) (*cinder.Volume, error) {
+	volume, err := c.Create(options)
+	if err != nil {
+		return nil, err
+	}
+	startTime := time.Now()
+	for {
+		vol, err := c.Show(volume.Id)
+		if err != nil {
+			return volume, fmt.Errorf("show volume failed: %s", err)
+		}
+		if vol.IsError() {
+			return volume, fmt.Errorf("status is error")
+		}
+		if vol.IsAvailable() {
+			return volume, nil
+		}
+		if time.Since(startTime) >= time.Second*time.Duration(timeoutSeconds) {
+			return volume, fmt.Errorf("create timeout")
+		}
+		time.Sleep(time.Second * 2)
+	}
 }
 func (c VolumeApi) Delete(id string) (err error) {
 	_, err = c.CinderV2.Delete(utility.UrlJoin("volumes", id), nil)

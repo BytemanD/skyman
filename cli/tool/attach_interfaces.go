@@ -65,7 +65,9 @@ var attachInterfaces = &cobra.Command{
 				interfaces = append(interfaces, Interface{NetId: net})
 			}
 		}
-
+		if len(interfaces) == 0 {
+			return
+		}
 		taskGroup2 := syncutils.TaskGroup{
 			Items:        interfaces,
 			MaxWorker:    parallel,
