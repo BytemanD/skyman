@@ -273,6 +273,33 @@ func (c ServersApi) DeleteVolume(id string, volumeId string) error {
 	_, err := c.NovaV2.Delete(utility.UrlJoin("servers", id, "os-volume_attachments", volumeId), nil)
 	return err
 }
+func (c ServersApi) DeleteVolumeAndWait(id string, volumeId string, waitSeconds int) error {
+	err := c.DeleteVolume(id, volumeId)
+	if err != nil {
+		return err
+	}
+	startTime := time.Now()
+	for {
+		detached := true
+		attachedVolumes, err := c.ListVolumes(id)
+		if err != nil {
+			return fmt.Errorf("list server interfaces failed: %s", err)
+		}
+		for _, vol := range attachedVolumes {
+			if vol.VolumeId == volumeId {
+				detached = false
+				break
+			}
+		}
+		if detached {
+			return nil
+		}
+		if time.Since(startTime) >= time.Second*time.Duration(waitSeconds) {
+			return fmt.Errorf("interface %s is not detached after %d seconds", volumeId, waitSeconds)
+		}
+		time.Sleep(time.Second * 2)
+	}
+}
 func (c ServersApi) ListInterfaces(id string) ([]nova.InterfaceAttachment, error) {
 	resp, err := c.NovaV2.Get(utility.UrlJoin("servers", id, "os-interface"), nil)
 	if err != nil {
@@ -307,7 +334,7 @@ func (c ServersApi) DeleteInterface(id string, portId string) error {
 	return err
 }
 func (c ServersApi) DeleteInterfaceAndWait(id string, portId string, waitSeconds int) error {
-	_, err := c.NovaV2.Delete(utility.UrlJoin("servers", id, "os-interface", portId), nil)
+	err := c.DeleteInterface(id, portId)
 	if err != nil {
 		return err
 	}

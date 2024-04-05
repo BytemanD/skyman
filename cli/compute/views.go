@@ -61,7 +61,7 @@ func printServer(server nova.Server) {
 				}},
 			{Name: "AZ", Text: "AZ"}, {Name: "Host"},
 			{Name: "Status"}, {Name: "TaskState"}, {Name: "PowerState"},
-			{Name: "RootBdmType"},
+			{Name: "RootBdmType"}, {Name: "RootDeviceName"},
 			{Name: "SecurityGroups", Slot: func(item interface{}) interface{} {
 				p := item.(nova.Server)
 				bytes, _ := json.Marshal(p.SecurityGroups)

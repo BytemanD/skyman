@@ -90,6 +90,7 @@ type Server struct {
 	UserId         string                  `json:"user_id,omitempty"`
 	Description    string                  `json:"description,omitempty"`
 	RootBdmType    string                  `json:"root_bdm_type,omitempty"`
+	RootDeviceName string                  `json:"OS-EXT-SRV-ATTR:root_device_name,omitempty"`
 	KeyName        string                  `json:"key_name,omitempty"`
 	SecurityGroups []neutron.SecurityGroup `json:"security_groups,omitempty"`
 }
