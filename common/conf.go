@@ -31,7 +31,8 @@ type ConfGroup struct {
 	Language    string `yaml:"language"`
 	HttpTimeout int    `yaml:"httpTimeout"`
 
-	Auth Auth `yaml:"auth"`
+	Auth  Auth  `yaml:"auth"`
+	Iperf Iperf `yaml:"iperf"`
 }
 type Auth struct {
 	Url             string          `yaml:"url"`
@@ -50,6 +51,12 @@ type Server struct {
 	VolumeSize       uint16 `yaml:"volumeSize"`
 	AvailabilityZone string `yaml:"availabilityZone"`
 	NamePrefix       string `yaml:"namePrefix"`
+}
+type Iperf struct {
+	GuestPath     string `yaml:"guestPath"`
+	LocalPath     string `yaml:"guestPath"`
+	ClientOptions string `yaml:"clientOptions"`
+	ServerOptions string `yaml:"serverOptions"`
 }
 
 func LoadConfig(configFile string) error {

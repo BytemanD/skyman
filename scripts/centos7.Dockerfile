@@ -13,6 +13,7 @@ RUN yum install -y make
 RUN wget -q https://dl.google.com/go/go1.21.4.linux-amd64.tar.gz
 RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.21.4.linux-amd64.tar.gz
 RUN cp /usr/local/go/bin/* /usr/bin/
+RUN yum install -y gcc glibc-devel libvirt-devel
 
 RUN echo 'export PATH=/usr/local/go/bin:$PATH' >> $HOME/.bashrc
 RUN source $HOME/.bashrc && /usr/local/go/bin/go version
@@ -27,8 +28,7 @@ RUN echo ${DATE}
 RUN source $HOME/.bashrc \
     && go env -w GO111MODULE="on" \
     && go env -w GOPROXY="https://goproxy.cn,direct"
-# RUN cd /root/skyman && sh scripts/build.sh
-# RUN cd /root/skyman && sh scripts/build.sh --rpm
+
 RUN cd /root/skyman \
     && source $HOME/.bashrc \
     && make build build-rpm

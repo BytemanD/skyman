@@ -1,3 +1,6 @@
+/*
+OpenStack Client with Golang
+*/
 package openstack
 
 import (
