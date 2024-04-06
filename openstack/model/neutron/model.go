@@ -103,7 +103,10 @@ func (port Port) VifDetailList() []string {
 		details = append(details, fmt.Sprintf("%s=%v", k, v))
 	}
 	return details
+}
 
+func (port Port) IsActive() bool {
+	return port.Status == "ACTIVE"
 }
 
 type Routers []Router

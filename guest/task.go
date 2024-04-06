@@ -42,7 +42,7 @@ func installIperf(guest Guest) error {
 	if err != nil {
 		return err
 	}
-	if err := guest.RpmInstall(*remoteFile); err != nil {
+	if err := guest.RpmInstall(remoteFile); err != nil {
 		return err
 	}
 	return nil

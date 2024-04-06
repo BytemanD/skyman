@@ -129,9 +129,9 @@ func (guest Guest) Exec(command string, wait bool) ExecResult {
 }
 
 func (guest Guest) runQemuAgentCommand(jsonData []byte) (string, error) {
-	logging.Debug("QGA 命令: %s", fmt.Sprintf("%s", jsonData))
+	logging.Debug("QGA 命令: %s", string(jsonData))
 	result, err := guest.domain.QemuAgentCommand(
-		fmt.Sprintf("%s", jsonData), libvirt.DOMAIN_QEMU_AGENT_COMMAND_MIN, 0)
+		string(jsonData), libvirt.DOMAIN_QEMU_AGENT_COMMAND_MIN, 0)
 	if err != nil {
 		logging.Error("执行失败: %s", err)
 		return "", err
@@ -275,15 +275,25 @@ func (guest Guest) FileWrite(filePath string, content string) error {
 	return nil
 }
 
-func (guest Guest) CopyFile(localFile string, remotePath string) (*string, error) {
-	// TODO: 限制文件大小 <= 160k
+func (guest Guest) CopyFile(localFile string, remotePath string) (string, error) {
 	f, err := os.OpenFile(localFile, os.O_RDONLY, 0666)
-	defer f.Close()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
+	fileStat, err := f.Stat()
+	if err != nil {
+		return "", err
+	}
+	// 限制文件大小 <= 160k
+	if fileStat.Size() > 160*1024 {
+		return "", fmt.Errorf("file size must <= 160k")
+	}
+	defer f.Close()
 	bytes, err := io.ReadAll(f)
+	if err != nil {
+		return "", err
+	}
 	remoteFile := remotePath + "/" + filepath.Base(localFile)
-	logging.Info("[%s] 拷贝文件 %s --> %s", guest.Domain, localFile, remotePath)
-	return &remoteFile, guest.FileWrite(remoteFile, string(bytes))
+	logging.Info("拷贝文件 %s --> %s", localFile, remotePath)
+	return remoteFile, guest.FileWrite(remoteFile, string(bytes))
 }

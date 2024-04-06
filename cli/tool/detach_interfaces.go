@@ -14,7 +14,7 @@ import (
 var detachInterfaces = &cobra.Command{
 	Use:   "interfaces <server>",
 	Short: "Attach interfaces to server",
-	Args:  cobra.MinimumNArgs(2),
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		serverId := args[0]
 
@@ -47,7 +47,7 @@ var detachInterfaces = &cobra.Command{
 				logging.Info("[interface: %s] detaching", p.PortId)
 				err := client.NovaV2().Servers().DeleteInterfaceAndWait(server.Id, p.PortId, 600)
 				if err != nil {
-					logging.Error("[interface: %s] attach failed: %v", p.PortId, err)
+					logging.Error("[interface: %s] detach failed: %v", p.PortId, err)
 					return err
 				}
 				if clean {

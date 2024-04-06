@@ -2,8 +2,10 @@ package tool
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/BytemanD/easygo/pkg/arrayutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -68,6 +70,7 @@ var attachInterfaces = &cobra.Command{
 		if len(interfaces) == 0 {
 			return
 		}
+		attachFailed := false
 		taskGroup2 := syncutils.TaskGroup{
 			Items:        interfaces,
 			MaxWorker:    parallel,
@@ -88,18 +91,33 @@ var attachInterfaces = &cobra.Command{
 					utility.LogError(err, "list server interfaces failed:", false)
 					return err
 				}
+				for {
+					port, err := client.NeutronV2().Ports().Show(attachment.PortId)
+					if port != nil {
+						logging.Info("[interface: %s] status is %s", port.Id, port.Status)
+						if err == nil && port.IsActive() {
+							break
+						}
+					}
+					time.Sleep(time.Second * 3)
+				}
+
 				for _, vif := range interfaces {
 					if vif.PortId == p.PortId {
-						logging.Info("[interface: %s] attach success", p)
+						logging.Info("[interface: %s] attach success", attachment.PortId)
 						return nil
 					}
 				}
-				logging.Error("[interface: %s] attach failed", p)
+				logging.Error("[interface: %s] attach failed", attachment.PortId)
+				attachFailed = true
 				return nil
 			},
 		}
 		logging.Info("attaching ...")
 		taskGroup2.Start()
+		if attachFailed {
+			os.Exit(1)
+		}
 	},
 }
 
