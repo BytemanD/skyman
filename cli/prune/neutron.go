@@ -19,8 +19,12 @@ var portPrune = &cobra.Command{
 		c := openstack.DefaultClient()
 
 		name, _ := cmd.Flags().GetString("name")
+		network, _ := cmd.Flags().GetString("network")
 		query := url.Values{}
-		logging.Info("list ports")
+		if network != "" {
+			query.Set("network_id", network)
+		}
+		logging.Info("list ports ...")
 		ports, err := c.NeutronV2().Ports().List(query)
 		utility.LogError(err, "list ports failed", true)
 		filterPorts := []neutron.Port{}
@@ -44,4 +48,5 @@ var portPrune = &cobra.Command{
 
 func init() {
 	portPrune.Flags().StringP("name", "n", "", "filter by name")
+	portPrune.Flags().String("network", "", "filter by network id")
 }
