@@ -28,6 +28,9 @@ type SubnetApi struct {
 type PortApi struct {
 	NeutronV2
 }
+type AgentApi struct {
+	NeutronV2
+}
 
 func (c NeutronV2) Routers() RouterApi {
 	return RouterApi{c}
@@ -41,6 +44,10 @@ func (c NeutronV2) Subnets() SubnetApi {
 func (c NeutronV2) Ports() PortApi {
 	return PortApi{c}
 }
+func (c NeutronV2) Agents() AgentApi {
+	return AgentApi{c}
+}
+
 func (o *Openstack) NeutronV2() *NeutronV2 {
 	if o.neutronClient == nil {
 		endpoint, err := o.AuthPlugin.GetServiceEndpoint("network", "neutron", "public")
@@ -330,4 +337,17 @@ func (c PortApi) Create(params map[string]interface{}) (*neutron.Port, error) {
 func (c PortApi) Delete(id string) (err error) {
 	_, err = c.NeutronV2.Delete(utility.UrlJoin("ports", id), nil)
 	return err
+}
+func (c AgentApi) List(query url.Values) ([]neutron.Agent, error) {
+	resp, err := c.NeutronV2.Get("agents", query)
+	if err != nil {
+		return nil, err
+	}
+	body := struct {
+		Agents []neutron.Agent `json:"agents"`
+	}{}
+	if err := resp.BodyUnmarshal(&body); err != nil {
+		return nil, err
+	}
+	return body.Agents, nil
 }

@@ -88,6 +88,16 @@ type Port struct {
 	RevsionNumber   int                    `json:"revision_number"`
 	TenantId        string                 `json:"tenant_id,omitempty"`
 }
+type Agent struct {
+	model.Resource
+	Binary           string `json:"binary"`
+	Host             string `json:"host,omitempty"`
+	Topic            string `json:"topic,omitempty"`
+	AgentType        string `json:"agent_type,omitempty"`
+	AvailabilityZone string `json:"availability_zone"`
+	Alive            bool   `json:"alive,omitempty"`
+	AdminStateUp     bool   `json:"admin_state_up"`
+}
 type SecurityGroup struct {
 	model.Resource
 }

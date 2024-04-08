@@ -138,4 +138,5 @@ func init() {
 	networkCreate.Flags().Bool("disable", false, "Disable router")
 
 	Network.AddCommand(networkList, networkShow, networkDelete, networkCreate)
+	// Network.AddCommand(agentCmd)
 }
