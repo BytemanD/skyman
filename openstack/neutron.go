@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/openstack/model"
@@ -47,10 +48,17 @@ func (c NeutronV2) Ports() PortApi {
 func (c NeutronV2) Agents() AgentApi {
 	return AgentApi{c}
 }
+func (o *Openstack) getEndpoint() (string, error) {
+	endpoint := os.Getenv("OS_NEUTRON_ENDPOINT")
+	if endpoint != "" {
+		return endpoint, nil
+	}
+	return o.AuthPlugin.GetServiceEndpoint("network", "neutron", "public")
+}
 
 func (o *Openstack) NeutronV2() *NeutronV2 {
 	if o.neutronClient == nil {
-		endpoint, err := o.AuthPlugin.GetServiceEndpoint("network", "neutron", "public")
+		endpoint, err := o.getEndpoint()
 		if err != nil {
 			logging.Fatal("get compute endpoint falied: %v", err)
 		}
