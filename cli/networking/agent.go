@@ -46,7 +46,7 @@ var agentList = &cobra.Command{
 					}
 					return "XXX"
 				}},
-				{Name: "AdminStateUp", Text: "State"},
+				{Name: "AdminStateUp"},
 				{Name: "Binary"},
 			},
 			ColumnConfigs: []table.ColumnConfig{{Number: 4, Align: text.AlignRight}},
@@ -57,6 +57,8 @@ var agentList = &cobra.Command{
 }
 
 func init() {
+	agentList.Flags().String("host", "", "filter by host")
+	agentList.Flags().String("binary", "", "filter by binary")
 	agentCmd.AddCommand(agentList)
 	Network.AddCommand(agentCmd)
 }

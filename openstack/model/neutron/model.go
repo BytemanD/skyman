@@ -96,7 +96,7 @@ type Agent struct {
 	AgentType        string `json:"agent_type,omitempty"`
 	AvailabilityZone string `json:"availability_zone"`
 	Alive            bool   `json:"alive,omitempty"`
-	AdminStateUp     bool   `json:"admin_state_up"`
+	AdminStateUp     bool   `json:"admin_state_up,omitempty"`
 }
 type SecurityGroup struct {
 	model.Resource
