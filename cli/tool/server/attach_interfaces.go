@@ -1,4 +1,4 @@
-package tool
+package server
 
 import (
 	"fmt"
@@ -16,8 +16,8 @@ import (
 )
 
 var attachInterfaces = &cobra.Command{
-	Use:   "interfaces <server> <network1> [<network2>...]",
-	Short: "Attach interfaces to server",
+	Use:   "add-interfaces <server> <network1> [<network2>...]",
+	Short: "Add interfaces to server",
 	Args:  cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		serverId := args[0]
@@ -126,5 +126,5 @@ func init() {
 	attachInterfaces.Flags().Int("parallel", runtime.NumCPU(), "nums of parallel")
 	attachInterfaces.Flags().Bool("use-net-id", false, "attach interface with network id rather than port id")
 
-	attachCmd.AddCommand(attachInterfaces)
+	ServerCommand.AddCommand(attachInterfaces)
 }

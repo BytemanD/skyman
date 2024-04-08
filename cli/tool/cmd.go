@@ -2,6 +2,7 @@ package tool
 
 import (
 	"github.com/BytemanD/skyman/cli/tool/guest"
+	"github.com/BytemanD/skyman/cli/tool/server"
 	"github.com/spf13/cobra"
 )
 
@@ -11,7 +12,7 @@ var detachCmd = &cobra.Command{Use: "detach", Short: "detach devices from a serv
 
 func init() {
 	ToolCmd.AddCommand(
-		attachCmd, detachCmd,
+		server.ServerCommand,
 		guest.GuestCommand,
 	)
 }

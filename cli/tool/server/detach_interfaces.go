@@ -1,4 +1,4 @@
-package tool
+package server
 
 import (
 	"runtime"
@@ -12,8 +12,8 @@ import (
 )
 
 var detachInterfaces = &cobra.Command{
-	Use:   "interfaces <server>",
-	Short: "Attach interfaces to server",
+	Use:   "remove-interfaces <server>",
+	Short: "Remove interfaces from server",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		serverId := args[0]
@@ -71,5 +71,5 @@ func init() {
 	detachInterfaces.Flags().Int("parallel", runtime.NumCPU(), "nums of parallel")
 	detachInterfaces.Flags().Bool("clean", false, "delete interface after detached")
 
-	detachCmd.AddCommand(detachInterfaces)
+	ServerCommand.AddCommand(detachInterfaces)
 }

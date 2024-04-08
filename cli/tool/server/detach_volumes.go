@@ -1,4 +1,4 @@
-package tool
+package server
 
 import (
 	"fmt"
@@ -13,8 +13,8 @@ import (
 )
 
 var detachVolumes = &cobra.Command{
-	Use:   "volumes <server>",
-	Short: "Detach volumes from server",
+	Use:   "remove-volumes <server>",
+	Short: "Remove volumes from server",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
 			return err
@@ -110,5 +110,5 @@ func init() {
 	detachVolumes.Flags().Int("parallel", runtime.NumCPU(), "nums of parallel")
 	detachVolumes.Flags().Bool("clean", false, "delete interface after detached")
 
-	detachCmd.AddCommand(detachVolumes)
+	ServerCommand.AddCommand(detachVolumes)
 }

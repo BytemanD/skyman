@@ -1,4 +1,4 @@
-package tool
+package server
 
 import (
 	"fmt"
@@ -14,8 +14,8 @@ import (
 )
 
 var attachVolumes = &cobra.Command{
-	Use:   "volumes <server>",
-	Short: "Attach volumes to server",
+	Use:   "add-volumes <server>",
+	Short: "Add volumes to server",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		serverId := args[0]
@@ -106,5 +106,5 @@ func init() {
 	attachVolumes.Flags().Int("size", 10, "size of volume")
 	attachVolumes.Flags().String("type", "", "attach volume with specified type")
 
-	attachCmd.AddCommand(attachVolumes)
+	ServerCommand.AddCommand(attachVolumes)
 }
