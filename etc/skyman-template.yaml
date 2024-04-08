@@ -8,7 +8,7 @@ language: en_US
 auth:
   url: http://keystone-server:35357/v3
   region:
-    name: RegionOne
+    id: RegionOne
   user:
     name: admin
     password: admin123

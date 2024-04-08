@@ -203,5 +203,5 @@ var CreateCmd = &cobra.Command{
 }
 
 func init() {
-	CreateCmd.Flags().Bool("watch", false, "watch the resource progress until it completes.")
+	CreateCmd.Flags().Bool("wait", false, "wait the resource progress until it completes.")
 }

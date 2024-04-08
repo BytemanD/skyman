@@ -26,24 +26,13 @@ type Job struct {
 	Receiver Bandwidth
 }
 
-func installIperf(guest Guest) error {
-	if common.CONF.Iperf.GuestPath != "" {
-		logging.Info("%s 安装 iperf3, 文件路径: %s", guest.Domain,
-			common.CONF.Iperf.GuestPath)
-		if err := guest.RpmInstall(common.CONF.Iperf.GuestPath); err != nil {
-			return err
-		}
-	} else if common.CONF.Iperf.LocalPath == "" {
-		return fmt.Errorf("iperf3 文件路径未配置")
-	}
-	logging.Info("[%s] 安装iperf3, 使用本地文件: %s", guest.Domain,
-		common.CONF.Iperf.LocalPath)
-	remoteFile, err := guest.CopyFile(common.CONF.Iperf.LocalPath, "/tmp")
+func installIperf(guest Guest, localIperf3File string) error {
+	remoteFile, err := guest.CopyFile(localIperf3File, "/tmp")
 	if err != nil {
-		return err
+		return fmt.Errorf("%s 拷贝iperf3失败: %s", guest.Domain, err)
 	}
 	if err := guest.RpmInstall(remoteFile); err != nil {
-		return err
+		return fmt.Errorf("%s 安装iperf3失败: %s", guest.Domain, err)
 	}
 	return nil
 }
@@ -53,18 +42,7 @@ func installIperf(guest Guest) error {
 // 参数为客户端和服务端实例的连接地址，格式: "连接地址:实例 UUID"。例如：
 //
 //	192.168.192.168:a6ee919a-4026-4f0b-8d7e-404950a91eb3
-func TestNetQos(clientConn GuestConnection, serverConn GuestConnection,
-	pps bool) (float64, float64, error) {
-	clientGuest := Guest{
-		Connection: clientConn.Connection,
-		Domain:     clientConn.Domain,
-		QGATimeout: 60,
-		ByUUID:     true}
-	serverGuest := Guest{
-		Connection: serverConn.Connection,
-		QGATimeout: 60,
-		Domain:     serverConn.Domain,
-		ByUUID:     true}
+func TestNetQos(clientGuest Guest, serverGuest Guest, pps bool, localIperf3File string) (float64, float64, error) {
 	err := clientGuest.Connect()
 	if clientGuest.IsSame(serverGuest) {
 		logging.Error("客户端和服务端实例不能相同")
@@ -91,14 +69,22 @@ func TestNetQos(clientConn GuestConnection, serverConn GuestConnection,
 	if len(clientAddresses) == 0 || len(serverAddresses) == 0 {
 		logging.Fatal("客户端和服务端实例必须至少有一张启用的网卡")
 	}
-	if !clientGuest.HasCommand("iperf3") {
-		if err := installIperf(clientGuest); err != nil {
-			logging.Fatal("安装iperf失败, %s", err)
-		}
-	}
+
 	if !serverGuest.HasCommand("iperf3") {
-		if err := installIperf(serverGuest); err != nil {
-			logging.Fatal("安装iperf失败, %s", err)
+		if localIperf3File == "" {
+			return 0, 0, fmt.Errorf("iperf3 is not installed in server guest")
+		}
+		if err := installIperf(serverGuest, localIperf3File); err != nil {
+			return 0, 0, fmt.Errorf("服务端拷贝iperf3失败: %s", err)
+		}
+
+	}
+	if !clientGuest.HasCommand("iperf3") {
+		if localIperf3File == "" {
+			return 0, 0, fmt.Errorf("iperf3 is not installed in client guest")
+		}
+		if err := installIperf(clientGuest, localIperf3File); err != nil {
+			return 0, 0, fmt.Errorf("客户端安装iperf3失败: %s", err)
 		}
 	}
 	clientOptions := strings.Split(common.CONF.Iperf.ClientOptions, " ")

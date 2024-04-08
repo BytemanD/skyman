@@ -21,6 +21,7 @@
 go.work
 
 etc/skyman.yaml
+etc/skyman.yaml
 skyman
 dist
 etc/create-test-server.yaml

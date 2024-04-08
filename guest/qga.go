@@ -294,6 +294,6 @@ func (guest Guest) CopyFile(localFile string, remotePath string) (string, error)
 		return "", err
 	}
 	remoteFile := remotePath + "/" + filepath.Base(localFile)
-	logging.Info("拷贝文件 %s --> %s", localFile, remotePath)
+	logging.Info("[%s] 拷贝文件 %s --> %s", guest.Domain, localFile, remotePath)
 	return remoteFile, guest.FileWrite(remoteFile, string(bytes))
 }
