@@ -171,7 +171,7 @@ var CreateCmd = &cobra.Command{
 	Short: "create from template file",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		watch, _ := cmd.Flags().GetBool("watch")
+		watch, _ := cmd.Flags().GetBool("wait")
 		var err error
 		createTemplate, err := LoadCreateTemplate(args[0])
 		utility.LogError(err, "load template file failed", true)
@@ -203,5 +203,5 @@ var CreateCmd = &cobra.Command{
 }
 
 func init() {
-	CreateCmd.Flags().Bool("wait", false, "wait the resource progress until it completes.")
+	CreateCmd.Flags().Bool("wait", false, "wait the resource progress until it created.")
 }

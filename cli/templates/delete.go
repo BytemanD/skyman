@@ -61,7 +61,7 @@ var DeleteCmd = &cobra.Command{
 	Short: "delete resources of template file",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		watch, _ := cmd.Flags().GetBool("watch")
+		watch, _ := cmd.Flags().GetBool("wait")
 		var err error
 		createTemplate, err := LoadCreateTemplate(args[0])
 		utility.LogError(err, "load template file failed", true)
@@ -80,5 +80,5 @@ var DeleteCmd = &cobra.Command{
 }
 
 func init() {
-	DeleteCmd.Flags().Bool("watch", false, "watch the resource progress until it completes.")
+	DeleteCmd.Flags().Bool("wait", false, "wait the resource progress until it deleted.")
 }
