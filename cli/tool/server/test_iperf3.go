@@ -1,12 +1,15 @@
 package server
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/table"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/guest"
 	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -27,6 +30,37 @@ const SERVER_IPERF3_TEST_EXAMPLE = `
       clientOptions: -t 60 -P 10
   -------------------------------------------------------
 `
+
+type QosItem struct {
+	Position string
+	Value    string
+	BpsBurst string
+	BpsPeak  string
+	PPSBurst string
+	PPSPeak  string
+}
+
+func printServerQOSItems(server nova.Server) {
+	items := []QosItem{
+		{
+			Position: "入向",
+			BpsBurst: server.Flavor.ExtraSpecs.Get("quota:vif_inbound_burst"),
+			BpsPeak:  server.Flavor.ExtraSpecs.Get("quota:vif_inbound_peak"),
+			PPSBurst: server.Flavor.ExtraSpecs.Get("quota:vif_inbound_pps_burst"),
+			PPSPeak:  server.Flavor.ExtraSpecs.Get("quota:vif_inbound_pps_burst"),
+		},
+		{
+			Position: "出向",
+			BpsBurst: server.Flavor.ExtraSpecs.Get("quota:vif_inbound_burst"),
+			BpsPeak:  server.Flavor.ExtraSpecs.Get("quota:vif_inbound_peak"),
+			PPSBurst: server.Flavor.ExtraSpecs.Get("quota:vif_inbound_pps_burst"),
+			PPSPeak:  server.Flavor.ExtraSpecs.Get("quota:vif_inbound_pps_burst"),
+		},
+	}
+	t := table.NewItemsTable([]string{"Position", "BpsBurst", "BpsPeak", "PPSBurst", "PPSPeak"}, items)
+	result, _ := t.SetStyle(table.StyleLight).Render()
+	fmt.Println(result)
+}
 
 var testNetQos = &cobra.Command{
 	Use:     "iperf3-test <server> --client <client>",
@@ -64,6 +98,11 @@ var testNetQos = &cobra.Command{
 
 		serverConn := guest.Guest{Connection: serverHost.HostIp, Domain: serverInstance.Id}
 		clientConn := guest.Guest{Connection: clientHost.HostIp, Domain: clientInstance.Id}
+
+		fmt.Println("服务端QOS配置:")
+		printServerQOSItems(*serverInstance)
+		fmt.Println("客户端QOS配置:")
+		printServerQOSItems(*clientInstance)
 
 		logging.Info("start test with QGA")
 		_, _, err = guest.TestNetQos(clientConn, serverConn, pps, localIperf3File)

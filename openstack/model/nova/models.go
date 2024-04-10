@@ -48,6 +48,9 @@ func (extraSpecs ExtraSpecs) GetList() []string {
 	}
 	return properties
 }
+func (extraSpecs ExtraSpecs) Get(key string) string {
+	return extraSpecs[key]
+}
 
 type Fault struct {
 	Code    int    `json:"code,omitempty"`
