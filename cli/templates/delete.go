@@ -61,14 +61,14 @@ var DeleteCmd = &cobra.Command{
 	Short: "delete resources of template file",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		watch, _ := cmd.Flags().GetBool("wait")
+		wait, _ := cmd.Flags().GetBool("wait")
 		var err error
 		createTemplate, err := LoadCreateTemplate(args[0])
 		utility.LogError(err, "load template file failed", true)
 
 		client := openstack.DefaultClient()
 		for _, server := range createTemplate.Servers {
-			deleteServer(client, server, watch)
+			deleteServer(client, server, wait)
 		}
 		for _, network := range createTemplate.Networks {
 			deleteNetwork(client, network)

@@ -267,7 +267,7 @@ func (c ServersApi) AddVolume(id string, volumeId string) (*nova.VolumeAttachmen
 	}
 	body := map[string]*nova.VolumeAttachment{"volumeAttachments": {}}
 	resp.BodyUnmarshal(&body)
-	return body["volumeAttachments"], nil
+	return body["volumeAttachment"], nil
 }
 func (c ServersApi) DeleteVolume(id string, volumeId string) error {
 	_, err := c.NovaV2.Delete(utility.UrlJoin("servers", id, "os-volume_attachments", volumeId), nil)
