@@ -21,6 +21,12 @@ RUN source $HOME/.bashrc && /usr/local/go/bin/go version
 # Build Skylight
 FROM Skylight-Centos7-Base as Skylight-Centos7-Builder
 
+RUN source $HOME/.bashrc \
+    && cd /root/skyman \
+    && go env -w GO111MODULE="on" \
+    && go env -w GOPROXY="https://goproxy.cn,direct" \
+    && go mod download
+
 # NOTE:In order not to use caching
 ARG DATE
 RUN echo ${DATE}
