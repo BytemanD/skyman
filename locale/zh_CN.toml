@@ -18,3 +18,6 @@ other = '展示虚拟机详情'
 
 [localFuzzySearch]
 other = '本地模糊查询'
+
+[testServerNetworkQOS]
+other = '测试云主机网络QOS'

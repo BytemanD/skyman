@@ -39,9 +39,9 @@ func installIperf(guest Guest, localIperf3File string) error {
 
 // 使用 iperf3 工具测试网络BPS/PPS
 //
-// 参数为客户端和服务端实例的连接地址，格式: "连接地址:实例 UUID"。例如：
+// 参数为客户端和服务端实例的连接地址, 格式: "连接地址@实例 UUID". e.g.
 //
-//	192.168.192.168:a6ee919a-4026-4f0b-8d7e-404950a91eb3
+//	192.168.192.168@a6ee919a-4026-4f0b-8d7e-404950a91eb3
 func TestNetQos(clientGuest Guest, serverGuest Guest, pps bool, localIperf3File string) (float64, float64, error) {
 	err := clientGuest.Connect()
 	if clientGuest.IsSame(serverGuest) {

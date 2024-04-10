@@ -39,6 +39,9 @@ func init() {
 		{ID: "localFuzzySearch",
 			Other: "Local fuzzy search",
 		},
+		{ID: "testServerNetworkQOS",
+			Other: "Test Server Network QOS",
+		},
 	}
 	defaultMessageMap = map[string]i18n.Message{}
 

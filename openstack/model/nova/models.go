@@ -147,6 +147,9 @@ func (server Server) AllStatus() string {
 func (server Server) InResize() bool {
 	return server.Status == "VERIFY_RESIZE" || server.Status == "RESIZE"
 }
+func (server Server) IsActive() bool {
+	return server.Status == "ACTIVE"
+}
 
 type Service struct {
 	model.Resource
