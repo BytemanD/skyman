@@ -90,7 +90,7 @@ func printServer(server nova.Server) {
 	common.PrintPrettyItemTable(pt)
 }
 
-func printFlavor(server nova.Flavor) {
+func PrintFlavor(server nova.Flavor) {
 	pt := common.PrettyItemTable{
 		Item: server,
 		ShortFields: []common.Column{

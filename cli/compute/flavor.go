@@ -104,7 +104,7 @@ var flavorShow = &cobra.Command{
 		idOrName := args[0]
 		flavor, err := client.NovaV2().Flavors().ShowWithExtraSpecs(idOrName)
 		utility.LogError(err, "Show flavor failed", true)
-		printFlavor(*flavor)
+		PrintFlavor(*flavor)
 	},
 }
 var flavorDelete = &cobra.Command{
@@ -191,7 +191,7 @@ var flavorCreate = &cobra.Command{
 			}
 			flavor.ExtraSpecs = createdExtraSpecs
 		}
-		printFlavor(*flavor)
+		PrintFlavor(*flavor)
 	},
 }
 var flavorSet = &cobra.Command{
@@ -236,48 +236,6 @@ var flavorUnset = &cobra.Command{
 
 	},
 }
-var flavorCopy = &cobra.Command{
-	Use:   "copy <flavor id> <new flavor name>",
-	Short: "Copy flavor",
-	Args: func(cmd *cobra.Command, args []string) error {
-		if err := cobra.ExactArgs(2)(cmd, args); err != nil {
-			return err
-		}
-		properties, _ := cmd.Flags().GetStringArray("set")
-		for _, property := range properties {
-			kv := strings.Split(property, "=")
-			if len(kv) != 2 {
-				return fmt.Errorf("invalid property '%s', it must be format: key1=value1", property)
-			}
-		}
-		return nil
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		flavorId := args[0]
-		newName := args[1]
-		newId, _ := cmd.Flags().GetString("id")
-		vcpus, _ := cmd.Flags().GetUint("vcpus")
-		ram, _ := cmd.Flags().GetUint("ram")
-		disk, _ := cmd.Flags().GetUint("disk")
-		swap, _ := cmd.Flags().GetUint("swap")
-		ephemeral, _ := cmd.Flags().GetUint("ephemeral")
-		rxtxFactor, _ := cmd.Flags().GetFloat32("rxtx-factor")
-		setProperties, _ := cmd.Flags().GetStringArray("set")
-		unSetProperties, _ := cmd.Flags().GetStringArray("unset")
-
-		client := openstack.DefaultClient()
-
-		newFlavor, err := client.NovaV2().Flavors().Copy(flavorId, newName, newId,
-			int(vcpus), int(ram), int(disk), int(swap), int(ephemeral), rxtxFactor,
-			getExtraSpecsMap(setProperties), unSetProperties,
-		)
-		if err != nil {
-			fmt.Printf("Copy flavor faield, %v", err)
-			os.Exit(1)
-		}
-		printFlavor(*newFlavor)
-	},
-}
 
 func init() {
 	// flavor list flags
@@ -302,17 +260,6 @@ func init() {
 	flavorUnset.Flags().StringArrayP("property", "p", []string{},
 		"Property to add or modify for this flavor (repeat option to set multiple properties)")
 
-	flavorCopy.Flags().String("id", "", "New flavor ID, creates a UUID if empty")
-	flavorCopy.Flags().Uint("vcpus", 0, "Number of vcpus")
-	flavorCopy.Flags().Uint("ram", 0, "Memory size in MB")
-	flavorCopy.Flags().Uint("disk", 0, "Disk size in GB")
-	flavorCopy.Flags().Uint("swap", 0, "Swap space size in MB")
-	flavorCopy.Flags().Uint("ephemeral", 0, "Swap space size in MB")
-	flavorCopy.Flags().Float32("rxtx-factor", 0, "RX/TX factor")
-	flavorCopy.Flags().StringArray("set", []string{},
-		"Set property to for new flavor (repeat option to set multiple properties)")
-	flavorCopy.Flags().StringArray("unset", []string{},
-		"Unset property for new flavor (repeat option to set multiple properties)")
 	Flavor.AddCommand(flavorList, flavorShow, flavorCreate, flavorDelete,
-		flavorSet, flavorUnset, flavorCopy)
+		flavorSet, flavorUnset)
 }

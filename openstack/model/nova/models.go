@@ -430,3 +430,12 @@ type RegionMigrateResp struct {
 	AllowLiveMigrate bool   `json:"allow_live_migrate"`
 	Reason           string `json:"reason"`
 }
+
+func ParseExtraSpecsMap(extraSpecs []string) ExtraSpecs {
+	extraSpecsMap := ExtraSpecs{}
+	for _, property := range extraSpecs {
+		kv := strings.Split(property, "=")
+		extraSpecsMap[kv[0]] = kv[1]
+	}
+	return extraSpecsMap
+}

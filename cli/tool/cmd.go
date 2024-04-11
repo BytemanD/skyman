@@ -14,5 +14,6 @@ func init() {
 	ToolCmd.AddCommand(
 		server.ServerCommand,
 		guest.GuestCommand,
+		server.FlavorCommand,
 	)
 }
