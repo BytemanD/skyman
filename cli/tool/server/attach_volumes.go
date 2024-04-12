@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/BytemanD/easygo/pkg/arrayutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -80,16 +81,29 @@ var attachVolumes = &cobra.Command{
 				if attachment != nil && p.Id == "" {
 					p.Id = attachment.VolumeId
 				}
-				attachedVolumes, err := client.NovaV2().Servers().ListVolumes(server.Id)
-				if err != nil {
-					utility.LogError(err, "list server volumes failed:", false)
-					return err
-				}
-				for _, vol := range attachedVolumes {
-					if vol.VolumeId == p.Id {
-						logging.Info("[volume: %s] attach success", p)
-						return nil
+				startTime := time.Now()
+				for {
+					attachedVolumes, err := client.NovaV2().Servers().ListVolumes(server.Id)
+					if err != nil {
+						utility.LogError(err, "list server volumes failed:", false)
+						return err
 					}
+					for _, vol := range attachedVolumes {
+						if vol.VolumeId != p.Id {
+							continue
+						}
+						v, err := client.CinderV2().Volumes().Show(vol.VolumeId)
+						logging.Info("[volume: %s] status is %s", vol.Id, v.Status)
+						if err == nil && v.IsInuse() {
+							logging.Info("[volume: %s] attach success", p)
+							return nil
+						}
+					}
+					if time.Since(startTime) >= time.Minute*10 {
+						break
+					}
+					time.Sleep(time.Second * 5)
+
 				}
 				logging.Error("[volume: %s] attach failed", p)
 				return nil

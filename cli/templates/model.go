@@ -80,7 +80,7 @@ func LoadCreateTemplate(file string) (*CreateTemplate, error) {
 	if template.Default.ServerNamePrefix == "" {
 		template.Default.ServerNamePrefix = "server-"
 	}
-	for i, _ := range template.Servers {
+	for i := range template.Servers {
 		if template.Servers[i].Min == 0 {
 			template.Servers[i].Min = 1
 		}

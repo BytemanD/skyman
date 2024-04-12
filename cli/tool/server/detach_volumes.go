@@ -25,7 +25,6 @@ var detachVolumes = &cobra.Command{
 		}
 		return nil
 	},
-	// Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		serverId := args[0]
 

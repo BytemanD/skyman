@@ -18,3 +18,9 @@ auth:
     name: admin
     domain:
       name: Default
+
+# iperf:
+#   clientOptions: -t 60 -P 10
+#   ServerOptions:
+#   guestPath:
+#   localPath:
