@@ -83,7 +83,7 @@ var serviceCreate = &cobra.Command{
 }
 var serviceDelete = &cobra.Command{
 	Use:   "delete <service> [service ...]",
-	Short: "Delete service ",
+	Short: "Delete service",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().KeystoneV3()

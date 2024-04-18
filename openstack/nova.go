@@ -720,7 +720,6 @@ func (c FlavorApi) Copy(id string, newName string, newId string,
 	newEphemeral int, newRxtxFactor float32, setProperties map[string]string,
 	unsetProperties []string,
 ) (*nova.Flavor, error) {
-
 	logging.Info("Show flavor")
 	flavor, err := c.Show(id)
 	if err != nil {

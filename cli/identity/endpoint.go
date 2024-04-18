@@ -11,6 +11,7 @@ import (
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/keystone"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var Endpoint = &cobra.Command{Use: "endpoint"}
@@ -70,19 +71,88 @@ var endpointList = &cobra.Command{
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "RegionId", Sort: true},
-				{Name: "ServiceName", Sort: true, Slot: func(item interface{}) interface{} {
+				{Name: "Service", Sort: true, Slot: func(item interface{}) interface{} {
 					p, _ := item.(keystone.Endpoint)
 					if _, ok := serviceMap[p.ServiceId]; !ok {
 						service, _ := c.Services().Show(p.ServiceId)
 						serviceMap[p.ServiceId] = *service
 					}
-					return serviceMap[p.ServiceId].Name
+					return serviceMap[p.ServiceId].Display()
 				}},
 				{Name: "Interface"}, {Name: "Url"},
 			},
 		}
 		pt.AddItems(items)
 		common.PrintPrettyTable(pt, long)
+	},
+}
+var endpointCreate = &cobra.Command{
+	Use:   "create <service> <url>",
+	Short: "create endpoint",
+	Args:  cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		disable, _ := cmd.Flags().GetBool("disable")
+
+		region, _ := cmd.Flags().GetString("region")
+		public, _ := cmd.Flags().GetBool("public")
+		internal, _ := cmd.Flags().GetBool("internal")
+		admin, _ := cmd.Flags().GetBool("admin")
+
+		s, url := args[0], args[1]
+
+		c := openstack.DefaultClient().KeystoneV3()
+
+		service, err := c.Services().Found(s)
+		utility.LogError(err, "get service failed", true)
+		interfaceMap := map[string]bool{
+			"public":   public,
+			"admin":    admin,
+			"internal": internal,
+		}
+		endpoints := []keystone.Endpoint{}
+		for k, v := range interfaceMap {
+			if !v {
+				continue
+			}
+			e := keystone.Endpoint{
+				Region:    region,
+				Url:       url,
+				ServiceId: service.Id,
+				Interface: k,
+				Enabled:   !disable,
+			}
+			logging.Info("create %s endpoint", k)
+			endpoint, err := c.Endpoints().Create(e)
+			if err != nil {
+				utility.LogError(err, fmt.Sprintf("create %s endpoint failed", k), false)
+				continue
+			}
+			endpoints = append(endpoints, *endpoint)
+		}
+		pt := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"}, {Name: "RegionId", Sort: true},
+				{Name: "Service", Sort: true, Slot: func(item interface{}) interface{} {
+					return service.Display()
+				}},
+				{Name: "Interface"}, {Name: "Url"},
+			},
+		}
+		pt.AddItems(endpoints)
+		common.PrintPrettyTable(pt, false)
+	},
+}
+var endpointDelete = &cobra.Command{
+	Use:   "delete <endpoint> [endpoint ...]",
+	Short: "Delete endpoint",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		c := openstack.DefaultClient().KeystoneV3()
+		for _, id := range args {
+			logging.Info("request to delete endpoint %s", id)
+			err := c.Endpoints().Delete(id)
+			utility.LogError(err, fmt.Sprintf("delete endpoint %s failed", id), false)
+		}
 	},
 }
 
@@ -93,5 +163,11 @@ func init() {
 	endpointList.Flags().StringP("service", "s", "", "Search by service name")
 	endpointList.Flags().Bool("current", false, "Search by current region")
 
-	Endpoint.AddCommand(endpointList)
+	endpointCreate.Flags().Bool("diable", false, "Disable service")
+	endpointCreate.Flags().StringP("region", "r", "", "New endpoint region ID")
+	endpointCreate.Flags().Bool("public", false, "Create public endpoint")
+	endpointCreate.Flags().Bool("admin", false, "Create admin endpoint")
+	endpointCreate.Flags().Bool("internal", false, "Create internal endpoint")
+
+	Endpoint.AddCommand(endpointList, endpointCreate, endpointDelete)
 }

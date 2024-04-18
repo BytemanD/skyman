@@ -12,12 +12,13 @@ type Service struct {
 }
 
 type Endpoint struct {
-	Id        string `json:"id"`
-	Region    string `json:"region"`
-	Url       string `json:"url"`
-	Interface string `json:"interface"`
-	RegionId  string `json:"region_id"`
-	ServiceId string `json:"service_id"`
+	Id        string `json:"id,omitempty"`
+	Region    string `json:"region,omitempty"`
+	Url       string `json:"url,omitempty"`
+	Interface string `json:"interface,omitempty"`
+	RegionId  string `json:"region_id,omitempty"`
+	Enabled   bool   `json:"enabled"`
+	ServiceId string `json:"service_id,omitempty"`
 }
 
 type Region struct {
@@ -32,4 +33,14 @@ type Scope struct {
 type RoleAssigment struct {
 	Scope Scope     `json:"scope,omitempty"`
 	User  auth.User `json:"user,omitempty"`
+}
+
+func (service Service) Display() string {
+	if service.Name != "" {
+		return service.Name
+	}
+	if service.Type != "" {
+		return service.Type
+	}
+	return service.Id
 }
