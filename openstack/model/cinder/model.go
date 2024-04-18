@@ -87,6 +87,16 @@ type VolumeType struct {
 	ExtraSpecs                 map[string]string `json:"extra_specs,omitempty"`
 }
 
+type Service struct {
+	model.Resource
+	Host           string `json:"host,omitempty"`
+	Binary         string `json:"binary,omitempty"`
+	Zone           string `json:"zone,omitempty"`
+	Status         string `json:"status,omitempty"`
+	State          string `json:"state,omitempty"`
+	DisabledReason string `json:"disabled_reason,omitempty"`
+}
+
 func (volumeType VolumeType) GetExtraSpecsList() []string {
 	properties := []string{}
 	for key, value := range volumeType.ExtraSpecs {

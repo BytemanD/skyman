@@ -26,6 +26,9 @@ type VolumeApi struct {
 type VolumeTypeApi struct {
 	CinderV2
 }
+type VolumeServiceApi struct {
+	CinderV2
+}
 
 const (
 	POLICY_NEVER     = "never"
@@ -80,6 +83,10 @@ func (c CinderV2) Volumes() VolumeApi {
 func (c CinderV2) VolumeTypes() VolumeTypeApi {
 	return VolumeTypeApi{c}
 }
+func (c CinderV2) Services() VolumeServiceApi {
+	return VolumeServiceApi{c}
+}
+
 func (c VolumeApi) Detail(query url.Values) ([]cinder.Volume, error) {
 	resp, err := c.CinderV2.Get("volumes/detail", query)
 	if err != nil {
@@ -345,4 +352,18 @@ func (c VolumeApi) Prune(query url.Values, yes bool) {
 	} else {
 		logging.Info("清理完成")
 	}
+}
+func (c VolumeServiceApi) List(query url.Values) ([]cinder.Service, error) {
+	resp, err := c.CinderV2.Get("os-services", query)
+	if err != nil {
+		return nil, err
+	}
+	body := struct {
+		Services []cinder.Service
+	}{Services: []cinder.Service{}}
+
+	if err := resp.BodyUnmarshal(&body); err != nil {
+		return nil, err
+	}
+	return body.Services, nil
 }
