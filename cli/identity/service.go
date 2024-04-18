@@ -1,12 +1,16 @@
 package identity
 
 import (
+	"fmt"
 	"net/url"
 
 	"github.com/spf13/cobra"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model"
+	"github.com/BytemanD/skyman/openstack/model/keystone"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -44,11 +48,62 @@ var serviceList = &cobra.Command{
 		common.PrintPrettyTable(pt, long)
 	},
 }
+var serviceCreate = &cobra.Command{
+	Use:   "create <type>",
+	Short: "Create service",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		serviceType := args[0]
+
+		name, _ := cmd.Flags().GetString("name")
+		description, _ := cmd.Flags().GetString("description")
+		disable, _ := cmd.Flags().GetBool("disable")
+
+		c := openstack.DefaultClient().KeystoneV3()
+
+		service, err := c.Services().Create(
+			keystone.Service{
+				Type:     serviceType,
+				Enabled:  !disable,
+				Resource: model.Resource{Name: name, Description: description},
+			})
+		utility.LogError(err, "create service failed", true)
+
+		pt := common.PrettyItemTable{
+			ShortFields: []common.Column{
+				{Name: "Id"}, {Name: "Name"}, {Name: "Type"},
+				{Name: "Enabled"},
+				{Name: "Description"},
+			},
+			LongFields: []common.Column{},
+			Item:       *service,
+		}
+		common.PrintPrettyItemTable(pt)
+	},
+}
+var serviceDelete = &cobra.Command{
+	Use:   "delete <service> [service ...]",
+	Short: "Delete service ",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		c := openstack.DefaultClient().KeystoneV3()
+
+		for _, id := range args {
+			logging.Info("request to delete service %s", id)
+			err := c.Services().Delete(id)
+			utility.LogError(err, fmt.Sprintf("delete service %s failed", id), false)
+		}
+	},
+}
 
 func init() {
 	serviceList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	serviceList.Flags().StringP("name", "n", "", "Search by service name")
 	serviceList.Flags().StringP("type", "t", "", "Search by service type")
 
-	Service.AddCommand(serviceList)
+	serviceCreate.Flags().Bool("disable", false, "Disable service")
+	serviceCreate.Flags().StringP("name", "n", "", "New service name")
+	serviceCreate.Flags().StringP("description", "t", "", "New service description")
+
+	Service.AddCommand(serviceList, serviceCreate, serviceDelete)
 }

@@ -1,6 +1,7 @@
 package openstack
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 
@@ -132,6 +133,27 @@ func (c ServiceApi) List(query url.Values) ([]keystone.Service, error) {
 		return nil, err
 	}
 	return body.Services, nil
+}
+func (c ServiceApi) Create(service keystone.Service) (*keystone.Service, error) {
+	type serviceBody struct {
+		Service keystone.Service `json:"service"`
+	}
+
+	reqBody, _ := json.Marshal(serviceBody{Service: service})
+	resp, err := c.KeystoneV3.Post("services", reqBody, nil)
+	if err != nil {
+		return nil, err
+	}
+	respBody := serviceBody{Service: keystone.Service{}}
+	resp.BodyUnmarshal(&respBody)
+	return &respBody.Service, nil
+}
+func (c ServiceApi) Delete(id string) error {
+	_, err := c.KeystoneV3.Delete(utility.UrlJoin("services", id), nil)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 func (c ServiceApi) ListByName(name string) ([]keystone.Service, error) {
 	return c.List(utility.UrlValues(map[string]string{
