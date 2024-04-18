@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/syncutils"
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
@@ -68,6 +69,34 @@ var endpointList = &cobra.Command{
 		if err != nil {
 			logging.Fatal("get services failed, %s", err)
 		}
+
+		// TODO: 优化
+		serviceIds := []string{}
+		for _, endpoint := range items {
+			found := false
+			for _, id := range serviceIds {
+				if id == endpoint.ServiceId {
+					found = true
+					break
+				}
+			}
+			if found {
+				continue
+			}
+			serviceIds = append(serviceIds, endpoint.ServiceId)
+		}
+		task := syncutils.TaskGroup{
+			Items: serviceIds,
+			Func: func(item interface{}) error {
+				serviceId := item.(string)
+				service, err := c.Services().Show(serviceId)
+				if err == nil {
+					serviceMap[serviceId] = *service
+				}
+				return nil
+			},
+		}
+		task.Start()
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "RegionId", Sort: true},
