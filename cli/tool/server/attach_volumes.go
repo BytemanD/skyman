@@ -95,7 +95,7 @@ var attachVolumes = &cobra.Command{
 						v, err := client.CinderV2().Volumes().Show(vol.VolumeId)
 						logging.Info("[volume: %s] status is %s", vol.Id, v.Status)
 						if err == nil && v.IsInuse() {
-							logging.Info("[volume: %s] attach success", p)
+							logging.Info("[volume: %s] attach success", p.Id)
 							return nil
 						}
 					}

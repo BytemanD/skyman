@@ -23,8 +23,8 @@ type Volume struct {
 
 func (i Volume) String() string {
 	if i.Name != "" {
-		return fmt.Sprintf("id: %s", i.Name)
+		return fmt.Sprintf("<volume name: %s>", i.Name)
 	} else {
-		return fmt.Sprintf("id: %s", i.Id)
+		return fmt.Sprintf("<volume id: %s>", i.Id)
 	}
 }

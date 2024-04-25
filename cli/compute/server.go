@@ -402,7 +402,12 @@ var serverShelve = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		for _, id := range args {
-			err := client.NovaV2().Servers().Shelve(id)
+			server, err := client.NovaV2().Servers().Found(id)
+			if err != nil {
+				utility.LogError(err, fmt.Sprintf("get server %s faield", id), false)
+				continue
+			}
+			err = client.NovaV2().Servers().Shelve(server.Id)
 			if err != nil {
 				logging.Error("Reqeust to shelve server failed, %v", err)
 			} else {

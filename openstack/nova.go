@@ -503,7 +503,7 @@ func (c ServersApi) Migrate(id string, host string) error {
 	_, err := c.doAction("migrate", id, data)
 	return err
 }
-func (c ServersApi) LiveMigrate(id string, blockMigrate bool, host string) error {
+func (c ServersApi) LiveMigrate(id string, blockMigrate interface{}, host string) error {
 	data := map[string]interface{}{"block_migration": blockMigrate}
 	if host != "" {
 		server, err := c.Show(id)
@@ -513,9 +513,9 @@ func (c ServersApi) LiveMigrate(id string, blockMigrate bool, host string) error
 		if server.Host == host {
 			return fmt.Errorf("server %s host is %s", id, server.Host)
 		}
-		data["host"] = host
 	}
-	_, err := c.doAction("migrate", id, data)
+	data["host"] = nil
+	_, err := c.doAction("os-migrateLive", id, data)
 	return err
 }
 func (c ServersApi) ListActions(id string) ([]nova.InstanceAction, error) {

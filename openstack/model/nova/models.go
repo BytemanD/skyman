@@ -96,6 +96,7 @@ type Server struct {
 	RootDeviceName string                  `json:"OS-EXT-SRV-ATTR:root_device_name,omitempty"`
 	KeyName        string                  `json:"key_name,omitempty"`
 	SecurityGroups []neutron.SecurityGroup `json:"security_groups,omitempty"`
+	Progress       float32                 `json:"progress"`
 }
 type Image struct {
 	Id   string `json:"id,omitempty"`
@@ -152,6 +153,9 @@ func (server Server) InResize() bool {
 }
 func (server Server) IsActive() bool {
 	return server.Status == "ACTIVE"
+}
+func (server Server) IsError() bool {
+	return strings.ToUpper(server.Status) == "ERROR"
 }
 
 type Service struct {

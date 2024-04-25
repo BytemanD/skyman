@@ -107,7 +107,7 @@ var detachVolumes = &cobra.Command{
 func init() {
 	detachVolumes.Flags().Int("nums", 1, "nums of interfaces")
 	detachVolumes.Flags().Int("parallel", runtime.NumCPU(), "nums of parallel")
-	detachVolumes.Flags().Bool("clean", false, "delete interface after detached")
+	detachVolumes.Flags().Bool("clean", false, "delete volumes after detached")
 
 	ServerCommand.AddCommand(detachVolumes)
 }
