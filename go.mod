@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/spf13/cobra v1.7.0
 	gopkg.in/yaml.v3 v3.0.1
-	libvirt.org/go/libvirt v1.10001.0
+	libvirt.org/go/libvirt v1.10002.0
 )
 
 require (
@@ -31,7 +31,7 @@ require (
 )
 
 require (
-	github.com/BytemanD/easygo/pkg v0.0.7
+	github.com/BytemanD/easygo/pkg v0.0.8
 	github.com/MichaelMure/go-term-markdown v0.1.4
 	github.com/cheggaaa/pb/v3 v3.1.5
 	github.com/jedib0t/go-pretty/v6 v6.5.6

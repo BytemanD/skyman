@@ -21,3 +21,6 @@ other = '本地模糊查询'
 
 [testServerNetworkQOS]
 other = '测试云主机网络QOS'
+
+[logFile]
+other = '日志文件'

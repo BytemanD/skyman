@@ -122,19 +122,20 @@ func main() {
 			}
 			conf, _ := cmd.Flags().GetString("conf")
 			if err := common.LoadConfig(conf); err != nil {
-				fmt.Printf("load config failed, %v\n", err)
+				fmt.Printf("load config failed: %v\n", err)
 				os.Exit(1)
 			}
+			logLevel := logging.INFO
 			if common.CONF.Debug {
-				logging.BasicConfig(logging.LogConfig{Level: logging.DEBUG})
-			} else {
-				logging.BasicConfig(logging.LogConfig{Level: logging.INFO})
+				logLevel = logging.DEBUG
 			}
+			logging.BasicConfig(logging.LogConfig{Level: logLevel, Output: common.CONF.LogFile})
 			logging.Debug("load config file from %s", viper.ConfigFileUsed())
 		},
 	}
 
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, i18n.T("showDebug"))
+	rootCmd.PersistentFlags().String("log-file", "", i18n.T("logFile"))
 	rootCmd.PersistentFlags().StringP("conf", "c", os.Getenv("SKYMAN_CONF_FILE"),
 		i18n.T("thePathOfConfigFile"))
 	rootCmd.PersistentFlags().StringP("format", "f", "table",
@@ -142,6 +143,7 @@ func main() {
 
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	viper.BindPFlag("format", rootCmd.PersistentFlags().Lookup("format"))
+	viper.BindPFlag("logFile", rootCmd.PersistentFlags().Lookup("log-file"))
 
 	rootCmd.AddCommand(
 		versionCmd,

@@ -42,6 +42,7 @@ func init() {
 		{ID: "testServerNetworkQOS",
 			Other: "Test Server Network QOS",
 		},
+		{ID: "logFile", Other: "log file"},
 	}
 	defaultMessageMap = map[string]i18n.Message{}
 

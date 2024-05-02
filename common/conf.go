@@ -30,6 +30,7 @@ type ConfGroup struct {
 	Format      string `yaml:"format"`
 	Language    string `yaml:"language"`
 	HttpTimeout int    `yaml:"httpTimeout"`
+	LogFile     string `yaml:"logFile"`
 
 	Auth  Auth  `yaml:"auth"`
 	Iperf Iperf `yaml:"iperf"`
