@@ -1001,7 +1001,7 @@ func (c AggregateApi) List(query url.Values) ([]nova.Aggregate, error) {
 	return respBody["aggregates"], nil
 }
 func (c AggregateApi) Show(aggregate string) (*nova.Aggregate, error) {
-	resp, err := c.NovaV2.Get("aggregates", nil)
+	resp, err := c.NovaV2.Get("os-aggregates", nil)
 	if err != nil {
 		return nil, err
 	}

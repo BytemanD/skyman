@@ -47,7 +47,8 @@ var migrate = &cobra.Command{
 							server.Id, sourceHost, server.Host, time.Since(startTime))
 						break
 					}
-					logging.Info("[server: %s] migrate progress: %v", server.Id, server.Progress)
+					logging.Info("[server: %s] migrate progress: %v, power state: %s",
+						server.Id, server.Progress, server.GetPowerState())
 					if server.IsError() {
 						logging.Error("[server: %s] status is error", server.Id)
 						break
