@@ -58,7 +58,7 @@ var migrate = &cobra.Command{
 				}
 				time.Sleep(time.Second * 5)
 			}
-			if server.IsError() {
+			if !server.IsMigrating() {
 				break
 			}
 			time.Sleep(time.Second * time.Duration(interval))

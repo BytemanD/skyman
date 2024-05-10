@@ -56,3 +56,7 @@ func PathExtSplit(file string) (string, string) {
 	name := strings.TrimSuffix(path.Base(file), ext)
 	return name, ext
 }
+
+func LastItems(items []interface{}, last int) []interface{} {
+	return items[max(len(items)-max(last, 0), 0):]
+}

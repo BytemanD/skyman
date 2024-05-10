@@ -157,6 +157,9 @@ func (server Server) IsActive() bool {
 func (server Server) IsError() bool {
 	return strings.ToUpper(server.Status) == "ERROR"
 }
+func (server Server) IsMigrating() bool {
+	return strings.ToUpper(server.Status) == "MIGRATING"
+}
 
 type Service struct {
 	model.Resource
