@@ -24,7 +24,7 @@ servers:
       # - uuid: <network uuid>
     availabilityZone:
     # securityGroups:
-    #   - ea8008d6-4aad-4cdf-8ef7-9c5a77c58cf6
+    #   - name: default
     blockDeviceMappingV2:
     - bootIndex: 0
       uuid: <image uuid>
