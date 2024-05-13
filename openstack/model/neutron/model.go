@@ -80,6 +80,7 @@ type Port struct {
 	BindingVnicType string                 `json:"binding:vnic_type,omitempty"`
 	BindingVifType  string                 `json:"binding:vif_type,omitempty"`
 	BindingDetails  map[string]interface{} `json:"binding:vif_details,omitempty"`
+	BindingProfile  map[string]interface{} `json:"binding:profile,omitempty"`
 	QosPolicyId     string                 `json:"qos_policy_id:host_id,omitempty"`
 	FixedIps        []FixedIp              `json:"fixed_ips"`
 	DeviceOwner     string                 `json:"device_owner"`
@@ -105,7 +106,10 @@ type SecurityGroup struct {
 func (port Port) MarshalVifDetails() string {
 	bytes, _ := json.Marshal(port.BindingDetails)
 	return string(bytes)
-
+}
+func (port Port) MarshalBindingProfile() string {
+	bytes, _ := json.Marshal(port.BindingProfile)
+	return string(bytes)
 }
 func (port Port) VifDetailList() []string {
 	details := []string{}

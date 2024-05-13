@@ -118,6 +118,10 @@ var portShow = &cobra.Command{
 				{Name: "MACAddress", Text: "MAC Address"},
 				{Name: "BindingVnicType"},
 				{Name: "BindingVifType"},
+				{Name: "BindingProfile", Slot: func(item interface{}) interface{} {
+					p, _ := item.(neutron.Port)
+					return p.MarshalBindingProfile()
+				}},
 				{Name: "BindingDetails", Slot: func(item interface{}) interface{} {
 					p, _ := item.(neutron.Port)
 					return p.MarshalVifDetails()
