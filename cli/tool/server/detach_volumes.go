@@ -53,7 +53,7 @@ var detachVolumes = &cobra.Command{
 			detachVolumes = append(detachVolumes, attachedVolumes[i].VolumeId)
 		}
 		if len(detachVolumes) < nums {
-			logging.Info("the server only has %d volume(s) that can be detached", len(detachVolumes))
+			logging.Error("the server only has %d volume(s) that can be detached", len(detachVolumes))
 			os.Exit(1)
 		}
 		if len(detachVolumes) == 0 {
