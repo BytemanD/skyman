@@ -433,7 +433,7 @@ func (c ServersApi) SetPassword(id string, password, user string) error {
 	if user != "" {
 		data["userName"] = user
 	}
-	_, err := c.doAction("adminPass", id, data)
+	_, err := c.doAction("changePassword", id, data)
 	return err
 }
 func (c ServersApi) SetName(id string, name string) error {

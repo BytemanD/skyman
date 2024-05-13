@@ -85,7 +85,9 @@ func (rest *RestClient) doRequest(method, reqUrl string, query url.Values,
 			continue
 		}
 		return nil, err
-
+	}
+	if err != nil {
+		return nil, err
 	}
 	response := utility.Response{
 		Status:  resp.StatusCode,
