@@ -162,9 +162,11 @@ func (c NetworkApi) Show(id string) (*neutron.Network, error) {
 	if err != nil {
 		return nil, err
 	}
-	body := map[string]*neutron.Network{"network": {}}
+	body := struct {
+		Network neutron.Network `json:"network,omitempty"`
+	}{}
 	resp.BodyUnmarshal(&body)
-	return body["network"], err
+	return &body.Network, err
 }
 func (c NetworkApi) Found(idOrName string) (*neutron.Network, error) {
 	network, err := c.Show(idOrName)
@@ -230,9 +232,12 @@ func (c SubnetApi) Show(id string) (*neutron.Subnet, error) {
 	if err != nil {
 		return nil, err
 	}
-	body := map[string]*neutron.Subnet{"subnets": {}}
+	body := struct {
+		Subnet neutron.Subnet `json:"subnet,omitempty"`
+	}{}
+
 	resp.BodyUnmarshal(&body)
-	return body["subnets"], err
+	return &body.Subnet, err
 }
 func (c SubnetApi) Found(idOrName string) (*neutron.Subnet, error) {
 	subnet, err := c.Show(idOrName)

@@ -84,6 +84,31 @@ var subnetCreate = &cobra.Command{
 		cli.PrintSubnet(*subnet)
 	},
 }
+var subnetShow = &cobra.Command{
+	Use:   "show <subnet>",
+	Short: "Show subnet",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		c := openstack.DefaultClient().NeutronV2()
+		subnet, err := c.Subnets().Show(args[0])
+		utility.LogError(err, "show subnet failed", true)
+		table := common.PrettyItemTable{
+			Item: *subnet,
+			ShortFields: []common.Column{
+				{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
+				{Name: "NetworkId"},
+				{Name: "Cidr"},
+				{Name: "RevisionNumber"}, {Name: "IpVersion"},
+				{Name: "Tags"}, {Name: "EnableDhcp"},
+				{Name: "GatewayIp"},
+				{Name: "AllocationPools"},
+				{Name: "CreatedAt"},
+			},
+		}
+		common.PrintPrettyItemTable(table)
+
+	},
+}
 var subnetDelete = &cobra.Command{
 	Use:   "delete <subnet> [subnet ...]",
 	Short: "Delete subnet(s)",
@@ -113,5 +138,5 @@ func init() {
 	subnetCreate.MarkFlagRequired("network")
 	subnetCreate.MarkFlagRequired("cidr")
 
-	Subnet.AddCommand(subnetList, subnetCreate, subnetDelete)
+	Subnet.AddCommand(subnetList, subnetCreate, subnetDelete, subnetShow)
 }
