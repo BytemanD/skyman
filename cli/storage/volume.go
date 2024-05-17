@@ -84,6 +84,8 @@ var volumeDelete = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
+		force, _ := cmd.Flags().GetBool("force")
+		cascade, _ := cmd.Flags().GetBool("cascade")
 
 		for _, idOrName := range args {
 			volume, err := client.CinderV2().Volumes().Found(idOrName)
@@ -91,7 +93,7 @@ var volumeDelete = &cobra.Command{
 				utility.LogError(err, "get volume failed", false)
 				continue
 			}
-			err = client.CinderV2().Volumes().Delete(volume.Id)
+			err = client.CinderV2().Volumes().Delete(volume.Id, force, cascade)
 			if err == nil {
 				fmt.Printf("Requested to delete volume %s\n", idOrName)
 			} else {
@@ -183,6 +185,9 @@ func init() {
 
 	volumeCreate.Flags().Uint("size", 0, "Volume size (GB)")
 	volumeCreate.MarkFlagRequired("size")
+
+	volumeDelete.Flags().Bool("force", false, "Force delete volume.")
+	volumeDelete.Flags().Bool("cascade", false, "Remove any snapshots along with volume")
 
 	volumeRetype.Flags().StringP("migration-policy", "p", "never",
 		fmt.Sprintf("Migration policy during retype of volume,\ninvalid values: %s",

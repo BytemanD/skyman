@@ -1028,7 +1028,7 @@ func (c ServersApi) WaitStatus(serverId string, status string, interval int) (*n
 		if err != nil {
 			return server, err
 		}
-		logging.Info("server %s status: %s, taskState: %s", server.Id, server.Status, server.TaskState)
+		logging.Info("[server: %s] status: %s, taskState: %s", server.Id, server.Status, server.TaskState)
 		switch strings.ToUpper(server.Status) {
 		case "ERROR":
 			return server, fmt.Errorf("server status is error, message: %s", server.Fault.Message)

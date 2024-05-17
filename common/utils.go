@@ -60,3 +60,9 @@ func PathExtSplit(file string) (string, string) {
 func LastItems(items []interface{}, last int) []interface{} {
 	return items[max(len(items)-max(last, 0), 0):]
 }
+
+func RepeatFunc(nums int, function func()) {
+	for i := 0; i < nums; i++ {
+		function()
+	}
+}

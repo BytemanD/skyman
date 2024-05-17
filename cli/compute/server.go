@@ -331,6 +331,7 @@ var serverStart = &cobra.Command{
 		}
 	},
 }
+
 var serverReboot = &cobra.Command{
 	Use:   "reboot <server> [<server> ...]",
 	Short: "Reboot server(s)",

@@ -196,7 +196,15 @@ func (c VolumeApi) CreateAndWait(options map[string]interface{}, timeoutSeconds 
 		time.Sleep(time.Second * 2)
 	}
 }
-func (c VolumeApi) Delete(id string) (err error) {
+func (c VolumeApi) Delete(id string, force bool, cascade bool) (err error) {
+	query := url.Values{}
+	if force {
+		query.Add("force", "false")
+		query.Add("cascade", "true")
+	}
+	if cascade {
+		query.Add("cascade", "true")
+	}
 	_, err = c.CinderV2.Delete(utility.UrlJoin("volumes", id), nil)
 	return err
 }
@@ -337,7 +345,7 @@ func (c VolumeApi) Prune(query url.Values, yes bool) {
 		Func: func(i interface{}) error {
 			volume := i.(cinder.Volume)
 			logging.Debug("delete volume %s(%s)", volume.Id, volume.Name)
-			err := c.Delete(volume.Id)
+			err := c.Delete(volume.Id, true, true)
 			if err != nil {
 				return fmt.Errorf("delete volume %s failed: %v", volume.Id, err)
 			}

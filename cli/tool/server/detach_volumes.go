@@ -89,7 +89,7 @@ var detachVolumes = &cobra.Command{
 			Func: func(item interface{}) error {
 				p := item.(string)
 				logging.Debug("[volume: %s] deleting", p)
-				err := cinderClient.Volumes().Delete(p)
+				err := cinderClient.Volumes().Delete(p, true, true)
 				// TODO: wait deleted
 				if err != nil {
 					logging.Error("[volume: %s] delete failed: %v", p, err)
