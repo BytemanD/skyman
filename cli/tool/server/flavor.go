@@ -14,9 +14,9 @@ import (
 
 var FlavorCommand = &cobra.Command{Use: "flavor", Short: "flavor tools"}
 
-var flavorCopy = &cobra.Command{
-	Use:   "copy <flavor id> <new flavor name>",
-	Short: "Copy flavor",
+var flavorClone = &cobra.Command{
+	Use:   "clone <flavor id> <new flavor name>",
+	Short: "clone flavor",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.ExactArgs(2)(cmd, args); err != nil {
 			return err
@@ -100,17 +100,17 @@ var flavorCopy = &cobra.Command{
 }
 
 func init() {
-	flavorCopy.Flags().String("id", "", "New flavor ID, creates a UUID if empty")
-	flavorCopy.Flags().Uint("vcpus", 0, "Number of vcpus")
-	flavorCopy.Flags().Uint("ram", 0, "Memory size in MB")
-	flavorCopy.Flags().Uint("disk", 0, "Disk size in GB")
-	flavorCopy.Flags().Uint("swap", 0, "Swap space size in MB")
-	flavorCopy.Flags().Uint("ephemeral", 0, "Swap space size in MB")
-	flavorCopy.Flags().Float32("rxtx-factor", 0, "RX/TX factor")
-	flavorCopy.Flags().StringArray("set", []string{},
+	flavorClone.Flags().String("id", "", "New flavor ID, creates a UUID if empty")
+	flavorClone.Flags().Uint("vcpus", 0, "Number of vcpus")
+	flavorClone.Flags().Uint("ram", 0, "Memory size in MB")
+	flavorClone.Flags().Uint("disk", 0, "Disk size in GB")
+	flavorClone.Flags().Uint("swap", 0, "Swap space size in MB")
+	flavorClone.Flags().Uint("ephemeral", 0, "Swap space size in MB")
+	flavorClone.Flags().Float32("rxtx-factor", 0, "RX/TX factor")
+	flavorClone.Flags().StringArray("set", []string{},
 		"Set property to for new flavor (repeat option to set multiple properties)")
-	flavorCopy.Flags().StringArray("unset", []string{},
+	flavorClone.Flags().StringArray("unset", []string{},
 		"Unset property for new flavor (repeat option to set multiple properties)")
 
-	FlavorCommand.AddCommand(flavorCopy)
+	FlavorCommand.AddCommand(flavorClone)
 }
