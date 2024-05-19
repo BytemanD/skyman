@@ -16,7 +16,6 @@ import (
 	"github.com/BytemanD/skyman/cli/identity"
 	"github.com/BytemanD/skyman/cli/image"
 	"github.com/BytemanD/skyman/cli/networking"
-	"github.com/BytemanD/skyman/cli/prune"
 	"github.com/BytemanD/skyman/cli/storage"
 	"github.com/BytemanD/skyman/cli/templates"
 	"github.com/BytemanD/skyman/cli/tool"
@@ -157,7 +156,6 @@ func main() {
 		storage.Volume,
 		networking.Router, networking.Network, networking.Subnet, networking.Port,
 		templates.CreateCmd, templates.DeleteCmd,
-		prune.PruneCmd,
 		tool.ToolCmd,
 	)
 	rootCmd.Execute()
