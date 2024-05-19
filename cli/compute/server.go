@@ -469,21 +469,57 @@ var serverResume = &cobra.Command{
 	},
 }
 var serverResize = &cobra.Command{
-	Use:   "resize <server1> [server2 ...] <flavor>",
+	Use:   "resize <server1> [server2 ...]",
 	Short: "Resize server",
-	Args:  cobra.MinimumNArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.MinimumNArgs(1)(cmd, args); err != nil {
+			return err
+		}
+		confirm, _ := cmd.Flags().GetBool("confirm")
+		revert, _ := cmd.Flags().GetBool("revert")
+		flavorId, _ := cmd.Flags().GetString("flavor")
+
+		if confirm && revert {
+			return fmt.Errorf("flag --confirm and --revert are confict")
+		}
+		if (!confirm && !revert) && flavorId == "" {
+			return fmt.Errorf("flavor is required")
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		wait, _ := cmd.Flags().GetBool("wait")
+		confirm, _ := cmd.Flags().GetBool("confirm")
+		revert, _ := cmd.Flags().GetBool("revert")
 		client := openstack.DefaultClient()
+		flavorId, _ := cmd.Flags().GetString("flavor")
+		var (
+			flavor *nova.Flavor
+			err    error
+		)
 
-		servers := args[:len(args)-1]
-		flavorId := args[len(args)-1]
+		for _, serverId := range args {
+			if confirm {
+				if err := client.NovaV2().Servers().ResizeConfirm(serverId); err != nil {
+					utility.LogError(err, "Reqeust to confirm resize for server failed", false)
+				} else {
+					logging.Info("requested to confirm resize for server %s", serverId)
+				}
+				continue
+			}
+			if revert {
+				if err := client.NovaV2().Servers().ResizeRevert(serverId); err != nil {
+					utility.LogError(err, "Reqeust to revert resize for server failed", false)
 
-		flavor, err := client.NovaV2().Flavors().Show(flavorId)
-		if err != nil {
-			logging.Fatal("Get flavor %s failed, %v", args[1], err)
-		}
-		for _, serverId := range servers {
+				} else {
+					logging.Info("requested to revert resize for server %s", serverId)
+				}
+				continue
+			}
+			if flavorId != "" && flavor == nil {
+				flavor, err = client.NovaV2().Flavors().Show(flavorId)
+				utility.LogError(err, fmt.Sprintf("Get flavor %s failed", flavorId), true)
+			}
 			err = client.NovaV2().Servers().Resize(serverId, flavor.Id)
 			if err != nil {
 				utility.LogError(err, "Reqeust to resize server failed", false)
@@ -492,8 +528,8 @@ var serverResize = &cobra.Command{
 			}
 		}
 
-		if wait {
-			for _, serverId := range servers {
+		if flavorId != "" && wait {
+			for _, serverId := range args {
 				client.NovaV2().Servers().WaitResized(serverId, flavor.Name)
 			}
 		}
@@ -763,6 +799,9 @@ func init() {
 
 	// server resize flags
 	serverResize.Flags().BoolP("wait", "w", false, "Wait server resize completed")
+	serverResize.Flags().String("flavor", "", "Resize server to specified flavor")
+	serverResize.Flags().Bool("confirm", false, "Confirm server resize is complete")
+	serverResize.Flags().Bool("revert", false, "Restore server state before resize")
 
 	// server evacuate flags
 	serverEvacuate.Flags().Bool("force", false, "Force to not verify the scheduler if a host is provided.")

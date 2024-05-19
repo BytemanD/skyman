@@ -102,9 +102,10 @@ func (o *Openstack) NovaV2() *NovaV2 {
 		}
 		currentVersion, err := o.novaClient.GetCurrentVersion()
 		if err != nil {
-			logging.Warning("get current failed: %v", err)
+			logging.Warning("get current version failed: %v", err)
+		} else {
+			o.novaClient.MicroVersion = *currentVersion
 		}
-		o.novaClient.MicroVersion = *currentVersion
 		o.novaClient.RestClient.Headers["Openstack-Api-Version"] = o.novaClient.MicroVersion.Version
 		o.novaClient.RestClient.Headers["X-Openstack-Nova-Api-Version"] = o.novaClient.MicroVersion.Version
 		logging.Debug("current nova version: %s", o.novaClient.MicroVersion)
@@ -404,6 +405,14 @@ func (c ServersApi) Resume(id string) error {
 }
 func (c ServersApi) Resize(id string, flavorRef string) error {
 	_, err := c.doAction("resize", id, map[string]string{"flavorRef": flavorRef})
+	return err
+}
+func (c ServersApi) ResizeConfirm(id string) error {
+	_, err := c.doAction("confirmResize", id, nil)
+	return err
+}
+func (c ServersApi) ResizeRevert(id string) error {
+	_, err := c.doAction("revertResize", id, nil)
 	return err
 }
 
