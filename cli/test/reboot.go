@@ -1,4 +1,4 @@
-package server
+package test
 
 import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -26,7 +26,7 @@ func RebootServer(novaClient openstack.NovaV2, id string, hard bool) {
 
 var reboot = &cobra.Command{
 	Use:   "reboot <server> [<server> ...]",
-	Short: "reboot server",
+	Short: "test server reboot",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		hard, _ := cmd.Flags().GetBool("hard")
@@ -53,5 +53,5 @@ func init() {
 	reboot.Flags().Bool("hard", false, "Perform a hard reboot")
 	reboot.Flags().Int("times", 1, "Reboot times")
 
-	ServerCommand.AddCommand(reboot)
+	TestCmd.AddCommand(reboot)
 }

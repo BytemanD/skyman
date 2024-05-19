@@ -18,6 +18,7 @@ import (
 	"github.com/BytemanD/skyman/cli/networking"
 	"github.com/BytemanD/skyman/cli/storage"
 	"github.com/BytemanD/skyman/cli/templates"
+	"github.com/BytemanD/skyman/cli/test"
 	"github.com/BytemanD/skyman/cli/tool"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
@@ -157,6 +158,7 @@ func main() {
 		networking.Router, networking.Network, networking.Subnet, networking.Port,
 		templates.CreateCmd, templates.DeleteCmd,
 		tool.ToolCmd,
+		test.TestCmd,
 	)
 	rootCmd.Execute()
 }

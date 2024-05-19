@@ -1,4 +1,4 @@
-package server
+package test
 
 import (
 	"fmt"
@@ -119,5 +119,5 @@ func init() {
 
 	testNetQos.MarkFlagRequired("client")
 
-	ServerCommand.AddCommand(testNetQos)
+	TestCmd.AddCommand(testNetQos)
 }

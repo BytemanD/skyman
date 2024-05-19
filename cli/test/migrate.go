@@ -1,4 +1,4 @@
-package server
+package test
 
 import (
 	"time"
@@ -11,7 +11,7 @@ import (
 
 var migrate = &cobra.Command{
 	Use:   "migrate <server>",
-	Short: "migrate server",
+	Short: "test server migrate",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		serverId := args[0]
@@ -71,5 +71,5 @@ func init() {
 	migrate.Flags().Int("interval", 1, "Migrate interval")
 	migrate.Flags().Bool("live", false, "Live migrate")
 
-	ServerCommand.AddCommand(migrate)
+	TestCmd.AddCommand(migrate)
 }
