@@ -68,5 +68,7 @@ func init() {
 		"multiple actions separate by ','.\nExample: reboot,live_migrate:3")
 	serverAction.Flags().Int("action-interval", 0, "Action interval")
 
+	serverAction.MarkFlagRequired("actions")
+
 	TestCmd.AddCommand(serverAction)
 }

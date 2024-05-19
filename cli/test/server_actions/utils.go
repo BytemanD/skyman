@@ -24,6 +24,9 @@ func GetTestAction(actionName string, server *nova.Server, client *openstack.Ope
 
 func ParseServerActions(actions string) ([]string, error) {
 	serverActions := []string{}
+	if actions == "" {
+		return serverActions, nil
+	}
 	for _, action := range strings.Split(actions, ",") {
 		if !strings.Contains(action, ":") {
 			serverActions = append(serverActions, action)
