@@ -450,6 +450,16 @@ func (c ServersApi) SetName(id string, name string) error {
 	_, err := c.doAction("adminPass", id, data)
 	return err
 }
+func (c ServersApi) SetState(id string, active bool) error {
+	data := map[string]interface{}{}
+	if active {
+		data["state"] = "active"
+	} else {
+		data["state"] = "error"
+	}
+	_, err := c.doAction("os-resetState", id, data)
+	return err
+}
 func (c ServersApi) ConsoleLog(id string, length uint) (*nova.ConsoleLog, error) {
 	params := map[string]interface{}{}
 	if length != 0 {

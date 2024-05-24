@@ -268,7 +268,7 @@ var serverCreate = &cobra.Command{
 		}
 	},
 }
-var serverSet = &cobra.Command{Use: "set"}
+
 var serverDelete = &cobra.Command{
 	Use:   "delete <server1> [server2 ...]",
 	Short: "Delete server(s)",
@@ -594,17 +594,17 @@ var serverEvacuate = &cobra.Command{
 		}
 	},
 }
+
+var serverSet = &cobra.Command{Use: "set"}
+
 var serverSetPassword = &cobra.Command{
-	Use:   "password <server>",
+	Use:   "password <server> [<server> ...]",
 	Short: "set password for server",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 		user, _ := cmd.Flags().GetString("user")
-		server, err := client.NovaV2().Servers().Show(args[0])
-		if err != nil {
-			logging.Fatal("show server %s failed, %v", args[0], err)
-		}
+
 		var (
 			newPasswd []byte
 			again     []byte
@@ -624,22 +624,29 @@ var serverSetPassword = &cobra.Command{
 			}
 			logging.Fatal("Passwords do not match.")
 		}
-		err = client.NovaV2().Servers().SetPassword(server.Id, string(newPasswd), user)
-		if err != nil {
-			if httpError, ok := err.(*utility.HttpError); ok {
-				logging.Fatal("set password failed, %s, %s",
-					httpError.Reason, httpError.Message)
-			} else {
-				logging.Fatal("set password failed, %v", err)
+		for _, s := range args {
+			server, err := client.NovaV2().Servers().Found(s)
+			if err != nil {
+				utility.LogError(err, "show server failed", false)
+				continue
 			}
-		} else {
-			fmt.Println("Reqeust to set password successs")
+			err = client.NovaV2().Servers().SetPassword(server.Id, string(newPasswd), user)
+			if err != nil {
+				if httpError, ok := err.(*utility.HttpError); ok {
+					logging.Fatal("set password failed, %s, %s",
+						httpError.Reason, httpError.Message)
+				} else {
+					logging.Fatal("set password failed, %v", err)
+				}
+			} else {
+				fmt.Println("Reqeust to set password successs")
+			}
 		}
 	},
 }
 var serverSetName = &cobra.Command{
 	Use:   "name <server> <new name>",
-	Short: "set name for server",
+	Short: "Set name for server",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		idOrName := args[0]
@@ -649,6 +656,24 @@ var serverSetName = &cobra.Command{
 		utility.LogError(err, "get server failed", true)
 		err = client.NovaV2().Servers().SetName(server.Id, name)
 		utility.LogError(err, "set server name failed", true)
+	},
+}
+var serverSetState = &cobra.Command{
+	Use:   "state <server> [<server> ...]",
+	Short: "Set state for server(s)",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := openstack.DefaultClient()
+		active, _ := cmd.Flags().GetBool("active")
+		for _, server := range args {
+			server, err := client.NovaV2().Servers().Found(server)
+			if err != nil {
+				utility.LogError(err, "show server failed", false)
+				continue
+			}
+			err = client.NovaV2().Servers().SetState(server.Id, active)
+			utility.LogError(err, "set server state failed", false)
+		}
 	},
 }
 var serverRegion = &cobra.Command{Use: "region"}
@@ -825,11 +850,12 @@ func init() {
 	serverMigration.AddCommand(serverMigrationList)
 
 	serverSetPassword.Flags().String("user", "", "User name")
+	serverSetState.Flags().Bool("active", false,
+		"Request the server be reset to 'active' state instead of'error' state")
 
 	common.RegistryLongFlag(serverList, serverMigrationList)
 
-	serverSet.AddCommand(serverSetPassword)
-	serverSet.AddCommand(serverSetName)
+	serverSet.AddCommand(serverSetPassword, serverSetName, serverSetState)
 
 	Server.AddCommand(
 		serverList, serverShow, serverCreate, serverDelete,
