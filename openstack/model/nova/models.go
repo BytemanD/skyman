@@ -154,6 +154,9 @@ func (server Server) InResize() bool {
 func (server Server) IsActive() bool {
 	return server.Status == "ACTIVE"
 }
+func (server Server) IsShelved() bool {
+	return server.Status == "SHELVED" || server.Status == "SHELVED_OFFLOADED"
+}
 func (server Server) IsError() bool {
 	return strings.ToUpper(server.Status) == "ERROR"
 }

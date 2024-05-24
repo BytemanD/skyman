@@ -9,15 +9,37 @@ import (
 	"github.com/BytemanD/skyman/openstack/model/nova"
 )
 
+var (
+	ACTION_REBOOT          = "reboot"
+	ACTION_HARD_REBOOT     = "hard_reboot"
+	ACTION_LIVE_MIGRATE    = "live_migrate"
+	ACTION_SHELVE          = "shelve"
+	ACTION_UNSHELVE        = "unshelve"
+	ACTION_TOGGLE_UNSHELVE = "toggle_shelve"
+)
+
+func GetActions() []string {
+	return []string{
+		ACTION_REBOOT, ACTION_HARD_REBOOT,
+		ACTION_LIVE_MIGRATE,
+		ACTION_SHELVE, ACTION_UNSHELVE, ACTION_TOGGLE_UNSHELVE,
+	}
+}
 func GetTestAction(actionName string, server *nova.Server, client *openstack.Openstack) (ServerAction, error) {
 	testBase := ServerActionTest{Server: server, Client: client}
 	switch actionName {
-	case "reboot":
+	case ACTION_REBOOT:
 		return ServerReboot{ServerActionTest: testBase}, nil
-	case "hard_reboot":
+	case ACTION_HARD_REBOOT:
 		return ServerHardReboot{ServerActionTest: testBase}, nil
-	case "live_migrate":
+	case ACTION_LIVE_MIGRATE:
 		return ServerLiveMigrate{ServerActionTest: testBase}, nil
+	case ACTION_SHELVE:
+		return ServerShelve{ServerActionTest: testBase}, nil
+	case ACTION_UNSHELVE:
+		return ServerUnshelve{ServerActionTest: testBase}, nil
+	case ACTION_TOGGLE_UNSHELVE:
+		return ServerToggleShelve{ServerActionTest: testBase}, nil
 	}
 	return nil, fmt.Errorf("action '%s' not found", actionName)
 }

@@ -1,6 +1,7 @@
 package test
 
 import (
+	"strings"
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -65,7 +66,9 @@ var serverAction = &cobra.Command{
 
 func init() {
 	serverAction.Flags().String("actions", "", "Test actions\nFormat: <action>[:count], "+
-		"multiple actions separate by ','.\nExample: reboot,live_migrate:3")
+		"multiple actions separate by ','.\nExample: reboot,live_migrate:3\n"+
+		"Actions: "+strings.Join(server_actions.GetActions(), ", "),
+	)
 	serverAction.Flags().Int("action-interval", 0, "Action interval")
 
 	serverAction.MarkFlagRequired("actions")

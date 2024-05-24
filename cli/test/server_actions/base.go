@@ -29,20 +29,25 @@ func (t *ServerActionTest) RefreshServer() error {
 }
 
 func (t *ServerActionTest) WaitServerTaskFinished(showProgress bool) error {
+	interval, maxInterval := 1, 10
+
 	for i := 0; i <= 60; i++ {
 		if err := t.RefreshServer(); err != nil {
 			return err
 		}
 		progress := ""
 		if showProgress {
-			progress = fmt.Sprintf("progress: %d", int(t.Server.Progress))
+			progress = fmt.Sprintf(", progress: %d", int(t.Server.Progress))
 		}
-		logging.Info("[%s] vmState: %s, powerState: %s taskState: %s %s",
+		logging.Info("[%s] vmState=%s, powerState=%s, taskState=%s %s",
 			t.Server.Id, t.Server.VmState, t.Server.GetPowerState(), t.Server.TaskState, progress)
 		if t.Server.TaskState == "" {
 			return nil
 		}
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Second * time.Duration(interval))
+		if interval < maxInterval {
+			interval += 1
+		}
 	}
 	return fmt.Errorf("server task state is %s", t.Server.TaskState)
 }
