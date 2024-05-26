@@ -865,6 +865,5 @@ func init() {
 		serverEvacuate, serverMigrate,
 		serverMigration,
 		serverRegion,
-		serverInspect, serverFound,
 	)
 }

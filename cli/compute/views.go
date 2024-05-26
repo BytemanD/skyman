@@ -89,6 +89,9 @@ func printServer(server nova.Server) {
 	}
 	common.PrintPrettyItemTable(pt)
 }
+func PrintServer(server nova.Server) {
+	printServer(server)
+}
 
 func PrintFlavor(server nova.Flavor) {
 	pt := common.PrettyItemTable{

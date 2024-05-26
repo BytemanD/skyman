@@ -1,18 +1,23 @@
-package openstack
+package server
 
 import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"html/template"
 	"net/url"
 	"strings"
+	"text/template"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 	markdown "github.com/MichaelMure/go-term-markdown"
+	"github.com/spf13/cobra"
 )
 
 type ServerInspect struct {
@@ -65,6 +70,7 @@ func (serverInspect *ServerInspect) Print() {
   - **IP Address**: {{ range $index, $ip := $interface.FixedIps }} {{$ip.IpAddress}} {{end}}
   - **Binding Type**: vnic_type:{{ getPortVnicType $interface.PortId }} vif_type:{{ getPortVifType $interface.PortId }}
   - **Binding Detail**: {{ getPortBindingDetail $interface.PortId }}
+  - **Binding Profile**: {{ getPortBindingProfile $interface.PortId }}
 {{end}}
 
 ## 磁盘
@@ -133,6 +139,13 @@ func (serverInspect *ServerInspect) Print() {
 				return "-"
 			}
 		},
+		"getPortBindingProfile": func(portId string) string {
+			if port, ok := serverInspect.InterfaceDetail[portId]; ok {
+				return port.MarshalBindingProfile()
+			} else {
+				return "-"
+			}
+		},
 	})
 	tmpl, _ = tmpl.Parse(source)
 	tmpl.Execute(bufferWriter, serverInspect)
@@ -141,7 +154,7 @@ func (serverInspect *ServerInspect) Print() {
 	fmt.Println(string(result))
 }
 
-func (client Openstack) ServerInspect(serverId string) (*ServerInspect, error) {
+func inspect(client *openstack.Openstack, serverId string) (*ServerInspect, error) {
 	server, err := client.NovaV2().Servers().Show(serverId)
 	if err != nil {
 		return nil, err
@@ -182,4 +195,41 @@ func (client Openstack) ServerInspect(serverId string) (*ServerInspect, error) {
 		serverInspect.VolumeDetail[volume.VolumeId] = *vol
 	}
 	return &serverInspect, nil
+}
+
+var serverInspect = &cobra.Command{
+	Use:   "inspect <id>",
+	Short: "inspect server ",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := openstack.DefaultClient()
+
+		serverId := args[0]
+		format, _ := cmd.Flags().GetString("format")
+
+		serverInspect, err := inspect(client, serverId)
+		utility.LogError(err, "inspect sever faield", true)
+
+		switch format {
+		case "json":
+			output, err := stringutils.JsonDumpsIndent(serverInspect)
+			if err != nil {
+				logging.Fatal("print json failed, %s", err)
+			}
+			fmt.Println(output)
+		case "yaml":
+			output, err := common.GetYaml(serverInspect)
+			if err != nil {
+				logging.Fatal("print json failed, %s", err)
+			}
+			fmt.Println(output)
+		default:
+			serverInspect.Print()
+		}
+	},
+}
+
+func init() {
+
+	ServerCommand.AddCommand(serverInspect)
 }
