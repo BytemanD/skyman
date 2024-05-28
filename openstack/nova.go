@@ -512,12 +512,14 @@ func (c ServersApi) Migrate(id string, host string) error {
 	if host != "" {
 		server, err := c.Show(id)
 		if err != nil {
-			return nil
+			return err
 		}
 		if server.Host == host {
 			return fmt.Errorf("server %s host is %s", id, server.Host)
 		}
 		data["host"] = host
+	} else {
+		data["host"] = nil
 	}
 	_, err := c.doAction("migrate", id, data)
 	return err
@@ -527,13 +529,15 @@ func (c ServersApi) LiveMigrate(id string, blockMigrate interface{}, host string
 	if host != "" {
 		server, err := c.Show(id)
 		if err != nil {
-			return nil
+			return err
 		}
 		if server.Host == host {
 			return fmt.Errorf("server %s host is %s", id, server.Host)
 		}
+		data["host"] = host
+	} else {
+		data["host"] = nil
 	}
-	data["host"] = nil
 	_, err := c.doAction("os-migrateLive", id, data)
 	return err
 }
