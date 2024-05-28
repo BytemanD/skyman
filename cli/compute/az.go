@@ -3,6 +3,7 @@ package compute
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/BytemanD/skyman/cli/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
@@ -21,15 +22,15 @@ var azList = &cobra.Command{
 		utility.LogError(err, "list availability zones failed", true)
 
 		if tree {
-			printAZInfoTree(azInfo)
+			views.PrintAZInfoTree(azInfo)
 		} else {
 			switch common.CONF.Format {
 			case common.DEFAULT, common.FORMAT_TABLE, common.FORMAT_TABLE_LIGHT:
-				printAZInfo(azInfo)
+				views.PrintAZInfo(azInfo)
 			case common.JSON:
-				printAzInfoJson(azInfo)
+				views.PrintAzInfoJson(azInfo)
 			case common.YAML:
-				printAzInfoYaml(azInfo)
+				views.PrintAzInfoYaml(azInfo)
 			}
 		}
 	},

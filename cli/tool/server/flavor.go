@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli/compute"
+	"github.com/BytemanD/skyman/cli/views"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
@@ -95,7 +95,7 @@ var flavorClone = &cobra.Command{
 
 		newFlavor, err = novaClient.Flavors().ShowWithExtraSpecs(newFlavor.Id)
 		utility.LogError(err, "show new flavor", true)
-		compute.PrintFlavor(*newFlavor)
+		views.PrintFlavor(*newFlavor)
 	},
 }
 

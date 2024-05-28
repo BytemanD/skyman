@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/cli/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
@@ -104,7 +105,7 @@ var flavorShow = &cobra.Command{
 		idOrName := args[0]
 		flavor, err := client.NovaV2().Flavors().ShowWithExtraSpecs(idOrName)
 		utility.LogError(err, "Show flavor failed", true)
-		PrintFlavor(*flavor)
+		views.PrintFlavor(*flavor)
 	},
 }
 var flavorDelete = &cobra.Command{
@@ -191,7 +192,7 @@ var flavorCreate = &cobra.Command{
 			}
 			flavor.ExtraSpecs = createdExtraSpecs
 		}
-		PrintFlavor(*flavor)
+		views.PrintFlavor(*flavor)
 	},
 }
 var flavorSet = &cobra.Command{

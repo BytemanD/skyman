@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/BytemanD/skyman/cli/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
@@ -67,7 +68,7 @@ var csEnable = &cobra.Command{
 			fmt.Printf("Set service diabled failed: %v", err)
 			os.Exit(1)
 		}
-		printServiceTable(*service)
+		views.PrintServiceTable(*service)
 	},
 }
 var csDisable = &cobra.Command{
@@ -82,7 +83,7 @@ var csDisable = &cobra.Command{
 			fmt.Printf("Set service diabled failed: %v", err)
 			os.Exit(1)
 		}
-		printServiceTable(*service)
+		views.PrintServiceTable(*service)
 	},
 }
 var csUp = &cobra.Command{
@@ -96,7 +97,7 @@ var csUp = &cobra.Command{
 			fmt.Printf("Set service diabled failed: %v", err)
 			os.Exit(1)
 		}
-		printServiceTable(*service)
+		views.PrintServiceTable(*service)
 	},
 }
 var csDown = &cobra.Command{
@@ -110,7 +111,7 @@ var csDown = &cobra.Command{
 			fmt.Printf("Set service diabled failed: %v", err)
 			os.Exit(1)
 		}
-		printServiceTable(*service)
+		views.PrintServiceTable(*service)
 	},
 }
 var csDelete = &cobra.Command{

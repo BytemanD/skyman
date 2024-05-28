@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/cli/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
@@ -154,7 +155,7 @@ var serverShow = &cobra.Command{
 		if image, err := c.GlanceV2().Images().Show(server.Image.Id); err == nil {
 			server.Image.Name = image.Name
 		}
-		printServer(*server)
+		views.PrintServer(*server)
 	},
 }
 var serverCreate = &cobra.Command{
@@ -257,7 +258,7 @@ var serverCreate = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		printServer(*server)
+		views.PrintServer(*server)
 		if wait {
 			_, err := client.NovaV2().Servers().WaitStatus(server.Id, "ACTIVE", 5)
 			if err != nil {
