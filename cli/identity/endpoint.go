@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/easygo/pkg/syncutils"
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
@@ -85,18 +84,12 @@ var endpointList = &cobra.Command{
 			}
 			serviceIds = append(serviceIds, endpoint.ServiceId)
 		}
-		task := syncutils.TaskGroup{
-			Items: serviceIds,
-			Func: func(item interface{}) error {
-				serviceId := item.(string)
-				service, err := c.Services().Show(serviceId)
-				if err == nil {
-					serviceMap[serviceId] = *service
-				}
-				return nil
-			},
+		services, err := c.Services().List(nil)
+		utility.LogError(err, "get services failed", true)
+		for _, service := range services {
+			serviceMap[service.Id] = service
 		}
-		task.Start()
+
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "RegionId", Sort: true},
@@ -104,9 +97,10 @@ var endpointList = &cobra.Command{
 					p, _ := item.(keystone.Endpoint)
 					if _, ok := serviceMap[p.ServiceId]; !ok {
 						service, _ := c.Services().Show(p.ServiceId)
-						serviceMap[p.ServiceId] = *service
+						return service.Display()
+					} else {
+						return p.ServiceId
 					}
-					return serviceMap[p.ServiceId].Display()
 				}},
 				{Name: "Interface"}, {Name: "Url"},
 			},
