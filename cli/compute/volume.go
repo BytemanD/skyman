@@ -9,6 +9,7 @@ import (
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var Volume = &cobra.Command{Use: "volume", Short: "Update server volume"}
@@ -46,10 +47,7 @@ var volumeAttach = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 		attachment, err := client.NovaV2().Servers().AddVolume(args[0], args[1])
-		if err != nil {
-			fmt.Printf("Attach volume %s to server failed: %v", args[1], err)
-			os.Exit(1)
-		}
+		utility.LogError(err, "Attach volume to server failed", true)
 		printVolumeAttachments([]nova.VolumeAttachment{*attachment})
 	},
 }
@@ -60,10 +58,7 @@ var volumeDetach = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 		err := client.NovaV2().Servers().DeleteVolume(args[0], args[1])
-		if err != nil {
-			fmt.Printf("Detach volume %s from server failed: %v", args[1], err)
-			os.Exit(1)
-		}
+		utility.LogError(err, "Detach volume from server failed", true)
 	},
 }
 

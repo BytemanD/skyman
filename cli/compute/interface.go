@@ -79,10 +79,7 @@ var interfaceDetach = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		err := client.NovaV2().Servers().DeleteInterface(args[0], args[1])
-		if err != nil {
-			fmt.Printf("Detach port %s from server failed: %v", args[1], err)
-			os.Exit(1)
-		}
+		utility.LogError(err, "Detach port from server failed", true)
 	},
 }
 
