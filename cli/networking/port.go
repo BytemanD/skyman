@@ -76,6 +76,7 @@ var portList = &cobra.Command{
 			LongColumns: []common.Column{
 				{Name: "DeviceId"},
 				{Name: "TenantId"},
+				{Name: "BindingProfile"},
 				{Name: "SecurityGroups", Slot: func(item interface{}) interface{} {
 					p, _ := item.(neutron.Port)
 					return strings.Join(p.SecurityGroups, "\n")
