@@ -70,6 +70,7 @@ type Test struct {
 	Networks         []string `yaml:"networks"`
 	VolumeType       string   `yaml:"volumeType"`
 	VolumeSize       int      `yaml:"volumeSize"`
+	Actions          []string `yaml:"volumeType"`
 }
 
 func LoadConfig(configFile string) error {

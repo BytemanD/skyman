@@ -100,11 +100,14 @@ var serverAction = &cobra.Command{
 		actions, _ := cmd.Flags().GetString("actions")
 		actionInterval, _ := cmd.Flags().GetInt("action-interval")
 		// 检查 actions
+		if actions == "" {
+			actions = strings.Join(common.CONF.Test.Actions, ",")
+		}
 		serverActions, err := server_actions.ParseServerActions(actions)
 		if err != nil {
-			logging.Error("parse server actions failed: %s", err)
-			return
+			utility.LogError(err, "parse server actions failed", true)
 		}
+		logging.Info("test actions: %s", strings.Join(serverActions, ", "))
 		client := openstack.DefaultClient()
 		preTest(client)
 		var (
