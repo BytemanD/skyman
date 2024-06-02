@@ -38,6 +38,7 @@ func getServerBootOption() nova.ServerOpt {
 	} else {
 		logging.Warning("boot without network")
 	}
+
 	if common.CONF.Test.BootFromVolume {
 		opt.BlockDeviceMappingV2 = []nova.BlockDeviceMappingV2{
 			{

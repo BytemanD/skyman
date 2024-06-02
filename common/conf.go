@@ -105,7 +105,7 @@ func LoadConfig(configFile string) error {
 		CONF.Test.VolumeSize = 10
 	}
 	if CONF.Test.BootVolumeSize <= 0 {
-		CONF.Test.VolumeSize = 50
+		CONF.Test.BootVolumeSize = 50
 	}
 
 	return nil
