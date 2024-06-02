@@ -2,18 +2,19 @@ package test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/arrayutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/skyman/cli/test/server_actions"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func runActionTest(action server_actions.ServerAction) error {
@@ -24,9 +25,9 @@ func runActionTest(action server_actions.ServerAction) error {
 	return nil
 }
 
-func getServerBootOption() nova.ServerOpt {
+func getServerBootOption(testId int) nova.ServerOpt {
 	opt := nova.ServerOpt{
-		Name:             fmt.Sprintf("skyman-server-%v", time.Now().Format("20060102-150405")),
+		Name:             fmt.Sprintf("skyman-server-%d-%v", testId, time.Now().Format("20060102-150405")),
 		Flavor:           server_actions.TEST_FLAVORS[0].Id,
 		Image:            common.CONF.Test.Images[0],
 		AvailabilityZone: common.CONF.Test.AvailabilityZone,
@@ -55,8 +56,8 @@ func getServerBootOption() nova.ServerOpt {
 	}
 	return opt
 }
-func createDefaultServer(client *openstack.Openstack) (*nova.Server, error) {
-	bootOption := getServerBootOption()
+func createDefaultServer(client *openstack.Openstack, testId int) (*nova.Server, error) {
+	bootOption := getServerBootOption(testId)
 	server, err := client.NovaV2().Servers().Create(bootOption)
 	if err != nil {
 		return nil, err
@@ -75,22 +76,79 @@ func createDefaultServer(client *openstack.Openstack) (*nova.Server, error) {
 }
 
 func preTest(client *openstack.Openstack) {
-	logging.Info("refresh flavors")
+	logging.Info("check flavors ...")
 	for _, flavorId := range common.CONF.Test.Flavors {
 		flavor, err := client.NovaV2().Flavors().Found(flavorId)
 		utility.LogError(err, fmt.Sprintf("get flavor %s failed", flavorId), true)
 		server_actions.TEST_FLAVORS = append(server_actions.TEST_FLAVORS, *flavor)
 	}
-	logging.Info("refresh images")
+	logging.Info("check images ...")
 	for _, idOrName := range common.CONF.Test.Images {
 		_, err := client.GlanceV2().Images().Found(idOrName)
 		utility.LogError(err, fmt.Sprintf("get image %s failed", idOrName), true)
 	}
-	logging.Info("refresh networks")
+	logging.Info("check networks ...")
 	for _, idOrName := range common.CONF.Test.Networks {
 		_, err := client.NeutronV2().Networks().Show(idOrName)
 		utility.LogError(err, fmt.Sprintf("get network %s failed", idOrName), true)
 	}
+}
+
+func runTest(client *openstack.Openstack, serverId string, testId int, actionInterval int, serverActions []string) error {
+	var (
+		server     *nova.Server
+		err        error
+		boot       bool
+		testFailed bool
+	)
+	success, failed, skip := 0, 0, 0
+	if serverId != "" {
+		server, err = client.NovaV2().Servers().Found(serverId)
+		utility.LogError(err, "get server failed", true)
+		logging.Info("use server: %s(%s)", server.Id, server.Name)
+	} else {
+		if len(server_actions.TEST_FLAVORS) == 0 {
+			logging.Error("test flavors is empty")
+			return fmt.Errorf("test flavors is empty")
+		}
+		if len(common.CONF.Test.Images) == 0 {
+			return fmt.Errorf("test images is empty")
+		}
+		server, err = createDefaultServer(client, testId)
+		utility.LogError(err, "create server failed", true)
+		boot = true
+	}
+	for i, actionName := range serverActions {
+		action, err := server_actions.GetTestAction(actionName, server, client)
+		if err != nil {
+			logging.Error("[%s] get action failed: %s", server.Id, err)
+			skip++
+			continue
+		}
+		logging.Info("[%s] %s", server.Id, utility.BlueString("==== test "+actionName+" start ===="))
+		err = runActionTest(action)
+		if err != nil {
+			failed++
+			testFailed = true
+			logging.Error("[%s] test action '%s' %s: %s", server.Id, actionName,
+				utility.RedString("failed"), err)
+		} else {
+			success++
+			logging.Info("[%s] test action '%s' %s", server.Id, actionName, utility.GreenString("success"))
+		}
+		logging.Info("[%s] %s", server.Id, utility.BlueString("==== test "+actionName+" finished ===="))
+		if i < len(serverActions)-1 {
+			time.Sleep(time.Second * time.Duration(actionInterval))
+		}
+	}
+	if boot && (!testFailed || common.CONF.Test.DeleteIfError) {
+		logging.Info("[%s] deleting", server.Id)
+		client.NovaV2().Servers().Delete(server.Id)
+		client.NovaV2().Servers().WaitDeleted(server.Id)
+	}
+	logging.Info("[%s] total actions: %d, success: %d, failed: %d, skip: %d",
+		server.Id, len(serverActions), success, failed, skip)
+	return nil
 }
 
 var serverAction = &cobra.Command{
@@ -100,6 +158,8 @@ var serverAction = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		actions, _ := cmd.Flags().GetString("actions")
 		actionInterval, _ := cmd.Flags().GetInt("action-interval")
+		// tasks, _ := cmd.Flags().GetInt("tasks")
+		// workers, _ := cmd.Flags().GetInt("workers")
 		// 检查 actions
 		if actions == "" {
 			actions = strings.Join(common.CONF.Test.Actions, ",")
@@ -109,62 +169,23 @@ var serverAction = &cobra.Command{
 			utility.LogError(err, "parse server actions failed", true)
 		}
 		logging.Info("test actions: %s", strings.Join(serverActions, ", "))
+
 		client := openstack.DefaultClient()
 		preTest(client)
-		var (
-			server *nova.Server
-			boot   bool
-		)
 		if len(args) == 1 {
-			server, err = client.NovaV2().Servers().Found(args[0])
-			utility.LogError(err, "get server failed", true)
-			logging.Info("use server: %s(%s)", server.Id, server.Name)
+			runTest(client, args[0], actionInterval, 1, serverActions)
 		} else {
-			if len(server_actions.TEST_FLAVORS) == 0 {
-				logging.Info("test flavors is empty")
-				os.Exit(1)
+			logging.Info("tasks: %d, workers: %d", common.CONF.Test.Tasks, common.CONF.Test.Workers)
+			taskGroup := syncutils.TaskGroup{
+				Items:     arrayutils.Range(1, common.CONF.Test.Tasks+1),
+				MaxWorker: common.CONF.Test.Workers,
+				Func: func(item interface{}) error {
+					runTest(client, "", item.(int), actionInterval, serverActions)
+					return nil
+				},
 			}
-			if len(common.CONF.Test.Images) == 0 {
-				logging.Info("test images is empty")
-				os.Exit(1)
-			}
-			server, err = createDefaultServer(client)
-			utility.LogError(err, "create server failed", true)
-			boot = true
+			taskGroup.Start()
 		}
-
-		success, failed, skip := 0, 0, 0
-		testFailed := false
-		for i, actionName := range serverActions {
-			action, err := server_actions.GetTestAction(actionName, server, client)
-			if err != nil {
-				logging.Error("[%s] get action failed: %s", server.Id, err)
-				skip++
-				continue
-			}
-			logging.Info("[%s] %s", server.Id, utility.BlueString("==== test "+actionName+" start ===="))
-			err = runActionTest(action)
-			if err != nil {
-				failed++
-				testFailed = true
-				logging.Error("[%s] test action '%s' %s: %s", server.Id, actionName,
-					utility.RedString("failed"), err)
-			} else {
-				success++
-				logging.Info("[%s] test action '%s' %s", server.Id, actionName, utility.GreenString("success"))
-			}
-			logging.Info("[%s] %s", server.Id, utility.BlueString("==== test "+actionName+" finished ===="))
-			if i < len(serverActions)-1 {
-				time.Sleep(time.Second * time.Duration(actionInterval))
-			}
-		}
-		if boot && (!testFailed || common.CONF.Test.DeleteIfError) {
-			logging.Info("[%s] deleting", server.Id)
-			client.NovaV2().Servers().Delete(server.Id)
-			client.NovaV2().Servers().WaitDeleted(server.Id)
-		}
-		logging.Info("[%s] total: %d, success: %d, failed: %d, skip: %d",
-			server.Id, len(serverActions), success, failed, skip)
 	},
 }
 
@@ -179,8 +200,11 @@ func init() {
 	)
 
 	serverAction.Flags().Int("action-interval", 0, "Action interval")
+	serverAction.Flags().Int("tasks", 0, "The num of task")
+	serverAction.Flags().Int("workers", 0, "The num of worker")
 
-	// serverAction.MarkFlagRequired("actions")
+	viper.BindPFlag("test.tasks", serverAction.Flags().Lookup("tasks"))
+	viper.BindPFlag("test.workers", serverAction.Flags().Lookup("workers"))
 
 	TestCmd.AddCommand(serverAction)
 }

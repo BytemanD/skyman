@@ -61,6 +61,8 @@ type Iperf struct {
 	ServerOptions string `yaml:"serverOptions"`
 }
 type Test struct {
+	Tasks            int      `yaml:"tasks"`
+	Workers          int      `yaml:"workers"`
 	DeleteIfError    bool     `yaml:"deleteIfError"`
 	AvailabilityZone string   `yaml:"availabilityZone"`
 	BootFromVolume   bool     `yaml:"bootFromVolume"`
@@ -106,6 +108,12 @@ func LoadConfig(configFile string) error {
 	}
 	if CONF.Test.BootVolumeSize <= 0 {
 		CONF.Test.BootVolumeSize = 50
+	}
+	if CONF.Test.BootVolumeSize <= 0 {
+		CONF.Test.BootVolumeSize = 50
+	}
+	if CONF.Test.Tasks <= 0 {
+		CONF.Test.Tasks = 1
 	}
 
 	return nil
