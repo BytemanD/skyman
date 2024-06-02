@@ -71,7 +71,7 @@ func createDefaultServer(client *openstack.Openstack, testId int) (*nova.Server,
 	if err != nil {
 		return nil, err
 	}
-	logging.Info("[%s] create %s", server.Id, utility.GreenString("success"))
+	logging.Info("[%s] create success", server.Id)
 	return server, nil
 }
 
@@ -115,7 +115,9 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 			return fmt.Errorf("test images is empty")
 		}
 		server, err = createDefaultServer(client, testId)
-		utility.LogError(err, "create server failed", true)
+		if err != nil {
+			return fmt.Errorf("create server failed: %s", err)
+		}
 		boot = true
 	}
 	for i, actionName := range serverActions {
@@ -130,11 +132,10 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		if err != nil {
 			failed++
 			testFailed = true
-			logging.Error("[%s] test action '%s' %s: %s", server.Id, actionName,
-				utility.RedString("failed"), err)
+			logging.Error("[%s] test action '%s' failed: %s", server.Id, actionName, err)
 		} else {
 			success++
-			logging.Info("[%s] test action '%s' %s", server.Id, actionName, utility.GreenString("success"))
+			logging.Success("[%s] test action '%s' success", server.Id, actionName)
 		}
 		logging.Info("[%s] %s", server.Id, utility.BlueString("==== test "+actionName+" finished ===="))
 		if i < len(serverActions)-1 {
@@ -146,8 +147,17 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		client.NovaV2().Servers().Delete(server.Id)
 		client.NovaV2().Servers().WaitDeleted(server.Id)
 	}
-	logging.Info("[%s] total actions: %d, success: %d, failed: %d, skip: %d",
-		server.Id, len(serverActions), success, failed, skip)
+	if len(serverActions) == success {
+		logging.Success("[%s] total actions: %d, success: %d, failed: %d, skip: %d",
+			server.Id, len(serverActions), success, failed, skip)
+	} else if failed > 0 {
+		logging.Error("[%s] total actions: %d, success: %d, failed: %d, skip: %d",
+			server.Id, len(serverActions), success, failed, skip)
+	} else {
+		logging.Warning("[%s] total actions: %d, success: %d, failed: %d, skip: %d",
+			server.Id, len(serverActions), success, failed, skip)
+	}
+
 	return nil
 }
 
@@ -158,8 +168,6 @@ var serverAction = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		actions, _ := cmd.Flags().GetString("actions")
 		actionInterval, _ := cmd.Flags().GetInt("action-interval")
-		// tasks, _ := cmd.Flags().GetInt("tasks")
-		// workers, _ := cmd.Flags().GetInt("workers")
 		// 检查 actions
 		if actions == "" {
 			actions = strings.Join(common.CONF.Test.Actions, ",")
@@ -180,7 +188,11 @@ var serverAction = &cobra.Command{
 				Items:     arrayutils.Range(1, common.CONF.Test.Tasks+1),
 				MaxWorker: common.CONF.Test.Workers,
 				Func: func(item interface{}) error {
-					runTest(client, "", item.(int), actionInterval, serverActions)
+					err := runTest(client, "", item.(int), actionInterval, serverActions)
+					if err != nil {
+						logging.Error("test failed: %v", err)
+						return nil
+					}
 					return nil
 				},
 			}

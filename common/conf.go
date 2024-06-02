@@ -26,11 +26,12 @@ var (
 )
 
 type ConfGroup struct {
-	Debug       bool   `yaml:"debug"`
-	Format      string `yaml:"format"`
-	Language    string `yaml:"language"`
-	HttpTimeout int    `yaml:"httpTimeout"`
-	LogFile     string `yaml:"logFile"`
+	Debug          bool   `yaml:"debug"`
+	Format         string `yaml:"format"`
+	Language       string `yaml:"language"`
+	HttpTimeout    int    `yaml:"httpTimeout"`
+	LogFile        string `yaml:"logFile"`
+	EnableLogColor bool   `yaml:"enableLogColor"`
 
 	Auth  Auth  `yaml:"auth"`
 	Iperf Iperf `yaml:"iperf"`

@@ -24,3 +24,6 @@ other = '测试云主机网络QOS'
 
 [logFile]
 other = '日志文件'
+
+[enableLogColor]
+other = '启动日志颜色'

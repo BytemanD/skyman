@@ -43,6 +43,7 @@ func init() {
 			Other: "Test Server Network QOS",
 		},
 		{ID: "logFile", Other: "log file"},
+		{ID: "enableLogColor", Other: "enable log color"},
 	}
 	defaultMessageMap = map[string]i18n.Message{}
 

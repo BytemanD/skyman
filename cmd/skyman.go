@@ -129,13 +129,17 @@ func main() {
 			if common.CONF.Debug {
 				logLevel = logging.DEBUG
 			}
-			logging.BasicConfig(logging.LogConfig{Level: logLevel, Output: common.CONF.LogFile})
+			if common.CONF.Debug {
+				logLevel = logging.DEBUG
+			}
+			logging.BasicConfig(logging.LogConfig{Level: logLevel, Output: common.CONF.LogFile, EnableColor: common.CONF.EnableLogColor})
 			logging.Debug("load config file from %s", viper.ConfigFileUsed())
 		},
 	}
 
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, i18n.T("showDebug"))
 	rootCmd.PersistentFlags().String("log-file", "", i18n.T("logFile"))
+	rootCmd.PersistentFlags().Bool("log-color", false, i18n.T("enableLogColor"))
 	rootCmd.PersistentFlags().StringP("conf", "c", os.Getenv("SKYMAN_CONF_FILE"),
 		i18n.T("thePathOfConfigFile"))
 	rootCmd.PersistentFlags().StringP("format", "f", "table",
@@ -144,6 +148,7 @@ func main() {
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	viper.BindPFlag("format", rootCmd.PersistentFlags().Lookup("format"))
 	viper.BindPFlag("logFile", rootCmd.PersistentFlags().Lookup("log-file"))
+	viper.BindPFlag("enableLogColor", rootCmd.PersistentFlags().Lookup("log-color"))
 
 	rootCmd.AddCommand(
 		versionCmd,

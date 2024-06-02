@@ -24,17 +24,17 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	golang.org/x/crypto v0.17.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
-	golang.org/x/term v0.16.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/term v0.17.0 // indirect
 	golang.org/x/text v0.14.0
 	gopkg.in/ini.v1 v1.67.0 // indirect
 )
 
 require (
-	github.com/BytemanD/easygo/pkg v0.0.8
+	github.com/BytemanD/easygo/pkg v0.0.9
 	github.com/MichaelMure/go-term-markdown v0.1.4
 	github.com/cheggaaa/pb/v3 v3.1.5
-	github.com/jedib0t/go-pretty/v6 v6.5.6
+	github.com/jedib0t/go-pretty/v6 v6.5.8
 	github.com/nicksnyder/go-i18n/v2 v2.2.1
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/spf13/viper v1.16.0
@@ -49,7 +49,7 @@ require (
 	github.com/dlclark/regexp2 v1.1.6 // indirect
 	github.com/eliukblau/pixterm/pkg/ansimage v0.0.0-20191210081756-9fb6cf8c2f75 // indirect
 	github.com/fatih/color v1.15.0 // direct
-	github.com/gomarkdown/markdown v0.0.0-20191123064959-2c17d62f5098 // indirect
+	github.com/gomarkdown/markdown v0.0.0-20230922112808-5421fefb8386 // indirect
 	github.com/kyokomi/emoji/v2 v2.2.8 // indirect
 	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

@@ -1075,7 +1075,7 @@ func (c ServersApi) WaitBooted(id string) (*nova.Server, error) {
 		}
 
 		if server.IsError() {
-			return server, fmt.Errorf("create failed, server is error")
+			return server, fmt.Errorf("server %s is error", server.Id)
 		}
 		if server.IsActive() {
 			return server, err

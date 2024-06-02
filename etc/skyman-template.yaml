@@ -3,6 +3,7 @@ debug: false
 format: table
 language: en_US
 # httpTimeout: 0
+enableLogColor: false
 
 # 认证信息
 auth:
