@@ -109,12 +109,16 @@ var volumeCreate = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		size, _ := cmd.Flags().GetUint("size")
+		volumeType, _ := cmd.Flags().GetString("type")
 
 		params := map[string]interface{}{
 			"name": args[0],
 		}
 		if size > 0 {
 			params["size"] = size
+		}
+		if volumeType != "" {
+			params["volume_type"] = volumeType
 		}
 
 		client := openstack.DefaultClient()
@@ -184,6 +188,7 @@ func init() {
 	volumeList.Flags().String("status", "", "Search by volume status")
 
 	volumeCreate.Flags().Uint("size", 0, "Volume size (GB)")
+	volumeCreate.Flags().String("type", "", "Volume type")
 	volumeCreate.MarkFlagRequired("size")
 
 	volumeDelete.Flags().Bool("force", false, "Force delete volume.")

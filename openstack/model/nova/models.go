@@ -148,6 +148,9 @@ func (server Server) AllStatus() string {
 	return fmt.Sprintf("status=%s, task_state=%s, power_state=%s",
 		server.Status, server.TaskState, server.GetPowerState())
 }
+func (server Server) StatusIs(status string) bool {
+	return strings.ToUpper(server.Status) == strings.ToUpper(status)
+}
 func (server Server) InResize() bool {
 	return server.Status == "VERIFY_RESIZE" || server.Status == "RESIZE"
 }
@@ -162,6 +165,15 @@ func (server Server) IsError() bool {
 }
 func (server Server) IsMigrating() bool {
 	return strings.ToUpper(server.Status) == "MIGRATING"
+}
+func (server Server) IsStopped() bool {
+	return server.StatusIs("STOPPED")
+}
+func (server Server) IsPaused() bool {
+	return server.StatusIs("PAUSED")
+}
+func (server Server) IsSuspended() bool {
+	return server.StatusIs("SUSPENDED")
 }
 
 type Service struct {

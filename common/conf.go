@@ -34,6 +34,7 @@ type ConfGroup struct {
 
 	Auth  Auth  `yaml:"auth"`
 	Iperf Iperf `yaml:"iperf"`
+	Test  Test  `yaml:"test"`
 }
 type Auth struct {
 	Url             string          `yaml:"url"`
@@ -58,6 +59,17 @@ type Iperf struct {
 	LocalPath     string `yaml:"guestPath"`
 	ClientOptions string `yaml:"clientOptions"`
 	ServerOptions string `yaml:"serverOptions"`
+}
+type Test struct {
+	AvailabilityZone string   `yaml:"availabilityZone"`
+	BootFromVolume   bool     `yaml:"bootFromVolume"`
+	BootVolumeSize   uint16   `yaml:"bootVolumeSize"`
+	BootVolumeType   string   `yaml:"bootVolumeType"`
+	Flavors          []string `yaml:"flavors"`
+	Images           []string `yaml:"images"`
+	Networks         []string `yaml:"networks"`
+	VolumeType       string   `yaml:"volumeType"`
+	VolumeSize       int      `yaml:"volumeSize"`
 }
 
 func LoadConfig(configFile string) error {
@@ -87,5 +99,12 @@ func LoadConfig(configFile string) error {
 	if CONF.Auth.TokenExpireTime <= 0 {
 		CONF.Auth.TokenExpireTime = DEFAULT_TOKEN_EXPIRE_TIME
 	}
+	if CONF.Test.VolumeSize <= 0 {
+		CONF.Test.VolumeSize = 10
+	}
+	if CONF.Test.BootVolumeSize <= 0 {
+		CONF.Test.VolumeSize = 50
+	}
+
 	return nil
 }

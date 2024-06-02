@@ -24,3 +24,10 @@ auth:
 #   ServerOptions:
 #   guestPath:
 #   localPath:
+
+test:
+  availabilityZone:
+  bootFromVolume: true
+  flavors:
+  images:
+  networks:

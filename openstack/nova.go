@@ -225,6 +225,12 @@ func (c ServersApi) Create(options nova.ServerOpt) (*nova.Server, error) {
 	if options.Networks == nil {
 		options.Networks = "none"
 	}
+	if options.MinCount == 0 {
+		options.MinCount = 1
+	}
+	if options.MaxCount == 0 {
+		options.MaxCount = 1
+	}
 	repBody, _ := json.Marshal(map[string]nova.ServerOpt{"server": options})
 	var (
 		resp *utility.Response
@@ -1061,7 +1067,23 @@ func (c ServersApi) WaitStatus(serverId string, status string, interval int) (*n
 		time.Sleep(time.Second * time.Duration(interval))
 	}
 }
+func (c ServersApi) WaitBooted(id string) (*nova.Server, error) {
+	for {
+		server, err := c.Show(id)
+		if err != nil {
+			return server, err
+		}
 
+		if server.IsError() {
+			return server, fmt.Errorf("create failed, server is error")
+		}
+		if server.IsActive() {
+			return server, err
+		}
+		logging.Info("[%s] %s", server.Id, server.AllStatus())
+		time.Sleep(time.Second * 2)
+	}
+}
 func (c ServersApi) WaitDeleted(id string) error {
 	for {
 		server, err := c.Show(id)
@@ -1083,7 +1105,7 @@ func (c ServersApi) WaitTask(id string, taskState string) (*nova.Server, error) 
 		if err != nil {
 			return nil, err
 		}
-		logging.Info("server %s status: %s", id, server.AllStatus())
+		logging.Info("[%s] %s", id, server.AllStatus())
 
 		if strings.ToUpper(server.Status) == "ERROR" {
 			return nil, fmt.Errorf("server %s status is ERROR", id)

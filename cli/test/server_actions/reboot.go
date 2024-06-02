@@ -26,3 +26,66 @@ func (t ServerReboot) Start() error {
 	}
 	return nil
 }
+
+type ServerHardReboot struct{ ServerActionTest }
+
+func (t ServerHardReboot) Start() error {
+	t.RefreshServer()
+	if !t.Server.IsActive() {
+		return fmt.Errorf("server is not active")
+	}
+	err := t.Client.NovaV2().Servers().Reboot(t.Server.Id, true)
+	if err != nil {
+		return err
+	}
+	logging.Info("[%s] hard rebooting", t.Server.Id)
+	if err := t.WaitServerTaskFinished(false); err != nil {
+		return err
+	}
+	if !t.Server.IsActive() {
+		return fmt.Errorf("server is not active")
+	}
+	return nil
+}
+
+type ServerStop struct{ ServerActionTest }
+
+func (t ServerStop) Start() error {
+	t.RefreshServer()
+	if !t.Server.IsActive() {
+		return fmt.Errorf("server is not active")
+	}
+	err := t.Client.NovaV2().Servers().Stop(t.Server.Id)
+	if err != nil {
+		return err
+	}
+	logging.Info("[%s] stopping", t.Server.Id)
+	if err := t.WaitServerTaskFinished(false); err != nil {
+		return err
+	}
+	if !t.Server.IsStopped() {
+		return fmt.Errorf("server is not stopped")
+	}
+	return nil
+}
+
+type ServerStart struct{ ServerActionTest }
+
+func (t ServerStart) Start() error {
+	t.RefreshServer()
+	if !t.Server.IsStopped() {
+		return fmt.Errorf("server is not stopped")
+	}
+	err := t.Client.NovaV2().Servers().Start(t.Server.Id)
+	if err != nil {
+		return err
+	}
+	logging.Info("[%s] starting", t.Server.Id)
+	if err := t.WaitServerTaskFinished(false); err != nil {
+		return err
+	}
+	if !t.Server.IsActive() {
+		return fmt.Errorf("server is not active")
+	}
+	return nil
+}

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/fatih/color"
 )
 
 func UrlJoin(path ...string) string {
@@ -44,4 +45,15 @@ func VersionUrl(endpoint, version string) string {
 		return UrlJoin(endpoint, version)
 	}
 	return endpoint
+}
+
+func GreenString(s string) string {
+	return color.New(color.FgGreen).Sprintf(s)
+}
+
+func BlueString(s string) string {
+	return color.New(color.FgBlue).Sprintf(s)
+}
+func RedString(s string) string {
+	return color.New(color.FgRed).Sprintf(s)
 }

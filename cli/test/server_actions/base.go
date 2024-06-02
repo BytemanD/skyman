@@ -39,7 +39,7 @@ func (t *ServerActionTest) WaitServerTaskFinished(showProgress bool) error {
 		if showProgress {
 			progress = fmt.Sprintf(", progress: %d", int(t.Server.Progress))
 		}
-		logging.Info("[%s] vmState=%s, powerState=%s, taskState=%s %s",
+		logging.Info("[%s] vmState=%s, powerState=%s, taskState=%s%s",
 			t.Server.Id, t.Server.VmState, t.Server.GetPowerState(), t.Server.TaskState, progress)
 		if t.Server.TaskState == "" {
 			return nil

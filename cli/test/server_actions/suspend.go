@@ -1,0 +1,83 @@
+package server_actions
+
+import (
+	"fmt"
+
+	"github.com/BytemanD/easygo/pkg/global/logging"
+)
+
+type ServerSuspend struct{ ServerActionTest }
+
+func (t ServerSuspend) Start() error {
+	t.RefreshServer()
+	if !t.Server.IsActive() {
+		return fmt.Errorf("server is not active")
+	}
+	err := t.Client.NovaV2().Servers().Suspend(t.Server.Id)
+	if err != nil {
+		return err
+	}
+	logging.Info("[%s] suspending", t.Server.Id)
+	if err := t.WaitServerTaskFinished(false); err != nil {
+		return err
+	}
+	if !t.Server.IsSuspended() {
+		return fmt.Errorf("server is not suspended")
+	}
+	return nil
+}
+
+type ServerResume struct{ ServerActionTest }
+
+func (t ServerResume) Start() error {
+	t.RefreshServer()
+	if !t.Server.IsSuspended() {
+		return fmt.Errorf("server is not suspended")
+	}
+	err := t.Client.NovaV2().Servers().Resume(t.Server.Id)
+	if err != nil {
+		return err
+	}
+	logging.Info("[%s] resuming", t.Server.Id)
+	if err := t.WaitServerTaskFinished(false); err != nil {
+		return err
+	}
+	if !t.Server.IsActive() {
+		return fmt.Errorf("server is not active")
+	}
+	return nil
+}
+
+type ServerToggleSuspend struct{ ServerActionTest }
+
+func (t ServerToggleSuspend) Start() error {
+	t.RefreshServer()
+	if t.Server.IsSuspended() {
+		err := t.Client.NovaV2().Servers().Resume(t.Server.Id)
+		if err != nil {
+			return err
+		}
+		logging.Info("[%s] resuming", t.Server.Id)
+		if err := t.WaitServerTaskFinished(false); err != nil {
+			return err
+		}
+		if !t.Server.IsActive() {
+			return fmt.Errorf("server is not active")
+		}
+	} else if t.Server.IsActive() {
+		err := t.Client.NovaV2().Servers().Suspend(t.Server.Id)
+		if err != nil {
+			return err
+		}
+		logging.Info("[%s] suspending", t.Server.Id)
+		if err := t.WaitServerTaskFinished(false); err != nil {
+			return err
+		}
+		if !t.Server.IsPaused() {
+			return fmt.Errorf("server is not paused")
+		}
+	} else {
+		return fmt.Errorf("skip server status is %s", t.Server.Status)
+	}
+	return nil
+}
