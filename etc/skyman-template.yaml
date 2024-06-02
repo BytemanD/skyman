@@ -26,9 +26,11 @@ auth:
 #   localPath:
 
 test:
+  tasks: 1
+  workers: 1
   deleteIfError: false
   availabilityZone:
-  bootFromVolume: true
+  bootFromVolume: false
   bootVolumeSize:
   bootVolumeType:
   flavors:
