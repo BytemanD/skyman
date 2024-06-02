@@ -26,8 +26,11 @@ auth:
 #   localPath:
 
 test:
+  deleteIfError: false
   availabilityZone:
   bootFromVolume: true
+  bootVolumeSize:
+  bootVolumeType:
   flavors:
   images:
   networks:

@@ -61,6 +61,7 @@ type Iperf struct {
 	ServerOptions string `yaml:"serverOptions"`
 }
 type Test struct {
+	DeleteIfError    bool     `yaml:"deleteIfError"`
 	AvailabilityZone string   `yaml:"availabilityZone"`
 	BootFromVolume   bool     `yaml:"bootFromVolume"`
 	BootVolumeSize   uint16   `yaml:"bootVolumeSize"`
@@ -71,7 +72,6 @@ type Test struct {
 	VolumeType       string   `yaml:"volumeType"`
 	VolumeSize       int      `yaml:"volumeSize"`
 	Actions          []string `yaml:"volumeType"`
-	DeleteIfError    bool     `yaml:"deleteIfError"`
 }
 
 func LoadConfig(configFile string) error {
