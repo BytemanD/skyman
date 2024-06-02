@@ -71,6 +71,7 @@ type Test struct {
 	VolumeType       string   `yaml:"volumeType"`
 	VolumeSize       int      `yaml:"volumeSize"`
 	Actions          []string `yaml:"volumeType"`
+	DeleteIfError    bool     `yaml:"deleteIfError"`
 }
 
 func LoadConfig(configFile string) error {

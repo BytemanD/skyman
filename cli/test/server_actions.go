@@ -133,6 +133,7 @@ var serverAction = &cobra.Command{
 		}
 
 		success, failed, skip := 0, 0, 0
+		testFailed := false
 		for i, actionName := range serverActions {
 			action, err := server_actions.GetTestAction(actionName, server, client)
 			if err != nil {
@@ -144,6 +145,7 @@ var serverAction = &cobra.Command{
 			err = runActionTest(action)
 			if err != nil {
 				failed++
+				testFailed = true
 				logging.Error("[%s] test action '%s' %s: %s", server.Id, actionName,
 					utility.RedString("failed"), err)
 			} else {
@@ -155,7 +157,7 @@ var serverAction = &cobra.Command{
 				time.Sleep(time.Second * time.Duration(actionInterval))
 			}
 		}
-		if boot {
+		if boot && (!testFailed || common.CONF.Test.DeleteIfError) {
 			logging.Info("[%s] deleting", server.Id)
 			client.NovaV2().Servers().Delete(server.Id)
 			client.NovaV2().Servers().WaitDeleted(server.Id)
