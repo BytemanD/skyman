@@ -301,7 +301,7 @@ func (c VolumeTypeApi) Create(params map[string]interface{}) (*cinder.VolumeType
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.CinderV2.Post("volumes", body, nil)
+	resp, err := c.CinderV2.Post("volume_types", body, nil)
 	if err != nil {
 		return nil, err
 	}
