@@ -354,9 +354,9 @@ var serverReboot = &cobra.Command{
 			for _, id := range args {
 				_, err := client.NovaV2().Servers().WaitStatus(id, "ACTIVE", 5)
 				if err == nil {
-					logging.Info("Server %s rebooted", id)
+					logging.Info("[%s] rebooted", id)
 				} else {
-					logging.Error("Server %s reboot failed, %v", id, err)
+					logging.Error("[%s] reboot failed, %v", id, err)
 				}
 			}
 		}

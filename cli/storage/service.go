@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var service = &cobra.Command{Use: "service"}
+var service = &cobra.Command{Use: "service", Short: "Volume service command"}
 var list = &cobra.Command{
 	Use:   "list",
 	Short: "List volume services",
