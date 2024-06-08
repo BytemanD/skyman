@@ -121,9 +121,9 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		boot = true
 	}
 	for i, actionName := range serverActions {
-		action, err := server_actions.GetTestAction(actionName, server, client)
-		if err != nil {
-			logging.Error("[%s] get action failed: %s", server.Id, err)
+		action := server_actions.ACTIONS.Get(actionName, server, client)
+		if action == nil {
+			logging.Error("[%s] action '%s' not found", server.Id, action)
 			skip++
 			continue
 		}
@@ -161,34 +161,52 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 	return nil
 }
 
+var TestActions []string
+
 var serverAction = &cobra.Command{
 	Use:   "server-actions [server]",
 	Short: "Test server actions",
-	Args:  cobra.MaximumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.MaximumNArgs(1)(cmd, args); err != nil {
+			return err
+		}
 		actions, _ := cmd.Flags().GetString("actions")
+		if testActions, err := server_actions.ParseServerActions(actions); err != nil {
+			return err
+		} else {
+			TestActions = testActions
+		}
+		return nil
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		// actions, _ := cmd.Flags().GetString("actions")
 		actionInterval, _ := cmd.Flags().GetInt("action-interval")
 		// 检查 actions
-		if actions == "" {
-			actions = strings.Join(common.CONF.Test.Actions, ",")
+		if len(TestActions) == 0 {
+			if testActions, err := server_actions.ParseServerActions(strings.Join(common.CONF.Test.Actions, ",")); err != nil {
+				logging.Fatal("parse action failed: %s", err)
+			} else {
+				TestActions = testActions
+			}
 		}
-		serverActions, err := server_actions.ParseServerActions(actions)
-		if err != nil {
-			utility.LogError(err, "parse server actions failed", true)
+
+		if len(TestActions) == 0 {
+			logging.Warning("test actions is empty")
+		} else {
+			logging.Info("test actions: %s", strings.Join(TestActions, ", "))
 		}
-		logging.Info("test actions: %s", strings.Join(serverActions, ", "))
 
 		client := openstack.DefaultClient()
 		preTest(client)
 		if len(args) == 1 {
-			runTest(client, args[0], actionInterval, 1, serverActions)
+			runTest(client, args[0], actionInterval, 1, TestActions)
 		} else {
 			logging.Info("tasks: %d, workers: %d", common.CONF.Test.Tasks, common.CONF.Test.Workers)
 			taskGroup := syncutils.TaskGroup{
 				Items:     arrayutils.Range(1, common.CONF.Test.Tasks+1),
 				MaxWorker: common.CONF.Test.Workers,
 				Func: func(item interface{}) error {
-					err := runTest(client, "", item.(int), actionInterval, serverActions)
+					err := runTest(client, "", item.(int), actionInterval, TestActions)
 					if err != nil {
 						logging.Error("test failed: %v", err)
 						return nil
@@ -203,7 +221,7 @@ var serverAction = &cobra.Command{
 
 func init() {
 	supportedActions := []string{}
-	for _, actions := range arrayutils.SplitStrings(server_actions.GetActions(), 5) {
+	for _, actions := range arrayutils.SplitStrings(server_actions.ACTIONS.Keys(), 5) {
 		supportedActions = append(supportedActions, strings.Join(actions, ", "))
 	}
 	serverAction.Flags().String("actions", "", "Test actions\nFormat: <action>[:count], "+

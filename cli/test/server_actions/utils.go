@@ -7,7 +7,6 @@ import (
 
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
-	"github.com/BytemanD/skyman/utility"
 )
 
 var (
@@ -36,70 +35,38 @@ var (
 	ACTION_ATTACH_VOLUME_LOOP    = "attach_volume_loop"
 )
 
-func GetActions() []string {
-	return []string{
-		ACTION_REBOOT, ACTION_HARD_REBOOT, ACTION_START, ACTION_STOP,
-		ACTION_LIVE_MIGRATE, ACTION_MIGRATE,
-		ACTION_RESIZE, ACTION_REBUILD,
-		ACTION_SHELVE, ACTION_UNSHELVE, ACTION_TOGGLE_SHELVE,
-		ACTION_RENAME,
-		ACTION_PAUSE, ACTION_UNPAUSE,
-		ACTION_SUSPEND, ACTION_RESUME, ACTION_TOGGLE_SUSPEND,
-		ACTION_ATTACH_INTERFACE, ACTION_DETACH_INTERFACE,
-		ACTION_ATTACH_VOLUME, ACTION_DETACH_VOLUME,
-		ACTION_ATTACH_INTERFACE_LOOP,
-		ACTION_ATTACH_VOLUME_LOOP,
+type ActionCreatorFunc func(server *nova.Server, client *openstack.Openstack) ServerAction
+
+type Actions map[string]ActionCreatorFunc
+
+func (a Actions) Keys() []string {
+	keys := make([]string, 0, len(a))
+	for k := range a {
+		keys = append(keys, k)
 	}
+	return keys
 }
-func GetTestAction(actionName string, server *nova.Server, client *openstack.Openstack) (ServerAction, error) {
-	testBase := ServerActionTest{Server: server, Client: client}
-	switch actionName {
-	case ACTION_REBOOT:
-		return ServerReboot{ServerActionTest: testBase}, nil
-	case ACTION_HARD_REBOOT:
-		return ServerHardReboot{ServerActionTest: testBase}, nil
-	case ACTION_START:
-		return ServerStart{ServerActionTest: testBase}, nil
-	case ACTION_STOP:
-		return ServerStop{ServerActionTest: testBase}, nil
-	case ACTION_MIGRATE:
-		return ServerMigrate{ServerActionTest: testBase}, nil
-	case ACTION_LIVE_MIGRATE:
-		return ServerLiveMigrate{ServerActionTest: testBase}, nil
-	case ACTION_SHELVE:
-		return ServerShelve{ServerActionTest: testBase}, nil
-	case ACTION_UNSHELVE:
-		return ServerUnshelve{ServerActionTest: testBase}, nil
-	case ACTION_TOGGLE_SHELVE:
-		return ServerToggleShelve{ServerActionTest: testBase}, nil
-	case ACTION_REBUILD:
-		return ServerRebuild{ServerActionTest: testBase}, nil
-	case ACTION_RESIZE:
-		return ServerResize{ServerActionTest: testBase}, nil
-	case ACTION_RENAME:
-		return ServerRename{ServerActionTest: testBase}, nil
-	case ACTION_SUSPEND:
-		return ServerSuspend{ServerActionTest: testBase}, nil
-	case ACTION_RESUME:
-		return ServerResume{ServerActionTest: testBase}, nil
-	case ACTION_TOGGLE_SUSPEND:
-		return ServerToggleSuspend{ServerActionTest: testBase}, nil
-	case ACTION_ATTACH_INTERFACE:
-		return ServerAttachInterface{ServerActionTest: testBase}, nil
-	case ACTION_DETACH_INTERFACE:
-		return ServerDetachInterface{ServerActionTest: testBase}, nil
-	case ACTION_ATTACH_VOLUME:
-		return ServerAttachVolume{ServerActionTest: testBase}, nil
-	case ACTION_DETACH_VOLUME:
-		return ServerDetachVolume{ServerActionTest: testBase}, nil
-	case ACTION_ATTACH_INTERFACE_LOOP:
-		return ServerAttachInterfaceLoop{ServerActionTest: testBase}, nil
-	case ACTION_ATTACH_VOLUME_LOOP:
-		return ServerAttachInterfaceLoop{ServerActionTest: testBase}, nil
-	default:
-		return nil, fmt.Errorf("action '%s' not found", actionName)
+
+func (a Actions) Contains(name string) bool {
+	for k := range a {
+		if k == name {
+			return true
+		}
 	}
+	return false
 }
+func (a Actions) Get(name string, server *nova.Server, client *openstack.Openstack) ServerAction {
+	if creator, ok := a[name]; ok {
+		return creator(server, client)
+	}
+	return nil
+}
+
+func (a Actions) register(name string, creator ActionCreatorFunc) {
+	a[name] = creator
+}
+
+var ACTIONS = Actions{}
 
 func ParseServerActions(actions string) ([]string, error) {
 	serverActions := []string{}
@@ -108,8 +75,8 @@ func ParseServerActions(actions string) ([]string, error) {
 	}
 	for _, action := range strings.Split(actions, ",") {
 		if !strings.Contains(action, ":") {
-			if !utility.StringsContains(action, GetActions()) {
-				return nil, fmt.Errorf("invalid action '%s'", action)
+			if !ACTIONS.Contains(action) {
+				return nil, fmt.Errorf("action '%s' not found", action)
 			}
 			serverActions = append(serverActions, action)
 			continue
@@ -119,12 +86,84 @@ func ParseServerActions(actions string) ([]string, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid action '%s'", action)
 		}
-		if !utility.StringsContains(splited[0], GetActions()) {
-			return nil, fmt.Errorf("invalid action '%s'", splited[0])
+		if !ACTIONS.Contains(splited[0]) {
+			return nil, fmt.Errorf("action '%s' not found", splited[0])
 		}
 		for i := 0; i < count; i++ {
 			serverActions = append(serverActions, splited[0])
 		}
 	}
 	return serverActions, nil
+}
+
+func init() {
+	ACTIONS.register(ACTION_REBOOT, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerReboot{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_HARD_REBOOT, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerHardReboot{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_STOP, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerStop{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_START, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerStart{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_PAUSE, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerPause{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_UNPAUSE, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerUnpause{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_MIGRATE, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerMigrate{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_LIVE_MIGRATE, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerLiveMigrate{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_SHELVE, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerShelve{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_UNSHELVE, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerUnshelve{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_TOGGLE_SHELVE, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerToggleShelve{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_REBUILD, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerRebuild{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_RESIZE, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerResize{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_RENAME, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerRename{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_SUSPEND, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerSuspend{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_RESUME, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerResume{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_TOGGLE_SUSPEND, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerToggleSuspend{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_ATTACH_INTERFACE, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerAttachInterface{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_DETACH_INTERFACE, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerDetachInterface{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_ATTACH_VOLUME, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerAttachVolume{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_DETACH_VOLUME, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerDetachVolume{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_ATTACH_INTERFACE_LOOP, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerAttachInterfaceLoop{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	ACTIONS.register(ACTION_ATTACH_VOLUME_LOOP, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return ServerAttachVolumeLoop{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
 }
