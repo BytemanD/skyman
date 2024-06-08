@@ -61,20 +61,28 @@ type Iperf struct {
 	ClientOptions string `yaml:"clientOptions"`
 	ServerOptions string `yaml:"serverOptions"`
 }
+type AttachInterfaceLoop struct {
+	Nums int `yaml:"nums"`
+}
+type AttachVolumeLoop struct {
+	Nums int `yaml:"nums"`
+}
 type Test struct {
-	Tasks            int      `yaml:"tasks"`
-	Workers          int      `yaml:"workers"`
-	DeleteIfError    bool     `yaml:"deleteIfError"`
-	AvailabilityZone string   `yaml:"availabilityZone"`
-	BootFromVolume   bool     `yaml:"bootFromVolume"`
-	BootVolumeSize   uint16   `yaml:"bootVolumeSize"`
-	BootVolumeType   string   `yaml:"bootVolumeType"`
-	Flavors          []string `yaml:"flavors"`
-	Images           []string `yaml:"images"`
-	Networks         []string `yaml:"networks"`
-	VolumeType       string   `yaml:"volumeType"`
-	VolumeSize       int      `yaml:"volumeSize"`
-	Actions          []string `yaml:"volumeType"`
+	Tasks               int                 `yaml:"tasks"`
+	Workers             int                 `yaml:"workers"`
+	DeleteIfError       bool                `yaml:"deleteIfError"`
+	AvailabilityZone    string              `yaml:"availabilityZone"`
+	BootFromVolume      bool                `yaml:"bootFromVolume"`
+	BootVolumeSize      uint16              `yaml:"bootVolumeSize"`
+	BootVolumeType      string              `yaml:"bootVolumeType"`
+	Flavors             []string            `yaml:"flavors"`
+	Images              []string            `yaml:"images"`
+	Networks            []string            `yaml:"networks"`
+	VolumeType          string              `yaml:"volumeType"`
+	VolumeSize          int                 `yaml:"volumeSize"`
+	Actions             []string            `yaml:"volumeType"`
+	AttachInterfaceLoop AttachInterfaceLoop `yaml:"attachInterfaceLoop"`
+	AttachVolumeLoop    AttachVolumeLoop    `yaml:"attachVolumeLoop"`
 }
 
 func LoadConfig(configFile string) error {
@@ -116,6 +124,11 @@ func LoadConfig(configFile string) error {
 	if CONF.Test.Tasks <= 0 {
 		CONF.Test.Tasks = 1
 	}
-
+	if CONF.Test.AttachInterfaceLoop.Nums == 0 {
+		CONF.Test.AttachInterfaceLoop.Nums = 1
+	}
+	if CONF.Test.AttachVolumeLoop.Nums == 0 {
+		CONF.Test.AttachVolumeLoop.Nums = 1
+	}
 	return nil
 }

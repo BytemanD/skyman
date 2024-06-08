@@ -11,27 +11,29 @@ import (
 )
 
 var (
-	ACTION_REBOOT           = "reboot"
-	ACTION_HARD_REBOOT      = "hard_reboot"
-	ACTION_STOP             = "stop"
-	ACTION_START            = "start"
-	ACTION_PAUSE            = "pause"
-	ACTION_UNPAUSE          = "unpause"
-	ACTION_MIGRATE          = "migrate"
-	ACTION_LIVE_MIGRATE     = "live_migrate"
-	ACTION_SHELVE           = "shelve"
-	ACTION_UNSHELVE         = "unshelve"
-	ACTION_TOGGLE_SHELVE    = "toggle_shelve"
-	ACTION_REBUILD          = "rebuild"
-	ACTION_RESIZE           = "resize"
-	ACTION_RENAME           = "rename"
-	ACTION_SUSPEND          = "suspend"
-	ACTION_RESUME           = "resume"
-	ACTION_TOGGLE_SUSPEND   = "toggle_suspend"
-	ACTION_ATTACH_INTERFACE = "attach_interface"
-	ACTION_DETACH_INTERFACE = "detach_interface"
-	ACTION_ATTACH_VOLUME    = "attach_volume"
-	ACTION_DETACH_VOLUME    = "detach_volume"
+	ACTION_REBOOT                = "reboot"
+	ACTION_HARD_REBOOT           = "hard_reboot"
+	ACTION_STOP                  = "stop"
+	ACTION_START                 = "start"
+	ACTION_PAUSE                 = "pause"
+	ACTION_UNPAUSE               = "unpause"
+	ACTION_MIGRATE               = "migrate"
+	ACTION_LIVE_MIGRATE          = "live_migrate"
+	ACTION_SHELVE                = "shelve"
+	ACTION_UNSHELVE              = "unshelve"
+	ACTION_TOGGLE_SHELVE         = "toggle_shelve"
+	ACTION_REBUILD               = "rebuild"
+	ACTION_RESIZE                = "resize"
+	ACTION_RENAME                = "rename"
+	ACTION_SUSPEND               = "suspend"
+	ACTION_RESUME                = "resume"
+	ACTION_TOGGLE_SUSPEND        = "toggle_suspend"
+	ACTION_ATTACH_INTERFACE      = "attach_interface"
+	ACTION_DETACH_INTERFACE      = "detach_interface"
+	ACTION_ATTACH_INTERFACE_LOOP = "attach_interface_loop"
+	ACTION_ATTACH_VOLUME         = "attach_volume"
+	ACTION_DETACH_VOLUME         = "detach_volume"
+	ACTION_ATTACH_VOLUME_LOOP    = "attach_volume_loop"
 )
 
 func GetActions() []string {
@@ -45,6 +47,8 @@ func GetActions() []string {
 		ACTION_SUSPEND, ACTION_RESUME, ACTION_TOGGLE_SUSPEND,
 		ACTION_ATTACH_INTERFACE, ACTION_DETACH_INTERFACE,
 		ACTION_ATTACH_VOLUME, ACTION_DETACH_VOLUME,
+		ACTION_ATTACH_INTERFACE_LOOP,
+		ACTION_ATTACH_VOLUME_LOOP,
 	}
 }
 func GetTestAction(actionName string, server *nova.Server, client *openstack.Openstack) (ServerAction, error) {
@@ -88,6 +92,10 @@ func GetTestAction(actionName string, server *nova.Server, client *openstack.Ope
 		return ServerAttachVolume{ServerActionTest: testBase}, nil
 	case ACTION_DETACH_VOLUME:
 		return ServerDetachVolume{ServerActionTest: testBase}, nil
+	case ACTION_ATTACH_INTERFACE_LOOP:
+		return ServerAttachInterfaceLoop{ServerActionTest: testBase}, nil
+	case ACTION_ATTACH_VOLUME_LOOP:
+		return ServerAttachInterfaceLoop{ServerActionTest: testBase}, nil
 	default:
 		return nil, fmt.Errorf("action '%s' not found", actionName)
 	}

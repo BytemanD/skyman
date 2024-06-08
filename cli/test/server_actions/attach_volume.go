@@ -9,7 +9,6 @@ import (
 
 type ServerAttachVolume struct {
 	ServerActionTest
-	networkIndex int
 }
 
 func (t ServerAttachVolume) Start() error {
@@ -17,13 +16,8 @@ func (t ServerAttachVolume) Start() error {
 	if !t.Server.IsActive() {
 		return fmt.Errorf("server is not active")
 	}
-	options := map[string]interface{}{
-		"size": common.CONF.Test.VolumeSize,
-	}
-	if common.CONF.Test.VolumeType != "" {
-		options["volume_type"] = common.CONF.Test.VolumeType
-	}
-	volume, err := t.Client.CinderV2().Volumes().Create(options)
+	logging.Info("[%s] creating volume")
+	volume, err := t.CreateBlankVolume()
 	if err != nil {
 		return fmt.Errorf("create volume failed: %s", err)
 	}
@@ -93,4 +87,71 @@ func (t ServerDetachVolume) Start() error {
 		}
 	}
 	return nil
+}
+
+type ServerAttachVolumeLoop struct {
+	ServerActionTest
+	attachments []string
+}
+
+func (t ServerAttachVolumeLoop) Start() error {
+	t.RefreshServer()
+	if !t.Server.IsActive() {
+		return fmt.Errorf("server is not active")
+	}
+	for i := 0; i < common.CONF.Test.AttachVolumeLoop.Nums; i++ {
+
+		logging.Info("[%s] creating volume", t.ServerId())
+		volume, err := t.CreateBlankVolume()
+		if err != nil {
+			return fmt.Errorf("create volume failed: %s", err)
+		}
+
+		logging.Info("[%s] try to attach volume (%d)", t.ServerId(), i+1)
+
+		_, err = t.Client.NovaV2().Servers().AddVolume(t.Server.Id, volume.Id)
+		if err != nil {
+			return err
+		}
+		logging.Info("[%s] attaching volume %s", t.Server.Id, volume.Id)
+		if err := t.WaitServerTaskFinished(false); err != nil {
+			return err
+		}
+		if err := t.ServerMustNotError(); err != nil {
+			return err
+		}
+		if err := t.ServerMustHasVolume(volume.Id); err != nil {
+			return err
+		}
+		t.attachments = append(t.attachments, volume.Id)
+	}
+
+	for _, volId := range t.attachments {
+		err := t.Client.NovaV2().Servers().DeleteVolume(t.Server.Id, volId)
+		if err != nil {
+			return err
+		}
+		logging.Info("[%s] detaching volume %s", t.ServerId(), volId)
+		if err := t.WaitServerTaskFinished(false); err != nil {
+			return err
+		}
+		if err := t.ServerMustNotError(); err != nil {
+			return err
+		}
+		if err := t.ServerMustHasNotVolume(volId); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (t ServerAttachVolumeLoop) Cleanup() {
+	t.ServerActionTest.Cleanup()
+	for _, volId := range t.attachments {
+		logging.Info("[%s] deleting volume %s", t.ServerId(), volId)
+		err := t.Client.CinderV2().Volumes().Delete(volId, true, true)
+		if err != nil {
+			logging.Error("[%s] delete volume %s failed", t.ServerId(), volId)
+		}
+	}
 }

@@ -9,18 +9,6 @@ import (
 
 type ServerAttachInterface struct {
 	ServerActionTest
-	networkIndex int
-}
-
-func (t *ServerAttachInterface) nextNetwork() (string, error) {
-	if len(common.CONF.Test.Networks) == 0 {
-		return "", fmt.Errorf("the num of networks == 0")
-	}
-	if t.networkIndex >= len(common.CONF.Test.Networks)-1 {
-		t.networkIndex = 0
-	}
-	defer func() { t.networkIndex += 1 }()
-	return common.CONF.Test.Networks[t.networkIndex], nil
 }
 
 func (t ServerAttachInterface) Start() error {
@@ -32,27 +20,29 @@ func (t ServerAttachInterface) Start() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] attaching interface", t.Server.Id)
-	attachment, err := t.Client.NovaV2().Servers().AddInterface(t.Server.Id, nextNetwork, "")
+	logging.Info("[%s] creating port", t.Server.Id)
+	port, err := t.Client.NeutronV2().Ports().Create(map[string]interface{}{
+		"network_id": nextNetwork,
+	})
 	if err != nil {
+		logging.Error("[%s] create port failed: %s", t.ServerId(), err)
+		return err
+	}
+
+	logging.Info("[%s] attaching interface: %s", t.Server.Id, port.Id)
+	if _, err := t.Client.NovaV2().Servers().AddInterface(t.Server.Id, "", port.Id); err != nil {
 		return err
 	}
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
-	if t.Server.IsError() {
-		return fmt.Errorf("server status is error")
-	}
-	interfaces, err := t.Client.NovaV2().Servers().ListInterfaces(t.Server.Id)
-	if err != nil {
+	if err := t.ServerMustNotError(); err != nil {
 		return err
 	}
-	for _, vif := range interfaces {
-		if vif.PortId == attachment.PortId {
-			return nil
-		}
+	if err := t.ServerMustHasInterface(port.Id); err != nil {
+		return err
 	}
-	return fmt.Errorf("server has no interface %s", attachment.PortId)
+	return fmt.Errorf("server has no interface %s", port.Id)
 }
 
 type ServerDetachInterface struct {
@@ -101,4 +91,76 @@ func (t ServerDetachInterface) Start() error {
 		}
 	}
 	return nil
+}
+
+type ServerAttachInterfaceLoop struct {
+	ServerActionTest
+	attachments []string
+}
+
+func (t ServerAttachInterfaceLoop) Start() error {
+	t.RefreshServer()
+	if !t.Server.IsActive() {
+		return fmt.Errorf("server is not active")
+	}
+	for i := 0; i < common.CONF.Test.AttachInterfaceLoop.Nums; i++ {
+		logging.Info("[%s] try to attach interface %d", t.ServerId(), i+1)
+
+		nextNetwork, err := t.nextNetwork()
+		if err != nil {
+			return err
+		}
+		logging.Info("[%s] creating port", t.Server.Id)
+		port, err := t.Client.NeutronV2().Ports().Create(map[string]interface{}{
+			"network_id": nextNetwork,
+		})
+		if err != nil {
+			logging.Error("[%s] create port failed: %s", t.ServerId(), err)
+			return err
+		}
+
+		logging.Info("[%s] attaching interface %s", t.Server.Id, port.Id)
+		if _, err := t.Client.NovaV2().Servers().AddInterface(t.Server.Id, "", port.Id); err != nil {
+			return err
+		}
+
+		if err := t.WaitServerTaskFinished(false); err != nil {
+			return err
+		}
+		if err := t.ServerMustNotError(); err != nil {
+			return err
+		}
+		if err := t.ServerMustHasInterface(port.Id); err != nil {
+			return err
+		}
+		t.attachments = append(t.attachments, port.Id)
+	}
+
+	for _, portId := range t.attachments {
+		err := t.Client.NovaV2().Servers().DeleteInterface(t.Server.Id, portId)
+		if err != nil {
+			return err
+		}
+		logging.Info("[%s] detaching interface %s", t.ServerId(), portId)
+		if err := t.WaitServerTaskFinished(false); err != nil {
+			return err
+		}
+		if err := t.ServerMustNotError(); err != nil {
+			return err
+		}
+		if err := t.ServerMustHasNotInterface(portId); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (t ServerAttachInterfaceLoop) Cleanup() {
+	t.ServerActionTest.Cleanup()
+	for _, portId := range t.attachments {
+		logging.Info("[%s] deleting port %s", t.ServerId(), portId)
+		err := t.Client.NeutronV2().Ports().Delete(portId)
+		if err != nil {
+			logging.Error("[%s] delete port %s failed", t.ServerId(), portId)
+		}
+	}
 }
