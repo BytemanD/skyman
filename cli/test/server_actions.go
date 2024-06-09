@@ -18,10 +18,15 @@ import (
 )
 
 func runActionTest(action server_actions.ServerAction) error {
-	defer action.Cleanup()
+	defer func() {
+		logging.Info("[%s] cleanup ...", action.ServerId())
+		action.Cleanup()
+	}()
+
 	if err := action.Start(); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -127,7 +132,7 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 			skip++
 			continue
 		}
-		logging.Info("[%s] %s", server.Id, utility.BlueString("==== test "+actionName+" start ===="))
+		logging.Info("[%s] %s", server.Id, utility.BlueString("==== "+actionName+" ===="))
 		err = runActionTest(action)
 		if err != nil {
 			failed++
@@ -137,13 +142,12 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 			success++
 			logging.Success("[%s] test action '%s' success", server.Id, actionName)
 		}
-		logging.Info("[%s] %s", server.Id, utility.BlueString("==== test "+actionName+" finished ===="))
 		if i < len(serverActions)-1 {
 			time.Sleep(time.Second * time.Duration(actionInterval))
 		}
 	}
 	if boot && (!testFailed || common.CONF.Test.DeleteIfError) {
-		logging.Info("[%s] deleting", server.Id)
+		logging.Info("[%s] deleting server", server.Id)
 		client.NovaV2().Servers().Delete(server.Id)
 		client.NovaV2().Servers().WaitDeleted(server.Id)
 	}

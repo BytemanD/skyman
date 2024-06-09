@@ -6,7 +6,10 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
-type ServerShelve struct{ ServerActionTest }
+type ServerShelve struct {
+	ServerActionTest
+	EmptyCleanup
+}
 
 func (t ServerShelve) Start() error {
 	t.RefreshServer()
@@ -31,7 +34,10 @@ func (t ServerShelve) Start() error {
 	return nil
 }
 
-type ServerUnshelve struct{ ServerActionTest }
+type ServerUnshelve struct {
+	ServerActionTest
+	EmptyCleanup
+}
 
 func (t ServerUnshelve) Start() error {
 	t.RefreshServer()
@@ -56,7 +62,10 @@ func (t ServerUnshelve) Start() error {
 	return nil
 }
 
-type ServerToggleShelve struct{ ServerActionTest }
+type ServerToggleShelve struct {
+	ServerActionTest
+	EmptyCleanup
+}
 
 func (t ServerToggleShelve) Start() error {
 	t.RefreshServer()

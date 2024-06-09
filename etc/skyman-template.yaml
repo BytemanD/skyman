@@ -38,3 +38,7 @@ test:
   images:
   networks:
   actions:
+  attachInterfaceLoop:
+    nums: 1
+  attachVolumeLoop:
+    nums: 1

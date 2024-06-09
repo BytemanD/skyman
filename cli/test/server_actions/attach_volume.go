@@ -9,6 +9,7 @@ import (
 
 type ServerAttachVolume struct {
 	ServerActionTest
+	EmptyCleanup
 }
 
 func (t ServerAttachVolume) Start() error {
@@ -16,7 +17,7 @@ func (t ServerAttachVolume) Start() error {
 	if !t.Server.IsActive() {
 		return fmt.Errorf("server is not active")
 	}
-	logging.Info("[%s] creating volume")
+	logging.Info("[%s] creating volume", t.ServerId())
 	volume, err := t.CreateBlankVolume()
 	if err != nil {
 		return fmt.Errorf("create volume failed: %s", err)
@@ -44,7 +45,10 @@ func (t ServerAttachVolume) Start() error {
 	return fmt.Errorf("server has no volume %s", volume.Id)
 }
 
-type ServerDetachVolume struct{ ServerActionTest }
+type ServerDetachVolume struct {
+	ServerActionTest
+	EmptyCleanup
+}
 
 func (t *ServerDetachVolume) lastVolume() (string, error) {
 	volumes, err := t.Client.NovaV2().Servers().ListVolumes(t.Server.Id)
@@ -89,25 +93,24 @@ func (t ServerDetachVolume) Start() error {
 	return nil
 }
 
-type ServerAttachVolumeLoop struct {
+type ServerVolumeHotPlug struct {
 	ServerActionTest
 	attachments []string
 }
 
-func (t ServerAttachVolumeLoop) Start() error {
+func (t *ServerVolumeHotPlug) Start() error {
 	t.RefreshServer()
 	if !t.Server.IsActive() {
 		return fmt.Errorf("server is not active")
 	}
 	for i := 0; i < common.CONF.Test.AttachVolumeLoop.Nums; i++ {
+		logging.Info("[%s] attach volume (%d)", t.ServerId(), i+1)
 
 		logging.Info("[%s] creating volume", t.ServerId())
 		volume, err := t.CreateBlankVolume()
 		if err != nil {
 			return fmt.Errorf("create volume failed: %s", err)
 		}
-
-		logging.Info("[%s] try to attach volume (%d)", t.ServerId(), i+1)
 
 		_, err = t.Client.NovaV2().Servers().AddVolume(t.Server.Id, volume.Id)
 		if err != nil {
@@ -145,8 +148,8 @@ func (t ServerAttachVolumeLoop) Start() error {
 	return nil
 }
 
-func (t ServerAttachVolumeLoop) Cleanup() {
-	t.ServerActionTest.Cleanup()
+func (t ServerVolumeHotPlug) Cleanup() {
+	logging.Info("[%s] cleanup %d volumes", t.ServerId(), len(t.attachments))
 	for _, volId := range t.attachments {
 		logging.Info("[%s] deleting volume %s", t.ServerId(), volId)
 		err := t.Client.CinderV2().Volumes().Delete(volId, true, true)

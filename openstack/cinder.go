@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -313,7 +314,7 @@ func (c VolumeTypeApi) Delete(id string) (err error) {
 	_, err = c.CinderV2.Delete(utility.UrlJoin("types", id), nil)
 	return err
 }
-func (c VolumeApi) Prune(query url.Values, yes bool) {
+func (c VolumeApi) Prune(query url.Values, matchName string, yes bool) {
 	if query == nil {
 		query = url.Values{}
 	}
@@ -322,6 +323,15 @@ func (c VolumeApi) Prune(query url.Values, yes bool) {
 	}
 	logging.Info("查询卷: %v", query)
 	volumes, err := c.List(query)
+	if matchName != "" {
+		filterdVolumes := []cinder.Volume{}
+		for _, vol := range volumes {
+			if strings.Contains(vol.Name, matchName) {
+				filterdVolumes = append(filterdVolumes, vol)
+			}
+		}
+		volumes = filterdVolumes
+	}
 	if err != nil {
 		logging.Error("get volumes failed, %s", err)
 		return

@@ -9,7 +9,10 @@ import (
 
 var TEST_FLAVORS = []nova.Flavor{}
 
-type ServerResize struct{ ServerActionTest }
+type ServerResize struct {
+	ServerActionTest
+	EmptyCleanup
+}
 
 func (t ServerResize) nextFlavor() (*nova.Flavor, error) {
 	if len(TEST_FLAVORS) <= 1 {

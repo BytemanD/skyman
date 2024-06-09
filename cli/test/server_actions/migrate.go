@@ -7,7 +7,10 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
-type ServerLiveMigrate struct{ ServerActionTest }
+type ServerLiveMigrate struct {
+	ServerActionTest
+	EmptyCleanup
+}
 
 func (t ServerLiveMigrate) Start() error {
 	t.RefreshServer()
@@ -42,7 +45,10 @@ func (t ServerLiveMigrate) Start() error {
 	return nil
 }
 
-type ServerMigrate struct{ ServerActionTest }
+type ServerMigrate struct {
+	ServerActionTest
+	EmptyCleanup
+}
 
 func (t ServerMigrate) Start() error {
 	t.RefreshServer()

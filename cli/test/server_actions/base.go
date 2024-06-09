@@ -15,6 +15,7 @@ type ServerAction interface {
 	Start() error
 	// Rollback()
 	Cleanup()
+	ServerId() string
 }
 type ServerActionTest struct {
 	Server       *nova.Server
@@ -22,7 +23,7 @@ type ServerActionTest struct {
 	networkIndex int
 }
 
-func (t *ServerActionTest) ServerId() string {
+func (t ServerActionTest) ServerId() string {
 	return t.Server.Id
 }
 
@@ -75,6 +76,7 @@ func (t *ServerActionTest) ServerMustHasInterface(portId string) error {
 	}
 	for _, vif := range interfaces {
 		if vif.PortId == portId {
+			logging.Info("[%s] server has interface: %s", t.ServerId(), portId)
 			return nil
 		}
 	}
@@ -152,6 +154,9 @@ func (t ServerActionTest) CreateBlankVolume() (*cinder.Volume, error) {
 	return volume, fmt.Errorf("create volume timeout")
 }
 
-func (t ServerActionTest) Cleanup() {
-	logging.Info("[%s] clean up", t.Server.Id)
+type EmptyCleanup struct {
+}
+
+func (t EmptyCleanup) Cleanup() {
+	// logging.Info("[%s] clean up", t.Server.Id)
 }

@@ -7,7 +7,10 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
-type ServerRename struct{ ServerActionTest }
+type ServerRename struct {
+	ServerActionTest
+	EmptyCleanup
+}
 
 func (t ServerRename) Start() error {
 	t.RefreshServer()

@@ -6,7 +6,10 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
-type ServerPause struct{ ServerActionTest }
+type ServerPause struct {
+	ServerActionTest
+	EmptyCleanup
+}
 
 func (t ServerPause) Start() error {
 	t.RefreshServer()
@@ -27,7 +30,10 @@ func (t ServerPause) Start() error {
 	return nil
 }
 
-type ServerUnpause struct{ ServerActionTest }
+type ServerUnpause struct {
+	ServerActionTest
+	EmptyCleanup
+}
 
 func (t ServerUnpause) Start() error {
 	t.RefreshServer()

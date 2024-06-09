@@ -6,7 +6,10 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
-type ServerRebuild struct{ ServerActionTest }
+type ServerRebuild struct {
+	ServerActionTest
+	EmptyCleanup
+}
 
 func (t ServerRebuild) Start() error {
 	err := t.Client.NovaV2().Servers().Rebuild(t.Server.Id)

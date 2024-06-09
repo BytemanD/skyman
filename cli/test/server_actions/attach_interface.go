@@ -9,6 +9,7 @@ import (
 
 type ServerAttachInterface struct {
 	ServerActionTest
+	EmptyCleanup
 }
 
 func (t ServerAttachInterface) Start() error {
@@ -42,11 +43,12 @@ func (t ServerAttachInterface) Start() error {
 	if err := t.ServerMustHasInterface(port.Id); err != nil {
 		return err
 	}
-	return fmt.Errorf("server has no interface %s", port.Id)
+	return nil
 }
 
 type ServerDetachInterface struct {
 	ServerActionTest
+	EmptyCleanup
 }
 
 func (t *ServerDetachInterface) lastInterface() (string, error) {
@@ -93,19 +95,18 @@ func (t ServerDetachInterface) Start() error {
 	return nil
 }
 
-type ServerAttachInterfaceLoop struct {
+type ServerAttachHotPlug struct {
 	ServerActionTest
 	attachments []string
 }
 
-func (t ServerAttachInterfaceLoop) Start() error {
+func (t *ServerAttachHotPlug) Start() error {
 	t.RefreshServer()
 	if !t.Server.IsActive() {
 		return fmt.Errorf("server is not active")
 	}
-	for i := 0; i < common.CONF.Test.AttachInterfaceLoop.Nums; i++ {
-		logging.Info("[%s] try to attach interface %d", t.ServerId(), i+1)
-
+	for i := 1; i <= common.CONF.Test.AttachInterfaceLoop.Nums; i++ {
+		logging.Info("[%s] attach interface %d", t.ServerId(), i)
 		nextNetwork, err := t.nextNetwork()
 		if err != nil {
 			return err
@@ -154,9 +155,10 @@ func (t ServerAttachInterfaceLoop) Start() error {
 	}
 	return nil
 }
-func (t ServerAttachInterfaceLoop) Cleanup() {
-	t.ServerActionTest.Cleanup()
+func (t ServerAttachHotPlug) Cleanup() {
 	for _, portId := range t.attachments {
+		logging.Info("[%s] cleanup %d interfaces", t.ServerId(), len(t.attachments))
+
 		logging.Info("[%s] deleting port %s", t.ServerId(), portId)
 		err := t.Client.NeutronV2().Ports().Delete(portId)
 		if err != nil {
