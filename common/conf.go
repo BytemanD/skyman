@@ -83,6 +83,8 @@ type Test struct {
 	Actions             []string            `yaml:"volumeType"`
 	AttachInterfaceLoop AttachInterfaceLoop `yaml:"attachInterfaceLoop"`
 	AttachVolumeLoop    AttachVolumeLoop    `yaml:"attachVolumeLoop"`
+	UseServers          []string            `yaml:"userServers"`
+	ActionInterval      int                 `yaml:"actionInterval"`
 }
 
 func LoadConfig(configFile string) error {

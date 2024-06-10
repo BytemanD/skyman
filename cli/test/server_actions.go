@@ -71,7 +71,7 @@ func createDefaultServer(client *openstack.Openstack, testId int) (*nova.Server,
 	if err != nil {
 		return nil, err
 	}
-	logging.Info("[%s] creating server %s", server.Id, server.Resource.Name)
+	logging.Info("[%s] creating with name %s", server.Id, server.Resource.Name)
 	server, err = client.NovaV2().Servers().WaitBooted(server.Id)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,9 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 	success, failed, skip := 0, 0, 0
 	if serverId != "" {
 		server, err = client.NovaV2().Servers().Found(serverId)
-		utility.LogError(err, "get server failed", true)
+		if err != nil {
+			return fmt.Errorf("get server failed: %s", err)
+		}
 		logging.Info("use server: %s(%s)", server.Id, server.Name)
 	} else {
 		if len(server_actions.TEST_FLAVORS) == 0 {
@@ -151,15 +153,14 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		client.NovaV2().Servers().Delete(server.Id)
 		client.NovaV2().Servers().WaitDeleted(server.Id)
 	}
+	result := fmt.Sprintf("all actions: %d, success: %d, failed: %d, skip: %d",
+		len(serverActions), success, failed, skip)
 	if len(serverActions) == success {
-		logging.Success("[%s] total actions: %d, success: %d, failed: %d, skip: %d",
-			server.Id, len(serverActions), success, failed, skip)
+		logging.Success("[%s] %s", server.Id, result)
 	} else if failed > 0 {
-		logging.Error("[%s] total actions: %d, success: %d, failed: %d, skip: %d",
-			server.Id, len(serverActions), success, failed, skip)
+		logging.Error("[%s] %s", server.Id, result)
 	} else {
-		logging.Warning("[%s] total actions: %d, success: %d, failed: %d, skip: %d",
-			server.Id, len(serverActions), success, failed, skip)
+		logging.Warning("[%s] %s", server.Id, result)
 	}
 
 	return nil
@@ -171,7 +172,7 @@ var serverAction = &cobra.Command{
 	Use:   "server-actions [server]",
 	Short: "Test server actions",
 	Args: func(cmd *cobra.Command, args []string) error {
-		if err := cobra.MaximumNArgs(1)(cmd, args); err != nil {
+		if err := cobra.ExactArgs(0)(cmd, args); err != nil {
 			return err
 		}
 		actions, _ := cmd.Flags().GetString("actions")
@@ -183,8 +184,8 @@ var serverAction = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		// actions, _ := cmd.Flags().GetString("actions")
 		actionInterval, _ := cmd.Flags().GetInt("action-interval")
+		servers, _ := cmd.Flags().GetString("servers")
 		// 检查 actions
 		if len(TestActions) == 0 {
 			if testActions, err := server_actions.ParseServerActions(strings.Join(common.CONF.Test.Actions, ",")); err != nil {
@@ -193,33 +194,47 @@ var serverAction = &cobra.Command{
 				TestActions = testActions
 			}
 		}
-
 		if len(TestActions) == 0 {
 			logging.Warning("test actions is empty")
 		} else {
 			logging.Info("test actions: %s", strings.Join(TestActions, ", "))
 		}
-
+		if servers != "" {
+			common.CONF.Test.UseServers = strings.Split(servers, ",")
+		}
 		client := openstack.DefaultClient()
 		preTest(client)
-		if len(args) == 1 {
-			runTest(client, args[0], actionInterval, 1, TestActions)
+		logging.Info("tasks: %d, workers: %d", common.CONF.Test.Tasks, common.CONF.Test.Workers)
+
+		var taskGroup syncutils.TaskGroup
+		if len(common.CONF.Test.UseServers) > 0 {
+			logging.Info("test with servers: %s", strings.Join(common.CONF.Test.UseServers, ","))
+			taskGroup = syncutils.TaskGroup{
+				Items:     arrayutils.Range(1, len(common.CONF.Test.UseServers)+1),
+				MaxWorker: common.CONF.Test.Workers,
+				Func: func(item interface{}) error {
+					index := item.(int)
+					err := runTest(client, common.CONF.Test.UseServers[index-1], index, actionInterval, TestActions)
+					if err != nil {
+						logging.Error("[%s] test failed: %s", common.CONF.Test.UseServers[index-1], err)
+					}
+					return nil
+				},
+			}
 		} else {
-			logging.Info("tasks: %d, workers: %d", common.CONF.Test.Tasks, common.CONF.Test.Workers)
-			taskGroup := syncutils.TaskGroup{
+			taskGroup = syncutils.TaskGroup{
 				Items:     arrayutils.Range(1, common.CONF.Test.Tasks+1),
 				MaxWorker: common.CONF.Test.Workers,
 				Func: func(item interface{}) error {
 					err := runTest(client, "", item.(int), actionInterval, TestActions)
 					if err != nil {
-						logging.Error("test failed: %v", err)
-						return nil
+						logging.Error("test failed: %s", err)
 					}
 					return nil
 				},
 			}
-			taskGroup.Start()
 		}
+		taskGroup.Start()
 	},
 }
 
@@ -236,9 +251,11 @@ func init() {
 	serverAction.Flags().Int("action-interval", 0, "Action interval")
 	serverAction.Flags().Int("tasks", 0, "The num of task")
 	serverAction.Flags().Int("workers", 0, "The num of worker")
+	serverAction.Flags().String("servers", "", "Use existing servers")
 
 	viper.BindPFlag("test.tasks", serverAction.Flags().Lookup("tasks"))
 	viper.BindPFlag("test.workers", serverAction.Flags().Lookup("workers"))
+	viper.BindPFlag("test.actionInterval", serverAction.Flags().Lookup("action-interval"))
 
 	TestCmd.AddCommand(serverAction)
 }

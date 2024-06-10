@@ -29,6 +29,7 @@ auth:
 test:
   tasks: 1
   workers: 1
+  useServers:
   deleteIfError: false
   availabilityZone:
   bootFromVolume: false
