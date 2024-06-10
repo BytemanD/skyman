@@ -29,12 +29,12 @@ var aggList = &cobra.Command{
 				{Name: "Id"},
 				{Name: "Name", Sort: true},
 				{Name: "AvailabilityZone"},
-			},
-			LongColumns: []common.Column{
 				{Name: "HostNum", Slot: func(item interface{}) interface{} {
 					p, _ := (item).(nova.Aggregate)
 					return len(p.Hosts)
 				}},
+			},
+			LongColumns: []common.Column{
 				{Name: "Metadata", Slot: func(item interface{}) interface{} {
 					p, _ := (item).(nova.Aggregate)
 					return p.MarshalMetadata()

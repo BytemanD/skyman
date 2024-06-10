@@ -1029,8 +1029,8 @@ func (c AggregateApi) List(query url.Values) ([]nova.Aggregate, error) {
 	resp.BodyUnmarshal(&respBody)
 	return respBody["aggregates"], nil
 }
-func (c AggregateApi) Show(aggregate string) (*nova.Aggregate, error) {
-	resp, err := c.NovaV2.Get("os-aggregates", nil)
+func (c AggregateApi) Show(id string) (*nova.Aggregate, error) {
+	resp, err := c.NovaV2.Get(utility.UrlJoin("os-aggregates", id), nil)
 	if err != nil {
 		return nil, err
 	}
