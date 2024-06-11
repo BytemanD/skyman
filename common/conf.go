@@ -68,9 +68,15 @@ type VolumeHotplug struct {
 	Nums int `yaml:"nums"`
 }
 
+var (
+	DEFAULT_GUEST_CONNECT_TIMEOUT = 60 * 5
+	DEFAULT_QGA_CONNECT_TIMEOUT   = 60 * 10
+)
+
 type QGAChecker struct {
-	Enabled        bool `yaml:"enabled"`
-	ConnectTimeout int  `yaml:"connectTimeout"`
+	Enabled             bool `yaml:"enabled"`
+	GuestConnectTimeout int  `yaml:"guestConnectTimeout"`
+	QgaConnectTimeout   int  `yaml:"qgaConnectTimeout"`
 }
 
 type Test struct {
@@ -139,5 +145,12 @@ func LoadConfig(configFile string) error {
 	if CONF.Test.VolumeHotplug.Nums == 0 {
 		CONF.Test.VolumeHotplug.Nums = 1
 	}
+	if CONF.Test.QGAChecker.GuestConnectTimeout == 0 {
+		CONF.Test.QGAChecker.GuestConnectTimeout = DEFAULT_GUEST_CONNECT_TIMEOUT
+	}
+	if CONF.Test.QGAChecker.QgaConnectTimeout == 0 {
+		CONF.Test.QGAChecker.QgaConnectTimeout = DEFAULT_QGA_CONNECT_TIMEOUT
+	}
+
 	return nil
 }

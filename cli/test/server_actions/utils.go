@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 )
@@ -166,4 +167,13 @@ func init() {
 	ACTIONS.register(ACTION_VOLUME_HOTPLUG, func(s *nova.Server, c *openstack.Openstack) ServerAction {
 		return &ServerVolumeHotPlug{ServerActionTest: ServerActionTest{Server: s, Client: c}}
 	})
+}
+
+func GetQgaChecker(client *openstack.Openstack, server *nova.Server) (*QGAChecker, error) {
+	host, err := client.NovaV2().Hypervisors().Found(server.Host)
+	if err != nil {
+		return nil, fmt.Errorf("get hypervisor failed: %s", err)
+	}
+	logging.Info("[%s] server host ip is %s", server.Id, host.HostIp)
+	return &QGAChecker{Client: client, ServerId: server.Id, Host: host.HostIp}, nil
 }

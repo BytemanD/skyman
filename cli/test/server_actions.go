@@ -133,15 +133,17 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		}()
 
 		if common.CONF.Test.QGAChecker.Enabled {
-			checker := server_actions.QGAChecker{Client: client}
-			if err := checker.MakesureServerBooted(server); err != nil {
+			checker, err := server_actions.GetQgaChecker(client, server)
+			if err != nil {
+				return fmt.Errorf("get guest checker failed: %s", err)
+			}
+			if err := checker.MakesureServerBooted(); err != nil {
 				return err
 			}
-			// if err := checker.MakesureHostname(server, server.Name); err != nil {
-			// 	return err
-			// }
+			if err := checker.MakesureHostname(server.GuestHostname()); err != nil {
+				return err
+			}
 		}
-
 	}
 	for i, actionName := range serverActions {
 		action := server_actions.ACTIONS.Get(actionName, server, client)

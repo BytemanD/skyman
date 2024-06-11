@@ -175,6 +175,9 @@ func (server Server) IsPaused() bool {
 func (server Server) IsSuspended() bool {
 	return server.StatusIs("SUSPENDED")
 }
+func (server Server) GuestHostname() string {
+	return strings.Replace(server.Name, ":", "", -1)
+}
 
 type Service struct {
 	model.Resource

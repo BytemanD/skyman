@@ -1,3 +1,6 @@
+# 配置文件模板
+# 注意：该文件在程序更新后将被覆盖
+
 debug: false
 # 输出格式，可选值: table, table-light, json, yaml
 format: table
@@ -43,3 +46,7 @@ test:
     nums: 1
   volumeHotplug:
     nums: 1
+  qgaChecker:
+    enabled: false
+    guestConnectTimeout: 300
+    qgaConnectTimeout: 600

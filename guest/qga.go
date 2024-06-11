@@ -133,7 +133,6 @@ func (guest Guest) runQemuAgentCommand(jsonData []byte) (string, error) {
 	result, err := guest.domain.QemuAgentCommand(
 		string(jsonData), libvirt.DOMAIN_QEMU_AGENT_COMMAND_MIN, 0)
 	if err != nil {
-		logging.Error("执行失败: %s", err)
 		return "", err
 	}
 	logging.Debug("命令执行结果: %s", result)
@@ -296,4 +295,11 @@ func (guest Guest) CopyFile(localFile string, remotePath string) (string, error)
 	remoteFile := remotePath + "/" + filepath.Base(localFile)
 	logging.Info("[%s] 拷贝文件 %s --> %s", guest.Domain, localFile, remotePath)
 	return remoteFile, guest.FileWrite(remoteFile, string(bytes))
+}
+func (guest Guest) HostName() (string, error) {
+	result := guest.Exec("hostname", true)
+	if result.Failed {
+		return "", fmt.Errorf("exec failed: %s", result.ErrData)
+	}
+	return result.OutData, nil
 }
