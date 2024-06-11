@@ -51,6 +51,13 @@ func (g *Guest) GetName() string {
 func (g Guest) String() string {
 	return fmt.Sprintf("<%s %s>", g.Connection, g.Domain)
 }
+func (g Guest) IsRunning() bool {
+	domainInfo, err := g.domain.GetInfo()
+	if err != nil {
+		return false
+	}
+	return domainInfo.State == libvirt.DOMAIN_RUNNING
+}
 
 func ParseGuest(guestConnector string) (*Guest, error) {
 	values := strings.Split(guestConnector, ":")

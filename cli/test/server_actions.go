@@ -103,7 +103,6 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 	var (
 		server     *nova.Server
 		err        error
-		boot       bool
 		testFailed bool
 	)
 	success, failed, skip := 0, 0, 0
@@ -125,7 +124,24 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		if err != nil {
 			return fmt.Errorf("create server failed: %s", err)
 		}
-		boot = true
+		defer func() {
+			if !testFailed || common.CONF.Test.DeleteIfError {
+				logging.Info("[%s] deleting server", server.Id)
+				client.NovaV2().Servers().Delete(server.Id)
+				client.NovaV2().Servers().WaitDeleted(server.Id)
+			}
+		}()
+
+		if common.CONF.Test.QGAChecker.Enabled {
+			checker := server_actions.QGAChecker{Client: client}
+			if err := checker.MakesureServerBooted(server); err != nil {
+				return err
+			}
+			// if err := checker.MakesureHostname(server, server.Name); err != nil {
+			// 	return err
+			// }
+		}
+
 	}
 	for i, actionName := range serverActions {
 		action := server_actions.ACTIONS.Get(actionName, server, client)
@@ -148,11 +164,7 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 			time.Sleep(time.Second * time.Duration(actionInterval))
 		}
 	}
-	if boot && (!testFailed || common.CONF.Test.DeleteIfError) {
-		logging.Info("[%s] deleting server", server.Id)
-		client.NovaV2().Servers().Delete(server.Id)
-		client.NovaV2().Servers().WaitDeleted(server.Id)
-	}
+
 	result := fmt.Sprintf("all actions: %d, success: %d, failed: %d, skip: %d",
 		len(serverActions), success, failed, skip)
 	if len(serverActions) == success {

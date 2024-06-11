@@ -68,8 +68,9 @@ type VolumeHotplug struct {
 	Nums int `yaml:"nums"`
 }
 
-type QGAFeature struct {
-	Enabled bool `yaml:"enabled"`
+type QGAChecker struct {
+	Enabled        bool `yaml:"enabled"`
+	ConnectTimeout int  `yaml:"connectTimeout"`
 }
 
 type Test struct {
@@ -90,7 +91,7 @@ type Test struct {
 	VolumeHotplug    VolumeHotplug    `yaml:"volumeHotplug"`
 	UseServers       []string         `yaml:"userServers"`
 	ActionInterval   int              `yaml:"actionInterval"`
-	QGAFeature       QGAFeature       `yaml:"qgaFeature"`
+	QGAChecker       QGAChecker       `yaml:"qgaChecker"`
 }
 
 func LoadConfig(configFile string) error {
