@@ -39,7 +39,7 @@ test:
   images:
   networks:
   actions:
-  attachInterfaceLoop:
+  interfaceHotplug:
     nums: 1
-  attachVolumeLoop:
+  volumeHotplug:
     nums: 1

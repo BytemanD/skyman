@@ -61,30 +61,36 @@ type Iperf struct {
 	ClientOptions string `yaml:"clientOptions"`
 	ServerOptions string `yaml:"serverOptions"`
 }
-type AttachInterfaceLoop struct {
+type InterfaceHotplug struct {
 	Nums int `yaml:"nums"`
 }
-type AttachVolumeLoop struct {
+type VolumeHotplug struct {
 	Nums int `yaml:"nums"`
 }
+
+type QGAFeature struct {
+	Enabled bool `yaml:"enabled"`
+}
+
 type Test struct {
-	Tasks               int                 `yaml:"tasks"`
-	Workers             int                 `yaml:"workers"`
-	DeleteIfError       bool                `yaml:"deleteIfError"`
-	AvailabilityZone    string              `yaml:"availabilityZone"`
-	BootFromVolume      bool                `yaml:"bootFromVolume"`
-	BootVolumeSize      uint16              `yaml:"bootVolumeSize"`
-	BootVolumeType      string              `yaml:"bootVolumeType"`
-	Flavors             []string            `yaml:"flavors"`
-	Images              []string            `yaml:"images"`
-	Networks            []string            `yaml:"networks"`
-	VolumeType          string              `yaml:"volumeType"`
-	VolumeSize          int                 `yaml:"volumeSize"`
-	Actions             []string            `yaml:"volumeType"`
-	AttachInterfaceLoop AttachInterfaceLoop `yaml:"attachInterfaceLoop"`
-	AttachVolumeLoop    AttachVolumeLoop    `yaml:"attachVolumeLoop"`
-	UseServers          []string            `yaml:"userServers"`
-	ActionInterval      int                 `yaml:"actionInterval"`
+	Tasks            int              `yaml:"tasks"`
+	Workers          int              `yaml:"workers"`
+	DeleteIfError    bool             `yaml:"deleteIfError"`
+	AvailabilityZone string           `yaml:"availabilityZone"`
+	BootFromVolume   bool             `yaml:"bootFromVolume"`
+	BootVolumeSize   uint16           `yaml:"bootVolumeSize"`
+	BootVolumeType   string           `yaml:"bootVolumeType"`
+	Flavors          []string         `yaml:"flavors"`
+	Images           []string         `yaml:"images"`
+	Networks         []string         `yaml:"networks"`
+	VolumeType       string           `yaml:"volumeType"`
+	VolumeSize       int              `yaml:"volumeSize"`
+	Actions          []string         `yaml:"volumeType"`
+	InterfaceHotplug InterfaceHotplug `yaml:"interfaceHotplug"`
+	VolumeHotplug    VolumeHotplug    `yaml:"volumeHotplug"`
+	UseServers       []string         `yaml:"userServers"`
+	ActionInterval   int              `yaml:"actionInterval"`
+	QGAFeature       QGAFeature       `yaml:"qgaFeature"`
 }
 
 func LoadConfig(configFile string) error {
@@ -126,11 +132,11 @@ func LoadConfig(configFile string) error {
 	if CONF.Test.Tasks <= 0 {
 		CONF.Test.Tasks = 1
 	}
-	if CONF.Test.AttachInterfaceLoop.Nums == 0 {
-		CONF.Test.AttachInterfaceLoop.Nums = 1
+	if CONF.Test.InterfaceHotplug.Nums == 0 {
+		CONF.Test.InterfaceHotplug.Nums = 1
 	}
-	if CONF.Test.AttachVolumeLoop.Nums == 0 {
-		CONF.Test.AttachVolumeLoop.Nums = 1
+	if CONF.Test.VolumeHotplug.Nums == 0 {
+		CONF.Test.VolumeHotplug.Nums = 1
 	}
 	return nil
 }

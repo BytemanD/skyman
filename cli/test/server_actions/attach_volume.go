@@ -103,7 +103,7 @@ func (t *ServerVolumeHotPlug) Start() error {
 	if !t.Server.IsActive() {
 		return fmt.Errorf("server is not active")
 	}
-	for i := 0; i < common.CONF.Test.AttachVolumeLoop.Nums; i++ {
+	for i := 0; i < common.CONF.Test.VolumeHotplug.Nums; i++ {
 		logging.Info("[%s] attach volume (%d)", t.ServerId(), i+1)
 
 		logging.Info("[%s] creating volume", t.ServerId())

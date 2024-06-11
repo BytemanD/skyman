@@ -63,7 +63,7 @@ func printServerQOSItems(server nova.Server) {
 }
 
 var testNetQos = &cobra.Command{
-	Use:     "iperf3-test <server> --client <client>",
+	Use:     "server-net-qos <server> --client <client>",
 	Short:   i18n.T("testServerNetworkQOS"),
 	Long:    "基于iperf3工具测试两个虚拟机的网络QOS",
 	Example: strings.TrimRight(SERVER_IPERF3_TEST_EXAMPLE, "\n"),

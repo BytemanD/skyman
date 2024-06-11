@@ -105,7 +105,7 @@ func (t *ServerAttachHotPlug) Start() error {
 	if !t.Server.IsActive() {
 		return fmt.Errorf("server is not active")
 	}
-	for i := 1; i <= common.CONF.Test.AttachInterfaceLoop.Nums; i++ {
+	for i := 1; i <= common.CONF.Test.InterfaceHotplug.Nums; i++ {
 		logging.Info("[%s] attach interface %d", t.ServerId(), i)
 		nextNetwork, err := t.nextNetwork()
 		if err != nil {
