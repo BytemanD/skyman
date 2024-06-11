@@ -24,7 +24,7 @@ func (o *Openstack) GlanceV2() *Glance {
 	if o.glanceClient == nil {
 		endpoint, err := o.AuthPlugin.GetServiceEndpoint("image", "glance", "public")
 		if err != nil {
-			logging.Fatal("get compute endpoint falied: %v", err)
+			logging.Fatal("get glance endpoint falied: %v", err)
 		}
 		o.glanceClient = &Glance{
 			NewRestClient(utility.VersionUrl(endpoint, V2), o.AuthPlugin),

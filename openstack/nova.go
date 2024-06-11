@@ -95,7 +95,7 @@ func (o *Openstack) NovaV2() *NovaV2 {
 	if o.novaClient == nil {
 		endpoint, err := o.AuthPlugin.GetServiceEndpoint("compute", "nova", "public")
 		if err != nil {
-			logging.Fatal("get compute endpoint falied: %v", err)
+			logging.Fatal("get nova endpoint falied: %v", err)
 		}
 		o.novaClient = &NovaV2{
 			RestClient: NewRestClient(utility.VersionUrl(endpoint, V2_1), o.AuthPlugin),
