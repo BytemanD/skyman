@@ -1,0 +1,117 @@
+package checkers
+
+import (
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/guest"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/nova"
+)
+
+type QGAChecker struct {
+	Client   *openstack.Openstack
+	ServerId string
+	Host     string
+}
+
+func (c QGAChecker) makesureQGAConnected(g *guest.Guest) error {
+	logging.Info("[%s] connecting to qga ...", c.ServerId)
+	startTime := time.Now()
+	for {
+		_, err := g.HostName()
+		if err == nil {
+			logging.Info("[%s] qga connected", g.Domain)
+			return nil
+		}
+		if time.Since(startTime) >= time.Second*time.Duration(common.CONF.Test.QGAChecker.QgaConnectTimeout) {
+			return fmt.Errorf("connect qga timeout")
+		}
+		logging.Debug("[%s] get hostname failed: %s", g.Domain, err)
+		time.Sleep(time.Second * 5)
+	}
+}
+
+func (c QGAChecker) MakesureHostname(hostname string) error {
+	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
+	serverGuest.Connect()
+	result := serverGuest.Exec("hostname", true)
+	if result.Failed {
+		return fmt.Errorf("run qga command failed")
+	}
+	guestHostname := strings.TrimSpace(result.OutData)
+	logging.Info("[%s] guest hostname is %s", c.ServerId, guestHostname)
+	if guestHostname != hostname {
+		return fmt.Errorf("hostname is %s, not %s", guestHostname, hostname)
+	}
+	return nil
+}
+func (c QGAChecker) MakesureServerRunning() error {
+	startTime := time.Now()
+	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
+	logging.Info("[%s] connecting to guest ...", c.ServerId)
+	for {
+		if err := serverGuest.Connect(); err == nil {
+			if serverGuest.IsRunning() {
+				logging.Info("[%s] guest is running ...", c.ServerId)
+				break
+			}
+		}
+		if time.Since(startTime) >= time.Second*time.Duration(common.CONF.Test.QGAChecker.GuestConnectTimeout) {
+			return fmt.Errorf("connect guest timeout")
+		}
+		time.Sleep(time.Second * 5)
+	}
+	return c.makesureQGAConnected(&serverGuest)
+}
+func (c QGAChecker) MakesureInterfaceExist(attachment *nova.InterfaceAttachment) error {
+	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
+	serverGuest.Connect()
+	ipaddrs := serverGuest.GetIpaddrs()
+	logging.Debug("[%s] found ip addresses: %s", c.ServerId, ipaddrs)
+
+	for _, fixedIpaddr := range attachment.FixedIps {
+		found := false
+		for _, ipaddr := range ipaddrs {
+			if ipaddr == fixedIpaddr.IpAddress {
+				logging.Info("[%s] guest ip address %s exists", c.ServerId, fixedIpaddr.IpAddress)
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("ip address %s not found in guest, found %v",
+				fixedIpaddr.IpAddress, ipaddrs)
+		}
+	}
+	return nil
+}
+func (c QGAChecker) MakesureVolumeExist(attachment *nova.VolumeAttachment) error {
+	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
+	serverGuest.Connect()
+	guestBlockDevices, err := serverGuest.GetBlockDevices()
+	if err != nil {
+		return fmt.Errorf("get block devices failed: %s", err)
+	}
+	logging.Debug("[%s] found block devices: %s", c.ServerId, guestBlockDevices.GetAllNames())
+	for _, blockDevice := range guestBlockDevices {
+		if blockDevice.Name == attachment.Device {
+			logging.Info("[%s] guest block device %s exists", c.ServerId, attachment.Device)
+			return nil
+		}
+	}
+	return fmt.Errorf("block device %s not found in guest, found %v",
+		attachment.Device, guestBlockDevices.GetAllNames())
+}
+
+func GetQgaChecker(client *openstack.Openstack, server *nova.Server) (*QGAChecker, error) {
+	host, err := client.NovaV2().Hypervisors().Found(server.Host)
+	if err != nil {
+		return nil, fmt.Errorf("get hypervisor failed: %s", err)
+	}
+	logging.Info("[%s] server host ip is %s", server.Id, host.HostIp)
+	return &QGAChecker{Client: client, ServerId: server.Id, Host: host.HostIp}, nil
+}

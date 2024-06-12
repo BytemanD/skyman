@@ -8,6 +8,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/arrayutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/syncutils"
+	"github.com/BytemanD/skyman/cli/test/checkers"
 	"github.com/BytemanD/skyman/cli/test/server_actions"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
@@ -131,18 +132,12 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 				client.NovaV2().Servers().WaitDeleted(server.Id)
 			}
 		}()
-
-		if common.CONF.Test.QGAChecker.Enabled {
-			checker, err := server_actions.GetQgaChecker(client, server)
-			if err != nil {
-				return fmt.Errorf("get guest checker failed: %s", err)
-			}
-			if err := checker.MakesureServerBooted(); err != nil {
-				return err
-			}
-			if err := checker.MakesureHostname(server.GuestHostname()); err != nil {
-				return err
-			}
+		serverCheckers, err := checkers.GetServerCheckers(client, server)
+		if err != nil {
+			return fmt.Errorf("get server checker failed: %s", err)
+		}
+		if err := serverCheckers.MakesureServerRunning(); err != nil {
+			return err
 		}
 	}
 	for i, actionName := range serverActions {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/cli/test/checkers"
 	"github.com/BytemanD/skyman/common"
 )
 
@@ -31,7 +32,8 @@ func (t ServerAttachInterface) Start() error {
 	}
 
 	logging.Info("[%s] attaching interface: %s", t.Server.Id, port.Id)
-	if _, err := t.Client.NovaV2().Servers().AddInterface(t.Server.Id, "", port.Id); err != nil {
+	attachment, err := t.Client.NovaV2().Servers().AddInterface(t.Server.Id, "", port.Id)
+	if err != nil {
 		return err
 	}
 	if err := t.WaitServerTaskFinished(false); err != nil {
@@ -41,6 +43,13 @@ func (t ServerAttachInterface) Start() error {
 		return err
 	}
 	if err := t.ServerMustHasInterface(port.Id); err != nil {
+		return err
+	}
+	serverCheckers, err := checkers.GetServerCheckers(t.Client, t.Server)
+	if err != nil {
+		return fmt.Errorf("get server checker failed: %s", err)
+	}
+	if err := serverCheckers.MakesureInterfaceExist(attachment); err != nil {
 		return err
 	}
 	return nil
@@ -105,6 +114,10 @@ func (t *ServerAttachHotPlug) Start() error {
 	if !t.Server.IsActive() {
 		return fmt.Errorf("server is not active")
 	}
+	serverCheckers, err := checkers.GetServerCheckers(t.Client, t.Server)
+	if err != nil {
+		return fmt.Errorf("get server checker failed: %s", err)
+	}
 	for i := 1; i <= common.CONF.Test.InterfaceHotplug.Nums; i++ {
 		logging.Info("[%s] attach interface %d", t.ServerId(), i)
 		nextNetwork, err := t.nextNetwork()
@@ -121,7 +134,8 @@ func (t *ServerAttachHotPlug) Start() error {
 		}
 
 		logging.Info("[%s] attaching interface %s", t.Server.Id, port.Id)
-		if _, err := t.Client.NovaV2().Servers().AddInterface(t.Server.Id, "", port.Id); err != nil {
+		attachment, err := t.Client.NovaV2().Servers().AddInterface(t.Server.Id, "", port.Id)
+		if err != nil {
 			return err
 		}
 
@@ -131,7 +145,7 @@ func (t *ServerAttachHotPlug) Start() error {
 		if err := t.ServerMustNotError(); err != nil {
 			return err
 		}
-		if err := t.ServerMustHasInterface(port.Id); err != nil {
+		if err := serverCheckers.MakesureInterfaceExist(attachment); err != nil {
 			return err
 		}
 		t.attachments = append(t.attachments, port.Id)

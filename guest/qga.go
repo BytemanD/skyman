@@ -179,6 +179,40 @@ func (guest Guest) GetIpaddrs() []string {
 	return ipAddresses
 }
 
+type BlockDevice struct {
+	Name string
+	Size string
+	Type string
+}
+
+type BlockDevices []BlockDevice
+
+func (b BlockDevices) GetAllNames() []string {
+	names := []string{}
+	for _, device := range b {
+		names = append(names, device.Name)
+	}
+	return names
+}
+
+func (guest Guest) GetBlockDevices() (BlockDevices, error) {
+	result := guest.Exec("lsblk --raw -o Name,Size,TYPE --paths -d", true)
+	if result.Failed || result.ErrData != "" {
+		return nil, fmt.Errorf("get block devices failed: %s", result.ErrData)
+	}
+	blockDeviecs := BlockDevices{}
+	for _, line := range strings.Split(result.OutData, "\n") {
+		values := strings.Split(line, " ")
+		if len(values) != 3 || values[0] == "NAME" {
+			continue
+		}
+		blockDeviecs = append(blockDeviecs, BlockDevice{
+			Name: values[0], Size: values[1], Type: values[2],
+		})
+	}
+	return blockDeviecs, nil
+}
+
 func (guest Guest) Cat(args ...string) ExecResult {
 	return guest.Exec(fmt.Sprintf("cat %s", strings.Join(args, " ")), true)
 }

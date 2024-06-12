@@ -178,6 +178,9 @@ func (server Server) IsSuspended() bool {
 func (server Server) GuestHostname() string {
 	return strings.Replace(server.Name, ":", "", -1)
 }
+func (server Server) IsRunning() bool {
+	return strings.ToUpper(server.GetPowerState()) == "RUNNING"
+}
 
 type Service struct {
 	model.Resource

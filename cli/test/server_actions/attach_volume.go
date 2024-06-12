@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/cli/test/checkers"
 	"github.com/BytemanD/skyman/common"
 )
 
@@ -22,27 +23,25 @@ func (t ServerAttachVolume) Start() error {
 	if err != nil {
 		return fmt.Errorf("create volume failed: %s", err)
 	}
-	_, err = t.Client.NovaV2().Servers().AddVolume(t.Server.Id, volume.Id)
-	logging.Info("[%s] attaching volume", t.Server.Id)
+	attachment, err := t.Client.NovaV2().Servers().AddVolume(t.Server.Id, volume.Id)
 	if err != nil {
 		return err
 	}
+	logging.Info("[%s] attaching volume on %s", t.Server.Id, attachment.Device)
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
 	if t.Server.IsError() {
 		return fmt.Errorf("server status is error")
 	}
-	volumes, err := t.Client.NovaV2().Servers().ListVolumes(t.Server.Id)
+	serverCheckers, err := checkers.GetServerCheckers(t.Client, t.Server)
 	if err != nil {
+		return fmt.Errorf("get server checker failed: %s", err)
+	}
+	if err := serverCheckers.MakesureVolumeExist(attachment); err != nil {
 		return err
 	}
-	for _, vol := range volumes {
-		if vol.VolumeId == volume.Id {
-			return nil
-		}
-	}
-	return fmt.Errorf("server has no volume %s", volume.Id)
+	return nil
 }
 
 type ServerDetachVolume struct {
@@ -103,6 +102,10 @@ func (t *ServerVolumeHotPlug) Start() error {
 	if !t.Server.IsActive() {
 		return fmt.Errorf("server is not active")
 	}
+	serverCheckers, err := checkers.GetServerCheckers(t.Client, t.Server)
+	if err != nil {
+		return fmt.Errorf("get server checker failed: %s", err)
+	}
 	for i := 0; i < common.CONF.Test.VolumeHotplug.Nums; i++ {
 		logging.Info("[%s] attach volume (%d)", t.ServerId(), i+1)
 
@@ -112,7 +115,7 @@ func (t *ServerVolumeHotPlug) Start() error {
 			return fmt.Errorf("create volume failed: %s", err)
 		}
 
-		_, err = t.Client.NovaV2().Servers().AddVolume(t.Server.Id, volume.Id)
+		attachment, err := t.Client.NovaV2().Servers().AddVolume(t.Server.Id, volume.Id)
 		if err != nil {
 			return err
 		}
@@ -123,7 +126,7 @@ func (t *ServerVolumeHotPlug) Start() error {
 		if err := t.ServerMustNotError(); err != nil {
 			return err
 		}
-		if err := t.ServerMustHasVolume(volume.Id); err != nil {
+		if err := serverCheckers.MakesureVolumeExist(attachment); err != nil {
 			return err
 		}
 		t.attachments = append(t.attachments, volume.Id)
