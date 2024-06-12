@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/base64"
 	"io"
+	"os"
 	"reflect"
 	"strings"
 
@@ -56,4 +57,12 @@ func LoadUserData(file string) (string, error) {
 	}
 	encodedContent := base64.StdEncoding.EncodeToString([]byte(content))
 	return encodedContent, nil
+}
+
+func IsFileExists(filePath string) bool {
+	fileInfo, err := os.Stat(filePath)
+	if !os.IsExist(err) {
+		return false
+	}
+	return !fileInfo.Mode().IsDir()
 }

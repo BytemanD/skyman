@@ -2,6 +2,7 @@ package guest
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -106,6 +107,45 @@ var qgaCopy = &cobra.Command{
 		}
 	},
 }
+var qgaPasswd = &cobra.Command{
+	Use:     "qga-passwd <domain> <PASSWORD>",
+	Short:   "使用 QGA 修改密码",
+	Long:    "使用 chpasswd 命令修改 Linux 密码",
+	Example: "qga-passwd <HOST>@<DOMAIN_UUID>",
+	Args:    cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		connection, password := args[0], args[1]
+		user, _ := cmd.Flags().GetString("user")
+
+		domainGuest, err := getGuest(connection)
+		utility.LogError(err, "parse guest connection failed", true)
+		logging.Info("连接 guest domain")
+		err = domainGuest.Connect()
+		utility.LogError(err, "连接domain失败", true)
+
+		filename := "user-passwd.sh"
+
+		file, err := os.Create(filename)
+		utility.LogError(err, "creating file failed: %s", true)
+
+		defer func() {
+			file.Close()
+			os.Remove(filename)
+		}()
+
+		_, err = file.WriteString(fmt.Sprintf("echo '%s:%s' | /usr/sbin/chpasswd\n", user, password))
+		utility.LogError(err, "writing to file failed", true)
+
+		guestFile, err := domainGuest.CopyFile(filename, "/tmp")
+		utility.LogError(err, "copy to guest failed", true)
+		execResult := domainGuest.Exec(fmt.Sprintf("sh %s", guestFile), true)
+		if execResult.Failed || execResult.ErrData != "" {
+			logging.Error("execute failed: %s", execResult.ErrData)
+		} else {
+			logging.Success("设置成功")
+		}
+	},
+}
 
 var iperf3Test = &cobra.Command{
 	Use:     "iperf3-test <domain> --client <domain>",
@@ -137,5 +177,7 @@ func init() {
 	iperf3Test.Flags().String("iperf3-package", "", "iperf3 安装包")
 	iperf3Test.MarkFlagRequired("client")
 
-	GuestCommand.AddCommand(qgaExec, qgaCopy, iperf3Test)
+	qgaPasswd.Flags().StringP("user", "u", "root", "用户名")
+
+	GuestCommand.AddCommand(qgaExec, qgaCopy, qgaPasswd, iperf3Test)
 }
