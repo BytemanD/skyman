@@ -545,9 +545,14 @@ var serverMigrate = &cobra.Command{
 		live, _ := cmd.Flags().GetBool("live")
 		host, _ := cmd.Flags().GetString("host")
 		blockMigrate, _ := cmd.Flags().GetBool("block-migrate")
-		var err error
+		wait, _ := cmd.Flags().GetBool("wait")
+
+		srcHostMap := map[string]string{}
 		for _, serverId := range args {
+			server, err := client.NovaV2().Servers().Found(serverId)
+			utility.LogError(err, "get server server failed", true)
 			if live {
+				srcHostMap[serverId] = server.Host
 				err = client.NovaV2().Servers().LiveMigrate(serverId, blockMigrate, host)
 			} else {
 				err = client.NovaV2().Servers().Migrate(serverId, host)
@@ -556,6 +561,22 @@ var serverMigrate = &cobra.Command{
 				utility.LogError(err, "Reqeust to migrate server failed", false)
 			} else {
 				fmt.Printf("Requested to migrate server: %s\n", serverId)
+			}
+		}
+		if wait {
+			for _, serverId := range args {
+				server, err := client.NovaV2().Servers().Servers().WaitTask(serverId, "")
+				if err != nil {
+					logging.Error("[%s] migrate failed: %s", serverId, err)
+					continue
+				}
+				if server.Host == srcHostMap[serverId] {
+					logging.Error("[%s] migrate failed, host not changed", serverId)
+				} else {
+					logging.Success("[%s] migrate success, %s -> %s",
+						serverId, srcHostMap[serverId], server.Host)
+				}
+
 			}
 		}
 	},
@@ -822,6 +843,7 @@ func init() {
 	serverMigrate.Flags().Bool("live", false, "Migrate running server.")
 	serverMigrate.Flags().String("host", "", "Destination host name.")
 	serverMigrate.Flags().Bool("block-migrate", false, "True in case of block_migration.")
+	serverMigrate.Flags().Bool("wait", false, "Wait server migrated")
 
 	// server resize flags
 	serverResize.Flags().BoolP("wait", "w", false, "Wait server resize completed")
