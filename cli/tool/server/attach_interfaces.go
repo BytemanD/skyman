@@ -94,8 +94,8 @@ var attachInterfaces = &cobra.Command{
 				for {
 					port, err := client.NeutronV2().Ports().Show(attachment.PortId)
 					if port != nil {
-						logging.Info("[interface: %s] status is %s", port.Id, port.Status)
-						if err == nil && port.IsActive() {
+						logging.Info("[interface: %s] vif type is %s", port.Id, port.BindingVifType)
+						if err == nil && !port.IsUnbound() {
 							break
 						}
 					}

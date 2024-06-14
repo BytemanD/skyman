@@ -123,6 +123,10 @@ func (port Port) IsActive() bool {
 	return port.Status == "ACTIVE"
 }
 
+func (port Port) IsUnbound() bool {
+	return port.BindingVifType == "unbound"
+}
+
 type Routers []Router
 type Networks []Network
 type Ports []Port
