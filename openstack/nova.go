@@ -359,6 +359,7 @@ func (c ServersApi) DeleteInterfaceAndWait(id string, portId string, waitSeconds
 			}
 		}
 		if detached {
+			logging.Info("[interface: %s] detached", portId)
 			return nil
 		}
 		if time.Since(startTime) >= time.Second*time.Duration(waitSeconds) {
