@@ -17,9 +17,11 @@ type Openstack struct {
 	AuthPlugin     auth.AuthPlugin
 }
 
-func NewClient(authUrl string, user auth.User, project auth.Project,
-	regionName string,
-) *Openstack {
+func (o Openstack) Region() string {
+	return o.AuthPlugin.Region()
+}
+
+func NewClient(authUrl string, user auth.User, project auth.Project, regionName string) *Openstack {
 	passwordAuth := auth.NewPasswordAuth(authUrl, user, project, regionName)
 	return &Openstack{AuthPlugin: &passwordAuth}
 }
@@ -39,10 +41,6 @@ func Client(region string) *Openstack {
 	c := NewClient(common.CONF.Auth.Url, user, project, region)
 	c.AuthPlugin.SetLocalTokenExpire(common.CONF.Auth.TokenExpireTime)
 	return c
-}
-
-func (o Openstack) Region() string {
-	return o.AuthPlugin.Region()
 }
 
 func DefaultClient() *Openstack {

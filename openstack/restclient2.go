@@ -65,6 +65,10 @@ func (rest *RestClient2) Patch(url string, query url.Values, body []byte, header
 	return rest.session.Patch(rest.makeUrl(url), query, body, headers)
 }
 
+func (rest *RestClient2) GetResponseRequstId(resp *httpclient.Response) string {
+	return resp.Headers.Get("X-Openstack-Request-Id")
+}
+
 func NewRestClient2(baseUrl string, authPlugin auth.AuthPlugin) RestClient2 {
 	return RestClient2{
 		BaseUrl: baseUrl,

@@ -36,7 +36,7 @@ func (c Client) getSession() *http.Client {
 func encodeHeaders(headers http.Header) string {
 	headersString := []string{}
 	for k, v := range headers {
-		headersString = append(headersString, fmt.Sprintf("'%s:%s'", k, strings.Join(v, ",")))
+		headersString = append(headersString, fmt.Sprintf("'%s: %s'", k, strings.Join(v, ",")))
 	}
 	return strings.Join(headersString, " ")
 }

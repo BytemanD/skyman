@@ -77,17 +77,13 @@ var attachInterfaces = &cobra.Command{
 			ShowProgress: true,
 			Func: func(item interface{}) error {
 				p := item.(Interface)
-				logging.Debug("[interface: %s] attaching", p)
 				attachment, err := client.NovaV2().Servers().AddInterface(server.Id, p.NetId, p.PortId)
 				if err != nil {
 					logging.Error("[interface: %s] attach failed: %v", p, err)
 					return err
 				}
+				logging.Debug("[interface: %s] attaching", attachment.PortId)
 
-				if attachment != nil && p.PortId == "" {
-					p.PortId = attachment.PortId
-					logging.Info("request id: %s", attachment.GetRequestId())
-				}
 				interfaces, err := client.NovaV2().Servers().ListInterfaces(server.Id)
 				if err != nil {
 					utility.LogError(err, "list server interfaces failed:", false)

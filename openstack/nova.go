@@ -340,19 +340,39 @@ func (c ServersApi) AddInterface(id string, netId, portId string) (*nova.Interfa
 	body := map[string]*nova.InterfaceAttachment{"interfaceAttachment": {}}
 	resp.BodyUnmarshal(&body)
 
-	// body["interfaceAttachment"].SetRequestId(resp.GetRequestIdHeader())
+	body["interfaceAttachment"].SetRequestId(c.GetResponseRequstId(resp))
 	return body["interfaceAttachment"], nil
 }
-func (c ServersApi) DeleteInterface(id string, portId string) error {
-	_, err := c.NovaV2.Delete(utility.UrlJoin("servers", id, "os-interface", portId), nil)
-	return err
+func (c ServersApi) DeleteInterface(id string, portId string) (*httpclient.Response, error) {
+	return c.NovaV2.Delete(utility.UrlJoin("servers", id, "os-interface", portId), nil)
 }
 func (c ServersApi) DeleteInterfaceAndWait(id string, portId string, waitSeconds int) error {
-	err := c.DeleteInterface(id, portId)
+	resp, err := c.DeleteInterface(id, portId)
 	if err != nil {
 		return err
 	}
+	reqId := c.GetResponseRequstId(resp)
+	logging.Debug("request id: %s", reqId)
 	startTime := time.Now()
+	for {
+		action, err := c.ShowAction(id, reqId)
+		if err != nil {
+			logging.Warning("get action events failed: %s", err)
+			break
+		}
+		if len(action.Events) > 0 && action.Events[0].FinishTime != "" {
+			logging.Info("[interface: %s] action result: %s", portId, action.Events[0].Result)
+			if action.Events[0].Result == "Error" {
+				return fmt.Errorf("action is error")
+			}
+			break
+		}
+		if time.Since(startTime) >= time.Second*time.Duration(waitSeconds) {
+			return fmt.Errorf("action not finish after %d seconds", waitSeconds)
+		}
+		time.Sleep(time.Second * 2)
+	}
+
 	for {
 		detached := true
 		interfaces, err := c.ListInterfaces(id)

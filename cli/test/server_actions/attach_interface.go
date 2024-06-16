@@ -42,9 +42,6 @@ func (t ServerAttachInterface) Start() error {
 	if err := t.ServerMustNotError(); err != nil {
 		return err
 	}
-	if err := t.ServerMustHasInterface(port.Id); err != nil {
-		return err
-	}
 	serverCheckers, err := checkers.GetServerCheckers(t.Client, t.Server)
 	if err != nil {
 		return fmt.Errorf("get server checker failed: %s", err)
@@ -81,11 +78,15 @@ func (t ServerDetachInterface) Start() error {
 		return err
 	}
 
-	err = t.Client.NovaV2().Servers().DeleteInterface(t.Server.Id, portId)
+	resp, err := t.Client.NovaV2().Servers().DeleteInterface(t.Server.Id, portId)
 	if err != nil {
 		return err
 	}
 	logging.Info("[%s] detaching interface %s", t.Server.Id, portId)
+
+	reqId := t.Client.NovaV2().GetResponseRequstId(resp)
+	logging.Info("[%s] request id: %s", t.ServerId(), reqId)
+
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
@@ -152,7 +153,7 @@ func (t *ServerAttachHotPlug) Start() error {
 	}
 
 	for _, portId := range t.attachments {
-		err := t.Client.NovaV2().Servers().DeleteInterface(t.Server.Id, portId)
+		_, err := t.Client.NovaV2().Servers().DeleteInterface(t.Server.Id, portId)
 		if err != nil {
 			return err
 		}
