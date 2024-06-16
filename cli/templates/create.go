@@ -161,7 +161,7 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 	utility.LogError(err, "create server failed", true)
 	logging.Info("creating server %s", serverOption.Name)
 	if watch {
-		computeClient.Servers().WaitStatus(s.Id, "ACTIVE", 5)
+		computeClient.Servers().WaitStatus(s.Id, "ACTIVE", 2)
 	}
 	return s, nil
 }

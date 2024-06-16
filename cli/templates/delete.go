@@ -48,10 +48,14 @@ func deleteServer(client *openstack.Openstack, server Server, watch bool) {
 		logging.Warning("get server %s failed, %s", server.Name, err)
 		return
 	}
-	logging.Info("deleting server %s", server.Name)
 	err = client.NovaV2().Servers().Delete(s.Id)
-	utility.LogError(err, fmt.Sprintf("delete server %s failed", s.Name), false)
-	if err == nil && watch {
+	if err != nil {
+		utility.LogError(err, fmt.Sprintf("delete server %s failed", s.Name), false)
+		return
+	}
+
+	logging.Info("deleting server %s", server.Name)
+	if watch {
 		client.NovaV2().Servers().WaitDeleted(s.Id)
 	}
 }

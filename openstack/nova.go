@@ -1080,20 +1080,32 @@ func (c ServerGroupApi) List(query url.Values) ([]nova.ServerGroup, error) {
 }
 
 func (c ServersApi) WaitStatus(serverId string, status string, interval int) (*nova.Server, error) {
-	for {
-		server, err := c.Show(serverId)
-		if err != nil {
-			return server, err
-		}
-		logging.Info("[server: %s] status: %s, taskState: %s", server.Id, server.Status, server.TaskState)
-		switch strings.ToUpper(server.Status) {
-		case "ERROR":
-			return server, fmt.Errorf("server status is error, message: %s", server.Fault.Message)
-		case strings.ToUpper(status):
-			return server, nil
-		}
-		time.Sleep(time.Second * time.Duration(interval))
-	}
+	var (
+		server *nova.Server
+		err    error
+	)
+	utility.Retry(
+		utility.RetryCondition{
+			Timeout: time.Second * 60 * 10, IntervalMin: time.Second * time.Duration(interval),
+		},
+		func() bool {
+			server, err = c.Show(serverId)
+			if err != nil {
+				return false
+			}
+			logging.Info("[server: %s] status: %s, taskState: %s", server.Id, server.Status, server.TaskState)
+			switch strings.ToUpper(server.Status) {
+			case "ERROR":
+				err = fmt.Errorf("server status is error, message: %s", server.Fault.Message)
+				return false
+			case strings.ToUpper(status):
+				return false
+			}
+			return true
+
+		},
+	)
+	return server, err
 }
 func (c ServersApi) WaitBooted(id string) (*nova.Server, error) {
 	for {
@@ -1113,19 +1125,31 @@ func (c ServersApi) WaitBooted(id string) (*nova.Server, error) {
 	}
 }
 func (c ServersApi) WaitDeleted(id string) error {
-	for {
-		server, err := c.Show(id)
-		if err != nil {
+	var (
+		server *nova.Server
+		err    error
+	)
+	utility.Retry(
+		utility.RetryCondition{
+			Timeout:     time.Second * 60 * 10,
+			IntervalMin: time.Second * time.Duration(2)},
+		func() bool {
+			server, err = c.Show(id)
+			if err == nil {
+				logging.Info("[%s] %s", id, server.AllStatus())
+				return true
+			}
 			if httpError, ok := err.(*httpclient.HttpError); ok {
 				if httpError.Status == 404 {
-					return nil
+					logging.Info("[%s] deleted", id)
+					err = nil
+					return false
 				}
 			}
-			return err
-		}
-		logging.Debug("servers status is %s", server.Status)
-		time.Sleep(time.Second * 2)
-	}
+			return false
+		},
+	)
+	return err
 }
 func (c ServersApi) WaitTask(id string, taskState string) (*nova.Server, error) {
 	for {
