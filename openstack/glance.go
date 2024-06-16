@@ -3,6 +3,7 @@ package openstack
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"strconv"
@@ -11,10 +12,11 @@ import (
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/glance"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/BytemanD/skyman/utility/httpclient"
 )
 
 type Glance struct {
-	RestClient
+	RestClient2
 }
 type ImageApi struct {
 	Glance
@@ -27,7 +29,7 @@ func (o *Openstack) GlanceV2() *Glance {
 			logging.Fatal("get glance endpoint falied: %v", err)
 		}
 		o.glanceClient = &Glance{
-			NewRestClient(utility.VersionUrl(endpoint, V2), o.AuthPlugin),
+			NewRestClient2(utility.VersionUrl(endpoint, V2), o.AuthPlugin),
 		}
 	}
 	return o.glanceClient
@@ -129,7 +131,7 @@ func (c ImageApi) Found(idOrName string) (*glance.Image, error) {
 	if err == nil {
 		return image, nil
 	}
-	if httpError, ok := err.(*utility.HttpError); ok {
+	if httpError, ok := err.(*httpclient.HttpError); ok {
 		if httpError.IsNotFound() {
 			image, err = c.FoundByName(idOrName)
 		}
@@ -149,8 +151,8 @@ func (c ImageApi) Create(options glance.Image) (*glance.Image, error) {
 	resp.BodyUnmarshal(&image)
 	return &image, nil
 }
-func (c ImageApi) Delete(id string) (err error) {
-	_, err = c.Glance.Delete(utility.UrlJoin("images", id), nil)
+func (c ImageApi) Delete(id string) error {
+	_, err := c.Glance.Delete(utility.UrlJoin("images", id), nil)
 	return err
 }
 func (c ImageApi) Set(id string, params map[string]interface{}) (*glance.Image, error) {
@@ -164,14 +166,10 @@ func (c ImageApi) Set(id string, params map[string]interface{}) (*glance.Image, 
 	}
 	body, _ := json.Marshal(attributies)
 
-	req := utility.Request{
-		Url:  utility.UrlJoin("images", id),
-		Body: body,
-		Headers: map[string]string{
-			"Content-Type": "application/openstack-images-v2.1-json-patch",
-		},
+	headers := map[string]string{
+		"Content-Type": "application/openstack-images-v2.1-json-patch",
 	}
-	resp, err := c.Glance.Patch(req)
+	resp, err := c.Glance.Patch(utility.UrlJoin("images", id), nil, body, headers)
 	if err != nil {
 		return nil, err
 	}
@@ -182,21 +180,33 @@ func (c ImageApi) Set(id string, params map[string]interface{}) (*glance.Image, 
 	image.SetRaw(rawBody)
 	return &image, nil
 }
-func (c ImageApi) Upload(id string, fileName string) error {
-	req := utility.Request{
-		Url:     utility.UrlJoin("images", id, "file"),
-		Headers: map[string]string{"Content-Type": "application/octet-stream"},
+func (c ImageApi) Upload(id string, file string) error {
+	fileReader, err := os.Open(file)
+	if err != nil {
+		return err
 	}
-	_, err := c.Glance.PutFile(req, fileName)
+	defer fileReader.Close()
+	fileStat, err := fileReader.Stat()
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest(http.MethodPut, c.makeUrl(utility.UrlJoin("images", id, "file")),
+		utility.NewProcessReader(fileReader, int(fileStat.Size())))
+	req.Header.Set("Content-Type", "application/octet-stream")
+	if err != nil {
+		return err
+	}
+	_, err = c.session.Request(req)
 	return err
 }
 
 func (c ImageApi) Download(id string, fileName string, process bool) error {
-	req := utility.Request{
-		Url:     utility.UrlJoin("images", id, "file"),
-		Headers: map[string]string{"Content-Type": "application/octet-stream"},
+	req, err := http.NewRequest(http.MethodGet, c.makeUrl(utility.UrlJoin("images", id, "file")), nil)
+	if err != nil {
+		return err
 	}
-	resp, err := c.Glance.GetReq(req)
+	req.Header.Set("Content-Type", "application/octet-stream")
+	resp, err := c.session.Request(req)
 	if err != nil {
 		return err
 	}

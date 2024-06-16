@@ -4,11 +4,11 @@ import "net/http"
 
 type AuthPlugin interface {
 	GetToken() (*Token, error)
-	SetTokenExpireSecond(expire int)
-	GetAuthTokenId() string
 	GetTokenId() (string, error)
+	SetLocalTokenExpire(expire int)
 	GetServiceEndpoint(sType string, sName string, sInterface string) (string, error)
 	TokenIssue() error
 	AuthRequest(req *http.Request) error
 	Region() string
+	GetSafeHeader(header http.Header) http.Header
 }

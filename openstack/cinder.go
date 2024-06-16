@@ -13,12 +13,13 @@ import (
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/BytemanD/skyman/utility/httpclient"
 )
 
 const V2 = "v2"
 
 type CinderV2 struct {
-	RestClient
+	RestClient2
 }
 type VolumeApi struct {
 	CinderV2
@@ -56,7 +57,7 @@ func (o *Openstack) CinderV2() *CinderV2 {
 			logging.Warning("get endpoint falied: %v", err)
 		}
 		o.cinderClient = &CinderV2{
-			NewRestClient(utility.VersionUrl(endpoint, V2), o.AuthPlugin),
+			NewRestClient2(utility.VersionUrl(endpoint, V2), o.AuthPlugin),
 		}
 	}
 	return o.cinderClient
@@ -137,7 +138,7 @@ func (c VolumeApi) Found(idOrName string) (*cinder.Volume, error) {
 	if err == nil {
 		return volume, nil
 	}
-	if httpError, ok := err.(*utility.HttpError); ok {
+	if httpError, ok := err.(*httpclient.HttpError); ok {
 		if !httpError.IsNotFound() {
 			return nil, err
 		}
@@ -279,7 +280,7 @@ func (c VolumeTypeApi) Found(idOrName string) (*cinder.VolumeType, error) {
 	if err == nil {
 		return volumeType, nil
 	}
-	if httpError, ok := err.(*utility.HttpError); ok {
+	if httpError, ok := err.(*httpclient.HttpError); ok {
 		if !httpError.IsNotFound() {
 			return nil, err
 		}

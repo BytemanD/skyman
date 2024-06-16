@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/httpclient"
 	"github.com/BytemanD/skyman/cli/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
@@ -654,7 +655,7 @@ var serverSetPassword = &cobra.Command{
 			}
 			err = client.NovaV2().Servers().SetPassword(server.Id, string(newPasswd), user)
 			if err != nil {
-				if httpError, ok := err.(*utility.HttpError); ok {
+				if httpError, ok := err.(*httpclient.HttpError); ok {
 					logging.Fatal("set password failed, %s, %s",
 						httpError.Reason, httpError.Message)
 				} else {

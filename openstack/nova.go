@@ -15,6 +15,7 @@ import (
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/BytemanD/skyman/utility/httpclient"
 )
 
 const V2_1 = "v2.1"
@@ -32,9 +33,10 @@ func getMicroVersion(vertionStr string) microVersion {
 }
 
 type NovaV2 struct {
-	RestClient
+	RestClient2
 	currentVersion *model.ApiVersion
 	MicroVersion   model.ApiVersion
+	region         string
 }
 type ServersApi struct {
 	NovaV2
@@ -98,7 +100,8 @@ func (o *Openstack) NovaV2() *NovaV2 {
 			logging.Fatal("get nova endpoint falied: %v", err)
 		}
 		o.novaClient = &NovaV2{
-			RestClient: NewRestClient(utility.VersionUrl(endpoint, V2_1), o.AuthPlugin),
+			RestClient2: NewRestClient2(utility.VersionUrl(endpoint, V2_1), o.AuthPlugin),
+			region:      o.AuthPlugin.Region(),
 		}
 		currentVersion, err := o.novaClient.GetCurrentVersion()
 		if err != nil {
@@ -106,8 +109,8 @@ func (o *Openstack) NovaV2() *NovaV2 {
 		} else {
 			o.novaClient.MicroVersion = *currentVersion
 		}
-		o.novaClient.RestClient.Headers["Openstack-Api-Version"] = o.novaClient.MicroVersion.Version
-		o.novaClient.RestClient.Headers["X-Openstack-Nova-Api-Version"] = o.novaClient.MicroVersion.Version
+		o.novaClient.RestClient2.AddBaseHeader("Openstack-Api-Version", o.novaClient.MicroVersion.Version)
+		o.novaClient.RestClient2.AddBaseHeader("X-Openstack-Nova-Api-Version", o.novaClient.MicroVersion.Version)
 		logging.Debug("current nova version: %s", o.novaClient.MicroVersion)
 	}
 	return o.novaClient
@@ -147,7 +150,7 @@ func (c *NovaV2) GetCurrentVersion() (*model.ApiVersion, error) {
 }
 
 func (c *NovaV2) String() string {
-	return fmt.Sprintf("<%s %s>", c.BaseUrl, c.AuthPlugin.Region())
+	return fmt.Sprintf("<%s %s>", c.BaseUrl, c.region)
 }
 
 // server api
@@ -161,6 +164,8 @@ func (c ServersApi) List(query url.Values) ([]nova.Server, error) {
 	if err := resp.BodyUnmarshal(&body); err != nil {
 		return nil, err
 	}
+	// serversResp := nova.ServersResp{Items: body["servers"]}
+	// serversResp.SetRequestId(resp.GetRequestIdHeader())
 	return body["servers"], nil
 }
 func (c ServersApi) ListByName(name string) ([]nova.Server, error) {
@@ -201,7 +206,7 @@ func (c ServersApi) Found(idOrName string) (*nova.Server, error) {
 	if err == nil {
 		return server, nil
 	}
-	if httpError, ok := err.(*utility.HttpError); ok {
+	if httpError, ok := err.(*httpclient.HttpError); ok {
 		if httpError.IsNotFound() {
 			var servers []nova.Server
 			servers, err = c.Servers().ListByName(idOrName)
@@ -233,7 +238,7 @@ func (c ServersApi) Create(options nova.ServerOpt) (*nova.Server, error) {
 	}
 	repBody, _ := json.Marshal(map[string]nova.ServerOpt{"server": options})
 	var (
-		resp *utility.Response
+		resp *httpclient.Response
 		err  error
 	)
 
@@ -334,6 +339,8 @@ func (c ServersApi) AddInterface(id string, netId, portId string) (*nova.Interfa
 	}
 	body := map[string]*nova.InterfaceAttachment{"interfaceAttachment": {}}
 	resp.BodyUnmarshal(&body)
+
+	// body["interfaceAttachment"].SetRequestId(resp.GetRequestIdHeader())
 	return body["interfaceAttachment"], nil
 }
 func (c ServersApi) DeleteInterface(id string, portId string) error {
@@ -368,7 +375,7 @@ func (c ServersApi) DeleteInterfaceAndWait(id string, portId string, waitSeconds
 		time.Sleep(time.Second * 2)
 	}
 }
-func (c ServersApi) doAction(action string, id string, params interface{}) (*utility.Response, error) {
+func (c ServersApi) doAction(action string, id string, params interface{}) (*httpclient.Response, error) {
 	body, _ := json.Marshal(map[string]interface{}{action: params})
 	return c.NovaV2.Post(utility.UrlJoin("servers", id, "action"), body, nil)
 }
@@ -704,7 +711,7 @@ func (c FlavorApi) Found(idOrName string) (*nova.Flavor, error) {
 	if err == nil {
 		return flavor, nil
 	}
-	if httpError, ok := err.(*utility.HttpError); !ok || !httpError.IsNotFound() {
+	if httpError, ok := err.(*httpclient.HttpError); !ok || !httpError.IsNotFound() {
 		return nil, err
 	}
 
@@ -848,7 +855,7 @@ func (c HypervisorApi) ShowByHostname(hostname string) (*nova.Hypervisor, error)
 		return nil, err
 	}
 	if len(hypervisors) == 0 {
-		return nil, &utility.HttpError{
+		return nil, &httpclient.HttpError{
 			Status: 404, Reason: "NotFound",
 			Message: fmt.Sprintf("hypervisor %s not found", hostname),
 		}
@@ -1089,7 +1096,7 @@ func (c ServersApi) WaitDeleted(id string) error {
 	for {
 		server, err := c.Show(id)
 		if err != nil {
-			if httpError, ok := err.(*utility.HttpError); ok {
+			if httpError, ok := err.(*httpclient.HttpError); ok {
 				if httpError.Status == 404 {
 					return nil
 				}

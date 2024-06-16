@@ -15,7 +15,7 @@ import (
 const V3 = "v3"
 
 type KeystoneV3 struct {
-	RestClient
+	RestClient2
 }
 type EndpointApi struct {
 	KeystoneV3
@@ -43,7 +43,7 @@ func (o *Openstack) KeystoneV3() *KeystoneV3 {
 			logging.Fatal("get keystone endpoint falied: %v", err)
 		}
 		o.keystoneClient = &KeystoneV3{
-			NewRestClient(utility.VersionUrl(endpoint, V3), o.AuthPlugin),
+			NewRestClient2(utility.VersionUrl(endpoint, V3), o.AuthPlugin),
 		}
 	}
 	return o.keystoneClient
@@ -69,7 +69,7 @@ func (c KeystoneV3) Regions() RegionApi {
 }
 
 func (c KeystoneV3) GetCurrentVersion() (*model.ApiVersion, error) {
-	resp, err := c.RestClient.Index()
+	resp, err := c.RestClient2.Index()
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (c KeystoneV3) GetCurrentVersion() (*model.ApiVersion, error) {
 	return versions["versions"].Current(), nil
 }
 func (c KeystoneV3) GetStableVersion() (*model.ApiVersion, error) {
-	resp, err := c.RestClient.Index()
+	resp, err := c.RestClient2.Index()
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (c EndpointApi) Create(endpoint keystone.Endpoint) (*keystone.Endpoint, err
 	}
 
 	reqBody, _ := json.Marshal(Body{Endpoint: endpoint})
-	resp, err := c.KeystoneV3.Post("endpoints", reqBody, nil)
+	resp, err := c.KeystoneV3.session.Post("endpoints", reqBody, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (c EndpointApi) ListByService(serviceType string, serviceName string, servi
 
 }
 func (c EndpointApi) Delete(id string) error {
-	_, err := c.KeystoneV3.Delete(utility.UrlJoin("endpoints", id), nil)
+	_, err := c.KeystoneV3.session.Delete(utility.UrlJoin("endpoints", id), nil)
 	return err
 }
 
@@ -234,7 +234,7 @@ func (c ServiceApi) Create(service keystone.Service) (*keystone.Service, error) 
 	}
 
 	reqBody, _ := json.Marshal(serviceBody{Service: service})
-	resp, err := c.KeystoneV3.Post("services", reqBody, nil)
+	resp, err := c.KeystoneV3.session.Post("services", reqBody, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -243,7 +243,7 @@ func (c ServiceApi) Create(service keystone.Service) (*keystone.Service, error) 
 	return &respBody.Service, nil
 }
 func (c ServiceApi) Delete(id string) error {
-	_, err := c.KeystoneV3.Delete(utility.UrlJoin("services", id), nil)
+	_, err := c.KeystoneV3.session.Delete(utility.UrlJoin("services", id), nil)
 	return err
 }
 func (c ServiceApi) ListByName(name string) ([]keystone.Service, error) {
@@ -318,7 +318,7 @@ func (c ProjectApi) Show(id string) (*auth.Project, error) {
 	return body["projects"], nil
 }
 func (c ProjectApi) Delete(id string) error {
-	_, err := c.KeystoneV3.Delete(utility.UrlJoin("projects", id), nil)
+	_, err := c.KeystoneV3.session.Delete(utility.UrlJoin("projects", id), nil)
 	return err
 }
 func (c RoleAssignmentApi) List(query url.Values) ([]keystone.RoleAssigment, error) {

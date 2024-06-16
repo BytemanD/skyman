@@ -68,3 +68,14 @@ func (client ApiVersions) Stable() *ApiVersion {
 	}
 	return nil
 }
+
+type RequestId struct {
+	requestId string
+}
+
+func (r *RequestId) SetRequestId(requestId string) {
+	r.requestId = requestId
+}
+func (r RequestId) GetRequestId() string {
+	return r.requestId
+}

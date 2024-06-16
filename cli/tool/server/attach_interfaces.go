@@ -83,8 +83,10 @@ var attachInterfaces = &cobra.Command{
 					logging.Error("[interface: %s] attach failed: %v", p, err)
 					return err
 				}
+
 				if attachment != nil && p.PortId == "" {
 					p.PortId = attachment.PortId
+					logging.Info("request id: %s", attachment.GetRequestId())
 				}
 				interfaces, err := client.NovaV2().Servers().ListInterfaces(server.Id)
 				if err != nil {

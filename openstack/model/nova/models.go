@@ -111,6 +111,11 @@ type Address struct {
 
 type Servers []Server
 
+type ServersResp struct {
+	model.RequestId
+	Items []Server
+}
+
 func (server *Server) GetPowerState() string {
 	return POWER_STATE[server.PowerState]
 }
@@ -334,6 +339,7 @@ type VolumeAttachment struct {
 	DeleteOnTermination bool   `json:"delete_on_termination,omitempty"`
 }
 type InterfaceAttachment struct {
+	model.RequestId
 	MacAddr   string    `json:"mac_addr"`
 	NetId     string    `json:"net_id"`
 	PortId    string    `json:"port_id"`

@@ -10,10 +10,11 @@ import (
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/BytemanD/skyman/utility/httpclient"
 )
 
 type NeutronV2 struct {
-	RestClient
+	RestClient2
 	currentVersion *model.ApiVersion
 }
 type RouterApi struct {
@@ -63,7 +64,7 @@ func (o *Openstack) NeutronV2() *NeutronV2 {
 			logging.Fatal("get neutron endpoint falied: %v", err)
 		}
 		o.neutronClient = &NeutronV2{
-			RestClient: NewRestClient(utility.VersionUrl(endpoint, "v2.0"), o.AuthPlugin),
+			RestClient2: NewRestClient2(utility.VersionUrl(endpoint, "v2.0"), o.AuthPlugin),
 		}
 	}
 	return o.neutronClient
@@ -174,7 +175,7 @@ func (c NetworkApi) Found(idOrName string) (*neutron.Network, error) {
 		return network, err
 	}
 	networks, err := c.ListByName(idOrName)
-	if httpError, ok := err.(*utility.HttpError); ok {
+	if httpError, ok := err.(*httpclient.HttpError); ok {
 		if !httpError.IsNotFound() {
 			return nil, err
 		}
@@ -245,7 +246,7 @@ func (c SubnetApi) Found(idOrName string) (*neutron.Subnet, error) {
 		return subnet, err
 	}
 	subnets, err := c.ListByName(idOrName)
-	if httpError, ok := err.(*utility.HttpError); ok {
+	if httpError, ok := err.(*httpclient.HttpError); ok {
 		if !httpError.IsNotFound() {
 			return nil, err
 		}
@@ -318,7 +319,7 @@ func (c PortApi) Found(idOrName string) (*neutron.Port, error) {
 		return subnet, err
 	}
 	ports, err := c.ListByName(idOrName)
-	if httpError, ok := err.(*utility.HttpError); ok {
+	if httpError, ok := err.(*httpclient.HttpError); ok {
 		if !httpError.IsNotFound() {
 			return nil, err
 		}

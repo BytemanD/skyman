@@ -4,10 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"time"
 
-	"github.com/BytemanD/skyman/utility"
+	"github.com/BytemanD/skyman/utility/httpclient"
 )
 
 const (
@@ -29,25 +28,25 @@ const (
 )
 
 type PasswordAuthPlugin struct {
-	restfulClient utility.RestfulClient
+	restfulClient httpclient.Client
 
-	AuthUrl           string
-	Username          string
-	Password          string
-	ProjectName       string
-	UserDomainName    string
-	ProjectDomainName string
-	RegionName        string
-	TokenExpireSecond int
-	tokenCache        TokenCache
+	AuthUrl                string
+	Username               string
+	Password               string
+	ProjectName            string
+	UserDomainName         string
+	ProjectDomainName      string
+	RegionName             string
+	LocalTokenExpireSecond int
+	tokenCache             TokenCache
 }
 
 func (plugin PasswordAuthPlugin) Region() string {
 	return plugin.RegionName
 }
 
-func (plugin *PasswordAuthPlugin) SetTokenExpireSecond(expire int) {
-	plugin.TokenExpireSecond = expire
+func (plugin *PasswordAuthPlugin) SetLocalTokenExpire(expireSeconds int) {
+	plugin.LocalTokenExpireSecond = expireSeconds
 }
 
 func (plugin PasswordAuthPlugin) GetToken() (*Token, error) {
@@ -57,9 +56,6 @@ func (plugin PasswordAuthPlugin) GetToken() (*Token, error) {
 		}
 	}
 	return &plugin.tokenCache.token, nil
-}
-func (plugin PasswordAuthPlugin) GetAuthTokenId() string {
-	return plugin.tokenCache.TokenId
 }
 
 func (plugin *PasswordAuthPlugin) GetTokenId() (string, error) {
@@ -83,30 +79,15 @@ func (client PasswordAuthPlugin) getAuthReqBody() map[string]Auth {
 
 	return map[string]Auth{"auth": auth}
 }
-func (plugin PasswordAuthPlugin) Get(url string, query url.Values,
-	headers map[string]string) (*utility.Response, error) {
-	return plugin.restfulClient.Get(url, query, headers)
-}
-func (plugin PasswordAuthPlugin) Post(url string, body []byte,
-	headers map[string]string) (*utility.Response, error) {
-	return plugin.restfulClient.Post(url, body, headers)
-}
-func (plugin PasswordAuthPlugin) Put(url string, body []byte,
-	headers map[string]string) (*utility.Response, error) {
-	return plugin.restfulClient.Put(url, body, headers)
-}
-func (plugin PasswordAuthPlugin) Delete(url string,
-	headers map[string]string) (*utility.Response, error) {
-	return plugin.restfulClient.Delete(url, headers)
-}
 
-func (plugin PasswordAuthPlugin) Request(req *http.Request) (*utility.Response, error) {
-	return plugin.restfulClient.Request(req)
-}
+// func (plugin PasswordAuthPlugin) post(url string, body []byte,
+// 	headers map[string]string) (*utility.Response, error) {
+// 	return plugin.restfulClient.Post(url, body, headers)
+// }
 
 func (plugin *PasswordAuthPlugin) TokenIssue() error {
 	body, _ := json.Marshal(plugin.getAuthReqBody())
-	resp, err := plugin.Post(
+	resp, err := plugin.restfulClient.Post(
 		fmt.Sprintf("%s%s", plugin.AuthUrl, URL_AUTH_TOKEN), body, nil)
 	if err != nil {
 		return fmt.Errorf("token issue failed, %v", err)
@@ -150,8 +131,21 @@ func (plugin *PasswordAuthPlugin) AuthRequest(req *http.Request) error {
 	req.Header.Set("X-Auth-Token", tokenId)
 	return nil
 }
+func (plugin *PasswordAuthPlugin) GetSafeHeader(headers http.Header) http.Header {
+	safeHeaders := http.Header{}
+	for k, v := range headers {
+		if k == "X-Auth-Token" {
+			safeHeaders[k] = []string{"<TOKEN>"}
+		} else {
+			safeHeaders[k] = v
+		}
+	}
+	return safeHeaders
+}
+
 func NewPasswordAuth(authUrl string, user User, project Project, regionName string) PasswordAuthPlugin {
 	return PasswordAuthPlugin{
+		restfulClient:     httpclient.Client{},
 		AuthUrl:           authUrl,
 		Username:          user.Name,
 		Password:          user.Password,

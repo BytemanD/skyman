@@ -8,10 +8,6 @@ import (
 	"github.com/BytemanD/skyman/openstack/auth"
 )
 
-type OpenstackClientInterface interface {
-	Servers() *RestClient
-}
-
 type Openstack struct {
 	keystoneClient *KeystoneV3
 	glanceClient   *Glance
@@ -22,15 +18,9 @@ type Openstack struct {
 }
 
 func NewClient(authUrl string, user auth.User, project auth.Project,
-	regionName string, tokenExpireSecond int,
+	regionName string,
 ) *Openstack {
-	// if authUrl == "" {
-	// 	return nil, fmt.Errorf("authUrl is required")
-	// }
 	passwordAuth := auth.NewPasswordAuth(authUrl, user, project, regionName)
-	// passwordAuth.TokenIssue()
-	passwordAuth.SetTokenExpireSecond(tokenExpireSecond)
-
 	return &Openstack{AuthPlugin: &passwordAuth}
 }
 
@@ -46,10 +36,13 @@ func Client(region string) *Openstack {
 			Name: common.CONF.Auth.Project.Domain.Name,
 		},
 	}
-	return NewClient(
-		common.CONF.Auth.Url, user, project, region,
-		common.CONF.Auth.TokenExpireTime,
-	)
+	c := NewClient(common.CONF.Auth.Url, user, project, region)
+	c.AuthPlugin.SetLocalTokenExpire(common.CONF.Auth.TokenExpireTime)
+	return c
+}
+
+func (o Openstack) Region() string {
+	return o.AuthPlugin.Region()
 }
 
 func DefaultClient() *Openstack {
