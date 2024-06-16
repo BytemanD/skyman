@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/easygo/pkg/httpclient"
+	"github.com/BytemanD/skyman/utility/httpclient"
 	"github.com/fatih/color"
 )
 
@@ -20,7 +20,7 @@ func RaiseIfError(err error, msg string) {
 		return
 	}
 	if httpError, ok := err.(*httpclient.HttpError); ok {
-		logging.Fatal("%s, %s, %s", msg, httpError.Reason, httpError.Message)
+		logging.Fatal("%s, %s: %s", msg, httpError.Reason, httpError.Message)
 	} else {
 		logging.Fatal("%s, %v", msg, err)
 	}

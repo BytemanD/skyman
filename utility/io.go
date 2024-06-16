@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/fileutils"
+	"github.com/BytemanD/skyman/utility/httpclient"
 	"github.com/cheggaaa/pb/v3"
 )
 
@@ -65,4 +66,17 @@ func IsFileExists(filePath string) bool {
 		return false
 	}
 	return !fileInfo.Mode().IsDir()
+}
+
+func SaveBody(resp *httpclient.Response, file *os.File, process bool) error {
+	defer resp.CloseReader()
+	var reader io.Reader
+	if process && resp.GetContentLength() > 0 {
+		reader = NewProcessReader(resp.BodyReader(), resp.GetContentLength())
+	} else {
+		reader = bufio.NewReaderSize(resp.BodyReader(), 1024*32)
+	}
+
+	_, err := io.Copy(bufio.NewWriter(file), reader)
+	return err
 }

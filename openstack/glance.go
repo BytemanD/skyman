@@ -214,5 +214,5 @@ func (c ImageApi) Download(id string, fileName string, process bool) error {
 	if err != nil {
 		return err
 	}
-	return resp.SaveBody(file, process)
+	return utility.SaveBody(resp, file, process)
 }

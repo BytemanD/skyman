@@ -13,7 +13,7 @@ type HttpError struct {
 }
 
 func (err HttpError) Error() string {
-	return fmt.Sprintf("%d %s", err.Status, err.Reason)
+	return fmt.Sprintf("%d %s: %s", err.Status, err.Reason, err.Message)
 }
 
 func (err HttpError) IsNotFound() bool {
