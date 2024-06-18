@@ -9,6 +9,7 @@ import (
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/openstack/model/nova"
+	"github.com/BytemanD/skyman/utility"
 )
 
 type ServerAction interface {
@@ -37,27 +38,32 @@ func (t *ServerActionTest) RefreshServer() error {
 }
 
 func (t *ServerActionTest) WaitServerTaskFinished(showProgress bool) error {
-	interval, maxInterval := 1, 10
-
-	for i := 0; i <= 60; i++ {
-		if err := t.RefreshServer(); err != nil {
-			return err
-		}
-		progress := ""
-		if showProgress {
-			progress = fmt.Sprintf(", progress: %d", int(t.Server.Progress))
-		}
-		logging.Info("[%s] vmState=%s, powerState=%s, taskState=%s%s",
-			t.Server.Id, t.Server.VmState, t.Server.GetPowerState(), t.Server.TaskState, progress)
-		if t.Server.TaskState == "" {
-			return nil
-		}
-		time.Sleep(time.Second * time.Duration(interval))
-		if interval < maxInterval {
-			interval += 1
-		}
+	serverError := false
+	utility.Retry(
+		utility.RetryCondition{
+			Timeout:      time.Second * 60 * 20,
+			IntervalMin:  time.Second,
+			IntervalMax:  time.Second * 10,
+			IntervalStep: time.Second * 2,
+		},
+		func() bool {
+			if err := t.RefreshServer(); err != nil {
+				serverError = true
+				return false
+			}
+			progress := ""
+			if showProgress {
+				progress = fmt.Sprintf(", progress: %d", int(t.Server.Progress))
+			}
+			logging.Info("[%s] %s%s", t.Server.Id, t.Server.AllStatus(), progress)
+			return t.Server.TaskState != ""
+		},
+	)
+	if serverError {
+		return fmt.Errorf("server is error")
+	} else {
+		return nil
 	}
-	return fmt.Errorf("server task state is %s", t.Server.TaskState)
 }
 func (t *ServerActionTest) nextNetwork() (string, error) {
 	if len(common.CONF.Test.Networks) == 0 {

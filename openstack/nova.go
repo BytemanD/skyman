@@ -1,6 +1,7 @@
 package openstack
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -353,47 +354,44 @@ func (c ServersApi) DeleteInterfaceAndWait(id string, portId string, waitSeconds
 	}
 	reqId := c.GetResponseRequstId(resp)
 	logging.Debug("request id: %s", reqId)
-	startTime := time.Now()
-	for {
-		action, err := c.ShowAction(id, reqId)
-		if err != nil {
-			logging.Warning("get action events failed: %s", err)
-			break
-		}
-		if len(action.Events) > 0 && action.Events[0].FinishTime != "" {
-			logging.Info("[interface: %s] action result: %s", portId, action.Events[0].Result)
-			if action.Events[0].Result == "Error" {
-				return fmt.Errorf("action is error")
-			}
-			break
-		}
-		if time.Since(startTime) >= time.Second*time.Duration(waitSeconds) {
-			return fmt.Errorf("action not finish after %d seconds", waitSeconds)
-		}
-		time.Sleep(time.Second * 2)
-	}
+	logging.Info("[%s] detaching interface %s, request id: %s", id, portId, reqId)
 
-	for {
-		detached := true
-		interfaces, err := c.ListInterfaces(id)
-		if err != nil {
-			return fmt.Errorf("list server interfaces failed: %s", err)
-		}
-		for _, vif := range interfaces {
-			if vif.PortId == portId {
-				detached = false
-				break
+	actionError := false
+	utility.Retry(
+		utility.RetryCondition{
+			Timeout:     time.Second * time.Duration(waitSeconds),
+			IntervalMin: time.Second * 2,
+		},
+		func() bool {
+			action, err := c.ShowAction(id, reqId)
+			if err != nil {
+				logging.Warning("get action events failed: %s", err)
+				return true
 			}
-		}
-		if detached {
-			logging.Info("[interface: %s] detached", portId)
-			return nil
-		}
-		if time.Since(startTime) >= time.Second*time.Duration(waitSeconds) {
-			return fmt.Errorf("interface %s is not detached after %d seconds", portId, waitSeconds)
-		}
-		time.Sleep(time.Second * 2)
+			if len(action.Events) > 0 && action.Events[0].FinishTime != "" {
+				logging.Debug("[interface: %s] action result: %s", portId, action.Events[0].Result)
+				if action.Events[0].Result == "Error" {
+					actionError = true
+				}
+				return false
+			}
+			return true
+		},
+	)
+	if actionError {
+		return fmt.Errorf("action is error")
 	}
+	interfaces, err := c.ListInterfaces(id)
+	if err != nil {
+		return fmt.Errorf("list server interfaces failed: %s", err)
+	}
+	for _, vif := range interfaces {
+		if vif.PortId == portId {
+			return fmt.Errorf("interface %s is not detached", portId)
+		}
+	}
+	logging.Info("[interface: %s] detached", portId)
+	return nil
 }
 func (c ServersApi) doAction(action string, id string, params interface{}) (*httpclient.Response, error) {
 	body, _ := json.Marshal(map[string]interface{}{action: params})
@@ -1129,6 +1127,9 @@ func (c ServersApi) WaitDeleted(id string) error {
 		server *nova.Server
 		err    error
 	)
+	cxt := context.TODO()
+	cxt.Done()
+
 	utility.Retry(
 		utility.RetryCondition{
 			Timeout:     time.Second * 60 * 10,

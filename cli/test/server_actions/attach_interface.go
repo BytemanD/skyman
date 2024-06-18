@@ -78,14 +78,11 @@ func (t ServerDetachInterface) Start() error {
 		return err
 	}
 
-	resp, err := t.Client.NovaV2().Servers().DeleteInterface(t.Server.Id, portId)
+	err = t.Client.NovaV2().Servers().DeleteInterfaceAndWait(t.Server.Id, portId, 10)
 	if err != nil {
 		return err
 	}
 	logging.Info("[%s] detaching interface %s", t.Server.Id, portId)
-
-	reqId := t.Client.NovaV2().GetResponseRequstId(resp)
-	logging.Info("[%s] request id: %s", t.ServerId(), reqId)
 
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
