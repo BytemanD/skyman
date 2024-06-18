@@ -1,8 +1,11 @@
 package utility
 
 import (
+	"context"
 	"fmt"
 	"time"
+
+	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
 type Interval interface {
@@ -64,6 +67,47 @@ func Retry(condition RetryCondition, function func() bool) error {
 		}
 		if condition.Timeout > 0 && time.Since(startTime) >= condition.Timeout {
 			return fmt.Errorf("retry timeout(%v)", condition.Timeout)
+		}
+		time.Sleep(condition.NextInterval())
+	}
+}
+
+func RetryWithContext(ctx context.Context, condition RetryCondition, function func() error) error {
+	startTime := time.Now()
+	for {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		err := function()
+		if err == nil {
+			return nil
+		}
+		logging.Debug("error: %s", err)
+		if condition.Timeout > 0 && time.Since(startTime) >= condition.Timeout {
+			return fmt.Errorf("retry timeout(%v), last error: %s", condition.Timeout, err)
+		}
+		time.Sleep(condition.NextInterval())
+	}
+}
+
+func RetryWithErrors(condition RetryCondition, matchErrors []string, function func() error) error {
+	startTime := time.Now()
+	for {
+		err := function()
+		if err == nil {
+			return nil
+		}
+		for _, e := range matchErrors {
+			if IsError(err, e) {
+				err = nil
+				break
+			}
+		}
+		if err != nil {
+			return err
+		}
+		if condition.Timeout > 0 && time.Since(startTime) >= condition.Timeout {
+			return fmt.Errorf("retry timeout(%v), last error: %s", condition.Timeout, err)
 		}
 		time.Sleep(condition.NextInterval())
 	}

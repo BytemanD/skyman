@@ -356,30 +356,29 @@ func (c ServersApi) DeleteInterfaceAndWait(id string, portId string, waitSeconds
 	logging.Debug("request id: %s", reqId)
 	logging.Info("[%s] detaching interface %s, request id: %s", id, portId, reqId)
 
-	actionError := false
-	utility.Retry(
+	err = utility.RetryWithErrors(
 		utility.RetryCondition{
 			Timeout:     time.Second * time.Duration(waitSeconds),
-			IntervalMin: time.Second * 2,
-		},
-		func() bool {
+			IntervalMin: time.Second * 2},
+		[]string{"ActionError"},
+		func() error {
 			action, err := c.ShowAction(id, reqId)
 			if err != nil {
-				logging.Warning("get action events failed: %s", err)
-				return true
+				return fmt.Errorf("get action events failed: %s", err)
 			}
-			if len(action.Events) > 0 && action.Events[0].FinishTime != "" {
-				logging.Debug("[interface: %s] action result: %s", portId, action.Events[0].Result)
-				if action.Events[0].Result == "Error" {
-					actionError = true
-				}
-				return false
+			if len(action.Events) == 0 || action.Events[0].FinishTime == "" {
+				return utility.NewActionError(reqId)
 			}
-			return true
+			logging.Info("[interface: %s] action result: %s", portId, action.Events[0].Result)
+			if action.Events[0].Result == "Error" {
+				return fmt.Errorf("actions is error")
+			} else {
+				return nil
+			}
 		},
 	)
-	if actionError {
-		return fmt.Errorf("action is error")
+	if err != nil {
+		return err
 	}
 	interfaces, err := c.ListInterfaces(id)
 	if err != nil {
