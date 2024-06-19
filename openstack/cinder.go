@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BytemanD/easygo/pkg/compare"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/easygo/pkg/syncutils"
@@ -138,11 +139,13 @@ func (c VolumeApi) Found(idOrName string) (*cinder.Volume, error) {
 	if err == nil {
 		return volume, nil
 	}
-	if httpError, ok := err.(*httpclient.HttpError); ok {
+	if compare.IsType[httpclient.HttpError](err) {
+		httpError, _ := err.(httpclient.HttpError)
 		if !httpError.IsNotFound() {
 			return nil, err
 		}
 	}
+
 	volumes, err := c.DetailByName(idOrName)
 	if err == nil {
 		if len(volumes) == 0 {
@@ -280,11 +283,13 @@ func (c VolumeTypeApi) Found(idOrName string) (*cinder.VolumeType, error) {
 	if err == nil {
 		return volumeType, nil
 	}
-	if httpError, ok := err.(*httpclient.HttpError); ok {
+	if compare.IsType[httpclient.HttpError](err) {
+		httpError, _ := err.(httpclient.HttpError)
 		if !httpError.IsNotFound() {
 			return nil, err
 		}
 	}
+
 	volumeTypes, err := c.ListByName(idOrName)
 	if err == nil {
 		if len(volumeTypes) == 0 {

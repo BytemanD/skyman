@@ -90,7 +90,7 @@ var subnetShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().NeutronV2()
-		subnet, err := c.Subnets().Show(args[0])
+		subnet, err := c.Subnets().Found(args[0])
 		utility.LogError(err, "show subnet failed", true)
 		table := common.PrettyItemTable{
 			Item: *subnet,

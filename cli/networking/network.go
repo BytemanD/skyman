@@ -84,7 +84,7 @@ var networkShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().NeutronV2()
 
-		network, err := c.Networks().Show(args[0])
+		network, err := c.Networks().Found(args[0])
 		utility.LogError(err, "show network failed", true)
 		table := common.PrettyItemTable{
 			Item: *network,

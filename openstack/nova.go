@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BytemanD/easygo/pkg/compare"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/easygo/pkg/syncutils"
@@ -207,7 +208,8 @@ func (c ServersApi) Found(idOrName string) (*nova.Server, error) {
 	if err == nil {
 		return server, nil
 	}
-	if httpError, ok := err.(*httpclient.HttpError); ok {
+	if compare.IsType[httpclient.HttpError](err) {
+		httpError, _ := err.(httpclient.HttpError)
 		if httpError.IsNotFound() {
 			var servers []nova.Server
 			servers, err = c.Servers().ListByName(idOrName)
@@ -369,7 +371,7 @@ func (c ServersApi) DeleteInterfaceAndWait(id string, portId string, waitSeconds
 			if len(action.Events) == 0 || action.Events[0].FinishTime == "" {
 				return utility.NewActionError(reqId)
 			}
-			logging.Info("[interface: %s] action result: %s", portId, action.Events[0].Result)
+			logging.Info("[%s] action result: %s", id, action.Events[0].Result)
 			if action.Events[0].Result == "Error" {
 				return fmt.Errorf("actions is error")
 			} else {
@@ -389,7 +391,7 @@ func (c ServersApi) DeleteInterfaceAndWait(id string, portId string, waitSeconds
 			return fmt.Errorf("interface %s is not detached", portId)
 		}
 	}
-	logging.Info("[interface: %s] detached", portId)
+	logging.Info("[%s] interface %s detached", id, portId)
 	return nil
 }
 func (c ServersApi) doAction(action string, id string, params interface{}) (*httpclient.Response, error) {
@@ -728,8 +730,11 @@ func (c FlavorApi) Found(idOrName string) (*nova.Flavor, error) {
 	if err == nil {
 		return flavor, nil
 	}
-	if httpError, ok := err.(*httpclient.HttpError); !ok || !httpError.IsNotFound() {
-		return nil, err
+	if compare.IsType[httpclient.HttpError](err) {
+		httpError, _ := err.(httpclient.HttpError)
+		if !httpError.IsNotFound() {
+			return nil, err
+		}
 	}
 
 	flavors, err := c.List(nil)
@@ -1139,8 +1144,9 @@ func (c ServersApi) WaitDeleted(id string) error {
 				logging.Info("[%s] %s", id, server.AllStatus())
 				return true
 			}
-			if httpError, ok := err.(*httpclient.HttpError); ok {
-				if httpError.Status == 404 {
+			if compare.IsType[httpclient.HttpError](err) {
+				httpError, _ := err.(httpclient.HttpError)
+				if httpError.IsNotFound() {
 					logging.Info("[%s] deleted", id)
 					err = nil
 					return false

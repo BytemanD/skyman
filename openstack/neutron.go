@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/BytemanD/easygo/pkg/compare"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
@@ -175,7 +176,8 @@ func (c NetworkApi) Found(idOrName string) (*neutron.Network, error) {
 		return network, err
 	}
 	networks, err := c.ListByName(idOrName)
-	if httpError, ok := err.(*httpclient.HttpError); ok {
+	if compare.IsType[httpclient.HttpError](err) {
+		httpError, _ := err.(httpclient.HttpError)
 		if !httpError.IsNotFound() {
 			return nil, err
 		}
@@ -246,7 +248,8 @@ func (c SubnetApi) Found(idOrName string) (*neutron.Subnet, error) {
 		return subnet, err
 	}
 	subnets, err := c.ListByName(idOrName)
-	if httpError, ok := err.(*httpclient.HttpError); ok {
+	if compare.IsType[httpclient.HttpError](err) {
+		httpError, _ := err.(httpclient.HttpError)
 		if !httpError.IsNotFound() {
 			return nil, err
 		}
@@ -319,7 +322,8 @@ func (c PortApi) Found(idOrName string) (*neutron.Port, error) {
 		return subnet, err
 	}
 	ports, err := c.ListByName(idOrName)
-	if httpError, ok := err.(*httpclient.HttpError); ok {
+	if compare.IsType[httpclient.HttpError](err) {
+		httpError, _ := err.(httpclient.HttpError)
 		if !httpError.IsNotFound() {
 			return nil, err
 		}

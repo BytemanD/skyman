@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/BytemanD/easygo/pkg/compare"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/glance"
@@ -131,7 +132,8 @@ func (c ImageApi) Found(idOrName string) (*glance.Image, error) {
 	if err == nil {
 		return image, nil
 	}
-	if httpError, ok := err.(*httpclient.HttpError); ok {
+	if compare.IsType[httpclient.HttpError](err) {
+		httpError, _ := err.(httpclient.HttpError)
 		if httpError.IsNotFound() {
 			image, err = c.FoundByName(idOrName)
 		}

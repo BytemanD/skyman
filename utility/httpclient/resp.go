@@ -50,7 +50,7 @@ func (resp *Response) MustNotError() error {
 	case resp.Status < 400:
 		return nil
 	default:
-		return &HttpError{Status: resp.Status, Reason: resp.Reason,
+		return HttpError{Status: resp.Status, Reason: resp.Reason,
 			Message: resp.BodyString()}
 	}
 }

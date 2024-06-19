@@ -31,7 +31,7 @@ require (
 )
 
 require (
-	github.com/BytemanD/easygo/pkg v0.0.9
+	github.com/BytemanD/easygo/pkg v0.1.0
 	github.com/MichaelMure/go-term-markdown v0.1.4
 	github.com/cheggaaa/pb/v3 v3.1.5
 	github.com/jedib0t/go-pretty/v6 v6.5.8

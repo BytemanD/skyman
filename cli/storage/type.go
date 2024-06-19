@@ -89,8 +89,7 @@ var typeShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		idOrName := args[0]
-		volumeType, err := client.CinderV2().VolumeTypes().Found(idOrName)
+		volumeType, err := client.CinderV2().VolumeTypes().Found(args[0])
 		utility.LogError(err, "get volume type failed", true)
 		printVolumeType(*volumeType)
 	},

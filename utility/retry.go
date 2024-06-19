@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/BytemanD/easygo/pkg/compare"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
@@ -98,7 +99,7 @@ func RetryWithErrors(condition RetryCondition, matchErrors []string, function fu
 			return nil
 		}
 		for _, e := range matchErrors {
-			if IsError(err, e) {
+			if compare.IsStructOf(e, err) {
 				err = nil
 				break
 			}
