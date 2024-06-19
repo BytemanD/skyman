@@ -5,6 +5,7 @@ import (
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 )
 
@@ -12,9 +13,9 @@ type ServerCheckerInterface interface {
 	MakesureServerRunning() error
 	// MakesureHostname(hostname string) error
 	MakesureInterfaceExist(attachment *nova.InterfaceAttachment) error
-	// MakesureInterfaceNotExists(ipaddresses []string) error
+	MakesureInterfaceNotExists(port *neutron.Port) error
 	MakesureVolumeExist(attachment *nova.VolumeAttachment) error
-	// MakesureVolumeNotExists(blockDevices []string) error
+	MakesureVolumeNotExists(attachment *nova.VolumeAttachment) error
 }
 
 type ServerCheckers []ServerCheckerInterface
@@ -35,10 +36,26 @@ func (checkers ServerCheckers) MakesureVolumeExist(attachment *nova.VolumeAttach
 	}
 	return nil
 }
+func (checkers ServerCheckers) MakesureVolumeNotExists(attachment *nova.VolumeAttachment) error {
+	for _, checker := range checkers {
+		if err := checker.MakesureVolumeNotExists(attachment); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func (checkers ServerCheckers) MakesureInterfaceExist(attachment *nova.InterfaceAttachment) error {
 	for _, checker := range checkers {
 		if err := checker.MakesureInterfaceExist(attachment); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (checkers ServerCheckers) MakesureInterfaceNotExists(port *neutron.Port) error {
+	for _, checker := range checkers {
+		if err := checker.MakesureInterfaceNotExists(port); err != nil {
 			return err
 		}
 	}

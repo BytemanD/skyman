@@ -6,6 +6,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli/test/checkers"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack/model/nova"
 )
 
 type ServerAttachVolume struct {
@@ -31,8 +32,8 @@ func (t ServerAttachVolume) Start() error {
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
-	if t.Server.IsError() {
-		return fmt.Errorf("server status is error")
+	if err := t.ServerMustNotError(); err != nil {
+		return err
 	}
 	serverCheckers, err := checkers.GetServerCheckers(t.Client, t.Server)
 	if err != nil {
@@ -49,15 +50,15 @@ type ServerDetachVolume struct {
 	EmptyCleanup
 }
 
-func (t *ServerDetachVolume) lastVolume() (string, error) {
+func (t *ServerDetachVolume) lastVolume() (*nova.VolumeAttachment, error) {
 	volumes, err := t.Client.NovaV2().Servers().ListVolumes(t.Server.Id)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if len(volumes) == 0 {
-		return "", fmt.Errorf("has no volume")
+		return nil, fmt.Errorf("has no volume")
 	}
-	return volumes[len(volumes)-1].VolumeId, nil
+	return &volumes[len(volumes)-1], nil
 }
 
 func (t ServerDetachVolume) Start() error {
@@ -65,29 +66,27 @@ func (t ServerDetachVolume) Start() error {
 	if !t.Server.IsActive() {
 		return fmt.Errorf("server is not active")
 	}
-	volumeId, err := t.lastVolume()
+	attachment, err := t.lastVolume()
 	if err != nil {
 		return err
 	}
-	err = t.Client.NovaV2().Servers().DeleteVolume(t.Server.Id, volumeId)
+	err = t.Client.NovaV2().Servers().DeleteVolume(t.Server.Id, attachment.VolumeId)
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] detaching volume %s", t.Server.Id, volumeId)
+	logging.Info("[%s] detaching volume %s", t.Server.Id, attachment.VolumeId)
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
-	if t.Server.IsError() {
-		return fmt.Errorf("server status is error")
-	}
-	volumes, err := t.Client.NovaV2().Servers().ListVolumes(t.Server.Id)
-	if err != nil {
+	if err := t.ServerMustNotError(); err != nil {
 		return err
 	}
-	for _, vol := range volumes {
-		if vol.VolumeId == volumeId {
-			return fmt.Errorf("volume %s is not detached", volumeId)
-		}
+	serverCheckers, err := checkers.GetServerCheckers(t.Client, t.Server)
+	if err != nil {
+		return fmt.Errorf("get server checker failed: %s", err)
+	}
+	if err := serverCheckers.MakesureVolumeNotExists(attachment); err != nil {
+		return err
 	}
 	return nil
 }

@@ -126,6 +126,13 @@ func (port Port) IsActive() bool {
 func (port Port) IsUnbound() bool {
 	return port.BindingVifType == "unbound"
 }
+func (port Port) GetFixedIpaddress() []string {
+	address := []string{}
+	for _, fixedIp := range port.FixedIps {
+		address = append(address, fixedIp.IpAddress)
+	}
+	return address
+}
 
 type Routers []Router
 type Networks []Network

@@ -77,27 +77,27 @@ func (t ServerDetachInterface) Start() error {
 	if err != nil {
 		return err
 	}
-
+	port, err := t.Client.NeutronV2().Ports().Show(portId)
+	if err != nil {
+		return err
+	}
 	err = t.Client.NovaV2().Servers().DeleteInterfaceAndWait(t.Server.Id, portId, 60*5)
 	if err != nil {
 		return err
 	}
-	// logging.Info("[%s] detaching interface %s", t.Server.Id, portId)
-
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
-	if t.Server.IsError() {
-		return fmt.Errorf("server status is error")
-	}
-	interfaces, err := t.Client.NovaV2().Servers().ListInterfaces(t.Server.Id)
-	if err != nil {
+	if err := t.ServerMustNotError(); err != nil {
 		return err
 	}
-	for _, vif := range interfaces {
-		if vif.PortId == portId {
-			return fmt.Errorf("interface %s is not detached", portId)
-		}
+	serverCheckers, err := checkers.GetServerCheckers(t.Client, t.Server)
+	if err != nil {
+		return fmt.Errorf("get server checker failed: %s", err)
+	}
+
+	if err := serverCheckers.MakesureInterfaceNotExists(port); err != nil {
+		return err
 	}
 	return nil
 }

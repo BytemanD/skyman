@@ -9,6 +9,7 @@ import (
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/guest"
 	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 )
 
@@ -77,7 +78,7 @@ func (c QGAChecker) MakesureInterfaceExist(attachment *nova.InterfaceAttachment)
 		found := false
 		for _, ipaddr := range ipaddrs {
 			if ipaddr == fixedIpaddr.IpAddress {
-				logging.Info("[%s] guest ip address %s exists", c.ServerId, fixedIpaddr.IpAddress)
+				logging.Info("[%s] ip address %s exists on guest", c.ServerId, fixedIpaddr.IpAddress)
 				found = true
 				break
 			}
@@ -87,6 +88,22 @@ func (c QGAChecker) MakesureInterfaceExist(attachment *nova.InterfaceAttachment)
 				fixedIpaddr.IpAddress, ipaddrs)
 		}
 	}
+	return nil
+}
+func (c QGAChecker) MakesureInterfaceNotExists(port *neutron.Port) error {
+	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
+	serverGuest.Connect()
+	ipaddrs := serverGuest.GetIpaddrs()
+	logging.Debug("[%s] found ip addresses: %s", c.ServerId, ipaddrs)
+
+	for _, fixedIp := range port.FixedIps {
+		for _, ipaddr := range ipaddrs {
+			if ipaddr == fixedIp.IpAddress {
+				return fmt.Errorf("ip address %s exists on guest", fixedIp.IpAddress)
+			}
+		}
+	}
+	logging.Info("[%s] ip address: %s not exists on guest", c.ServerId, port.GetFixedIpaddress())
 	return nil
 }
 func (c QGAChecker) MakesureVolumeExist(attachment *nova.VolumeAttachment) error {
@@ -105,6 +122,23 @@ func (c QGAChecker) MakesureVolumeExist(attachment *nova.VolumeAttachment) error
 	}
 	return fmt.Errorf("block device %s not found in guest, found %v",
 		attachment.Device, guestBlockDevices.GetAllNames())
+}
+func (c QGAChecker) MakesureVolumeNotExists(attachment *nova.VolumeAttachment) error {
+	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
+	serverGuest.Connect()
+	guestBlockDevices, err := serverGuest.GetBlockDevices()
+	if err != nil {
+		return fmt.Errorf("get block devices failed: %s", err)
+	}
+	logging.Debug("[%s] found block devices: %s", c.ServerId, guestBlockDevices.GetAllNames())
+	for _, blockDevice := range guestBlockDevices {
+		if blockDevice.Name == attachment.Device {
+			return fmt.Errorf("block device %s not found in guest, found %v",
+				attachment.Device, guestBlockDevices.GetAllNames())
+		}
+	}
+	logging.Info("[%s] block device %s not exists on guest", c.ServerId, attachment.Device)
+	return nil
 }
 
 func GetQgaChecker(client *openstack.Openstack, server *nova.Server) (*QGAChecker, error) {
