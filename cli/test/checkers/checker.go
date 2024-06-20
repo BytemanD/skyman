@@ -16,6 +16,7 @@ type ServerCheckerInterface interface {
 	MakesureInterfaceNotExists(port *neutron.Port) error
 	MakesureVolumeExist(attachment *nova.VolumeAttachment) error
 	MakesureVolumeNotExists(attachment *nova.VolumeAttachment) error
+	MakesureVolumeSizeIs(attachment *nova.VolumeAttachment, size uint) error
 }
 
 type ServerCheckers []ServerCheckerInterface
@@ -56,6 +57,14 @@ func (checkers ServerCheckers) MakesureInterfaceExist(attachment *nova.Interface
 func (checkers ServerCheckers) MakesureInterfaceNotExists(port *neutron.Port) error {
 	for _, checker := range checkers {
 		if err := checker.MakesureInterfaceNotExists(port); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (checkers ServerCheckers) MakesureVolumeSizeIs(attachment *nova.VolumeAttachment, size uint) error {
+	for _, checker := range checkers {
+		if err := checker.MakesureVolumeSizeIs(attachment, size); err != nil {
 			return err
 		}
 	}

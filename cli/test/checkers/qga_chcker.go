@@ -141,6 +141,26 @@ func (c QGAChecker) MakesureVolumeNotExists(attachment *nova.VolumeAttachment) e
 	return nil
 }
 
+func (c QGAChecker) MakesureVolumeSizeIs(attachment *nova.VolumeAttachment, size uint) error {
+	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
+	serverGuest.Connect()
+	guestBlockDevices, err := serverGuest.GetBlockDevices()
+	if err != nil {
+		return fmt.Errorf("get block devices failed: %s", err)
+	}
+	for _, blockDevice := range guestBlockDevices {
+		if blockDevice.Name == attachment.Device {
+			logging.Info("[%s] size of block %s is: %s", c.ServerId, attachment.Device, blockDevice.Size)
+			if blockDevice.Size == fmt.Sprintf("%dG", size) {
+				return nil
+			} else {
+				return fmt.Errorf("block size is %s, not %d", blockDevice.Size, size)
+			}
+		}
+	}
+	return fmt.Errorf("block device %s not exists on guest", attachment.Device)
+}
+
 func GetQgaChecker(client *openstack.Openstack, server *nova.Server) (*QGAChecker, error) {
 	host, err := client.NovaV2().Hypervisors().Found(server.Host)
 	if err != nil {

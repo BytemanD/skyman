@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 )
@@ -33,6 +34,7 @@ var (
 	ACTION_ATTACH_VOLUME     = "volume_attach"
 	ACTION_DETACH_VOLUME     = "volume_detach"
 	ACTION_VOLUME_HOTPLUG    = "volume_hotplug"
+	ACTION_VOLUME_EXTEND     = "volume_extend"
 )
 
 type ActionCreatorFunc func(server *nova.Server, client *openstack.Openstack) ServerAction
@@ -63,6 +65,10 @@ func (a Actions) Get(name string, server *nova.Server, client *openstack.Opensta
 }
 
 func (a Actions) register(name string, creator ActionCreatorFunc) {
+	if _, ok := a[name]; ok {
+		logging.Warning("action %s already exists", name)
+		return
+	}
 	a[name] = creator
 }
 
@@ -166,4 +172,8 @@ func init() {
 	ACTIONS.register(ACTION_VOLUME_HOTPLUG, func(s *nova.Server, c *openstack.Openstack) ServerAction {
 		return &ServerVolumeHotPlug{ServerActionTest: ServerActionTest{Server: s, Client: c}}
 	})
+	ACTIONS.register(ACTION_VOLUME_EXTEND, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return &ServerExtendVolume{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+
 }

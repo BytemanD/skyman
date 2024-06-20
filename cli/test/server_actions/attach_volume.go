@@ -6,7 +6,6 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli/test/checkers"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack/model/nova"
 )
 
 type ServerAttachVolume struct {
@@ -48,17 +47,6 @@ func (t ServerAttachVolume) Start() error {
 type ServerDetachVolume struct {
 	ServerActionTest
 	EmptyCleanup
-}
-
-func (t *ServerDetachVolume) lastVolume() (*nova.VolumeAttachment, error) {
-	volumes, err := t.Client.NovaV2().Servers().ListVolumes(t.Server.Id)
-	if err != nil {
-		return nil, err
-	}
-	if len(volumes) == 0 {
-		return nil, fmt.Errorf("has no volume")
-	}
-	return &volumes[len(volumes)-1], nil
 }
 
 func (t ServerDetachVolume) Start() error {

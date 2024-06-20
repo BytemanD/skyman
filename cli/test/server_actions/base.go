@@ -75,18 +75,15 @@ func (t *ServerActionTest) nextNetwork() (string, error) {
 	defer func() { t.networkIndex += 1 }()
 	return common.CONF.Test.Networks[t.networkIndex], nil
 }
-func (t *ServerActionTest) ServerMustHasInterface(portId string) error {
-	interfaces, err := t.Client.NovaV2().Servers().ListInterfaces(t.Server.Id)
+func (t *ServerActionTest) lastVolume() (*nova.VolumeAttachment, error) {
+	volumes, err := t.Client.NovaV2().Servers().ListVolumes(t.Server.Id)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	for _, vif := range interfaces {
-		if vif.PortId == portId {
-			logging.Info("[%s] server has interface: %s", t.ServerId(), portId)
-			return nil
-		}
+	if len(volumes) == 0 {
+		return nil, fmt.Errorf("has no volume")
 	}
-	return fmt.Errorf("server has not interface: %s", portId)
+	return &volumes[len(volumes)-1], nil
 }
 
 func (t *ServerActionTest) ServerMustHasNotInterface(portId string) error {
@@ -101,18 +98,7 @@ func (t *ServerActionTest) ServerMustHasNotInterface(portId string) error {
 	}
 	return nil
 }
-func (t *ServerActionTest) ServerMustHasVolume(volumeId string) error {
-	volumes, err := t.Client.NovaV2().Servers().ListVolumes(t.Server.Id)
-	if err != nil {
-		return err
-	}
-	for _, vol := range volumes {
-		if vol.VolumeId == volumeId {
-			return nil
-		}
-	}
-	return fmt.Errorf("server has not volume: %s", volumeId)
-}
+
 func (t *ServerActionTest) ServerMustHasNotVolume(volumeId string) error {
 	volumes, err := t.Client.NovaV2().Servers().ListVolumes(t.Server.Id)
 	if err != nil {

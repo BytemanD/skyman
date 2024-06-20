@@ -77,7 +77,7 @@ func createDefaultServer(client *openstack.Openstack, testId int) (*nova.Server,
 	if err != nil {
 		return nil, err
 	}
-	logging.Info("[%s] create success", server.Id)
+	logging.Success("[%s] create success", server.Id)
 	return server, nil
 }
 
@@ -147,7 +147,7 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 			skip++
 			continue
 		}
-		logging.Info("[%s] %s", server.Id, utility.BlueString("==== "+actionName+" ===="))
+		logging.Info(utility.BlueString(fmt.Sprintf("[%s] ==== %s ====", server.Id, actionName)))
 		err = runActionTest(action)
 		if err != nil {
 			failed++

@@ -77,3 +77,14 @@ func (c ServerChecker) MakesureVolumeNotExists(attachment *nova.VolumeAttachment
 	logging.Info("[%s] server has not volume: %s", c.ServerId, attachment.VolumeId)
 	return nil
 }
+
+func (c ServerChecker) MakesureVolumeSizeIs(attachment *nova.VolumeAttachment, size uint) error {
+	volume, err := c.Client.CinderV2().Volumes().Show(attachment.VolumeId)
+	if err != nil {
+		return err
+	}
+	if volume.Size != size {
+		return fmt.Errorf("volume size is %d, not %d", volume.Size, size)
+	}
+	return nil
+}
