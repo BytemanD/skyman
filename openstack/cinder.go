@@ -235,13 +235,16 @@ func (c VolumeApi) Retype(id string, newType string, migrationPolicy string) err
 func (c VolumeApi) doAction(id string, data interface{}) error {
 	reqBody, _ := json.Marshal(data)
 	_, err := c.CinderV2.Post(
-		utility.UrlJoin("volumes", id), reqBody, nil,
+		utility.UrlJoin("volumes", id, "action"), reqBody, nil,
 	)
 	if err != nil {
 		return err
 	}
 	return nil
 }
+
+// volume type api
+
 func (c VolumeTypeApi) List(query url.Values) ([]cinder.VolumeType, error) {
 	resp, err := c.CinderV2.Get("types", query)
 	if err != nil {
@@ -320,6 +323,7 @@ func (c VolumeTypeApi) Delete(id string) (err error) {
 	_, err = c.CinderV2.Delete(utility.UrlJoin("types", id), nil)
 	return err
 }
+
 func (c VolumeApi) Prune(query url.Values, matchName string, yes bool) {
 	if query == nil {
 		query = url.Values{}
