@@ -13,6 +13,16 @@ networks:
       - name: test-subnet-1
         cidr: 192.168.11.0/24
 
+# defaultUserData: &DEFAULT_USER_DATA |
+#   #cloud-config
+#   disable_root: false
+#   ssh_pwauth: true
+#   chpasswd:
+#     list: |
+#           root:<YOUR PASSWORD>
+#     expire: False
+#   ssh_pwauth: True
+
 servers:
   - name: test-server
     flavor:
@@ -25,6 +35,8 @@ servers:
     availabilityZone:
     # securityGroups:
     #   - name: default
+    # adiminPass:
+    # userData: *DEFAULT_USER_DATA
     blockDeviceMappingV2:
     - bootIndex: 0
       uuid: <image uuid>

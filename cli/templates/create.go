@@ -153,9 +153,7 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 		serverOption.Networks = networks
 	}
 	if server.UserData != "" {
-		content, err := utility.LoadUserData(server.UserData)
-		utility.LogError(err, "read user data failed", true)
-		serverOption.UserData = content
+		serverOption.UserData = utility.EncodedUserdata(server.UserData)
 	}
 	s, err = computeClient.Servers().Create(serverOption)
 	utility.LogError(err, "create server failed", true)

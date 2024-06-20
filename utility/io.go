@@ -56,8 +56,10 @@ func LoadUserData(file string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	encodedContent := base64.StdEncoding.EncodeToString([]byte(content))
-	return encodedContent, nil
+	return EncodedUserdata(content), nil
+}
+func EncodedUserdata(content string) string {
+	return base64.StdEncoding.EncodeToString([]byte(content))
 }
 
 func IsFileExists(filePath string) bool {

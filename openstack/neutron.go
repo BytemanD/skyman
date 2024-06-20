@@ -332,7 +332,7 @@ func (c PortApi) Found(idOrName string) (*neutron.Port, error) {
 		return &(ports[0]), nil
 	}
 	if len(ports) == 0 {
-		return nil, fmt.Errorf("subnet %s not found", idOrName)
+		return nil, fmt.Errorf("port %s not found", idOrName)
 	} else {
 		return nil, fmt.Errorf("found multi ports named %s", idOrName)
 	}
