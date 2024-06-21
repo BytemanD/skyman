@@ -82,7 +82,7 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 
 	s, _ := client.NovaV2().Servers().Found(server.Name)
 	if s != nil {
-		logging.Warning("server %s exists", s.Name)
+		logging.Warning("server %s exists (%s)", s.Name, s.Status)
 		return s, nil
 	}
 	serverOption := nova.ServerOpt{
