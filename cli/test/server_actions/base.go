@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/cli/test/checkers"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
@@ -144,6 +145,20 @@ func (t ServerActionTest) CreateBlankVolume() (*cinder.Volume, error) {
 		time.Sleep(time.Second * 2)
 	}
 	return volume, fmt.Errorf("create volume timeout")
+}
+
+func (t ServerActionTest) getCheckers() (checkers.ServerCheckers, error) {
+	serverCheckers, err := checkers.GetServerCheckers(t.Client, t.Server)
+	if err != nil {
+		return nil, fmt.Errorf("get server checker failed: %s", err)
+	}
+	return serverCheckers, nil
+}
+func (t ServerActionTest) MakesureServerRunning() error {
+	if serverCheckers, err := t.getCheckers(); err == nil {
+		return serverCheckers.MakesureServerRunning()
+	}
+	return nil
 }
 
 type EmptyCleanup struct {

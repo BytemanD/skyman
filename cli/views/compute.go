@@ -68,6 +68,7 @@ func PrintServer(server nova.Server) {
 				bytes, _ := json.Marshal(p.SecurityGroups)
 				return string(bytes)
 			}},
+			{Name: "Progress"},
 			{Name: "Created"}, {Name: "LaunchedAt"}, {Name: "Updated"}, {Name: "TerminatedAt"},
 
 			{Name: "Fault:code", Text: "Fault:code",

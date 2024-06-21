@@ -51,7 +51,7 @@ func (t ServerHardReboot) Start() error {
 	if !t.Server.IsActive() {
 		return fmt.Errorf("server is not active")
 	}
-	return nil
+	return t.MakesureServerRunning()
 }
 
 type ServerStop struct {
