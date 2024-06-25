@@ -10,6 +10,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var POWER_STATE = []string{
@@ -37,6 +38,10 @@ func (flavor Flavor) Marshal() string {
 }
 func (flavor Flavor) BaseInfo() string {
 	return fmt.Sprintf("vcpu=%d, ram=%d", flavor.Vcpus, flavor.Ram)
+}
+
+func (flavor Flavor) HumanRam() string {
+	return utility.HumanBytes(flavor.Ram * utility.MB)
 }
 
 type ExtraSpecs map[string]string

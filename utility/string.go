@@ -12,6 +12,13 @@ import (
 	"github.com/fatih/color"
 )
 
+const (
+	KB = 1024
+	MB = KB * 1024
+	GB = MB * 1024
+	TB = GB * 1024
+)
+
 func UrlJoin(path ...string) string {
 	return strings.Join(path, "/")
 }
@@ -60,4 +67,19 @@ func BlueString(s string) string {
 }
 func RedString(s string) string {
 	return color.New(color.FgRed).Sprintf(s)
+}
+
+func HumanBytes(value int) string {
+	switch {
+	case value >= TB:
+		return fmt.Sprintf("%.2d TB", float32(value)/TB)
+	case value >= GB:
+		return fmt.Sprintf("%.2f GB", float32(value)/GB)
+	case value >= MB:
+		return fmt.Sprintf("%.2f MB", float32(value)/MB)
+	case value >= KB:
+		return fmt.Sprintf("%.2f KB", float32(value)/KB)
+	default:
+		return fmt.Sprintf("%d B", value)
+	}
 }

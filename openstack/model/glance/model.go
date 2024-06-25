@@ -12,6 +12,7 @@ const (
 	KB = 1024
 	MB = KB * 1024
 	GB = MB * 1024
+	TB = GB * 1024
 )
 
 var IMAGE_CONTAINER_FORMATS = []string{
@@ -22,6 +23,8 @@ var IMAGE_VISIBILITIES = []string{"public", "private", "community", "shared"}
 
 func humanSize(size uint) string {
 	switch {
+	case size >= TB:
+		return fmt.Sprintf("%.2f TB", float32(size)/TB)
 	case size >= GB:
 		return fmt.Sprintf("%.2f GB", float32(size)/GB)
 	case size >= MB:

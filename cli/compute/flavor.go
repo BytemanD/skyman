@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -40,6 +41,7 @@ var flavorList = &cobra.Command{
 		minRam, _ := cmd.Flags().GetUint64("min-ram")
 		minDisk, _ := cmd.Flags().GetUint64("min-disk")
 		long, _ := cmd.Flags().GetBool("long")
+		human, _ := cmd.Flags().GetBool("human")
 
 		if public {
 			query.Set("public", "true")
@@ -68,8 +70,11 @@ var flavorList = &cobra.Command{
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name"},
-				{Name: "Vcpus"}, {Name: "Ram"}, {Name: "Disk"},
-				{Name: "Ephemeral"}, {Name: "IsPublic"},
+				{Name: "Vcpus", Align: text.AlignRight},
+				{Name: "Ram", Align: text.AlignRight},
+				{Name: "Disk", Align: text.AlignRight},
+				{Name: "Ephemeral", Align: text.AlignRight},
+				{Name: "IsPublic"},
 			},
 			LongColumns: []common.Column{
 				{Name: "Swap"}, {Name: "RXTXFactor", Text: "RXTX Factor"},
@@ -80,6 +85,12 @@ var flavorList = &cobra.Command{
 					},
 				},
 			},
+		}
+		if human {
+			pt.ShortColumns[3].Slot = func(item interface{}) interface{} {
+				p := item.(nova.Flavor)
+				return p.HumanRam()
+			}
 		}
 
 		if long {
@@ -246,6 +257,7 @@ func init() {
 	flavorList.Flags().Uint64("min-ram", 0, "Filters the flavors by a minimum RAM, in MB.")
 	flavorList.Flags().Uint64("min-disk", 0, "Filters the flavors by a minimum disk space, in GiB.")
 	flavorList.Flags().BoolP("long", "l", false, "List additional fields in output")
+	flavorList.Flags().Bool("human", false, " Print ram like 1M 2G etc")
 
 	flavorCreate.Flags().String("id", "", "Unique flavor ID, creates a UUID if empty")
 	flavorCreate.Flags().Uint("disk", 0, "Disk size in GB")
