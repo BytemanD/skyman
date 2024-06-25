@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/common"
 )
 
 type ServerLiveMigrate struct {
@@ -16,6 +17,20 @@ func (t ServerLiveMigrate) Start() error {
 	t.RefreshServer()
 	if !t.Server.IsActive() {
 		return fmt.Errorf("server is not active")
+	}
+
+	if common.CONF.Test.LiveMigrate.PingEnabled {
+		clientServerOpt := t.getServerBootOption(fmt.Sprintf("client-%s", t.Server.Name))
+
+		clientServer, err := t.Client.NovaV2().Servers().Create(clientServerOpt)
+		if err != nil {
+			return fmt.Errorf("create client instance failed: %s", err)
+		}
+		clientServer, err = t.Client.NovaV2().Servers().WaitBooted(clientServer.Id)
+		if err != nil {
+			return err
+		}
+		logging.Success("[%s] client (%s) created", t.Server.Id, clientServer.Name)
 	}
 
 	sourceHost := t.Server.Host

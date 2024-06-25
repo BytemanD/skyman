@@ -161,6 +161,38 @@ func (t ServerActionTest) MakesureServerRunning() error {
 	return nil
 }
 
+func (t ServerActionTest) getServerBootOption(name string) nova.ServerOpt {
+	opt := nova.ServerOpt{
+		Name:             name,
+		Flavor:           TEST_FLAVORS[0].Id,
+		Image:            common.CONF.Test.Images[0],
+		AvailabilityZone: common.CONF.Test.AvailabilityZone,
+	}
+	if len(common.CONF.Test.Networks) >= 1 {
+		opt.Networks = []nova.ServerOptNetwork{
+			{UUID: common.CONF.Test.Networks[0]},
+		}
+	} else {
+		logging.Warning("boot without network")
+	}
+
+	if common.CONF.Test.BootFromVolume {
+		opt.BlockDeviceMappingV2 = []nova.BlockDeviceMappingV2{
+			{
+				UUID:               common.CONF.Test.Images[0],
+				VolumeSize:         common.CONF.Test.BootVolumeSize,
+				SourceType:         "image",
+				DestinationType:    "volume",
+				VolumeType:         common.CONF.Test.BootVolumeType,
+				DeleteOnTemination: true,
+			},
+		}
+	} else {
+		opt.Image = common.CONF.Test.Images[0]
+	}
+	return opt
+}
+
 type EmptyCleanup struct {
 }
 

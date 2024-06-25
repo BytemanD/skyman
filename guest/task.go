@@ -77,7 +77,6 @@ func TestNetQos(clientGuest Guest, serverGuest Guest, pps bool, localIperf3File 
 		if err := installIperf(serverGuest, localIperf3File); err != nil {
 			return 0, 0, fmt.Errorf("服务端拷贝iperf3失败: %s", err)
 		}
-
 	}
 	if !clientGuest.HasCommand("iperf3") {
 		if localIperf3File == "" {

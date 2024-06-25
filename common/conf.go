@@ -79,25 +79,30 @@ type QGAChecker struct {
 	QgaConnectTimeout   int  `yaml:"qgaConnectTimeout"`
 }
 
+type LiveMigrateOptions struct {
+	PingEnabled bool `yaml:"pingEnabled"`
+}
+
 type Test struct {
-	Tasks            int              `yaml:"tasks"`
-	Workers          int              `yaml:"workers"`
-	DeleteIfError    bool             `yaml:"deleteIfError"`
-	AvailabilityZone string           `yaml:"availabilityZone"`
-	BootFromVolume   bool             `yaml:"bootFromVolume"`
-	BootVolumeSize   uint16           `yaml:"bootVolumeSize"`
-	BootVolumeType   string           `yaml:"bootVolumeType"`
-	Flavors          []string         `yaml:"flavors"`
-	Images           []string         `yaml:"images"`
-	Networks         []string         `yaml:"networks"`
-	VolumeType       string           `yaml:"volumeType"`
-	VolumeSize       int              `yaml:"volumeSize"`
-	Actions          []string         `yaml:"volumeType"`
-	InterfaceHotplug InterfaceHotplug `yaml:"interfaceHotplug"`
-	VolumeHotplug    VolumeHotplug    `yaml:"volumeHotplug"`
-	UseServers       []string         `yaml:"userServers"`
-	ActionInterval   int              `yaml:"actionInterval"`
-	QGAChecker       QGAChecker       `yaml:"qgaChecker"`
+	Tasks            int                `yaml:"tasks"`
+	Workers          int                `yaml:"workers"`
+	DeleteIfError    bool               `yaml:"deleteIfError"`
+	AvailabilityZone string             `yaml:"availabilityZone"`
+	BootFromVolume   bool               `yaml:"bootFromVolume"`
+	BootVolumeSize   uint16             `yaml:"bootVolumeSize"`
+	BootVolumeType   string             `yaml:"bootVolumeType"`
+	Flavors          []string           `yaml:"flavors"`
+	Images           []string           `yaml:"images"`
+	Networks         []string           `yaml:"networks"`
+	VolumeType       string             `yaml:"volumeType"`
+	VolumeSize       int                `yaml:"volumeSize"`
+	Actions          []string           `yaml:"volumeType"`
+	InterfaceHotplug InterfaceHotplug   `yaml:"interfaceHotplug"`
+	VolumeHotplug    VolumeHotplug      `yaml:"volumeHotplug"`
+	UseServers       []string           `yaml:"userServers"`
+	ActionInterval   int                `yaml:"actionInterval"`
+	QGAChecker       QGAChecker         `yaml:"qgaChecker"`
+	LiveMigrate      LiveMigrateOptions `yaml:"liveMigrate"`
 }
 
 func LoadConfig(configFile string) error {
