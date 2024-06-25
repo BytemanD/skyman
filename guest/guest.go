@@ -13,7 +13,7 @@ type Guest struct {
 	ByUUID     bool
 	QGATimeout int
 	conn       libvirt.Connect
-	domain     libvirt.Domain
+	domain     *libvirt.Domain
 	domainName string
 }
 
@@ -33,9 +33,15 @@ func (guest *Guest) Connect() error {
 	if err != nil {
 		return err
 	}
-	guest.domain = *domain
+	guest.domain = domain
 	guest.domainName, _ = domain.GetName()
 	return nil
+}
+func (guest *Guest) getDoamin() *libvirt.Domain {
+	if guest.domain == nil {
+		guest.Connect()
+	}
+	return guest.domain
 }
 
 func (g Guest) IsSame(other Guest) bool {

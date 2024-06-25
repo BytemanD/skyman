@@ -108,7 +108,6 @@ func (guest Guest) Exec(command string, wait bool) ExecResult {
 		Arguments: getGuestExecArguments(command),
 	}
 	jsonData, _ := json.Marshal(qemuAgentCommand)
-	logging.Debug("run qga command: %s", jsonData)
 	result, err := guest.runQemuAgentCommand(jsonData)
 	if err != nil {
 		return ExecResult{Failed: true, ErrData: fmt.Sprintf("%s", err)}
@@ -130,7 +129,7 @@ func (guest Guest) Exec(command string, wait bool) ExecResult {
 
 func (guest Guest) runQemuAgentCommand(jsonData []byte) (string, error) {
 	logging.Debug("QGA 命令: %s", string(jsonData))
-	result, err := guest.domain.QemuAgentCommand(
+	result, err := guest.getDoamin().QemuAgentCommand(
 		string(jsonData), libvirt.DOMAIN_QEMU_AGENT_COMMAND_MIN, 0)
 	if err != nil {
 		return "", err
@@ -336,4 +335,18 @@ func (guest Guest) HostName() (string, error) {
 		return "", fmt.Errorf("exec failed: %s", result.ErrData)
 	}
 	return result.OutData, nil
+}
+
+func (guest Guest) Ping(targetIp string, Interval int, count int, useInterface string) ExecResult {
+	if Interval == 0 {
+		Interval = 1
+	}
+	if count == 0 {
+		count = 1
+	}
+	cmd := fmt.Sprintf("ping -i %d -c %d %s", Interval, count, targetIp)
+	if useInterface != "" {
+		cmd += fmt.Sprintf(" -I %s", useInterface)
+	}
+	return guest.Exec(cmd, true)
 }
