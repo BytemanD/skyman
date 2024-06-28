@@ -71,6 +71,7 @@ type VolumeHotplug struct {
 var (
 	DEFAULT_GUEST_CONNECT_TIMEOUT = 60 * 5
 	DEFAULT_QGA_CONNECT_TIMEOUT   = 60 * 10
+	DEFAULT_PING_INTERVAL         = float32(1.0)
 )
 
 type QGAChecker struct {
@@ -80,7 +81,9 @@ type QGAChecker struct {
 }
 
 type LiveMigrateOptions struct {
-	PingEnabled bool `yaml:"pingEnabled"`
+	PingEnabled  bool    `yaml:"pingEnabled"`
+	PingInterval float32 `yaml:"pingInterval"`
+	MaxLoss      int     `yaml:"maxLoss"`
 }
 
 type Test struct {
@@ -155,6 +158,9 @@ func LoadConfig(configFile string) error {
 	}
 	if CONF.Test.QGAChecker.QgaConnectTimeout == 0 {
 		CONF.Test.QGAChecker.QgaConnectTimeout = DEFAULT_QGA_CONNECT_TIMEOUT
+	}
+	if CONF.Test.LiveMigrate.PingInterval <= 0 {
+		CONF.Test.LiveMigrate.PingInterval = DEFAULT_PING_INTERVAL
 	}
 
 	return nil

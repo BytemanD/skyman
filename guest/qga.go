@@ -103,6 +103,23 @@ type ExecResult struct {
 	Failed  bool
 }
 
+func (guest Guest) ConnectToQGA(timeout int) error {
+	logging.Debug("%s connecting to qga ...", guest)
+	startTime := time.Now()
+	for {
+		_, err := guest.HostName()
+		if err == nil {
+			logging.Debug("%s qga connected", guest)
+			return nil
+		}
+		if time.Since(startTime) >= time.Second*time.Duration(timeout) {
+			return fmt.Errorf("connect qga timeout")
+		}
+		logging.Debug("%s get hostname failed: %s", guest, err)
+		time.Sleep(time.Second * 5)
+	}
+}
+
 func (guest Guest) Exec(command string, wait bool) ExecResult {
 	qemuAgentCommand := QemuAgentCommand{
 		Execute:   "guest-exec",
@@ -132,10 +149,10 @@ func (guest Guest) runQemuAgentCommand(jsonData []byte) (string, error) {
 	logging.Debug("QGA 命令: %s", string(jsonData))
 	result, err := guest.getDoamin().QemuAgentCommand(
 		string(jsonData), libvirt.DOMAIN_QEMU_AGENT_COMMAND_MIN, 0)
+	logging.Debug("命令执行结果: %s", result)
 	if err != nil {
 		return "", err
 	}
-	logging.Debug("命令执行结果: %s", result)
 	return result, nil
 }
 
@@ -338,11 +355,11 @@ func (guest Guest) HostName() (string, error) {
 	return result.OutData, nil
 }
 
-func (guest Guest) Ping(targetIp string, interval int, count int, useInterface string, wait bool) ExecResult {
+func (guest Guest) Ping(targetIp string, interval float32, count int, useInterface string, wait bool) ExecResult {
 	if interval == 0 {
 		interval = 1
 	}
-	cmd := fmt.Sprintf("ping -i %d %s", interval, targetIp)
+	cmd := fmt.Sprintf("ping -i %.2f %s", interval, targetIp)
 	if count > 0 {
 		cmd += fmt.Sprintf(" -c %d", count)
 	}
@@ -350,10 +367,10 @@ func (guest Guest) Ping(targetIp string, interval int, count int, useInterface s
 	if useInterface != "" {
 		cmd += fmt.Sprintf(" -I %s", useInterface)
 	}
-	logging.Info("ping %s -> %s", useInterface, targetIp)
+	logging.Debug("ping %s -> %s", useInterface, targetIp)
 	return guest.Exec(cmd, wait)
 }
-func (guest Guest) WithPing(targetIp string, interval int, useInterface string, function func()) (string, string) {
+func (guest Guest) WithPing(targetIp string, interval float32, useInterface string, function func()) (string, string) {
 	result := guest.Ping(targetIp, interval, 0, useInterface, false)
 	logging.Debug("pid: %d", result.Pid)
 	function()

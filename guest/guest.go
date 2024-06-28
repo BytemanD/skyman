@@ -55,7 +55,7 @@ func (g *Guest) GetName() string {
 }
 
 func (g Guest) String() string {
-	return fmt.Sprintf("<%s %s>", g.Connection, g.Domain)
+	return fmt.Sprintf("<%s @%s>", g.Domain, g.Connection)
 }
 func (g Guest) IsRunning() bool {
 	domainInfo, err := g.domain.GetInfo()

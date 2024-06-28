@@ -23,7 +23,7 @@ var serverPing = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 
-		interval, _ := cmd.Flags().GetInt("interval")
+		interval, _ := cmd.Flags().GetFloat32("interval")
 		count, _ := cmd.Flags().GetInt("count")
 
 		serverInstance, err := client.NovaV2().Servers().Show(args[0])
@@ -94,7 +94,7 @@ var serverPing = &cobra.Command{
 }
 
 func init() {
-	serverPing.Flags().Int("interval", 1, "Interval")
+	serverPing.Flags().Float32("interval", 1.0, "Interval")
 	serverPing.Flags().Int("count", 0, "count")
 	TestCmd.AddCommand(serverPing)
 }

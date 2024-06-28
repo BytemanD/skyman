@@ -50,3 +50,9 @@ test:
     enabled: false
     guestConnectTimeout: 300
     qgaConnectTimeout: 600
+  liveMigrate:
+    # qgaChecker.enaled 必须为true, pingEnabled 才生效
+    pingEnabled: false
+    # 仅支持小数点后两位
+    pingInterval: 0.1
+    maxLoss: 9

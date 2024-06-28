@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/compare"
@@ -82,4 +83,9 @@ func HumanBytes(value int) string {
 	default:
 		return fmt.Sprintf("%d B", value)
 	}
+}
+
+func MatchPingResult(text string) []string {
+	reg := regexp.MustCompile(`(\d+) packets transmitted, (\d+) received,[^\n]+`)
+	return reg.FindStringSubmatch(text)
 }

@@ -21,19 +21,11 @@ type QGAChecker struct {
 
 func (c QGAChecker) makesureQGAConnected(g *guest.Guest) error {
 	logging.Info("[%s] connecting to qga ...", c.ServerId)
-	startTime := time.Now()
-	for {
-		_, err := g.HostName()
-		if err == nil {
-			logging.Info("[%s] qga connected", g.Domain)
-			return nil
-		}
-		if time.Since(startTime) >= time.Second*time.Duration(common.CONF.Test.QGAChecker.QgaConnectTimeout) {
-			return fmt.Errorf("connect qga timeout")
-		}
-		logging.Debug("[%s] get hostname failed: %s", g.Domain, err)
-		time.Sleep(time.Second * 5)
+	if err := g.ConnectToQGA(common.CONF.Test.QGAChecker.QgaConnectTimeout); err != nil {
+		return err
 	}
+	logging.Info("[%s] qga connected", g.Domain)
+	return nil
 }
 
 func (c QGAChecker) MakesureHostname(hostname string) error {
