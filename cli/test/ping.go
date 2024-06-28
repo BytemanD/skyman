@@ -23,7 +23,7 @@ var serverPing = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 
-		timeout, _ := cmd.Flags().GetInt("timeout")
+		interval, _ := cmd.Flags().GetInt("interval")
 		count, _ := cmd.Flags().GetInt("count")
 
 		serverInstance, err := client.NovaV2().Servers().Show(args[0])
@@ -49,25 +49,26 @@ var serverPing = &cobra.Command{
 			logging.Fatal("客户端和服务端实例必须至少有一张启用的网卡")
 		}
 
-		logging.Info("ping %s -> %s", serverAddresses[0], clientAddresses[0])
-		result := serverGuest.Ping(clientAddresses[0], timeout, count, serverAddresses[0], count > 0)
-		if result.ErrData != "" {
-			fmt.Println(result.ErrData)
-			return
-		}
 		var stdout, stderr string
 		if count > 0 {
+			result := serverGuest.Ping(clientAddresses[0], interval, count, serverAddresses[0], count > 0)
+			if result.ErrData != "" {
+				fmt.Println(result.ErrData)
+				return
+			}
 			stdout, stderr = result.OutData, result.ErrData
+
 		} else {
-			logging.Debug("pid: %d", result.Pid)
-			logging.Info("waiting, stop by  ctrl+C ...")
-			sigCh := make(chan os.Signal, 1)
-			signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-			sig := <-sigCh
-			logging.Info("received signal: %s\n", sig)
-			// signal SIGINT
-			serverGuest.Kill(int(syscall.SIGINT), []int{result.Pid})
-			stdout, stderr = serverGuest.GetExecStatusOutput(result.Pid)
+			stdout, stderr = serverGuest.WithPing(
+				clientAddresses[0], interval, serverAddresses[0],
+				func() {
+					logging.Info("waiting, stop by ctrl+C ...")
+					sigCh := make(chan os.Signal, 1)
+					signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+					sig := <-sigCh
+					logging.Info("received signal: %s\n", sig)
+				},
+			)
 		}
 
 		if stderr != "" {

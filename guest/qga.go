@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"syscall"
 	"time"
 
 	"libvirt.org/go/libvirt"
@@ -337,11 +338,11 @@ func (guest Guest) HostName() (string, error) {
 	return result.OutData, nil
 }
 
-func (guest Guest) Ping(targetIp string, Interval int, count int, useInterface string, wait bool) ExecResult {
-	if Interval == 0 {
-		Interval = 1
+func (guest Guest) Ping(targetIp string, interval int, count int, useInterface string, wait bool) ExecResult {
+	if interval == 0 {
+		interval = 1
 	}
-	cmd := fmt.Sprintf("ping -i %d %s", Interval, targetIp)
+	cmd := fmt.Sprintf("ping -i %d %s", interval, targetIp)
 	if count > 0 {
 		cmd += fmt.Sprintf(" -c %d", count)
 	}
@@ -349,5 +350,13 @@ func (guest Guest) Ping(targetIp string, Interval int, count int, useInterface s
 	if useInterface != "" {
 		cmd += fmt.Sprintf(" -I %s", useInterface)
 	}
+	logging.Info("ping %s -> %s", useInterface, targetIp)
 	return guest.Exec(cmd, wait)
+}
+func (guest Guest) WithPing(targetIp string, interval int, useInterface string, function func()) (string, string) {
+	result := guest.Ping(targetIp, interval, 0, useInterface, false)
+	logging.Debug("pid: %d", result.Pid)
+	function()
+	guest.Kill(int(syscall.SIGINT), []int{result.Pid})
+	return guest.GetExecStatusOutput(result.Pid)
 }
