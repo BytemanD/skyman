@@ -117,7 +117,7 @@ func (guest Guest) Exec(command string, wait bool) ExecResult {
 	if !wait {
 		return ExecResult{Pid: qgaExecResult.Return.Pid}
 	}
-	outData, errData := guest.getExecStatusOutput(qgaExecResult.Return.Pid)
+	outData, errData := guest.GetExecStatusOutput(qgaExecResult.Return.Pid)
 	logging.Debug("OutData: %s, ErrData: %s", outData, errData)
 
 	return ExecResult{
@@ -139,7 +139,7 @@ func (guest Guest) runQemuAgentCommand(jsonData []byte) (string, error) {
 }
 
 // guest-exec-status
-func (guest Guest) getExecStatusOutput(pid int) (string, string) {
+func (guest Guest) GetExecStatusOutput(pid int) (string, string) {
 	qemuAgentCommand := QGACExecStatus{
 		Execute:   "guest-exec-status",
 		Arguments: getGuestExecStatusArguments(pid),
@@ -337,16 +337,17 @@ func (guest Guest) HostName() (string, error) {
 	return result.OutData, nil
 }
 
-func (guest Guest) Ping(targetIp string, Interval int, count int, useInterface string) ExecResult {
+func (guest Guest) Ping(targetIp string, Interval int, count int, useInterface string, wait bool) ExecResult {
 	if Interval == 0 {
 		Interval = 1
 	}
-	if count == 0 {
-		count = 1
+	cmd := fmt.Sprintf("ping -i %d %s", Interval, targetIp)
+	if count > 0 {
+		cmd += fmt.Sprintf(" -c %d", count)
 	}
-	cmd := fmt.Sprintf("ping -i %d -c %d %s", Interval, count, targetIp)
+
 	if useInterface != "" {
 		cmd += fmt.Sprintf(" -I %s", useInterface)
 	}
-	return guest.Exec(cmd, true)
+	return guest.Exec(cmd, wait)
 }

@@ -139,7 +139,7 @@ func TestNetQos(clientGuest Guest, serverGuest Guest, pps bool, localIperf3File 
 	logging.Info("等待测试结束(%ds) ...", times)
 	time.Sleep(time.Second * time.Duration(times))
 	for _, job := range jobs {
-		clientGuest.getExecStatusOutput(job.Pid)
+		clientGuest.GetExecStatusOutput(job.Pid)
 	}
 	logging.Info("测试结束")
 

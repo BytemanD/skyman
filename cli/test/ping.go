@@ -2,8 +2,11 @@ package test
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
 	"regexp"
 	"strconv"
+	"syscall"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/guest"
@@ -46,34 +49,51 @@ var serverPing = &cobra.Command{
 			logging.Fatal("客户端和服务端实例必须至少有一张启用的网卡")
 		}
 
-		logging.Debug("ping %s -> %s", serverAddresses[0], clientAddresses[0])
-		result := serverGuest.Ping(clientAddresses[0], timeout, count, serverAddresses[0])
-
+		logging.Info("ping %s -> %s", serverAddresses[0], clientAddresses[0])
+		result := serverGuest.Ping(clientAddresses[0], timeout, count, serverAddresses[0], count > 0)
 		if result.ErrData != "" {
 			fmt.Println(result.ErrData)
 			return
+		}
+		var stdout, stderr string
+		if count > 0 {
+			stdout, stderr = result.OutData, result.ErrData
+		} else {
+			logging.Debug("pid: %d", result.Pid)
+			logging.Info("waiting, stop by  ctrl+C ...")
+			sigCh := make(chan os.Signal, 1)
+			signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+			sig := <-sigCh
+			logging.Info("received signal: %s\n", sig)
+			// signal SIGINT
+			serverGuest.Kill(int(syscall.SIGINT), []int{result.Pid})
+			stdout, stderr = serverGuest.GetExecStatusOutput(result.Pid)
+		}
 
+		if stderr != "" {
+			fmt.Println(color.RedString(stdout))
+			os.Exit(1)
 		}
 		reg := regexp.MustCompile(`(\d+)% +packet +loss`)
-		matchedNoLossed := reg.FindAllStringSubmatch(result.OutData, -1)
+		matchedNoLossed := reg.FindAllStringSubmatch(stdout, -1)
 		if len(matchedNoLossed) >= 1 && len(matchedNoLossed[0]) >= 2 {
 			lossPackage, _ := strconv.Atoi(matchedNoLossed[0][1])
 			switch {
 			case lossPackage == 0:
-				fmt.Println(color.YellowString(result.OutData))
+				fmt.Println(stdout)
 			case lossPackage == 100:
-				fmt.Println(color.RedString(result.OutData))
+				fmt.Println(color.RedString(stdout))
 			default:
-				fmt.Println(result.OutData)
+				fmt.Println(color.YellowString(stdout))
 			}
 			return
 		}
-		fmt.Println(color.RedString(result.OutData))
+		fmt.Println(color.RedString(stdout))
 	},
 }
 
 func init() {
 	serverPing.Flags().Int("interval", 1, "Interval")
-	serverPing.Flags().Int("count", 10, "count")
+	serverPing.Flags().Int("count", 0, "count")
 	TestCmd.AddCommand(serverPing)
 }
