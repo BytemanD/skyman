@@ -18,6 +18,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+var TestActions []string
+
+var report []server_actions.ServerReport
+
 func runActionTest(action server_actions.ServerAction) error {
 	defer func() {
 		logging.Info("[%s] cleanup ...", action.ServerId())
@@ -140,6 +144,10 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 			return err
 		}
 	}
+	serverReport := server_actions.ServerReport{
+		ServerId:        server.Id,
+		TotalActionsNum: len(serverActions),
+	}
 	for i, actionName := range serverActions {
 		action := server_actions.ACTIONS.Get(actionName, server, client)
 		if action == nil {
@@ -152,6 +160,7 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		if err != nil {
 			failed++
 			testFailed = true
+			serverReport.AddFailedAction(actionName)
 			logging.Error("[%s] test action '%s' failed: %s", server.Id, actionName, err)
 		} else {
 			success++
@@ -171,11 +180,14 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 	} else {
 		logging.Warning("[%s] %s", server.Id, result)
 	}
-
+	if serverReport.FailedActinos == "" {
+		serverReport.Result = utility.ColorString("success")
+	} else {
+		serverReport.Result = utility.ColorString("failed")
+	}
+	report = append(report, serverReport)
 	return nil
 }
-
-var TestActions []string
 
 var serverAction = &cobra.Command{
 	Use:   "server-actions [server]",
@@ -244,6 +256,7 @@ var serverAction = &cobra.Command{
 			}
 		}
 		taskGroup.Start()
+		server_actions.PrintReport(report)
 	},
 }
 

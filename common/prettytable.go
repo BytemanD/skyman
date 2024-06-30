@@ -118,7 +118,7 @@ func (pt PrettyTable) GetLongColumnIndex(column string) int {
 	}
 	return -1
 }
-func (pt PrettyTable) Print(long bool) {
+func (pt PrettyTable) RenderToTable(long bool) string {
 	tableWriter := pt.getTableWriter()
 	if pt.Title != "" {
 		fmt.Println(pt.Title)
@@ -192,26 +192,37 @@ func (pt PrettyTable) Print(long bool) {
 
 	// TODO: 当前只能按Columns 顺序排序
 	tableWriter.SortBy(sortBy)
-	tableWriter.Render()
+	return tableWriter.Render()
+}
+func (pt PrettyTable) Print(long bool) string {
+	result := pt.RenderToTable(long)
+	// tableWriter.Render()
 	if !pt.HideTotalItems {
 		fmt.Printf("Total items: %d\n", len(pt.Items))
 	}
+	return result
 }
-
-func (pt PrettyTable) PrintJson() {
-	output, err := stringutils.JsonDumpsIndent(pt.Items)
+func (pt PrettyTable) RenderToJson() (string, error) {
+	return stringutils.JsonDumpsIndent(pt.Items)
+}
+func (pt PrettyTable) PrintJson() string {
+	output, err := pt.RenderToJson()
 	if err != nil {
 		logging.Fatal("print json failed, %s", err)
 	}
 	fmt.Println(output)
+	return output
 }
-
-func (pt PrettyTable) PrintYaml() {
-	output, err := GetYaml(pt.Items)
+func (pt PrettyTable) RenderToYaml() (string, error) {
+	return GetYaml(pt.Items)
+}
+func (pt PrettyTable) PrintYaml() string {
+	output, err := pt.RenderToYaml()
 	if err != nil {
 		logging.Fatal("print json failed, %s", err)
 	}
 	fmt.Println(output)
+	return output
 }
 
 type PrettyItemTable struct {
@@ -223,7 +234,7 @@ type PrettyItemTable struct {
 	Number2WidthMax int
 }
 
-func (pt PrettyItemTable) Print(long bool) {
+func (pt PrettyItemTable) Print(long bool) string {
 	tableWriter := table.NewWriter()
 	if pt.Style == STYLE_LIGHT {
 		tableWriter.SetStyle(table.StyleLight)
@@ -278,37 +289,40 @@ func (pt PrettyItemTable) Print(long bool) {
 		tableWriter.SetTitle(pt.Title)
 		tableWriter.Style().Title.Align = text.AlignCenter
 	}
-	tableWriter.Render()
+	return tableWriter.Render()
 }
-func (dt PrettyItemTable) PrintJson() {
+func (dt PrettyItemTable) PrintJson() string {
 	output, err := stringutils.JsonDumpsIndent(dt.Item)
 	if err != nil {
 		logging.Fatal("print json failed, %s", err)
 	}
 	fmt.Println(output)
+	return output
 }
 
-func (dt PrettyItemTable) PrintYaml() {
+func (dt PrettyItemTable) PrintYaml() string {
 	output, err := GetYaml(dt.Item)
 	if err != nil {
 		logging.Fatal("print yaml failed, %s", err)
 	}
 	fmt.Println(output)
+	return output
 }
 
-func PrintPrettyTableFormat(table PrettyTable, long bool, format string) {
+func PrintPrettyTableFormat(table PrettyTable, long bool, format string) string {
 	switch format {
 	case TABLE, "default", "":
 		table.Print(long)
 	case TABLE_LIGHT:
 		table.Style = STYLE_LIGHT
-		table.Print(long)
+		return table.Print(long)
 	case JSON:
-		table.PrintJson()
+		return table.PrintJson()
 	case YAML:
-		table.PrintYaml()
+		return table.PrintYaml()
 	default:
 		logging.Fatal("invalid output format: %s, valid formats: %v", CONF.Format,
 			GetOutputFormats())
 	}
+	return ""
 }

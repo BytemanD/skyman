@@ -14,23 +14,24 @@ func GetOutputFormats() []string {
 	return []string{TABLE, TABLE_LIGHT, JSON, YAML}
 }
 
-func PrintPrettyTable(table PrettyTable, long bool) {
-	PrintPrettyTableFormat(table, long, CONF.Format)
+func PrintPrettyTable(table PrettyTable, long bool) string {
+	return PrintPrettyTableFormat(table, long, CONF.Format)
 }
 
-func PrintPrettyItemTable(table PrettyItemTable) {
+func PrintPrettyItemTable(table PrettyItemTable) string {
 	switch CONF.Format {
 	case TABLE, "":
-		table.Print(true)
+		return table.Print(true)
 	case TABLE_LIGHT:
 		table.Style = STYLE_LIGHT
-		table.Print(true)
+		return table.Print(true)
 	case JSON:
-		table.PrintJson()
+		return table.PrintJson()
 	case YAML:
-		table.PrintYaml()
+		return table.PrintYaml()
 	default:
 		logging.Fatal("invalid output format: %s, valid formats: %v", CONF.Format,
 			GetOutputFormats())
 	}
+	return ""
 }

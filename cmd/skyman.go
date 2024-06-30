@@ -132,6 +132,10 @@ func main() {
 			if common.CONF.Debug {
 				logLevel = logging.DEBUG
 			}
+			if common.CONF.LogFile != "" {
+				// disable log color if use log file
+				common.CONF.EnableLogColor = false
+			}
 			logging.BasicConfig(logging.LogConfig{Level: logLevel, Output: common.CONF.LogFile, EnableColor: common.CONF.EnableLogColor})
 			logging.Debug("load config file from %s", viper.ConfigFileUsed())
 		},
