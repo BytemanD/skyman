@@ -134,6 +134,14 @@ func (c QGAChecker) MakesureVolumeNotExists(attachment *nova.VolumeAttachment) e
 }
 
 func (c QGAChecker) MakesureVolumeSizeIs(attachment *nova.VolumeAttachment, size uint) error {
+	server, err := c.Client.NovaV2().Servers().Show(c.ServerId)
+	if err != nil {
+		return err
+	}
+	if server.IsShelved() {
+		logging.Warning("[%s] status is %s, skip to check volume size on guest", c.ServerId, server.Status)
+		return nil
+	}
 	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
 	serverGuest.Connect()
 	guestBlockDevices, err := serverGuest.GetBlockDevices()
