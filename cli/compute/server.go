@@ -586,10 +586,27 @@ var serverRebuild = &cobra.Command{
 	Use:   "rebuild <server>",
 	Short: "Rebuild server",
 	Args:  cobra.ExactArgs(1),
-	Run: func(_ *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 
-		err := client.NovaV2().Servers().Rebuild(args[0])
+		imageIdOrName, _ := cmd.Flags().GetString("image")
+		rebuildPassword, _ := cmd.Flags().GetString("rebuild-password")
+		name, _ := cmd.Flags().GetString("name")
+
+		options := map[string]interface{}{}
+		if imageIdOrName != "" {
+			image, err := client.GlanceV2().Images().Found(imageIdOrName)
+			utility.LogError(err, "get image failed", true)
+			options["imageRef"] = image.Id
+		}
+		if rebuildPassword != "" {
+			options["adminPass"] = rebuildPassword
+		}
+		if name != "" {
+			options["name"] = name
+		}
+
+		err := client.NovaV2().Servers().Rebuild(args[0], options)
 		if err != nil {
 			logging.Error("Reqeust to rebuild server failed, %v", err)
 		} else {
@@ -870,6 +887,10 @@ func init() {
 	serverSetPassword.Flags().String("user", "", "User name")
 	serverSetState.Flags().Bool("active", false,
 		"Request the server be reset to 'active' state instead of'error' state")
+
+	serverRebuild.Flags().String("image", "", "Name or ID of server.")
+	serverRebuild.Flags().String("rebuild-password", "", " Set the provided admin password on the rebuilt server.")
+	serverRebuild.Flags().String("name", "", "Name for the new server.")
 
 	common.RegistryLongFlag(serverList, serverMigrationList)
 

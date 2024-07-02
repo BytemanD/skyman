@@ -450,8 +450,8 @@ func (c ServersApi) ResizeRevert(id string) error {
 }
 
 // TODO: more params
-func (c ServersApi) Rebuild(id string) error {
-	_, err := c.doAction("rebuild", id, map[string]string{})
+func (c ServersApi) Rebuild(id string, options map[string]interface{}) error {
+	_, err := c.doAction("rebuild", id, options)
 	return err
 }
 func (c ServersApi) Evacuate(id string, password string, host string, force bool) error {

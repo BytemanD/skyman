@@ -12,7 +12,7 @@ type ServerRebuild struct {
 }
 
 func (t ServerRebuild) Start() error {
-	err := t.Client.NovaV2().Servers().Rebuild(t.Server.Id)
+	err := t.Client.NovaV2().Servers().Rebuild(t.Server.Id, map[string]interface{}{})
 	if err != nil {
 		return err
 	}
