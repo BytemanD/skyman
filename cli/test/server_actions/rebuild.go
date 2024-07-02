@@ -17,7 +17,7 @@ func (t ServerRebuild) Start() error {
 		return err
 	}
 	logging.Info("[%s] rebuilding", t.Server.Id)
-	if err := t.WaitServerTaskFinished(true); err != nil {
+	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
 	if t.Server.IsError() {

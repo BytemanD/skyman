@@ -35,6 +35,8 @@ test:
   useServers:
   deleteIfError: false
   availabilityZone:
+  volumeType:
+  volumeSize:
   bootFromVolume: false
   bootVolumeSize:
   bootVolumeType:

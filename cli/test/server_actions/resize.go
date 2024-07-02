@@ -47,7 +47,7 @@ func (t ServerResize) Start() error {
 		return err
 	}
 	logging.Info("[%s] resizing", t.Server.Id)
-	if err := t.WaitServerTaskFinished(true); err != nil {
+	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
 	if t.Server.IsError() {

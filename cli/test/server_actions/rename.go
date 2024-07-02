@@ -24,7 +24,7 @@ func (t ServerRename) Start() error {
 		return err
 	}
 	logging.Info("[%s] set name to %s", t.Server.Id, t.Server.Name)
-	if err := t.WaitServerTaskFinished(true); err != nil {
+	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
 	if t.Server.Name == newName {

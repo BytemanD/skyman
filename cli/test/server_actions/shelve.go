@@ -22,7 +22,7 @@ func (t ServerShelve) Start() error {
 	}
 	logging.Info("[%s] shelving", t.Server.Id)
 
-	if err := t.WaitServerTaskFinished(true); err != nil {
+	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
 	if t.Server.IsError() {
@@ -50,7 +50,7 @@ func (t ServerUnshelve) Start() error {
 	}
 	logging.Info("[%s] unshelving", t.Server.Id)
 
-	if err := t.WaitServerTaskFinished(true); err != nil {
+	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
 	if t.Server.IsError() {
@@ -75,7 +75,7 @@ func (t ServerToggleShelve) Start() error {
 			return err
 		}
 		logging.Info("[%s] unshelving", t.Server.Id)
-		if err := t.WaitServerTaskFinished(true); err != nil {
+		if err := t.WaitServerTaskFinished(false); err != nil {
 			return err
 		}
 		if !t.Server.IsActive() {
@@ -88,7 +88,7 @@ func (t ServerToggleShelve) Start() error {
 			return err
 		}
 		logging.Info("[%s] shelving", t.Server.Id)
-		if err := t.WaitServerTaskFinished(true); err != nil {
+		if err := t.WaitServerTaskFinished(false); err != nil {
 			return err
 		}
 		if !t.Server.IsShelved() {

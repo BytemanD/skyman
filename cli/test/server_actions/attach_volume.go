@@ -15,9 +15,6 @@ type ServerAttachVolume struct {
 
 func (t ServerAttachVolume) Start() error {
 	t.RefreshServer()
-	if !t.Server.IsActive() {
-		return fmt.Errorf("server is not active")
-	}
 	logging.Info("[%s] creating volume", t.ServerId())
 	volume, err := t.CreateBlankVolume()
 	if err != nil {
@@ -51,9 +48,6 @@ type ServerDetachVolume struct {
 
 func (t ServerDetachVolume) Start() error {
 	t.RefreshServer()
-	if !t.Server.IsActive() {
-		return fmt.Errorf("server is not active")
-	}
 	attachment, err := t.lastVolume()
 	if err != nil {
 		return err
@@ -86,9 +80,6 @@ type ServerVolumeHotPlug struct {
 
 func (t *ServerVolumeHotPlug) Start() error {
 	t.RefreshServer()
-	if !t.Server.IsActive() {
-		return fmt.Errorf("server is not active")
-	}
 	serverCheckers, err := checkers.GetServerCheckers(t.Client, t.Server)
 	if err != nil {
 		return fmt.Errorf("get server checker failed: %s", err)
