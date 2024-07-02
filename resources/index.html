@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet">
+    <link href="https://cdn.staticfile.net/vuetify/3.4.11/vuetify.css" rel="stylesheet">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"> -->
+
+    <script src="https://cdn.staticfile.org/axios/0.18.0/axios.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue@3.x/dist/vue.js"></script> -->
+    <script src="https://cdn.staticfile.net/vue/3.2.36/vue.global.min.js"></script>
+    <script src="https://cdn.staticfile.net/vuetify/3.4.11/vuetify.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vuetify@3.6.10/dist/vuetify.min.js"></script> -->
+    <title>Index</title>
+</head>
+
+<body>
+    <div id="app">
+        <v-app>
+            <v-container>
+                <v-card>
+                    <v-card-title class="text-info">测试进度</v-card-title>
+                    <v-btn color="info" @click="refreshItems">刷新</v-btn>
+                    <v-data-table density="compact" :headers="headers" :items="items"></v-data-table>
+                </v-card>
+            </v-container>
+        </v-app>
+    </div>
+
+    <script>
+        const HelloVueApp = {
+            data() {
+                return {
+                    headers: [
+                        { title: "实例ID", key: "serverId" },
+                        { title: "结果", key: "result" },
+                        { title: "操作总数", key: "totalActionNum" },
+                        { title: "失败操作", key: "failedActions" },
+                    ],
+                    items: [],
+                    message: 'Hello Vue!!'
+                }
+            },
+            methods: {
+                async refreshItems() {
+                    let self = this;
+                    console.debug("refresh items")
+                    let resp = await axios.get('/report')
+                    this.items = resp.data.report
+                    // items = resp.data.report
+                }
+            },
+            mounted() {
+                this.refreshItems()
+                let self = this
+
+                setInterval(() => {
+                    this.refreshItems()
+                }, 1000 * 2);
+            }
+        }
+        const { createApp } = Vue
+        const { createVuetify } = Vuetify
+        const vuetify = createVuetify()
+        const app = createApp(HelloVueApp)
+        app.use(vuetify).mount('#app')
+    </script>
+</body>
+
+</html>

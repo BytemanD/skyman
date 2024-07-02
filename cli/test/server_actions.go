@@ -182,9 +182,9 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		logging.Warning("[%s] %s", server.Id, result)
 	}
 	if serverReport.FailedActinos == "" {
-		serverReport.Result = utility.ColorString("success")
+		serverReport.Result = "success"
 	} else {
-		serverReport.Result = utility.ColorString("failed")
+		serverReport.Result = "failed"
 	}
 	report = append(report, serverReport)
 	return nil
@@ -208,6 +208,12 @@ var serverAction = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		actionInterval, _ := cmd.Flags().GetInt("action-interval")
 		servers, _ := cmd.Flags().GetString("servers")
+		web, _ := cmd.Flags().GetBool("web")
+
+		if web {
+			go RunSimpleWebServer()
+		}
+
 		// 检查 actions
 		if len(TestActions) == 0 {
 			if testActions, err := server_actions.ParseServerActions(strings.Join(common.CONF.Test.Actions, ",")); err != nil {
@@ -268,6 +274,12 @@ var serverAction = &cobra.Command{
 			}
 			server_actions.PrintServerEvents(client, serverIds)
 		}
+
+		if web {
+			for {
+				time.Sleep(time.Second * 60)
+			}
+		}
 	},
 }
 
@@ -286,6 +298,7 @@ func init() {
 	serverAction.Flags().Int("workers", 0, i18n.T("theNumOfWorker"))
 	serverAction.Flags().String("servers", "", "Use existing servers")
 	serverAction.Flags().Bool("report-events", false, i18n.T("reportServerEvents"))
+	serverAction.Flags().Bool("web", false, "Start web server")
 
 	viper.BindPFlag("test.tasks", serverAction.Flags().Lookup("tasks"))
 	viper.BindPFlag("test.workers", serverAction.Flags().Lookup("workers"))

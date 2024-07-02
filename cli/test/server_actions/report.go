@@ -7,14 +7,15 @@ import (
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
+	"github.com/BytemanD/skyman/utility"
 	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 type ServerReport struct {
-	ServerId        string
-	Result          string
-	TotalActionsNum int
-	FailedActinos   string
+	ServerId        string `json:"serverId"`
+	Result          string `json:"result"`
+	TotalActionsNum int    `json:"totalActionNum"`
+	FailedActinos   string `json:"failedActions"`
 }
 
 func (r *ServerReport) AddFailedAction(action string) {
@@ -30,7 +31,10 @@ func PrintReport(reportItems []ServerReport) string {
 		Style: common.STYLE_LIGHT,
 		ShortColumns: []common.Column{
 			{Name: "ServerId"},
-			{Name: "Result"},
+			{Name: "Result", Slot: func(item interface{}) interface{} {
+				p := item.(ServerReport)
+				return utility.ColorString(p.Result)
+			}},
 			{Name: "TotalActionsNum", Align: text.AlignRight},
 			{Name: "FailedActinos"},
 		},
