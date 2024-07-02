@@ -592,7 +592,7 @@ func (c ServersApi) ShowAction(id, requestId string) (*nova.InstanceAction, erro
 	resp.BodyUnmarshal(&body)
 	return body["instanceAction"], nil
 }
-func (c ServersApi) ListActionsWithEvents(id string, actionName string, requestId string, last int) ([]nova.InstanceActionAndEvents, error) {
+func (c ServersApi) ListActionsWithEvents(id string, actionName string, requestId string, last int) ([]nova.InstanceAction, error) {
 	serverActions, err := c.ListActions(id)
 	if err != nil {
 		return nil, err
@@ -612,19 +612,15 @@ func (c ServersApi) ListActionsWithEvents(id string, actionName string, requestI
 		last = len(filterActions)
 	}
 	start := max(len(filterActions)-last, 0)
-	var actionEvents []nova.InstanceActionAndEvents
+	actionWithEvents := []nova.InstanceAction{}
 	for _, action := range filterActions[start:] {
 		serverAction, err := c.ShowAction(id, action.RequestId)
 		if err != nil {
 			logging.Error("get server action %s failed: %s", action.RequestId, err)
 		}
-		actionEvents = append(actionEvents, nova.InstanceActionAndEvents{
-			InstanceAction: action,
-			RequestId:      action.RequestId,
-			Events:         serverAction.Events,
-		})
+		actionWithEvents = append(actionWithEvents, *serverAction)
 	}
-	return actionEvents, nil
+	return actionWithEvents, nil
 }
 
 func (c ServersApi) ListMigrations(id string, query url.Values) ([]nova.Migration, error) {

@@ -44,6 +44,9 @@ func init() {
 		},
 		{ID: "logFile", Other: "log file"},
 		{ID: "enableLogColor", Other: "enable log color"},
+		{ID: "theNumOfTask", Other: "the num of task"},
+		{ID: "theNumOfWorker", Other: "the num of worker"},
+		{ID: "reportServerEvents", Other: "report server events"},
 	}
 	defaultMessageMap = map[string]i18n.Message{}
 

@@ -11,6 +11,7 @@ import (
 	"github.com/BytemanD/skyman/cli/test/checkers"
 	"github.com/BytemanD/skyman/cli/test/server_actions"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
@@ -256,7 +257,17 @@ var serverAction = &cobra.Command{
 			}
 		}
 		taskGroup.Start()
+		fmt.Println("result:")
 		server_actions.PrintReport(report)
+		reportEvents, _ := cmd.Flags().GetBool("report-events")
+		if reportEvents {
+			fmt.Println("server events:")
+			serverIds := []string{}
+			for _, item := range report {
+				serverIds = append(serverIds, item.ServerId)
+			}
+			server_actions.PrintServerEvents(client, serverIds)
+		}
 	},
 }
 
@@ -271,9 +282,10 @@ func init() {
 	)
 
 	serverAction.Flags().Int("action-interval", 0, "Action interval")
-	serverAction.Flags().Int("tasks", 0, "The num of task")
-	serverAction.Flags().Int("workers", 0, "The num of worker")
+	serverAction.Flags().Int("tasks", 0, i18n.T("theNumOfTask"))
+	serverAction.Flags().Int("workers", 0, i18n.T("theNumOfWorker"))
 	serverAction.Flags().String("servers", "", "Use existing servers")
+	serverAction.Flags().Bool("report-events", false, i18n.T("reportServerEvents"))
 
 	viper.BindPFlag("test.tasks", serverAction.Flags().Lookup("tasks"))
 	viper.BindPFlag("test.workers", serverAction.Flags().Lookup("workers"))

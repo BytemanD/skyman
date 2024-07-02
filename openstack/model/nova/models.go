@@ -305,16 +305,10 @@ func (event InstanceActionEvent) GetSpendTime() (float64, error) {
 	return float64(finishTime.Sub(startTime).Milliseconds()) / 1000, nil
 }
 
-type InstanceActionAndEvents struct {
-	InstanceAction InstanceAction        `json:"action"`
-	RequestId      string                `json:"request_id"`
-	Events         []InstanceActionEvent `json:"events"`
-}
-
-func (actionWithEvents InstanceActionAndEvents) GetSpendTime() (float64, error) {
+func (actionWithEvents InstanceAction) GetSpendTime() (float64, error) {
 	// event.StartTime
-	if actionWithEvents.InstanceAction.StartTime == "" {
-		return 0, fmt.Errorf("No start time")
+	if actionWithEvents.StartTime == "" {
+		return 0, fmt.Errorf("no start time")
 	}
 	var lastEventFinishTime string
 	for _, event := range actionWithEvents.Events {
@@ -323,12 +317,12 @@ func (actionWithEvents InstanceActionAndEvents) GetSpendTime() (float64, error) 
 		}
 	}
 	if lastEventFinishTime == "" {
-		return 0, fmt.Errorf("No finish time")
+		return 0, fmt.Errorf("no finish time")
 	}
 
-	logging.Debug("%s spend time: %s ~ %s", actionWithEvents.InstanceAction.Action,
-		actionWithEvents.InstanceAction.StartTime, lastEventFinishTime)
-	startTime, _ := time.Parse("2006-01-02T15:04:05", actionWithEvents.InstanceAction.StartTime)
+	logging.Debug("%s spend time: %s ~ %s", actionWithEvents.Action,
+		actionWithEvents.StartTime, lastEventFinishTime)
+	startTime, _ := time.Parse("2006-01-02T15:04:05", actionWithEvents.StartTime)
 	finishTime, _ := time.Parse("2006-01-02T15:04:05", lastEventFinishTime)
 	return float64(finishTime.Sub(startTime).Milliseconds()) / 1000, nil
 }

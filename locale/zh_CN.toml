@@ -27,3 +27,12 @@ other = '日志文件'
 
 [enableLogColor]
 other = '启动日志颜色'
+
+[theNumOfTask]
+other = '任务数量'
+
+[theNumOfWorker]
+other = '并行任务数'
+
+[reportServerEvents]
+other = '输出实例操作事件'
