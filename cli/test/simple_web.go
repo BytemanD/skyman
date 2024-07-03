@@ -8,6 +8,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli/test/server_actions"
+	"github.com/BytemanD/skyman/utility"
 )
 
 var indexData []byte
@@ -16,7 +17,12 @@ func IndexHandler(respWriter http.ResponseWriter, request *http.Request) {
 	logging.Info("请求地址 %s", request.URL.Path)
 	var err error
 	if indexData == nil {
-		indexData, err = os.ReadFile("resources/index.html")
+		for _, indexPath := range []string{"static/index.html", "usr/share/skyman/static/index.html"} {
+			if utility.IsFileExists(indexPath) {
+				indexData, err = os.ReadFile(indexPath)
+				break
+			}
+		}
 	}
 	if err != nil {
 		respWriter.WriteHeader(http.StatusBadRequest)
