@@ -5,19 +5,22 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli/test/server_actions"
+	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/utility"
 )
 
 var indexData []byte
 
 func IndexHandler(respWriter http.ResponseWriter, request *http.Request) {
-	logging.Info("请求地址 %s", request.URL.Path)
+	logging.Debug("请求地址 %s", request.URL.Path)
 	var err error
 	if indexData == nil {
-		for _, indexPath := range []string{"static/index.html", "usr/share/skyman/static/index.html"} {
+		for _, indexPath := range []string{"static/index.html", "/usr/share/skyman/static/index.html"} {
 			if utility.IsFileExists(indexPath) {
 				indexData, err = os.ReadFile(indexPath)
 				break
@@ -31,21 +34,17 @@ func IndexHandler(respWriter http.ResponseWriter, request *http.Request) {
 		respWriter.WriteHeader(http.StatusOK)
 		respWriter.Write(indexData)
 	}
-	logging.Info(">>>> %s", request.URL.Path)
 }
 
-func ReportHandler(respWriter http.ResponseWriter, request *http.Request) {
+func TasksHandler(respWriter http.ResponseWriter, request *http.Request) {
 	logging.Info("请求地址 %s", request.URL.Path)
 	reportBody := struct {
-		Report []server_actions.ServerReport `json:"report"`
+		Tasks []*server_actions.TestTask `json:"tasks"`
 	}{
-		Report: report,
-	}
-	if len(reportBody.Report) == 0 {
-		reportBody.Report = []server_actions.ServerReport{}
+		Tasks: server_actions.TestTasks,
 	}
 	data, err := json.Marshal(&reportBody)
-	logging.Debug("report json: %s", string(data))
+	logging.Debug("tasks json: %s", string(data))
 	respWriter.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		respWriter.WriteHeader(http.StatusBadRequest)
@@ -57,10 +56,24 @@ func ReportHandler(respWriter http.ResponseWriter, request *http.Request) {
 }
 
 func RunSimpleWebServer() error {
-	port := 80
-	http.HandleFunc("/", IndexHandler)        //设置访问的路由
-	http.HandleFunc("/report", ReportHandler) //设置访问的路由
+	port := common.CONF.Test.Web.Port
+	//设置访问的路由
+	http.HandleFunc("/", IndexHandler)
+	http.HandleFunc("/tasks", TasksHandler)
 
-	logging.Info("启动web服务器, 端口: %d", port)
+	webAddr := []string{}
+	if ips, err := utility.GetAllIpaddress(); err != nil {
+		return err
+	} else {
+		for _, ip := range ips {
+			webAddr = append(webAddr, fmt.Sprintf("http://%s:%d", ip, port))
+		}
+	}
+	logging.Info("启动web服务:\n----\n%s\n----", strings.Join(webAddr, "\n"))
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+}
+func WaitWebServer() error {
+	for {
+		time.Sleep(time.Second * 60)
+	}
 }

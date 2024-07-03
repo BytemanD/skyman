@@ -85,10 +85,13 @@ type LiveMigrateOptions struct {
 	PingInterval float32 `yaml:"pingInterval"`
 	MaxLoss      int     `yaml:"maxLoss"`
 }
-
+type Web struct {
+	Port int `yaml:"port"`
+}
 type Test struct {
 	Tasks            int                `yaml:"tasks"`
 	Workers          int                `yaml:"workers"`
+	Web              Web                `yaml:"web"`
 	DeleteIfError    bool               `yaml:"deleteIfError"`
 	AvailabilityZone string             `yaml:"availabilityZone"`
 	BootFromVolume   bool               `yaml:"bootFromVolume"`
@@ -162,6 +165,8 @@ func LoadConfig(configFile string) error {
 	if CONF.Test.LiveMigrate.PingInterval <= 0 {
 		CONF.Test.LiveMigrate.PingInterval = DEFAULT_PING_INTERVAL
 	}
-
+	if CONF.Test.Web.Port <= 0 {
+		CONF.Test.Web.Port = 80
+	}
 	return nil
 }

@@ -3,6 +3,7 @@
 
 <head>
     <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet">
+    <link href="https://cdn.jsdmirror.com/npm/@mdi/font@latest/css/materialdesignicons.min.css" rel="stylesheet">
     <link href="https://cdn.staticfile.net/vuetify/3.4.11/vuetify.css" rel="stylesheet">
     <!-- <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"> -->
 
@@ -18,9 +19,10 @@
     <div id="app">
         <v-app>
             <v-container>
-                <v-card>
-                    <v-card-title class="text-info">测试进度</v-card-title>
-                    <v-btn color="info" @click="refreshItems">刷新</v-btn>
+                <v-card title="测试进度" class="text-info">
+                    <template v-slot:append>
+                        <v-btn color="info" size="small" icon @click="refreshItems"><v-icon>mdi-refresh</v-icon></v-btn>
+                    </template>
                     <v-data-table density="compact" :headers="headers" :items="items"></v-data-table>
                 </v-card>
             </v-container>
@@ -32,10 +34,13 @@
             data() {
                 return {
                     headers: [
-                        { title: "实例ID", key: "serverId" },
+                        { title: "ID", key: "id" },
+                        { title: "实例", key: "serverId" },
                         { title: "结果", key: "result" },
-                        { title: "操作总数", key: "totalActionNum" },
-                        { title: "失败操作", key: "failedActions" },
+                        { title: "操作总数", key: "total" },
+                        { title: "已完成", key: "completed" },
+                        { title: "任务", key: "stage" },
+                        { title: "详情", key: "message" },
                     ],
                     items: [],
                     message: 'Hello Vue!!'
@@ -45,9 +50,8 @@
                 async refreshItems() {
                     let self = this;
                     console.debug("refresh items")
-                    let resp = await axios.get('/report')
-                    this.items = resp.data.report
-                    // items = resp.data.report
+                    let resp = await axios.get('/tasks')
+                    this.items = resp.data.tasks
                 }
             },
             mounted() {

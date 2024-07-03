@@ -63,7 +63,11 @@ type PrettyTable struct {
 func (pt *PrettyTable) AddItems(items interface{}) {
 	value := reflect.ValueOf(items)
 	for i := 0; i < value.Len(); i++ {
-		pt.Items = append(pt.Items, value.Index(i).Interface())
+		if value.Index(i).Kind() == reflect.Ptr {
+			pt.Items = append(pt.Items, value.Index(i).Elem().Interface())
+		} else {
+			pt.Items = append(pt.Items, value.Index(i).Interface())
+		}
 	}
 }
 func (pt *PrettyTable) CleanItems() {

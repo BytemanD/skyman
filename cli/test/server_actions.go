@@ -21,8 +21,6 @@ import (
 
 var TestActions []string
 
-var report []server_actions.ServerReport
-
 func runActionTest(action server_actions.ServerAction) error {
 	defer func() {
 		logging.Info("[%s] cleanup ...", action.ServerId())
@@ -69,21 +67,20 @@ func getServerBootOption(testId int) nova.ServerOpt {
 }
 func createDefaultServer(client *openstack.Openstack, testId int) (*nova.Server, error) {
 	bootOption := getServerBootOption(testId)
-	server, err := client.NovaV2().Servers().Create(bootOption)
+	return client.NovaV2().Servers().Create(bootOption)
+}
+func waitServerCreated(client *openstack.Openstack, server *nova.Server) error {
+	server, err := client.NovaV2().Servers().Show(server.Id)
 	if err != nil {
-		return nil, err
-	}
-	server, err = client.NovaV2().Servers().Show(server.Id)
-	if err != nil {
-		return nil, err
+		return err
 	}
 	logging.Info("[%s] creating with name %s", server.Id, server.Resource.Name)
 	server, err = client.NovaV2().Servers().WaitBooted(server.Id)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	logging.Success("[%s] create success", server.Id)
-	return server, nil
+	return nil
 }
 
 func preTest(client *openstack.Openstack) {
@@ -112,11 +109,17 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		testFailed bool
 	)
 	success, failed, skip := 0, 0, 0
+	task := server_actions.TestTask{
+		Id:    testId,
+		Total: len(serverActions),
+	}
+	server_actions.TestTasks = append(server_actions.TestTasks, &task)
 	if serverId != "" {
 		server, err = client.NovaV2().Servers().Found(serverId)
 		if err != nil {
 			return fmt.Errorf("get server failed: %s", err)
 		}
+		task.ServerId = serverId
 		logging.Info("use server: %s(%s)", server.Id, server.Name)
 	} else {
 		if len(server_actions.TEST_FLAVORS) == 0 {
@@ -128,26 +131,34 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		}
 		server, err = createDefaultServer(client, testId)
 		if err != nil {
-			return fmt.Errorf("create server failed: %s", err)
+			task.Failed(fmt.Sprintf("create server failed: %s", err))
+			return task.GetError()
 		}
+		task.SetStage("creating")
+		task.ServerId = server.Id
+		err = waitServerCreated(client, server)
+		if err != nil {
+			task.Failed(fmt.Sprintf("server is not created: %s", err))
+			return task.GetError()
+		}
+		task.ServerId = server.Id
 		defer func() {
 			if !testFailed || common.CONF.Test.DeleteIfError {
+				task.SetStage("deleting")
 				logging.Info("[%s] deleting server", server.Id)
 				client.NovaV2().Servers().Delete(server.Id)
 				client.NovaV2().Servers().WaitDeleted(server.Id)
 			}
+			task.SetStage("")
 		}()
 		serverCheckers, err := checkers.GetServerCheckers(client, server)
 		if err != nil {
-			return fmt.Errorf("get server checker failed: %s", err)
+			task.Failed(fmt.Sprintf("get server checker failed: %s", err))
+			return task.GetError()
 		}
 		if err := serverCheckers.MakesureServerRunning(); err != nil {
 			return err
 		}
-	}
-	serverReport := server_actions.ServerReport{
-		ServerId:        server.Id,
-		TotalActionsNum: len(serverActions),
 	}
 	for i, actionName := range serverActions {
 		action := server_actions.ACTIONS.Get(actionName, server, client)
@@ -157,12 +168,15 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 			continue
 		}
 		logging.Info(utility.BlueString(fmt.Sprintf("[%s] ==== %s ====", server.Id, actionName)))
+		task.SetStage(actionName)
 		err = runActionTest(action)
+		task.IncrementCompleted()
 		if err != nil {
 			failed++
 			testFailed = true
-			serverReport.AddFailedAction(actionName)
-			logging.Error("[%s] test action '%s' failed: %s", server.Id, actionName, err)
+			task.AddFailedAction(actionName)
+			task.Failed(fmt.Sprintf("test action '%s' failed: %s", actionName, err))
+			logging.Error("[%s] %s", server.Id, task.GetError())
 		} else {
 			success++
 			logging.Success("[%s] test action '%s' success", server.Id, actionName)
@@ -175,18 +189,13 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 	result := fmt.Sprintf("all actions: %d, success: %d, failed: %d, skip: %d",
 		len(serverActions), success, failed, skip)
 	if len(serverActions) == success {
+		task.Success()
 		logging.Success("[%s] %s", server.Id, result)
 	} else if failed > 0 {
 		logging.Error("[%s] %s", server.Id, result)
 	} else {
 		logging.Warning("[%s] %s", server.Id, result)
 	}
-	if serverReport.FailedActinos == "" {
-		serverReport.Result = "success"
-	} else {
-		serverReport.Result = "failed"
-	}
-	report = append(report, serverReport)
 	return nil
 }
 
@@ -263,22 +272,14 @@ var serverAction = &cobra.Command{
 			}
 		}
 		taskGroup.Start()
-		fmt.Println("result:")
-		server_actions.PrintReport(report)
+
+		server_actions.PrintTestTasks()
 		reportEvents, _ := cmd.Flags().GetBool("report-events")
 		if reportEvents {
-			fmt.Println("server events:")
-			serverIds := []string{}
-			for _, item := range report {
-				serverIds = append(serverIds, item.ServerId)
-			}
-			server_actions.PrintServerEvents(client, serverIds)
+			server_actions.PrintServerEvents(client)
 		}
-
 		if web {
-			for {
-				time.Sleep(time.Second * 60)
-			}
+			WaitWebServer()
 		}
 	},
 }

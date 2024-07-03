@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/base64"
 	"io"
+	"net"
 	"os"
 	"reflect"
 	"strings"
@@ -64,7 +65,7 @@ func EncodedUserdata(content string) string {
 
 func IsFileExists(filePath string) bool {
 	fileInfo, err := os.Stat(filePath)
-	if !os.IsExist(err) {
+	if err != nil && !os.IsExist(err) {
 		return false
 	}
 	return !fileInfo.Mode().IsDir()
@@ -81,4 +82,18 @@ func SaveBody(resp *httpclient.Response, file *os.File, process bool) error {
 
 	_, err := io.Copy(bufio.NewWriter(file), reader)
 	return err
+}
+
+func GetAllIpaddress() ([]string, error) {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return nil, err
+	}
+	ips := []string{}
+	for _, adddr := range addrs {
+		if ipnet, ok := adddr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			ips = append(ips, ipnet.IP.String())
+		}
+	}
+	return ips, nil
 }
