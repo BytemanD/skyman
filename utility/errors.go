@@ -2,6 +2,7 @@ package utility
 
 import (
 	"fmt"
+	"strings"
 )
 
 type ErrArgs struct {
@@ -36,6 +37,15 @@ func (e VolumeHasTaskError) Format() string {
 func (e GuestNoIpaddressError) Error() string {
 	return "guest has no ipaddress"
 }
+
+type GuestHasNoIpaddressError struct {
+	ErrArgs
+}
+
+func (e GuestHasNoIpaddressError) Format() string {
+	return "guest has no ipaddress %s"
+}
+
 func NewActionError(args ...interface{}) ActionError {
 	return ActionError{ErrArgs{Args: args}}
 }
@@ -45,5 +55,10 @@ func NewGuestNoIpaddressError() GuestNoIpaddressError {
 func NewVolumeHasTaskError(volumeId string) VolumeHasTaskError {
 	return VolumeHasTaskError{
 		ErrArgs{Args: []interface{}{volumeId}},
+	}
+}
+func NewGuestHasNoIpaddressError(ipAddress []string) GuestHasNoIpaddressError {
+	return GuestHasNoIpaddressError{
+		ErrArgs{Args: []interface{}{strings.Join(ipAddress, ", ")}},
 	}
 }

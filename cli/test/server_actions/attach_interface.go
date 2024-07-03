@@ -6,6 +6,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli/test/checkers"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack/model/neutron"
 )
 
 type ServerAttachInterface struct {
@@ -104,7 +105,7 @@ func (t ServerDetachInterface) Start() error {
 
 type ServerAttachHotPlug struct {
 	ServerActionTest
-	attachments []string
+	attachedPorts []*neutron.Port
 }
 
 func (t *ServerAttachHotPlug) Start() error {
@@ -146,35 +147,35 @@ func (t *ServerAttachHotPlug) Start() error {
 		if err := serverCheckers.MakesureInterfaceExist(attachment); err != nil {
 			return err
 		}
-		t.attachments = append(t.attachments, port.Id)
+		t.attachedPorts = append(t.attachedPorts, port)
 	}
 
-	for _, portId := range t.attachments {
-		_, err := t.Client.NovaV2().Servers().DeleteInterface(t.Server.Id, portId)
+	for _, port := range t.attachedPorts {
+		_, err = t.Client.NovaV2().Servers().DeleteInterface(t.Server.Id, port.Id)
 		if err != nil {
 			return err
 		}
-		logging.Info("[%s] detaching interface %s", t.ServerId(), portId)
+		logging.Info("[%s] detaching interface %s", t.ServerId(), port.Id)
 		if err := t.WaitServerTaskFinished(false); err != nil {
 			return err
 		}
 		if err := t.ServerMustNotError(); err != nil {
 			return err
 		}
-		if err := t.ServerMustHasNotInterface(portId); err != nil {
+		if err := serverCheckers.MakesureInterfaceNotExists(port); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 func (t ServerAttachHotPlug) Cleanup() {
-	for _, portId := range t.attachments {
-		logging.Info("[%s] cleanup %d interfaces", t.ServerId(), len(t.attachments))
+	for _, port := range t.attachedPorts {
+		logging.Info("[%s] cleanup %d interfaces", t.ServerId(), len(t.attachedPorts))
 
-		logging.Info("[%s] deleting port %s", t.ServerId(), portId)
-		err := t.Client.NeutronV2().Ports().Delete(portId)
+		logging.Info("[%s] deleting port %s", t.ServerId(), port.Id)
+		err := t.Client.NeutronV2().Ports().Delete(port.Id)
 		if err != nil {
-			logging.Error("[%s] delete port %s failed", t.ServerId(), portId)
+			logging.Error("[%s] delete port %s failed", t.ServerId(), port.Id)
 		}
 	}
 }

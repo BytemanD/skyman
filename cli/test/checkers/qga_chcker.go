@@ -11,6 +11,7 @@ import (
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/openstack/model/nova"
+	"github.com/BytemanD/skyman/utility"
 )
 
 type QGAChecker struct {
@@ -63,24 +64,32 @@ func (c QGAChecker) MakesureServerRunning() error {
 func (c QGAChecker) MakesureInterfaceExist(attachment *nova.InterfaceAttachment) error {
 	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
 	serverGuest.Connect()
-	ipaddrs := serverGuest.GetIpaddrs()
-	logging.Debug("[%s] found ip addresses: %s", c.ServerId, ipaddrs)
 
-	for _, fixedIpaddr := range attachment.FixedIps {
-		found := false
-		for _, ipaddr := range ipaddrs {
-			if ipaddr == fixedIpaddr.IpAddress {
-				logging.Info("[%s] ip address %s exists on guest", c.ServerId, fixedIpaddr.IpAddress)
-				found = true
-				break
+	return utility.RetryWithErrors(
+		utility.RetryCondition{
+			Timeout:      time.Minute * 5,
+			IntervalMin:  time.Second,
+			IntervalMax:  time.Second * 10,
+			IntervalStep: time.Second,
+		},
+		[]string{"GuestHasNoIpaddressError"},
+		func() error {
+			ipaddrs := serverGuest.GetIpaddrs()
+			logging.Info("[%s] found ip address on guest: %v", c.ServerId, ipaddrs)
+			notFoundIpaddress := []string{}
+			for _, fixedIpaddr := range attachment.FixedIps {
+				if utility.StringsContains(fixedIpaddr.IpAddress, ipaddrs) {
+					logging.Info("[%s] ip address %s exists on guest", c.ServerId, fixedIpaddr.IpAddress)
+				} else {
+					notFoundIpaddress = append(notFoundIpaddress, fixedIpaddr.IpAddress)
+				}
 			}
-		}
-		if !found {
-			return fmt.Errorf("ip address %s not found in guest, found %v",
-				fixedIpaddr.IpAddress, ipaddrs)
-		}
-	}
-	return nil
+			if len(notFoundIpaddress) > 0 {
+				return utility.NewGuestHasNoIpaddressError(notFoundIpaddress)
+			}
+			return nil
+		},
+	)
 }
 func (c QGAChecker) MakesureInterfaceNotExists(port *neutron.Port) error {
 	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}

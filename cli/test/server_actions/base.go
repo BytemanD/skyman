@@ -94,7 +94,7 @@ func (t *ServerActionTest) ServerMustHasNotInterface(portId string) error {
 	}
 	for _, vif := range interfaces {
 		if vif.PortId == portId {
-			return fmt.Errorf("server has not interface: %s", portId)
+			return fmt.Errorf("server has no interface: %s", portId)
 		}
 	}
 	return nil

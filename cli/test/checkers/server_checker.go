@@ -36,7 +36,7 @@ func (c ServerChecker) MakesureInterfaceExist(attachment *nova.InterfaceAttachme
 			return nil
 		}
 	}
-	return fmt.Errorf("server has not interface: %s", attachment.PortId)
+	return fmt.Errorf("server has no interface: %s", attachment.PortId)
 }
 func (c ServerChecker) MakesureInterfaceNotExists(port *neutron.Port) error {
 	interfaces, err := c.Client.NovaV2().Servers().ListInterfaces(c.ServerId)
@@ -48,7 +48,7 @@ func (c ServerChecker) MakesureInterfaceNotExists(port *neutron.Port) error {
 			return fmt.Errorf("server has interface: %s", port.Id)
 		}
 	}
-	logging.Info("[%s] has no port %s", c.ServerId, port.Id)
+	logging.Info("[%s] has no interface: %s", c.ServerId, port.Id)
 	return nil
 }
 
