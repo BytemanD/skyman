@@ -2,6 +2,7 @@ package server_actions
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli/test/checkers"
@@ -82,7 +83,7 @@ func (t ServerDetachInterface) Start() error {
 	if err != nil {
 		return err
 	}
-	err = t.Client.NovaV2().Servers().DeleteInterfaceAndWait(t.Server.Id, portId, 60*5)
+	err = t.Client.NovaV2().Servers().DeleteInterfaceAndWait(t.Server.Id, portId, time.Minute*5)
 	if err != nil {
 		return err
 	}
@@ -151,11 +152,10 @@ func (t *ServerAttachHotPlug) Start() error {
 	}
 
 	for _, port := range t.attachedPorts {
-		_, err = t.Client.NovaV2().Servers().DeleteInterface(t.Server.Id, port.Id)
+		err = t.Client.NovaV2().Servers().DeleteInterfaceAndWait(t.Server.Id, port.Id, time.Minute*5)
 		if err != nil {
 			return err
 		}
-		logging.Info("[%s] detaching interface %s", t.ServerId(), port.Id)
 		if err := t.WaitServerTaskFinished(false); err != nil {
 			return err
 		}

@@ -75,7 +75,7 @@ func (c QGAChecker) MakesureInterfaceExist(attachment *nova.InterfaceAttachment)
 		[]string{"GuestHasNoIpaddressError"},
 		func() error {
 			ipaddrs := serverGuest.GetIpaddrs()
-			logging.Info("[%s] found ip address on guest: %v", c.ServerId, ipaddrs)
+			logging.Debug("[%s] found ip address on guest: %v", c.ServerId, ipaddrs)
 			notFoundIpaddress := []string{}
 			for _, fixedIpaddr := range attachment.FixedIps {
 				if utility.StringsContains(fixedIpaddr.IpAddress, ipaddrs) {

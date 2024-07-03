@@ -349,7 +349,7 @@ func (c ServersApi) AddInterface(id string, netId, portId string) (*nova.Interfa
 func (c ServersApi) DeleteInterface(id string, portId string) (*httpclient.Response, error) {
 	return c.NovaV2.Delete(utility.UrlJoin("servers", id, "os-interface", portId), nil)
 }
-func (c ServersApi) DeleteInterfaceAndWait(id string, portId string, waitSeconds int) error {
+func (c ServersApi) DeleteInterfaceAndWait(id string, portId string, timeout time.Duration) error {
 	resp, err := c.DeleteInterface(id, portId)
 	if err != nil {
 		return err
@@ -358,9 +358,9 @@ func (c ServersApi) DeleteInterfaceAndWait(id string, portId string, waitSeconds
 	logging.Debug("request id: %s", reqId)
 	logging.Info("[%s] detaching interface %s, request id: %s", id, portId, reqId)
 
-	err = utility.RetryWithErrors(
+	return utility.RetryWithErrors(
 		utility.RetryCondition{
-			Timeout:     time.Second * time.Duration(waitSeconds),
+			Timeout:     timeout,
 			IntervalMin: time.Second * 2},
 		[]string{"ActionError"},
 		func() error {
@@ -379,20 +379,6 @@ func (c ServersApi) DeleteInterfaceAndWait(id string, portId string, waitSeconds
 			}
 		},
 	)
-	if err != nil {
-		return err
-	}
-	interfaces, err := c.ListInterfaces(id)
-	if err != nil {
-		return fmt.Errorf("list server interfaces failed: %s", err)
-	}
-	for _, vif := range interfaces {
-		if vif.PortId == portId {
-			return fmt.Errorf("interface %s is not detached", portId)
-		}
-	}
-	logging.Info("[%s] interface %s detached", id, portId)
-	return nil
 }
 func (c ServersApi) doAction(action string, id string, params interface{}) (*httpclient.Response, error) {
 	body, _ := json.Marshal(map[string]interface{}{action: params})
