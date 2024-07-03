@@ -91,7 +91,7 @@ func (t *TestTask) AddFailedAction(action string) {
 	t.FailedActions = append(t.FailedActions, action)
 }
 func (t TestTask) GetError() error {
-	if t.Result == "failedd" {
+	if t.Result == "failed" {
 		return fmt.Errorf(t.Message)
 	}
 	return nil

@@ -30,6 +30,8 @@ auth:
 #   localPath:
 
 test:
+  # web:
+  #   port: 80
   tasks: 1
   workers: 1
   useServers:

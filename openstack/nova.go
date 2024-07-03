@@ -373,7 +373,7 @@ func (c ServersApi) DeleteInterfaceAndWait(id string, portId string, waitSeconds
 			}
 			logging.Info("[%s] action result: %s", id, action.Events[0].Result)
 			if action.Events[0].Result == "Error" {
-				return fmt.Errorf("actions is error")
+				return fmt.Errorf("request %s is error", reqId)
 			} else {
 				return nil
 			}
