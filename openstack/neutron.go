@@ -34,6 +34,12 @@ type PortApi struct {
 type AgentApi struct {
 	NeutronV2
 }
+type SGRuleApi struct {
+	NeutronV2
+}
+type SGApi struct {
+	NeutronV2
+}
 
 func (c NeutronV2) Routers() RouterApi {
 	return RouterApi{c}
@@ -49,6 +55,12 @@ func (c NeutronV2) Ports() PortApi {
 }
 func (c NeutronV2) Agents() AgentApi {
 	return AgentApi{c}
+}
+func (c NeutronV2) SecurityGroups() SGApi {
+	return SGApi{c}
+}
+func (c NeutronV2) SecurityGroupRules() SGRuleApi {
+	return SGRuleApi{c}
 }
 func (o *Openstack) getEndpoint() (string, error) {
 	endpoint := os.Getenv("OS_NEUTRON_ENDPOINT")
@@ -368,4 +380,73 @@ func (c AgentApi) List(query url.Values) ([]neutron.Agent, error) {
 		return nil, err
 	}
 	return body.Agents, nil
+}
+func (c SGApi) List(query url.Values) ([]neutron.SecurityGroup, error) {
+	resp, err := c.NeutronV2.Get("security_groups", query)
+	if err != nil {
+		return nil, err
+	}
+	body := struct {
+		SecurityGroups []neutron.SecurityGroup `json:"security_groups"`
+	}{}
+	if err := resp.BodyUnmarshal(&body); err != nil {
+		return nil, err
+	}
+	return body.SecurityGroups, nil
+}
+func (c SGApi) Show(id string) (*neutron.SecurityGroup, error) {
+	resp, err := c.NeutronV2.Get(utility.UrlJoin("security_groups", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	body := map[string]*neutron.SecurityGroup{"security_group": {}}
+	resp.BodyUnmarshal(&body)
+	return body["security_group"], err
+}
+func (c SGApi) Found(idOrName string) (*neutron.SecurityGroup, error) {
+	sg, err := c.Show(idOrName)
+	if err == nil {
+		return sg, nil
+	}
+	if compare.IsType[httpclient.HttpError](err) {
+		if e, ok := err.(httpclient.HttpError); !ok || !e.IsNotFound() {
+			return nil, e
+		}
+	}
+	query := url.Values{}
+	query.Set("name", idOrName)
+	sgs, err := c.List(query)
+	if err != nil {
+		return nil, err
+	}
+	switch {
+	case len(sgs) == 0:
+		return nil, fmt.Errorf("security group %s not found", idOrName)
+	case len(sgs) > 1:
+		return nil, fmt.Errorf("found multi with name %s ", idOrName)
+	default:
+		return &sgs[0], nil
+	}
+}
+func (c SGRuleApi) List(query url.Values) ([]neutron.SecurityGroupRule, error) {
+	resp, err := c.NeutronV2.Get("security_group_rules", query)
+	if err != nil {
+		return nil, err
+	}
+	body := struct {
+		SecurityGroupRules []neutron.SecurityGroupRule `json:"security_group_rules"`
+	}{}
+	if err := resp.BodyUnmarshal(&body); err != nil {
+		return nil, err
+	}
+	return body.SecurityGroupRules, nil
+}
+func (c SGRuleApi) Show(id string) (*neutron.SecurityGroupRule, error) {
+	resp, err := c.NeutronV2.Get(utility.UrlJoin("security_group_rules", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	body := map[string]*neutron.SecurityGroupRule{"security_group_rule": {}}
+	resp.BodyUnmarshal(&body)
+	return body["security_group_rule"], err
 }

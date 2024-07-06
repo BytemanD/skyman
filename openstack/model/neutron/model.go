@@ -3,6 +3,7 @@ package neutron
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/openstack/model"
@@ -101,6 +102,22 @@ type Agent struct {
 }
 type SecurityGroup struct {
 	model.Resource
+	Tags           []string            `json:"tags"`
+	Default        bool                `json:"default"`
+	RevisionNumber int                 `json:"revision_number"`
+	Rules          []SecurityGroupRule `json:"security_group_rules"`
+}
+type SecurityGroupRule struct {
+	model.Resource
+	SecurityGroupId string `json:"security_group_id"`
+	Direction       string `json:"direction"`
+	Ethertype       string `json:"ethertype"`
+	PortRangeMin    int    `json:"port_range_min"`
+	PortRangeMax    int    `json:"port_range_max"`
+	Protocol        string `json:"protocol"`
+	RemoteGroupId   string `json:"remote_group_id"`
+	RemoteIpPrefix  string `json:"remote_ip_prefix"`
+	RevisionNumber  int    `json:"revision_number"`
 }
 
 func (port Port) MarshalVifDetails() string {
@@ -132,6 +149,40 @@ func (port Port) GetFixedIpaddress() []string {
 		address = append(address, fixedIp.IpAddress)
 	}
 	return address
+}
+func (rule SecurityGroupRule) String() string {
+	values := []string{
+		fmt.Sprintf("Direction=%s", rule.Direction),
+	}
+	if rule.Ethertype != "" {
+		values = append(values, fmt.Sprintf("Ethertype=%s", rule.Ethertype))
+	}
+	if rule.Protocol != "" {
+		values = append(values, fmt.Sprintf("Protocol=%s", rule.Protocol))
+	}
+	if rule.RemoteGroupId != "" {
+		values = append(values, fmt.Sprintf("RemoteGroupId=%s", rule.RemoteGroupId))
+	}
+	if rule.RemoteIpPrefix != "" {
+		values = append(values, fmt.Sprintf("RemoteIpPrefix=%s", rule.RemoteIpPrefix))
+	}
+	if rule.PortRangeMin > 0 {
+		values = append(values, fmt.Sprintf("PortRangeMin=%s", rule.RemoteGroupId))
+	}
+	if rule.PortRangeMax > 0 {
+		values = append(values, fmt.Sprintf("PortRangeMax=%s", rule.RemoteGroupId))
+	}
+	return strings.Join(values, ",")
+}
+func (rule SecurityGroupRule) PortRange() string {
+	portRange := ""
+	if rule.PortRangeMin > 0 {
+		portRange = fmt.Sprintf("%d", rule.PortRangeMin)
+	}
+	if rule.PortRangeMax > 0 {
+		portRange += fmt.Sprintf("%s:%d", portRange, rule.PortRangeMax)
+	}
+	return portRange
 }
 
 type Routers []Router

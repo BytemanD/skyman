@@ -33,12 +33,15 @@ type Identity struct {
 }
 
 type Project struct {
-	Id          string `json:"id,omitempty"`
-	Name        string `json:"name,omitempty"`
-	Domain      Domain `json:"domain,omitempty"`
-	Description string `json:"description,omitempty"`
-	Enabled     bool   `json:"enabled,omitempty"`
-	DomainId    string `json:"domain_id,omitempty"`
+	Id          string   `json:"id,omitempty"`
+	Name        string   `json:"name,omitempty"`
+	Domain      Domain   `json:"domain,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Enabled     bool     `json:"enabled,omitempty"`
+	DomainId    string   `json:"domain_id,omitempty"`
+	Tags        []string `json:"tags,omitempty"`
+	IsDomain    bool     `json:"is_domain,omitempty"`
+	ParentId    string   `json:"parent_id,omitempty"`
 }
 type Scope struct {
 	Project Project `json:"project,omitempty"`

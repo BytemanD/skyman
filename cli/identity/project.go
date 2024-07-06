@@ -44,9 +44,32 @@ var projectDelete = &cobra.Command{
 		utility.LogError(err, "delete project failed", true)
 	},
 }
+var projectShow = &cobra.Command{
+	Use:   "show <id or name>",
+	Short: "Show project",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		c := openstack.DefaultClient().KeystoneV3()
+		project, err := c.Projects().Found(args[0])
+		utility.LogError(err, "show project failed", true)
+		pt := common.PrettyItemTable{
+			Item: *project,
+			ShortFields: []common.Column{
+				{Name: "Id"}, {Name: "Name"},
+				{Name: "Description"},
+				{Name: "DomainId"},
+				{Name: "Enabled", AutoColor: true},
+				{Name: "IsDomain"},
+				{Name: "ParentId"},
+				{Name: "Tags"},
+			},
+		}
+		common.PrintPrettyItemTable(pt)
+	},
+}
 
 func init() {
 	projectList.Flags().BoolP("long", "l", false, "List additional fields in output")
 
-	Project.AddCommand(projectList, projectDelete)
+	Project.AddCommand(projectList, projectShow, projectDelete)
 }

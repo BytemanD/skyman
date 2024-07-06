@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/BytemanD/easygo/pkg/compare"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/openstack/auth"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/keystone"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/BytemanD/skyman/utility/httpclient"
 )
 
 const V3 = "v3"
@@ -315,11 +317,37 @@ func (c ProjectApi) Show(id string) (*auth.Project, error) {
 	if err := resp.BodyUnmarshal(&body); err != nil {
 		return nil, err
 	}
-	return body["projects"], nil
+	return body["project"], nil
 }
 func (c ProjectApi) Delete(id string) error {
 	_, err := c.KeystoneV3.session.Delete(utility.UrlJoin("projects", id), nil)
 	return err
+}
+
+func (c ProjectApi) Found(idOrName string) (*auth.Project, error) {
+	project, err := c.Show(idOrName)
+	if err == nil {
+		return project, nil
+	}
+	if compare.IsType[httpclient.HttpError](err) {
+		if e, ok := err.(httpclient.HttpError); !ok || !e.IsNotFound() {
+			return nil, e
+		}
+	}
+	query := url.Values{}
+	query.Set("name", idOrName)
+	projects, err := c.List(query)
+	if err != nil {
+		return nil, err
+	}
+	switch {
+	case len(projects) == 0:
+		return nil, fmt.Errorf("project %s not found", idOrName)
+	case len(projects) > 1:
+		return nil, fmt.Errorf("found multi project with name %s ", idOrName)
+	default:
+		return &projects[0], nil
+	}
 }
 func (c RoleAssignmentApi) List(query url.Values) ([]keystone.RoleAssigment, error) {
 	resp, err := c.KeystoneV3.Get("role_assignments", query)
