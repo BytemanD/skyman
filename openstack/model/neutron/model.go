@@ -71,8 +71,8 @@ func (subnet Subnet) GetAllocationPoolsList() []string {
 }
 
 type FixedIp struct {
-	SubnetId  string `json:"subnet_id"`
-	IpAddress string `json:"ip_address"`
+	SubnetId  string `json:"subnet_id,omitempty"`
+	IpAddress string `json:"ip_address,omitempty"`
 }
 type Port struct {
 	model.Resource
@@ -102,22 +102,22 @@ type Agent struct {
 }
 type SecurityGroup struct {
 	model.Resource
-	Tags           []string            `json:"tags"`
-	Default        bool                `json:"default"`
-	RevisionNumber int                 `json:"revision_number"`
-	Rules          []SecurityGroupRule `json:"security_group_rules"`
+	Tags           []string            `json:"tags,omitempty"`
+	Default        bool                `json:"default,omitempty"`
+	RevisionNumber int                 `json:"revision_number,omitempty"`
+	Rules          []SecurityGroupRule `json:"security_group_rules,omitempty"`
 }
 type SecurityGroupRule struct {
 	model.Resource
-	SecurityGroupId string `json:"security_group_id"`
-	Direction       string `json:"direction"`
-	Ethertype       string `json:"ethertype"`
-	PortRangeMin    int    `json:"port_range_min"`
-	PortRangeMax    int    `json:"port_range_max"`
-	Protocol        string `json:"protocol"`
+	SecurityGroupId string `json:"security_group_id,omitempty"`
+	Direction       string `json:"direction,omitempty"`
+	Ethertype       string `json:"ethertype,omitempty"`
+	PortRangeMin    int    `json:"port_range_min,omitempty"`
+	PortRangeMax    int    `json:"port_range_max,omitempty"`
+	Protocol        string `json:"protocol,omitempty"`
 	RemoteGroupId   string `json:"remote_group_id"`
-	RemoteIpPrefix  string `json:"remote_ip_prefix"`
-	RevisionNumber  int    `json:"revision_number"`
+	RemoteIpPrefix  string `json:"remote_ip_prefix,omitempty"`
+	RevisionNumber  int    `json:"revision_number,omitempty"`
 }
 
 func (port Port) MarshalVifDetails() string {
