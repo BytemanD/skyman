@@ -113,13 +113,13 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		Id:    testId,
 		Total: len(serverActions),
 	}
-	server_actions.TestTasks = append(server_actions.TestTasks, &task)
 	if serverId != "" {
 		server, err = client.NovaV2().Servers().Found(serverId)
 		if err != nil {
 			return fmt.Errorf("get server failed: %s", err)
 		}
 		task.ServerId = serverId
+		server_actions.TestTasks = append(server_actions.TestTasks, &task)
 		logging.Info("use server: %s(%s)", server.Id, server.Name)
 	} else {
 		if len(server_actions.TEST_FLAVORS) == 0 {
@@ -136,6 +136,7 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		}
 		task.SetStage("creating")
 		task.ServerId = server.Id
+		server_actions.TestTasks = append(server_actions.TestTasks, &task)
 		err = waitServerCreated(client, server)
 		if err != nil {
 			task.Failed(fmt.Sprintf("server is not created: %s", err))

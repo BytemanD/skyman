@@ -41,7 +41,13 @@ func (e GuestNoIpaddressError) Error() string {
 type GuestHasNoIpaddressError struct {
 	ErrArgs
 }
+type PingLossPackage struct {
+	ErrArgs
+}
 
+func (e PingLossPackage) Error() string {
+	return "ping loss %v packages"
+}
 func (e GuestHasNoIpaddressError) Format() string {
 	return "guest has no ipaddress %s"
 }
@@ -61,4 +67,7 @@ func NewGuestHasNoIpaddressError(ipAddress []string) GuestHasNoIpaddressError {
 	return GuestHasNoIpaddressError{
 		ErrArgs{Args: []interface{}{strings.Join(ipAddress, ", ")}},
 	}
+}
+func NewPingLossPackage(lossed int) PingLossPackage {
+	return PingLossPackage{ErrArgs{Args: []interface{}{lossed}}}
 }

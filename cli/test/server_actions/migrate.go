@@ -22,6 +22,7 @@ type ServerLiveMigrate struct {
 
 func (t *ServerLiveMigrate) createClientServer() error {
 	clientServerOpt := t.getServerBootOption(fmt.Sprintf("client-%s", t.Server.Name))
+	clientServerOpt.AvailabilityZone = t.Server.AZ
 	clientServer, err := t.Client.NovaV2().Servers().Create(clientServerOpt)
 	if err != nil {
 		return fmt.Errorf("create client instance failed: %s", err)
@@ -74,12 +75,13 @@ func (t *ServerLiveMigrate) startPing(targetIp string) error {
 	if err != nil {
 		return err
 	}
+	logging.Info("[%s] ping -> %s", t.ServerId(), targetIp)
 	result := clientGuest.Ping(targetIp, common.CONF.Test.LiveMigrate.PingInterval, 0, ipaddrs[0], false)
 	if result.ErrData != "" {
 		return fmt.Errorf("run ping to %s failed: %s", targetIp, result.ErrData)
 	}
 	t.clientPingPid = result.Pid
-	logging.Info("[%s] ping process pid is: %d", t.ServerId(), t.clientPingPid)
+	logging.Debug("[%s] ping process pid is: %d", t.ServerId(), t.clientPingPid)
 	return nil
 }
 func (t *ServerLiveMigrate) stopPing() error {
@@ -114,6 +116,44 @@ func (t *ServerLiveMigrate) getPingOutput() (string, error) {
 	logging.Debug("[%s] ping output:\n%s", t.ServerId(), stdout)
 	return "", fmt.Errorf("get ping output failed: %s", stderr)
 }
+func (t *ServerLiveMigrate) checkPingBeforeMigrate(targetIp string) error {
+	defer func() {
+		t.clientPingPid = 0
+	}()
+	logging.Info("[%s] confirm ping packages not loss ...", t.ServerId())
+	return utility.RetryWithErrors(
+		utility.RetryCondition{
+			Timeout:     time.Minute * 5,
+			IntervalMin: time.Second * 4,
+		},
+		[]string{"PingLossPackage"},
+		func() error {
+			if err := t.startPing(targetIp); err != nil {
+				return err
+			}
+			time.Sleep(time.Second * 5)
+			if err := t.stopPing(); err != nil {
+				return fmt.Errorf("stop ping process failed: %s", err)
+			}
+			stdout, err := t.getPingOutput()
+			if err != nil {
+				return err
+			}
+			matchedResult := utility.MatchPingResult(stdout)
+			if len(matchedResult) == 0 {
+				return fmt.Errorf("ping result not matched")
+			}
+			logging.Info("[%s] ping result: %s", t.ServerId(), matchedResult[0])
+			transmitted, _ := strconv.Atoi(matchedResult[1])
+			received, _ := strconv.Atoi(matchedResult[2])
+			if transmitted-received > 0 {
+				return utility.NewPingLossPackage(transmitted - received)
+			}
+			return nil
+		},
+	)
+}
+
 func (t *ServerLiveMigrate) startLiveMigrate() error {
 	err := t.Client.NovaV2().Servers().LiveMigrate(t.Server.Id, "auto", "")
 	if err != nil {
@@ -176,6 +216,12 @@ func (t *ServerLiveMigrate) Start() error {
 		if err != nil {
 			return err
 		}
+		// 先检测ping 是否丢包
+		err = t.checkPingBeforeMigrate(interfaces[0].GetIPAddresses()[0])
+		if err != nil {
+			return fmt.Errorf("ping check failed: %s", err)
+		}
+		logging.Info("[%s] ping package not loss", t.ServerId())
 		// 开始运行ping
 		// TODO: 判断 IPv4 还是 IPv6
 		err = t.startPing(interfaces[0].GetIPAddresses()[0])

@@ -93,10 +93,14 @@ func RetryWithContext(ctx context.Context, condition RetryCondition, function fu
 
 func RetryWithErrors(condition RetryCondition, matchErrors []string, function func() error) error {
 	startTime := time.Now()
+	var err error
 	for {
-		err := function()
+		err = function()
 		if err == nil {
 			return nil
+		}
+		if condition.Timeout > 0 && time.Since(startTime) >= condition.Timeout {
+			return fmt.Errorf("retry timeout(%v), last error: %v", condition.Timeout, err)
 		}
 		for _, e := range matchErrors {
 			if compare.IsStructOf(e, err) {
@@ -106,9 +110,6 @@ func RetryWithErrors(condition RetryCondition, matchErrors []string, function fu
 		}
 		if err != nil {
 			return err
-		}
-		if condition.Timeout > 0 && time.Since(startTime) >= condition.Timeout {
-			return fmt.Errorf("retry timeout(%v), last error: %s", condition.Timeout, err)
 		}
 		time.Sleep(condition.NextInterval())
 	}

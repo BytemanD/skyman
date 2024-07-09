@@ -8,7 +8,9 @@ import (
 	"github.com/BytemanD/skyman/cli/test/checkers"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
+	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -175,7 +177,13 @@ func (t ServerActionTest) getServerBootOption(name string) nova.ServerOpt {
 	} else {
 		logging.Warning("boot without network")
 	}
+	if common.CONF.Test.BootWithSG != "" {
+		opt.SecurityGroups = append(opt.SecurityGroups,
+			neutron.SecurityGroup{
+				Resource: model.Resource{Name: common.CONF.Test.BootWithSG},
+			})
 
+	}
 	if common.CONF.Test.BootFromVolume {
 		opt.BlockDeviceMappingV2 = []nova.BlockDeviceMappingV2{
 			{

@@ -97,6 +97,7 @@ type Test struct {
 	BootFromVolume   bool               `yaml:"bootFromVolume"`
 	BootVolumeSize   uint16             `yaml:"bootVolumeSize"`
 	BootVolumeType   string             `yaml:"bootVolumeType"`
+	BootWithSG       string             `yaml:"bootWithSG"`
 	Flavors          []string           `yaml:"flavors"`
 	Images           []string           `yaml:"images"`
 	Networks         []string           `yaml:"networks"`
