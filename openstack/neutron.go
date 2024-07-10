@@ -14,6 +14,11 @@ import (
 	"github.com/BytemanD/skyman/utility/httpclient"
 )
 
+const (
+	URL_LIST_SECURITY_GROUPS = "security-groups"
+	URL_SHOW_SECURITY_GROUPS = "security-groups/%s"
+)
+
 type NeutronV2 struct {
 	RestClient2
 	currentVersion *model.ApiVersion
@@ -382,7 +387,7 @@ func (c AgentApi) List(query url.Values) ([]neutron.Agent, error) {
 	return body.Agents, nil
 }
 func (c SGApi) List(query url.Values) ([]neutron.SecurityGroup, error) {
-	resp, err := c.NeutronV2.Get("security_groups", query)
+	resp, err := c.NeutronV2.Get(URL_LIST_SECURITY_GROUPS, query)
 	if err != nil {
 		return nil, err
 	}
@@ -395,7 +400,7 @@ func (c SGApi) List(query url.Values) ([]neutron.SecurityGroup, error) {
 	return body.SecurityGroups, nil
 }
 func (c SGApi) Show(id string) (*neutron.SecurityGroup, error) {
-	resp, err := c.NeutronV2.Get(utility.UrlJoin("security_groups", id), nil)
+	resp, err := c.NeutronV2.Get(fmt.Sprintf(URL_SHOW_SECURITY_GROUPS, id), nil)
 	if err != nil {
 		return nil, err
 	}
