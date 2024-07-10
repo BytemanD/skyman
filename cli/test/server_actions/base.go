@@ -182,7 +182,6 @@ func (t ServerActionTest) getServerBootOption(name string) nova.ServerOpt {
 			neutron.SecurityGroup{
 				Resource: model.Resource{Name: common.CONF.Test.BootWithSG},
 			})
-
 	}
 	if common.CONF.Test.BootFromVolume {
 		opt.BlockDeviceMappingV2 = []nova.BlockDeviceMappingV2{

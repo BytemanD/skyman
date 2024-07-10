@@ -1097,14 +1097,13 @@ func (c ServersApi) WaitBooted(id string) (*nova.Server, error) {
 		if err != nil {
 			return server, err
 		}
-
+		logging.Info("[%s] %s", id, server.AllStatus())
 		if server.IsError() {
 			return server, fmt.Errorf("server %s is error", server.Id)
 		}
-		if server.IsActive() {
-			return server, err
+		if server.IsActive() && server.Host != "" {
+			return server, nil
 		}
-		logging.Info("[%s] %s", server.Id, server.AllStatus())
 		time.Sleep(time.Second * 2)
 	}
 }

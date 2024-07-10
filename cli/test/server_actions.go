@@ -13,6 +13,8 @@ import (
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model"
+	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
@@ -48,7 +50,12 @@ func getServerBootOption(testId int) nova.ServerOpt {
 	} else {
 		logging.Warning("boot without network")
 	}
-
+	if common.CONF.Test.BootWithSG != "" {
+		opt.SecurityGroups = append(opt.SecurityGroups,
+			neutron.SecurityGroup{
+				Resource: model.Resource{Name: common.CONF.Test.BootWithSG},
+			})
+	}
 	if common.CONF.Test.BootFromVolume {
 		opt.BlockDeviceMappingV2 = []nova.BlockDeviceMappingV2{
 			{
@@ -70,7 +77,8 @@ func createDefaultServer(client *openstack.Openstack, testId int) (*nova.Server,
 	return client.NovaV2().Servers().Create(bootOption)
 }
 func waitServerCreated(client *openstack.Openstack, server *nova.Server) error {
-	server, err := client.NovaV2().Servers().Show(server.Id)
+	var err error
+	server, err = client.NovaV2().Servers().Show(server.Id)
 	if err != nil {
 		return err
 	}
@@ -79,7 +87,7 @@ func waitServerCreated(client *openstack.Openstack, server *nova.Server) error {
 	if err != nil {
 		return err
 	}
-	logging.Success("[%s] create success", server.Id)
+	logging.Success("[%s] create success, host is %s", server.Id, server.Host)
 	return nil
 }
 
@@ -137,12 +145,12 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		task.SetStage("creating")
 		task.ServerId = server.Id
 		server_actions.TestTasks = append(server_actions.TestTasks, &task)
-		err = waitServerCreated(client, server)
+		waitServerCreated(client, server)
+		server, err = client.NovaV2().Servers().Show(server.Id)
 		if err != nil {
 			task.Failed(fmt.Sprintf("server is not created: %s", err))
 			return task.GetError()
 		}
-		task.ServerId = server.Id
 		defer func() {
 			if !testFailed || common.CONF.Test.DeleteIfError {
 				task.SetStage("deleting")

@@ -43,7 +43,9 @@ func (t *ServerLiveMigrate) getClientGuest() (*guest.Guest, error) {
 			return nil, err
 		}
 		t.clientGuest = &guest.Guest{Connection: host.HostIp, Domain: t.clientServer.Id}
-		t.clientGuest.Connect()
+		if err := t.clientGuest.Connect(); err != nil {
+			return nil, fmt.Errorf("connect guest %s faield: %s", t.clientGuest, err)
+		}
 		logging.Info("[%s] connecting to qga ...", t.clientGuest.Domain)
 		t.clientGuest.ConnectToQGA(common.CONF.Test.QGAChecker.QgaConnectTimeout)
 	}
