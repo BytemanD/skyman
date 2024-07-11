@@ -14,7 +14,7 @@ var rule = &cobra.Command{Use: "rule"}
 
 var sgRuleList = &cobra.Command{
 	Use:   "list",
-	Short: "List security groups",
+	Short: "List security group rules",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 		c := openstack.DefaultClient()
@@ -92,4 +92,5 @@ func init() {
 	rule.AddCommand(sgRuleList, sgRuleShow)
 
 	group.AddCommand(rule)
+	SG.AddCommand(rule)
 }

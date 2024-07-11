@@ -14,6 +14,7 @@ import (
 var Security = &cobra.Command{Use: "security"}
 
 var group = &cobra.Command{Use: "group"}
+var SG = &cobra.Command{Use: "sg", Aliases: []string{"security group"}}
 
 var sgList = &cobra.Command{
 	Use:   "list",
@@ -84,6 +85,6 @@ func init() {
 	sgList.Flags().StringP("project", "", "", "List according to the project")
 
 	group.AddCommand(sgList, sgShow)
-
 	Security.AddCommand(group)
+	SG.AddCommand(sgList, sgShow)
 }

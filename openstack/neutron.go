@@ -15,8 +15,10 @@ import (
 )
 
 const (
-	URL_LIST_SECURITY_GROUPS = "security-groups"
-	URL_SHOW_SECURITY_GROUPS = "security-groups/%s"
+	URL_LIST_SECURITY_GROUPS      = "security-groups"
+	URL_SHOW_SECURITY_GROUP       = "security-groups/%s"
+	URL_LIST_SECURITY_GROUP_RULES = "security-group-rules"
+	URL_SHOW_SECURITY_GROUP_RULE  = "security-group-rules/%s"
 )
 
 type NeutronV2 struct {
@@ -400,7 +402,7 @@ func (c SGApi) List(query url.Values) ([]neutron.SecurityGroup, error) {
 	return body.SecurityGroups, nil
 }
 func (c SGApi) Show(id string) (*neutron.SecurityGroup, error) {
-	resp, err := c.NeutronV2.Get(fmt.Sprintf(URL_SHOW_SECURITY_GROUPS, id), nil)
+	resp, err := c.NeutronV2.Get(fmt.Sprintf(URL_SHOW_SECURITY_GROUP, id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -434,7 +436,7 @@ func (c SGApi) Found(idOrName string) (*neutron.SecurityGroup, error) {
 	}
 }
 func (c SGRuleApi) List(query url.Values) ([]neutron.SecurityGroupRule, error) {
-	resp, err := c.NeutronV2.Get("security_group_rules", query)
+	resp, err := c.NeutronV2.Get(URL_LIST_SECURITY_GROUP_RULES, query)
 	if err != nil {
 		return nil, err
 	}
@@ -447,7 +449,7 @@ func (c SGRuleApi) List(query url.Values) ([]neutron.SecurityGroupRule, error) {
 	return body.SecurityGroupRules, nil
 }
 func (c SGRuleApi) Show(id string) (*neutron.SecurityGroupRule, error) {
-	resp, err := c.NeutronV2.Get(utility.UrlJoin("security_group_rules", id), nil)
+	resp, err := c.NeutronV2.Get(utility.UrlJoin(URL_SHOW_SECURITY_GROUP_RULE, id), nil)
 	if err != nil {
 		return nil, err
 	}

@@ -9,7 +9,7 @@ import (
 	"github.com/BytemanD/skyman/utility"
 )
 
-var AZ = &cobra.Command{Use: "az"}
+var AZ = &cobra.Command{Use: "availability-zone", Aliases: []string{"az"}}
 
 var azList = &cobra.Command{
 	Use:   "list",
