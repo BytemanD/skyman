@@ -13,7 +13,6 @@ import (
 	"github.com/BytemanD/easygo/pkg/compare"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
-	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
@@ -176,28 +175,18 @@ func (c ServersApi) ListByName(name string) ([]nova.Server, error) {
 	return c.List(query)
 }
 func (c ServersApi) Detail(query url.Values) ([]nova.Server, error) {
-	resp, err := c.NovaV2.Get("servers/detail", query)
-	if err != nil {
-		return nil, err
-	}
-	body := struct{ Servers []nova.Server }{}
-	if err := resp.BodyUnmarshal(&body); err != nil {
-		return nil, err
-	}
-	return body.Servers, nil
+	body := map[string][]nova.Server{}
+	return body["servers"], c.GetAndUnmarshal("servers/detail", query, &body)
+
 }
 func (c ServersApi) DetailsByName(name string) ([]nova.Server, error) {
 	return c.Detail(utility.UrlValues(map[string]string{"name": name}))
 }
 
 func (c ServersApi) Show(id string) (*nova.Server, error) {
-	resp, err := c.NovaV2.Get(utility.UrlJoin("servers", id), nil)
-	if err != nil {
-		return nil, err
-	}
-	body := map[string]*nova.Server{"server": {}}
-	resp.BodyUnmarshal(&body)
-	return body["server"], err
+	body := map[string]*nova.Server{}
+	return body["server"], c.GetAndUnmarshal(utility.UrlJoin("servers", id),
+		nil, &body)
 }
 func (c ServersApi) Found(idOrName string) (*nova.Server, error) {
 	var (
@@ -1184,46 +1173,5 @@ func (c ServersApi) CreateAndWait(options nova.ServerOpt) (*nova.Server, error) 
 	if err != nil {
 		return server, err
 	}
-	return c.WaitStatus(server.Id, "ACTIVE", 5)
-}
-
-func (c ServersApi) Prune(query url.Values, yes bool, waitDeleted bool) {
-	if len(query) == 0 {
-		query.Set("status", "error")
-	}
-	logging.Info("查询虚拟机: %v", query.Encode())
-	servers, err := c.Servers().List(query)
-	utility.LogError(err, "query servers failed", true)
-	logging.Info("需要清理的虚拟机数量: %d\n", len(servers))
-	if len(servers) == 0 {
-		return
-	}
-	if !yes {
-		fmt.Printf("即将删除 %d 个虚拟机:\n", len(servers))
-		for _, server := range servers {
-			fmt.Printf("    %s(%s)\n", server.Id, server.Name)
-		}
-		yes = stringutils.ScanfComfirm("是否删除", []string{"yes", "y"}, []string{"no", "n"})
-	}
-	if !yes {
-		return
-	}
-	logging.Info("开始删除虚拟机")
-	tg := syncutils.TaskGroup{
-		Items: servers,
-		Func: func(o interface{}) error {
-			s := o.(nova.Server)
-			logging.Info("delete %s", s.Id)
-			err := c.Servers().Delete(s.Id)
-			if err != nil {
-				return fmt.Errorf("delete %s failed: %v", s.Id, err)
-			}
-			if waitDeleted {
-				c.Servers().WaitDeleted(s.Id)
-			}
-			return nil
-		},
-		ShowProgress: true,
-	}
-	tg.Start()
+	return c.WaitBooted(server.Id)
 }

@@ -21,8 +21,8 @@ var volumePrune = &cobra.Command{
 		if status != "" {
 			query.Add("status", status)
 		}
-		client := openstack.DefaultClient()
-		client.CinderV2().Volumes().Prune(query, name, yes)
+		c := openstack.DefaultClient()
+		c.PruneVolumes(query, name, yes)
 	},
 }
 

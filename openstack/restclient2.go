@@ -44,6 +44,17 @@ func (rest *RestClient2) Get(url string, query url.Values) (*httpclient.Response
 	}
 	return rest.session.Get(rest.makeUrl(url), query, nil)
 }
+func (rest *RestClient2) GetAndUnmarshal(url string, query url.Values, body interface{}) error {
+	resp, err := rest.Get(url, query)
+	if err != nil {
+		return err
+	}
+	if err := resp.BodyUnmarshal(&body); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (rest *RestClient2) Post(url string, body []byte, headers map[string]string) (*httpclient.Response, error) {
 	if err := rest.mustHasBaseUrl(); err != nil {
 		return nil, err
@@ -71,6 +82,12 @@ func (rest *RestClient2) Patch(url string, query url.Values, body []byte, header
 
 func (rest *RestClient2) GetResponseRequstId(resp *httpclient.Response) string {
 	return resp.Headers.Get("X-Openstack-Request-Id")
+}
+
+type GetRequest struct {
+	Url   string
+	Query url.Values
+	Body  interface{}
 }
 
 func NewRestClient2(baseUrl string, authPlugin auth.AuthPlugin) RestClient2 {

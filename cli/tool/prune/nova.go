@@ -29,7 +29,7 @@ var serverPrune = &cobra.Command{
 			query.Add("status", status)
 		}
 		c := openstack.DefaultClient()
-		c.NovaV2().Servers().Prune(query, yes, true)
+		c.PruneServers(query, yes, true)
 	},
 }
 

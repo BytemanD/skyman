@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/compare"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
-	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/utility"
@@ -91,26 +89,12 @@ func (c CinderV2) Services() VolumeServiceApi {
 }
 
 func (c VolumeApi) Detail(query url.Values) ([]cinder.Volume, error) {
-	resp, err := c.CinderV2.Get("volumes/detail", query)
-	if err != nil {
-		return nil, err
-	}
-	body := map[string][]cinder.Volume{"volumes": {}}
-	if err := resp.BodyUnmarshal(&body); err != nil {
-		return nil, err
-	}
-	return body["volumes"], nil
+	body := map[string][]cinder.Volume{}
+	return body["volumes"], c.GetAndUnmarshal("volumes/detail", query, &body)
 }
 func (c VolumeApi) List(query url.Values) ([]cinder.Volume, error) {
-	resp, err := c.CinderV2.Get("volumes", query)
-	if err != nil {
-		return nil, err
-	}
-	body := map[string][]cinder.Volume{"volumes": {}}
-	if err := resp.BodyUnmarshal(&body); err != nil {
-		return nil, err
-	}
-	return body["volumes"], nil
+	body := map[string][]cinder.Volume{}
+	return body["volumes"], c.GetAndUnmarshal("volumes", query, &body)
 }
 func (c VolumeApi) ListByName(name string) ([]cinder.Volume, error) {
 	return c.List(utility.UrlValues(map[string]string{
@@ -123,15 +107,8 @@ func (c VolumeApi) DetailByName(name string) ([]cinder.Volume, error) {
 	}))
 }
 func (c VolumeApi) Show(id string) (*cinder.Volume, error) {
-	resp, err := c.CinderV2.Get(utility.UrlJoin("volumes", id), nil)
-	if err != nil {
-		return nil, err
-	}
-	body := map[string]*cinder.Volume{"volumes": {}}
-	if err := resp.BodyUnmarshal(&body); err != nil {
-		return nil, err
-	}
-	return body["volume"], nil
+	body := map[string]*cinder.Volume{}
+	return body["volume"], c.GetAndUnmarshal(utility.UrlJoin("volumes", id), nil, &body)
 }
 
 func (c VolumeApi) Found(idOrName string) (*cinder.Volume, error) {
@@ -324,63 +301,6 @@ func (c VolumeTypeApi) Delete(id string) (err error) {
 	return err
 }
 
-func (c VolumeApi) Prune(query url.Values, matchName string, yes bool) {
-	if query == nil {
-		query = url.Values{}
-	}
-	if len(query) == 0 {
-		query.Add("status", "error")
-	}
-	logging.Info("查询卷: %v", query)
-	volumes, err := c.List(query)
-	if matchName != "" {
-		filterdVolumes := []cinder.Volume{}
-		for _, vol := range volumes {
-			if strings.Contains(vol.Name, matchName) {
-				filterdVolumes = append(filterdVolumes, vol)
-			}
-		}
-		volumes = filterdVolumes
-	}
-	if err != nil {
-		logging.Error("get volumes failed, %s", err)
-		return
-	}
-	logging.Info("需要清理的卷数量: %d\n", len(volumes))
-	if len(volumes) == 0 {
-		return
-	}
-	if !yes {
-		fmt.Printf("即将清理 %d 个卷:\n", len(volumes))
-		for _, server := range volumes {
-			fmt.Printf("%s (%s)\n", server.Id, server.Name)
-		}
-		yes = stringutils.ScanfComfirm("是否删除?", []string{"yes", "y"}, []string{"no", "n"})
-		if !yes {
-			return
-		}
-	}
-	logging.Info("开始清理")
-	tg := syncutils.TaskGroup{
-		Func: func(i interface{}) error {
-			volume := i.(cinder.Volume)
-			logging.Debug("delete volume %s(%s)", volume.Id, volume.Name)
-			err := c.Delete(volume.Id, true, true)
-			if err != nil {
-				return fmt.Errorf("delete volume %s failed: %v", volume.Id, err)
-			}
-			return nil
-		},
-		Items:        volumes,
-		ShowProgress: true,
-	}
-	err = tg.Start()
-	if err != nil {
-		logging.Error("清理失败: %v", err)
-	} else {
-		logging.Info("清理完成")
-	}
-}
 func (c VolumeServiceApi) List(query url.Values) ([]cinder.Service, error) {
 	resp, err := c.CinderV2.Get("os-services", query)
 	if err != nil {
