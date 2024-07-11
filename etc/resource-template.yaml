@@ -1,0 +1,57 @@
+
+defaultImage: &DEFAULT_IMAGE <image id>
+defaultFlavor: &DEFAULT_FLAVOR <flavor id>
+defaultSecurityGroups: &DEFUALT_SG
+  - name: default
+
+defaultRootBDM: &DEFAULT_ROOT_BDM
+  bootIndex: 0
+  uuid: *DEFAULT_IMAGE
+  volumeSize: 50
+  sourceType: image
+  destinationType: volume
+  #  volumeType:
+  deleteOnTermination: true
+
+# defaultUserData: &DEFAULT_USER_DATA |
+#   #cloud-config
+#   disable_root: false
+#   ssh_pwauth: true
+#   chpasswd:
+#     list: |
+#       root:<YOUR PASSWORD>
+#     expire: False
+#   ssh_pwauth: True
+
+flavors:
+  - id: test.m1.2g2v
+    name: test.m1.2g2v
+    vcpus: 2
+    ram: 2048
+
+networks:
+  - name: test-network-1
+    subnets:
+      - name: test-subnet-1
+        cidr: 192.168.11.0/24
+
+
+server1: &SERVER1
+  name: test-server
+  flavor:
+    id: test.m1.2g2v
+  networks:
+    - name: test-network-1
+    # - uuid: <network uuid>
+  availabilityZone:
+  securityGroups:
+    - *DEFUALT_SG
+  # adiminPass:
+  # userData: *DEFAULT_USER_DATA
+  # image:
+  #   id: *DEFAULT_IMAGE
+  blockDeviceMappingV2:
+  - *DEFAULT_ROOT_BDM
+
+servers:
+  - *SERVER1

@@ -3,13 +3,14 @@ package server
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/url"
-	"strings"
 	"text/template"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/BytemanD/easygo/pkg/terminal"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
@@ -37,7 +38,7 @@ func (serverInspect *ServerInspect) Print() {
 ## 基本信息
 
 1. 实例详情
-	- **UUID(Name)**: {{.Server.Id}} ({{.Server.Name}})
+	- **UUID**: {{.Server.Id}}
 	- **Root BDM Type**: {{.Server.RootBdmType}}
 	- **InstanceName**: {{.Server.InstanceName}}
 	- **Created**: {{.Server.Created}}
@@ -45,6 +46,7 @@ func (serverInspect *ServerInspect) Print() {
 	- **LaunchedAt**: {{.Server.LaunchedAt}}
 	- **TerminatedAt**: {{.Server.TerminatedAt}}
 	- **Description**: {{.Server.Description}}
+	- **Image**: {{.Server.Image.Name}} ( {{.Server.Image.Id}} )
 1. 状态
 	- **VmState**: {{.Server.VmState}}
 	- **PowerState**: {{.PowerState}}
@@ -57,7 +59,7 @@ func (serverInspect *ServerInspect) Print() {
 
 - **Name**: {{.Server.Flavor.OriginalName}}
 - **Vcpus**: {{.Server.Flavor.Vcpus}}
-- **Ram**: {{.Server.Flavor.Ram}}
+- **Ram**: {{ humanRam .Server.Flavor}}
 - **Extra specs**:
 {{ range $key, $value := .Server.Flavor.ExtraSpecs }}
 	1. {{$key}} = {{$value}}
@@ -74,14 +76,16 @@ func (serverInspect *ServerInspect) Print() {
 {{end}}
 
 ## 磁盘
-|  **Device** |  **Volume Id** | **Type**  | **Size** | **Image** |
+| **Device** | **Volume Id** | **Type**  | **Size** | **Image** |
 |---|---|---|---|---|
 {{ range $index, $volume := .Volumes }} {{$volume.Device}} |{{$volume.VolumeId}} | {{ getVolumeType $volume.VolumeId }} |{{ getVolumeSize $volume.VolumeId }} |{{ getVolumeImage $volume.VolumeId }}|
 {{end}}
   
 ## 操作记录
-{{ range $index, $action := .Actions }}
-1. **{{$action.StartTime}}** {{$action.RequestId}} {{$action.Action}} {{$action.Message}}
+
+|  **Start Time** |  **Request Id** | **Action Name** | **Message** |
+|---|---|---|---|
+{{ range $index, $action := .Actions }} {{$action.StartTime}} |{{$action.RequestId}} | {{ $action.Action }} |{{ $action.Message }} |
 {{end}}
 `
 	templateBuffer := bytes.NewBuffer([]byte{})
@@ -134,23 +138,33 @@ func (serverInspect *ServerInspect) Print() {
 		},
 		"getPortBindingDetail": func(portId string) string {
 			if port, ok := serverInspect.InterfaceDetail[portId]; ok {
-				return strings.Join(port.VifDetailList(), ", ")
+				data, _ := json.Marshal(port.BindingDetails)
+				return string(data)
 			} else {
 				return "-"
 			}
 		},
 		"getPortBindingProfile": func(portId string) string {
 			if port, ok := serverInspect.InterfaceDetail[portId]; ok {
-				return port.MarshalBindingProfile()
+				data, _ := json.Marshal(port.BindingProfile)
+				return string(data)
 			} else {
 				return "-"
 			}
+		},
+		"humanRam": func(flavor nova.Flavor) string {
+			return flavor.HumanRam()
 		},
 	})
 	tmpl, _ = tmpl.Parse(source)
 	tmpl.Execute(bufferWriter, serverInspect)
 	bufferWriter.Flush()
-	result := markdown.Render(templateBuffer.String(), 120, 4)
+
+	width := 120
+	if curTerm := terminal.CurTerminal(); curTerm != nil {
+		width = curTerm.Columns
+	}
+	result := markdown.Render(templateBuffer.String(), width, 4)
 	fmt.Println(string(result))
 }
 
@@ -159,14 +173,22 @@ func inspect(client *openstack.Openstack, serverId string) (*ServerInspect, erro
 	if err != nil {
 		return nil, err
 	}
+	logging.Info("get server image")
+	image, err := client.GlanceV2().Images().Show(server.Image.Id)
+	if err != nil {
+		return nil, err
+	}
+	server.Image.Name = image.Name
 	interfaceAttachmetns, err := client.NovaV2().Servers().ListInterfaces(serverId)
 	if err != nil {
 		return nil, err
 	}
+	logging.Info("list server volumes")
 	volumeAttachments, err := client.NovaV2().Servers().ListVolumes(serverId)
 	if err != nil {
 		return nil, err
 	}
+	logging.Info("list server ations")
 	actions, err := client.NovaV2().Servers().ListActions(serverId)
 	if err != nil {
 		return nil, err
@@ -181,6 +203,8 @@ func inspect(client *openstack.Openstack, serverId string) (*ServerInspect, erro
 	}
 
 	portQuery := url.Values{}
+	portQuery.Set("device_id", server.Id)
+	logging.Info("list server ports details")
 	ports, err := client.NeutronV2().Ports().List(portQuery)
 	if err != nil {
 		return nil, err

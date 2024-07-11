@@ -9,6 +9,7 @@ Source0: skyman
 Source1: skyman-template.yaml
 Source2: zh_CN.toml
 Source3: index.html
+Source4: resource-template.yaml
 
 %global CONFIG_DIRNAME skyman
 %global CONFIG_PATH /etc/${CONFIG_DIRNAME}
@@ -29,6 +30,7 @@ mkdir -p %{_builddir}${SHARE_STATIC_PATH}
 %files
 %{_bindir}/skyman
 %{_sysconfdir}/skyman/skyman-template.yaml
+%{_sysconfdir}/skyman/resource-template.yaml
 %{SHARE_LOCALE_PATH}/zh_CN.toml
 %{SHARE_STATIC_PATH}/index.html
 
@@ -40,6 +42,7 @@ install -m 755 -d %{buildroot}%{SHARE_STATIC_PATH}
 
 install -p -m 755 -t %{buildroot}%{_bindir} %{SOURCE0}
 install -p -m 755 -t %{buildroot}%{_sysconfdir}/%{CONFIG_DIRNAME} %{SOURCE1}
+install -p -m 755 -t %{buildroot}%{_sysconfdir}/%{CONFIG_DIRNAME} %{SOURCE4}
 install -p -m 755 -t %{buildroot}%{SHARE_LOCALE_PATH} %{SOURCE2}
 install -p -m 755 -t %{buildroot}%{SHARE_STATIC_PATH} %{SOURCE3}
 

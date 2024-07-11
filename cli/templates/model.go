@@ -10,9 +10,7 @@ type BaseResource struct {
 	Name string
 	Id   string
 }
-type Default struct {
-	ServerNamePrefix string `yaml:"serverNamePrefix"`
-}
+
 type BlockDeviceMappingV2 struct {
 	BootIndex           int    `yaml:"bootIndex"`
 	UUID                string `yaml:"uuid"`
@@ -64,7 +62,6 @@ type Network struct {
 	Subnets []Subnet `yaml:"subnets,omitempty"`
 }
 type CreateTemplate struct {
-	Default  Default   `yaml:"default"`
 	Flavors  []Flavor  `yaml:"flavors"`
 	Networks []Network `yaml:"networks"`
 	Servers  []Server  `yaml:"servers"`
@@ -77,9 +74,7 @@ func LoadCreateTemplate(file string) (*CreateTemplate, error) {
 		return nil, err
 	}
 	err = yaml.Unmarshal(yamlFile, &template)
-	if template.Default.ServerNamePrefix == "" {
-		template.Default.ServerNamePrefix = "server-"
-	}
+
 	for i := range template.Servers {
 		if template.Servers[i].Min == 0 {
 			template.Servers[i].Min = 1

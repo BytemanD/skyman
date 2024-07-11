@@ -47,6 +47,10 @@ func init() {
 		{ID: "theNumOfTask", Other: "the num of task"},
 		{ID: "theNumOfWorker", Other: "the num of worker"},
 		{ID: "reportServerEvents", Other: "report server events"},
+		{ID: "defineResourcesFromTempFile",
+			Other: "define resources from template file"},
+		{ID: "undefineResourcesFromTempFile",
+			Other: "undefine resources from template file"},
 	}
 	defaultMessageMap = map[string]i18n.Message{}
 

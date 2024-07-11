@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
@@ -60,19 +61,19 @@ func deleteServer(client *openstack.Openstack, server Server, watch bool) {
 	}
 }
 
-var DeleteCmd = &cobra.Command{
-	Use:   "delete <file>",
-	Short: "delete resources of template file",
-	Args:  cobra.ExactArgs(1),
+var UndefineCmd = &cobra.Command{
+	Use:     "undefine <file>",
+	Short:   i18n.T("undefineResourcesFromTempFile"),
+	Args:    cobra.ExactArgs(1),
+	Aliases: []string{"delete"},
 	Run: func(cmd *cobra.Command, args []string) {
-		wait, _ := cmd.Flags().GetBool("wait")
 		var err error
 		createTemplate, err := LoadCreateTemplate(args[0])
 		utility.LogError(err, "load template file failed", true)
 
 		client := openstack.DefaultClient()
 		for _, server := range createTemplate.Servers {
-			deleteServer(client, server, wait)
+			deleteServer(client, server, true)
 		}
 		for _, network := range createTemplate.Networks {
 			deleteNetwork(client, network)
@@ -81,8 +82,4 @@ var DeleteCmd = &cobra.Command{
 			deleteFlavor(client, flavor)
 		}
 	},
-}
-
-func init() {
-	DeleteCmd.Flags().Bool("wait", false, "wait the resource progress until it deleted.")
 }

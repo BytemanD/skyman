@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/glance"
@@ -164,12 +165,12 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 	return s, nil
 }
 
-var CreateCmd = &cobra.Command{
-	Use:   "create <file>",
-	Short: "create from template file",
-	Args:  cobra.ExactArgs(1),
+var DefineCmd = &cobra.Command{
+	Use:     "define <file>",
+	Short:   i18n.T("defineResourcesFromTempFile"),
+	Args:    cobra.ExactArgs(1),
+	Aliases: []string{"create"},
 	Run: func(cmd *cobra.Command, args []string) {
-		watch, _ := cmd.Flags().GetBool("wait")
 		var err error
 		createTemplate, err := LoadCreateTemplate(args[0])
 		utility.LogError(err, "load template file failed", true)
@@ -194,12 +195,8 @@ var CreateCmd = &cobra.Command{
 		}
 
 		for _, server := range createTemplate.Servers {
-			_, err := createServer(client, server, watch)
+			_, err := createServer(client, server, true)
 			utility.LogError(err, "create server failed", true)
 		}
 	},
-}
-
-func init() {
-	CreateCmd.Flags().Bool("wait", false, "wait the resource progress until it created.")
 }

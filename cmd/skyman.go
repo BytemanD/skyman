@@ -166,7 +166,7 @@ func main() {
 		storage.Volume,
 		networking.Router, networking.Network, networking.Subnet, networking.Port,
 		networking.Security,
-		templates.CreateCmd, templates.DeleteCmd,
+		templates.DefineCmd, templates.UndefineCmd,
 		tool.ToolCmd,
 		test.TestCmd,
 	)
