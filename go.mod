@@ -9,6 +9,7 @@ require (
 )
 
 require (
+	github.com/go-resty/resty/v2 v2.13.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/howeyc/gopass v0.0.0-20210920133722-c8aef6fb66ef
@@ -23,10 +24,10 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
-	golang.org/x/crypto v0.17.0 // indirect
-	golang.org/x/sys v0.17.0 // indirect
-	golang.org/x/term v0.17.0 // indirect
-	golang.org/x/text v0.14.0
+	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/term v0.20.0 // indirect
+	golang.org/x/text v0.15.0
 	gopkg.in/ini.v1 v1.67.0 // indirect
 )
 
@@ -56,7 +57,7 @@ require (
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/wxnacy/wgo v1.0.4 // indirect
 	golang.org/x/image v0.0.0-20191206065243-da761ea9ff43 // indirect
-	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/net v0.25.0 // indirect
 )
 
 replace github.com/BytemanD/skyman => ./

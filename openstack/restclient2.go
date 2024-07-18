@@ -115,6 +115,7 @@ func (o Openstack) Region() string {
 
 func NewClient(authUrl string, user auth.User, project auth.Project, regionName string) *Openstack {
 	passwordAuth := auth.NewPasswordAuth(authUrl, user, project, regionName)
+	passwordAuth.SetHttpTimeout(common.CONF.HttpTimeout)
 	return &Openstack{AuthPlugin: &passwordAuth}
 }
 

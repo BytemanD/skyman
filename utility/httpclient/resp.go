@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+
+	"github.com/go-resty/resty/v2"
 )
 
 type Response struct {
@@ -60,4 +62,14 @@ func (resp *Response) BodyReader() io.ReadCloser {
 
 func (resp *Response) CloseReader() error {
 	return resp.bodyReader.Close()
+}
+
+func MustNotError(resp *resty.Response) error {
+	if resp.IsError() {
+		return HttpError{
+			Status: resp.StatusCode(), Reason: resp.Status(),
+			Message: string(resp.Body()),
+		}
+	}
+	return nil
 }

@@ -28,8 +28,7 @@ const (
 )
 
 type PasswordAuthPlugin struct {
-	restfulClient httpclient.Client
-
+	session                *httpclient.RESTClient
 	AuthUrl                string
 	Username               string
 	Password               string
@@ -80,24 +79,19 @@ func (client PasswordAuthPlugin) getAuthReqBody() map[string]Auth {
 	return map[string]Auth{"auth": auth}
 }
 
-// func (plugin PasswordAuthPlugin) post(url string, body []byte,
-// 	headers map[string]string) (*utility.Response, error) {
-// 	return plugin.restfulClient.Post(url, body, headers)
-// }
-
 func (plugin *PasswordAuthPlugin) TokenIssue() error {
-	body, _ := json.Marshal(plugin.getAuthReqBody())
-	resp, err := plugin.restfulClient.Post(
-		fmt.Sprintf("%s%s", plugin.AuthUrl, URL_AUTH_TOKEN), body, nil)
+	body := plugin.getAuthReqBody()
+	var respToken RespToken
+	resp, err := plugin.session.Post(
+		fmt.Sprintf("%s%s", plugin.AuthUrl, URL_AUTH_TOKEN), body, nil,
+	)
 	if err != nil {
 		return fmt.Errorf("token issue failed, %v", err)
 	}
-	var resToken RespToken
-	resp.BodyUnmarshal(&resToken)
-
+	json.Unmarshal(resp.Body(), &respToken)
 	plugin.tokenCache = TokenCache{
-		token:     resToken.Token,
-		TokenId:   resp.GetHeader("X-Subject-Token"),
+		token:     respToken.Token,
+		TokenId:   resp.Header().Get("X-Subject-Token"),
 		expiredAt: time.Now().Add(time.Second * time.Duration(3600)),
 	}
 	return nil
@@ -119,8 +113,11 @@ func (plugin *PasswordAuthPlugin) GetServiceEndpoint(
 		serviceType, serviceName, serviceInterface,
 		plugin.RegionName)
 }
-func (plugin *PasswordAuthPlugin) SetHttpTimeout(timeout int) {
-	plugin.restfulClient.Timeout = time.Second * time.Duration(timeout)
+func (plugin *PasswordAuthPlugin) SetHttpTimeout(timeout int) *PasswordAuthPlugin {
+	plugin.session.Timeout = time.Second * time.Duration(timeout)
+	fmt.Println(timeout)
+	fmt.Println(plugin.session.Timeout)
+	return plugin
 }
 
 func (plugin *PasswordAuthPlugin) AuthRequest(req *http.Request) error {
@@ -145,7 +142,7 @@ func (plugin *PasswordAuthPlugin) GetSafeHeader(headers http.Header) http.Header
 
 func NewPasswordAuth(authUrl string, user User, project Project, regionName string) PasswordAuthPlugin {
 	return PasswordAuthPlugin{
-		restfulClient:     httpclient.Client{},
+		session:           httpclient.New(),
 		AuthUrl:           authUrl,
 		Username:          user.Name,
 		Password:          user.Password,
