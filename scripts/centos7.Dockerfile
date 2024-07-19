@@ -24,7 +24,7 @@ FROM Skylight-Centos7-Base as Skylight-Centos7-Builder
 RUN source $HOME/.bashrc \
     && cd /root/skyman \
     && go env -w GO111MODULE="on" \
-    && go env -w GOPROXY="https://goproxy.cn,direct" \
+    && go env -w GOPROXY="https://mirrors.aliyun.com/goproxy/,direct" \
     && go mod download
 
 # NOTE:In order not to use caching
@@ -33,7 +33,7 @@ RUN echo ${DATE}
 
 RUN source $HOME/.bashrc \
     && go env -w GO111MODULE="on" \
-    && go env -w GOPROXY="https://goproxy.cn,direct"
+    && go env -w GOPROXY="https://mirrors.aliyun.com/goproxy/,direct"
 
 RUN cd /root/skyman \
     && source $HOME/.bashrc \
