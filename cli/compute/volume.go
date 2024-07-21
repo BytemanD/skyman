@@ -31,7 +31,7 @@ var volumeList = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		attachments, err := client.NovaV2().Servers().ListVolumes(args[0])
+		attachments, err := client.NovaV2().Server().ListVolumes(args[0])
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -46,7 +46,7 @@ var volumeAttach = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		attachment, err := client.NovaV2().Servers().AddVolume(args[0], args[1])
+		attachment, err := client.NovaV2().Server().AddVolume(args[0], args[1])
 		utility.LogError(err, "Attach volume to server failed", true)
 		printVolumeAttachments([]nova.VolumeAttachment{*attachment})
 	},
@@ -57,7 +57,7 @@ var volumeDetach = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		err := client.NovaV2().Servers().DeleteVolume(args[0], args[1])
+		err := client.NovaV2().Server().DeleteVolume(args[0], args[1])
 		utility.LogError(err, "Detach volume from server failed", true)
 	},
 }

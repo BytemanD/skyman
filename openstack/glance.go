@@ -3,10 +3,10 @@ package openstack
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/BytemanD/easygo/pkg/compare"
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -14,6 +14,8 @@ import (
 	"github.com/BytemanD/skyman/openstack/model/glance"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/BytemanD/skyman/utility/httpclient"
+	"github.com/cheggaaa/pb/v3"
+	"github.com/go-resty/resty/v2"
 )
 
 type Glance struct {
@@ -40,11 +42,11 @@ func (c Glance) GetCurrentVersion() (*model.ApiVersion, error) {
 	if err != nil {
 		return nil, err
 	}
-	apiVersions := struct{ Versions []model.ApiVersion }{}
-	if err := resp.BodyUnmarshal(&apiVersions); err != nil {
+	body := struct{ Versions []model.ApiVersion }{}
+	if err := json.Unmarshal(resp.Body(), &body); err != nil {
 		return nil, err
 	}
-	for _, version := range apiVersions.Versions {
+	for _, version := range body.Versions {
 		if version.Status == "CURRENT" {
 			return &version, nil
 		}
@@ -67,7 +69,7 @@ func (c ImageApi) List(query url.Values, total int) ([]glance.Image, error) {
 			return nil, err
 		}
 		respBbody := glance.ImagesResp{}
-		resp.BodyUnmarshal(&respBbody)
+		json.Unmarshal(resp.Body(), &respBbody)
 		if len(respBbody.Images) == 0 {
 			break
 		}
@@ -102,11 +104,11 @@ func (c ImageApi) Show(id string) (*glance.Image, error) {
 		return nil, err
 	}
 
-	image := glance.Image{}
-	if err := resp.BodyUnmarshal(&image); err != nil {
+	body := glance.Image{}
+	if err := json.Unmarshal(resp.Body(), &body); err != nil {
 		return nil, err
 	}
-	return &image, nil
+	return &body, nil
 }
 func (c ImageApi) FoundByName(name string) (*glance.Image, error) {
 	query := url.Values{}
@@ -149,9 +151,9 @@ func (c ImageApi) Create(options glance.Image) (*glance.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	image := glance.Image{}
-	resp.BodyUnmarshal(&image)
-	return &image, nil
+	body := glance.Image{}
+	json.Unmarshal(resp.Body(), &body)
+	return &body, nil
 }
 func (c ImageApi) Delete(id string) error {
 	_, err := c.Glance.Delete(utility.UrlJoin("images", id), nil)
@@ -166,21 +168,23 @@ func (c ImageApi) Set(id string, params map[string]interface{}) (*glance.Image, 
 			Op:    "replace",
 		})
 	}
-	body, _ := json.Marshal(attributies)
-
 	headers := map[string]string{
 		"Content-Type": "application/openstack-images-v2.1-json-patch",
 	}
-	resp, err := c.Glance.Patch(utility.UrlJoin("images", id), nil, body, headers)
+	resp, err := c.Glance.Patch(utility.UrlJoin("images", id), nil, attributies, headers)
 	if err != nil {
 		return nil, err
 	}
-	image := glance.Image{}
-	resp.BodyUnmarshal(&image)
+	body := glance.Image{}
+	if err := json.Unmarshal(resp.Body(), &body); err != nil {
+		return nil, err
+	}
 	rawBody := map[string]interface{}{}
-	resp.BodyUnmarshal(&rawBody)
-	image.SetRaw(rawBody)
-	return &image, nil
+	if err := json.Unmarshal(resp.Body(), &rawBody); err != nil {
+		return nil, err
+	}
+	body.SetRaw(rawBody)
+	return &body, nil
 }
 func (c ImageApi) Upload(id string, file string) error {
 	fileReader, err := os.Open(file)
@@ -192,29 +196,59 @@ func (c ImageApi) Upload(id string, file string) error {
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequest(http.MethodPut, c.makeUrl(utility.UrlJoin("images", id, "file")),
-		utility.NewProcessReader(fileReader, int(fileStat.Size())))
-	req.Header.Set("Content-Type", "application/octet-stream")
-	if err != nil {
-		return err
-	}
+	utility.NewProcessReader(fileReader, int(fileStat.Size()))
+	req := c.session.GetRequest(resty.MethodPut, c.makeUrl(utility.UrlJoin("images", id, "file")))
+	req.SetHeader(httpclient.CONTENT_TYPE, httpclient.CONTENT_TYPE_STREAM)
+	// req.SetFile()
+
+	utility.NewProcessReader(fileReader, int(fileStat.Size()))
+
 	_, err = c.session.Request(req)
 	return err
 }
 
 func (c ImageApi) Download(id string, fileName string, process bool) error {
-	req, err := http.NewRequest(http.MethodGet, c.makeUrl(utility.UrlJoin("images", id, "file")), nil)
+	image, err := c.Show(id)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/octet-stream")
-	resp, err := c.session.Request(req)
-	if err != nil {
-		return err
+	req := c.session.GetRequest(resty.MethodGet, c.makeUrl(utility.UrlJoin("images", id, "file"))).
+		SetHeader(httpclient.CONTENT_TYPE, "application/octet-stream").
+		SetOutput(fileName)
+
+	if utility.IsFileExists(fileName) {
+		if err := os.Remove(fileName); err != nil {
+			return err
+		}
 	}
-	file, err := os.Create(fileName)
-	if err != nil {
-		return err
+
+	done := make(chan bool)
+	defer close(done)
+
+	go func() {
+		_, err = c.session.Request(req)
+		done <- true
+	}()
+
+	bar := pb.StartNew(int(image.Size))
+	currentSize := int64(0)
+	for {
+		if !utility.IsFileExists(fileName) {
+			time.Sleep(time.Second * 2)
+			continue
+		}
+		stat, err := os.Stat(fileName)
+		if err != nil {
+			break
+		}
+		bar.Add(int(stat.Size() - currentSize))
+		if bar.Current() == bar.Total() {
+			break
+		}
+		currentSize = stat.Size()
+		time.Sleep(time.Second * 2)
 	}
-	return utility.SaveBody(resp, file, process)
+	bar.Finish()
+	<-done
+	return err
 }

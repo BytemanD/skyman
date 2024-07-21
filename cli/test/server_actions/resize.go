@@ -42,7 +42,7 @@ func (t ServerResize) Start() error {
 
 	logging.Info("[%s] resize %s -> %s", t.Server.Id, t.Server.Flavor.OriginalName, nextFlavor.Name)
 
-	err = t.Client.NovaV2().Servers().Resize(t.Server.Id, nextFlavor.Id)
+	err = t.Client.NovaV2().Server().Resize(t.Server.Id, nextFlavor.Id)
 	if err != nil {
 		return err
 	}

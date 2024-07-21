@@ -15,7 +15,7 @@ type ServerChecker struct {
 }
 
 func (c ServerChecker) MakesureServerRunning() error {
-	server, err := c.Client.NovaV2().Servers().Show(c.ServerId)
+	server, err := c.Client.NovaV2().Server().Show(c.ServerId)
 	if err != nil {
 		return fmt.Errorf("get server failed: %s", err)
 	}
@@ -26,7 +26,7 @@ func (c ServerChecker) MakesureServerRunning() error {
 }
 
 func (c ServerChecker) MakesureInterfaceExist(attachment *nova.InterfaceAttachment) error {
-	interfaces, err := c.Client.NovaV2().Servers().ListInterfaces(c.ServerId)
+	interfaces, err := c.Client.NovaV2().Server().ListInterfaces(c.ServerId)
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (c ServerChecker) MakesureInterfaceExist(attachment *nova.InterfaceAttachme
 	return fmt.Errorf("server has no interface: %s", attachment.PortId)
 }
 func (c ServerChecker) MakesureInterfaceNotExists(port *neutron.Port) error {
-	interfaces, err := c.Client.NovaV2().Servers().ListInterfaces(c.ServerId)
+	interfaces, err := c.Client.NovaV2().Server().ListInterfaces(c.ServerId)
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func (c ServerChecker) MakesureInterfaceNotExists(port *neutron.Port) error {
 }
 
 func (c ServerChecker) MakesureVolumeExist(attachment *nova.VolumeAttachment) error {
-	volumes, err := c.Client.NovaV2().Servers().ListVolumes(c.ServerId)
+	volumes, err := c.Client.NovaV2().Server().ListVolumes(c.ServerId)
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func (c ServerChecker) MakesureVolumeExist(attachment *nova.VolumeAttachment) er
 	return fmt.Errorf("server has not volume: %s", attachment.VolumeId)
 }
 func (c ServerChecker) MakesureVolumeNotExists(attachment *nova.VolumeAttachment) error {
-	volumes, err := c.Client.NovaV2().Servers().ListVolumes(c.ServerId)
+	volumes, err := c.Client.NovaV2().Server().ListVolumes(c.ServerId)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (c ServerChecker) MakesureVolumeNotExists(attachment *nova.VolumeAttachment
 }
 
 func (c ServerChecker) MakesureVolumeSizeIs(attachment *nova.VolumeAttachment, size uint) error {
-	volume, err := c.Client.CinderV2().Volumes().Show(attachment.VolumeId)
+	volume, err := c.Client.CinderV2().Volume().Show(attachment.VolumeId)
 	if err != nil {
 		return err
 	}

@@ -28,7 +28,7 @@ func getImage(client *openstack.Openstack, resource BaseResource) (*glance.Image
 }
 func createFlavor(client *openstack.Openstack, flavor Flavor) {
 	computeClient := client.NovaV2()
-	f, _ := computeClient.Flavors().Show(flavor.Id)
+	f, _ := computeClient.Flavor().Show(flavor.Id)
 	if f != nil {
 		logging.Warning("network %s exists", flavor.Id)
 		return
@@ -40,17 +40,17 @@ func createFlavor(client *openstack.Openstack, flavor Flavor) {
 		Ram:   flavor.Ram,
 	}
 	logging.Info("creating flavor %s", newFlavor.Id)
-	f, err := computeClient.Flavors().Create(newFlavor)
+	f, err := computeClient.Flavor().Create(newFlavor)
 	utility.LogError(err, "create flavor failed", true)
 	if flavor.ExtraSpecs != nil {
 		logging.Info("creating flavor extra specs")
-		_, err = computeClient.Flavors().SetExtraSpecs(f.Id, flavor.ExtraSpecs)
+		_, err = computeClient.Flavor().SetExtraSpecs(f.Id, flavor.ExtraSpecs)
 		utility.LogError(err, "create flavor extra specs failed", true)
 	}
 }
 func createNetwork(client *openstack.Openstack, network Network) {
 	networkClient := client.NeutronV2()
-	_, err := networkClient.Networks().Found(network.Name)
+	_, err := networkClient.Network().Found(network.Name)
 	if err == nil {
 		logging.Warning("network %s exists", network.Name)
 		return
@@ -59,7 +59,7 @@ func createNetwork(client *openstack.Openstack, network Network) {
 		"name": network.Name,
 	}
 	logging.Info("creating network %s", network.Name)
-	net, err := networkClient.Networks().Create(netParams)
+	net, err := networkClient.Network().Create(netParams)
 	utility.LogError(err, fmt.Sprintf("create network %s failed", network.Name), true)
 	for _, subnet := range network.Subnets {
 		if subnet.IpVersion == 0 {
@@ -72,7 +72,7 @@ func createNetwork(client *openstack.Openstack, network Network) {
 			"ip_version": subnet.IpVersion,
 		}
 		logging.Info("creating subnet %s (cidr: %s)", subnet.Name, subnet.Cidr)
-		_, err2 := networkClient.Subnets().Create(subnetParams)
+		_, err2 := networkClient.Subnet().Create(subnetParams)
 		utility.LogError(err2, fmt.Sprintf("create subnet %s failed", subnet.Name), true)
 	}
 }
@@ -81,7 +81,7 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 	computeClient := client.NovaV2()
 	networkClient := client.NeutronV2()
 
-	s, _ := client.NovaV2().Servers().Found(server.Name)
+	s, _ := client.NovaV2().Server().Found(server.Name)
 	if s != nil {
 		logging.Warning("server %s exists (%s)", s.Name, s.Status)
 		return s, nil
@@ -108,10 +108,10 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 
 	if server.Flavor.Id != "" {
 		logging.Info("find flavor %s", server.Flavor.Id)
-		flavor, err = client.NovaV2().Flavors().Show(server.Flavor.Id)
+		flavor, err = client.NovaV2().Flavor().Show(server.Flavor.Id)
 	} else if server.Flavor.Name != "" {
 		logging.Info("find flavor %s", server.Flavor.Name)
-		flavor, err = client.NovaV2().Flavors().Found(server.Flavor.Name)
+		flavor, err = client.NovaV2().Flavor().Found(server.Flavor.Name)
 	}
 	utility.LogError(err, "get flavor failed", true)
 	serverOption.Flavor = flavor.Id
@@ -146,21 +146,21 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 			} else if nic.Port != "" {
 				networks = append(networks, nova.ServerOptNetwork{Port: nic.Port})
 			} else if nic.Name != "" {
-				network, err := networkClient.Networks().Found(nic.Name)
+				network, err := networkClient.Network().Found(nic.Name)
 				utility.LogError(err, "found network failed", true)
 				networks = append(networks, nova.ServerOptNetwork{UUID: network.Id})
 			}
 		}
-		serverOption.Networks = networks
+		serverOption.Networks = server.Networks
 	}
 	if server.UserData != "" {
 		serverOption.UserData = utility.EncodedUserdata(server.UserData)
 	}
-	s, err = computeClient.Servers().Create(serverOption)
+	s, err = computeClient.Server().Create(serverOption)
 	utility.LogError(err, "create server failed", true)
 	logging.Info("creating server %s", serverOption.Name)
 	if watch {
-		computeClient.Servers().WaitStatus(s.Id, "ACTIVE", 2)
+		computeClient.Server().WaitStatus(s.Id, "ACTIVE", 2)
 	}
 	return s, nil
 }

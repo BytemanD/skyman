@@ -16,10 +16,16 @@ hypervisor list
 aggregate list
 az list
 az list --tree
+migration list
 
 router list
 network list
 port list
+network agent list
+sg list
+security group list
+sg rule list
+security group rule list
 EOF
 
 while read line

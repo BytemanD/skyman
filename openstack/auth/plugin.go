@@ -1,6 +1,10 @@
 package auth
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/go-resty/resty/v2"
+)
 
 type AuthPlugin interface {
 	GetToken() (*Token, error)
@@ -8,7 +12,7 @@ type AuthPlugin interface {
 	SetLocalTokenExpire(expire int)
 	GetServiceEndpoint(sType string, sName string, sInterface string) (string, error)
 	TokenIssue() error
-	AuthRequest(req *http.Request) error
 	Region() string
+	AuthRequest(req *resty.Request) error
 	GetSafeHeader(header http.Header) http.Header
 }

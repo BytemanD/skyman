@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/BytemanD/skyman/utility/httpclient"
+	"github.com/go-resty/resty/v2"
 )
 
 const (
@@ -81,14 +82,16 @@ func (client PasswordAuthPlugin) getAuthReqBody() map[string]Auth {
 
 func (plugin *PasswordAuthPlugin) TokenIssue() error {
 	body := plugin.getAuthReqBody()
-	var respToken RespToken
 	resp, err := plugin.session.Post(
 		fmt.Sprintf("%s%s", plugin.AuthUrl, URL_AUTH_TOKEN), body, nil,
 	)
 	if err != nil {
 		return fmt.Errorf("token issue failed, %v", err)
 	}
-	json.Unmarshal(resp.Body(), &respToken)
+	var respToken RespToken
+	if err := json.Unmarshal(resp.Body(), &respToken); err != nil {
+		return err
+	}
 	plugin.tokenCache = TokenCache{
 		token:     respToken.Token,
 		TokenId:   resp.Header().Get("X-Subject-Token"),
@@ -113,14 +116,12 @@ func (plugin *PasswordAuthPlugin) GetServiceEndpoint(
 		serviceType, serviceName, serviceInterface,
 		plugin.RegionName)
 }
-func (plugin *PasswordAuthPlugin) SetHttpTimeout(timeout int) *PasswordAuthPlugin {
+func (plugin PasswordAuthPlugin) SetHttpTimeout(timeout int) *PasswordAuthPlugin {
 	plugin.session.Timeout = time.Second * time.Duration(timeout)
-	fmt.Println(timeout)
-	fmt.Println(plugin.session.Timeout)
-	return plugin
+	return &plugin
 }
 
-func (plugin *PasswordAuthPlugin) AuthRequest(req *http.Request) error {
+func (plugin PasswordAuthPlugin) AuthRequest(req *resty.Request) error {
 	tokenId, err := plugin.GetTokenId()
 	if err != nil {
 		return err
@@ -128,9 +129,9 @@ func (plugin *PasswordAuthPlugin) AuthRequest(req *http.Request) error {
 	req.Header.Set("X-Auth-Token", tokenId)
 	return nil
 }
-func (plugin *PasswordAuthPlugin) GetSafeHeader(headers http.Header) http.Header {
+func (plugin PasswordAuthPlugin) GetSafeHeader(header http.Header) http.Header {
 	safeHeaders := http.Header{}
-	for k, v := range headers {
+	for k, v := range header {
 		if k == "X-Auth-Token" {
 			safeHeaders[k] = []string{"<TOKEN>"}
 		} else {
@@ -140,8 +141,8 @@ func (plugin *PasswordAuthPlugin) GetSafeHeader(headers http.Header) http.Header
 	return safeHeaders
 }
 
-func NewPasswordAuth(authUrl string, user User, project Project, regionName string) PasswordAuthPlugin {
-	return PasswordAuthPlugin{
+func NewPasswordAuth(authUrl string, user User, project Project, regionName string) *PasswordAuthPlugin {
+	return &PasswordAuthPlugin{
 		session:           httpclient.New(),
 		AuthUrl:           authUrl,
 		Username:          user.Name,

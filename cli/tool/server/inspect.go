@@ -169,7 +169,7 @@ func (serverInspect *ServerInspect) Print() {
 }
 
 func inspect(client *openstack.Openstack, serverId string) (*ServerInspect, error) {
-	server, err := client.NovaV2().Servers().Show(serverId)
+	server, err := client.NovaV2().Server().Show(serverId)
 	if err != nil {
 		return nil, err
 	}
@@ -179,17 +179,17 @@ func inspect(client *openstack.Openstack, serverId string) (*ServerInspect, erro
 		return nil, err
 	}
 	server.Image.Name = image.Name
-	interfaceAttachmetns, err := client.NovaV2().Servers().ListInterfaces(serverId)
+	interfaceAttachmetns, err := client.NovaV2().Server().ListInterfaces(serverId)
 	if err != nil {
 		return nil, err
 	}
 	logging.Info("list server volumes")
-	volumeAttachments, err := client.NovaV2().Servers().ListVolumes(serverId)
+	volumeAttachments, err := client.NovaV2().Server().ListVolumes(serverId)
 	if err != nil {
 		return nil, err
 	}
 	logging.Info("list server ations")
-	actions, err := client.NovaV2().Servers().ListActions(serverId)
+	actions, err := client.NovaV2().Server().ListActions(serverId)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +205,7 @@ func inspect(client *openstack.Openstack, serverId string) (*ServerInspect, erro
 	portQuery := url.Values{}
 	portQuery.Set("device_id", server.Id)
 	logging.Info("list server ports details")
-	ports, err := client.NeutronV2().Ports().List(portQuery)
+	ports, err := client.NeutronV2().Port().List(portQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +214,7 @@ func inspect(client *openstack.Openstack, serverId string) (*ServerInspect, erro
 	}
 
 	for _, volume := range serverInspect.Volumes {
-		vol, err := client.CinderV2().Volumes().Show(volume.VolumeId)
+		vol, err := client.CinderV2().Volume().Show(volume.VolumeId)
 		utility.LogError(err, "get volume failed", true)
 		serverInspect.VolumeDetail[volume.VolumeId] = *vol
 	}

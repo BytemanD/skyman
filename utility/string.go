@@ -1,6 +1,7 @@
 package utility
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"os"
@@ -50,13 +51,28 @@ func LogError(err error, message string, exit bool) {
 		os.Exit(1)
 	}
 }
-
-func VersionUrl(endpoint, version string) string {
-	parsedUrl, _ := url.Parse(endpoint)
-	if !strings.HasPrefix(parsedUrl.Path, fmt.Sprintf("/%s", version)) {
-		return UrlJoin(endpoint, version)
+func LogIfError(err error, exit bool, format string, args ...string) {
+	if err == nil {
+		return
 	}
-	return endpoint
+	if compare.IsType[httpclient.HttpError](err) {
+		httpError, _ := err.(httpclient.HttpError)
+		logging.Error(fmt.Sprintf(format, args)+": [%s] %s", httpError.Reason, httpError.Message)
+	} else {
+		logging.Error(fmt.Sprintf(format, args)+": %v", err)
+	}
+	if exit {
+		os.Exit(1)
+	}
+}
+func VersionUrl(endpoint, version string) string {
+	u, _ := url.Parse(endpoint)
+	u.Path = strings.TrimSuffix(u.Path, "/")
+	if !strings.HasPrefix(u.Path, fmt.Sprintf("/%s", version)) {
+		u.Path = fmt.Sprintf("/%s", version)
+	}
+	result, _ := url.JoinPath(fmt.Sprintf("%s://%s", u.Scheme, u.Host), u.Path)
+	return result
 }
 
 func GreenString(s string) string {
@@ -73,7 +89,7 @@ func RedString(s string) string {
 func HumanBytes(value int) string {
 	switch {
 	case value >= TB:
-		return fmt.Sprintf("%.2d TB", float32(value)/TB)
+		return fmt.Sprintf("%.2f TB", float32(value)/TB)
 	case value >= GB:
 		return fmt.Sprintf("%.2f GB", float32(value)/GB)
 	case value >= MB:
@@ -88,4 +104,16 @@ func HumanBytes(value int) string {
 func MatchPingResult(text string) []string {
 	reg := regexp.MustCompile(`(\d+) packets transmitted, (\d+) received,[^\n]+`)
 	return reg.FindStringSubmatch(text)
+}
+
+func UnmarshalJsonKey(bytes []byte, key string, v any) error {
+	tmp := map[string]interface{}{}
+	if err := json.Unmarshal(bytes, &tmp); err != nil {
+		return err
+	}
+	if tmpBytes, err := json.Marshal(tmp[key]); err != nil {
+		return err
+	} else {
+		return json.Unmarshal(tmpBytes, &v)
+	}
 }

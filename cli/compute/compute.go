@@ -35,7 +35,7 @@ var csList = &cobra.Command{
 			query.Set("host", host)
 		}
 
-		services, _ := client.NovaV2().Services().List(query)
+		services, _ := client.NovaV2().Service().List(query)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Binary"},
@@ -63,11 +63,8 @@ var csEnable = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		service, err := client.NovaV2().Services().Enable(args[0], args[1])
-		if err != nil {
-			fmt.Printf("Set service diabled failed: %v", err)
-			os.Exit(1)
-		}
+		service, err := client.NovaV2().Service().Enable(args[0], args[1])
+		utility.LogError(err, "set service disable failed", true)
 		views.PrintServiceTable(*service)
 	},
 }
@@ -78,9 +75,9 @@ var csDisable = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 		reason, _ := cmd.Flags().GetString("reason")
-		service, err := client.NovaV2().Services().Disable(args[0], args[1], reason)
+		service, err := client.NovaV2().Service().Disable(args[0], args[1], reason)
 		if err != nil {
-			fmt.Printf("Set service diabled failed: %v", err)
+			utility.LogError(err, "set service disable failed", true)
 			os.Exit(1)
 		}
 		views.PrintServiceTable(*service)
@@ -92,9 +89,9 @@ var csUp = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		service, err := client.NovaV2().Services().Up(args[0], args[1])
+		service, err := client.NovaV2().Service().Up(args[0], args[1])
 		if err != nil {
-			fmt.Printf("Set service diabled failed: %v", err)
+			utility.LogError(err, "set service up failed", true)
 			os.Exit(1)
 		}
 		views.PrintServiceTable(*service)
@@ -106,9 +103,9 @@ var csDown = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		service, err := client.NovaV2().Services().Down(args[0], args[1])
+		service, err := client.NovaV2().Service().Down(args[0], args[1])
 		if err != nil {
-			fmt.Printf("Set service diabled failed: %v", err)
+			fmt.Printf("Set service down failed: %v", err)
 			os.Exit(1)
 		}
 		views.PrintServiceTable(*service)
@@ -120,7 +117,7 @@ var csDelete = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		err := client.NovaV2().Services().Delete(args[0], args[1])
+		err := client.NovaV2().Service().Delete(args[0], args[1])
 		utility.LogError(err, "Delete service failed, %v", true)
 	},
 }

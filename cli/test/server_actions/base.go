@@ -32,7 +32,7 @@ func (t ServerActionTest) ServerId() string {
 }
 
 func (t *ServerActionTest) RefreshServer() error {
-	server, err := t.Client.NovaV2().Servers().Show(t.Server.Id)
+	server, err := t.Client.NovaV2().Server().Show(t.Server.Id)
 	if err != nil {
 		return nil
 	}
@@ -79,7 +79,7 @@ func (t *ServerActionTest) nextNetwork() (string, error) {
 	return common.CONF.Test.Networks[t.networkIndex], nil
 }
 func (t *ServerActionTest) lastVolume() (*nova.VolumeAttachment, error) {
-	volumes, err := t.Client.NovaV2().Servers().ListVolumes(t.Server.Id)
+	volumes, err := t.Client.NovaV2().Server().ListVolumes(t.Server.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (t *ServerActionTest) lastVolume() (*nova.VolumeAttachment, error) {
 }
 
 func (t *ServerActionTest) ServerMustHasNotInterface(portId string) error {
-	interfaces, err := t.Client.NovaV2().Servers().ListInterfaces(t.Server.Id)
+	interfaces, err := t.Client.NovaV2().Server().ListInterfaces(t.Server.Id)
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func (t *ServerActionTest) ServerMustHasNotInterface(portId string) error {
 }
 
 func (t *ServerActionTest) ServerMustHasNotVolume(volumeId string) error {
-	volumes, err := t.Client.NovaV2().Servers().ListVolumes(t.Server.Id)
+	volumes, err := t.Client.NovaV2().Server().ListVolumes(t.Server.Id)
 	if err != nil {
 		return err
 	}
@@ -128,12 +128,12 @@ func (t ServerActionTest) CreateBlankVolume() (*cinder.Volume, error) {
 	if common.CONF.Test.VolumeType != "" {
 		options["volume_type"] = common.CONF.Test.VolumeType
 	}
-	volume, err := t.Client.CinderV2().Volumes().Create(options)
+	volume, err := t.Client.CinderV2().Volume().Create(options)
 	if err != nil {
 		return nil, err
 	}
 	for i := 0; i <= 60; i++ {
-		volume, err = t.Client.CinderV2().Volumes().Show(volume.Id)
+		volume, err = t.Client.CinderV2().Volume().Show(volume.Id)
 		if err != nil {
 			return nil, err
 		}

@@ -32,7 +32,7 @@ var serviceList = &cobra.Command{
 			query.Add("type", serviceType)
 		}
 		c := openstack.DefaultClient().KeystoneV3()
-		services, err := c.Services().List(query)
+		services, err := c.Service().List(query)
 		utility.LogError(err, "list services failed", true)
 
 		pt := common.PrettyTable{
@@ -90,7 +90,7 @@ var serviceDelete = &cobra.Command{
 
 		for _, id := range args {
 			logging.Info("request to delete service %s", id)
-			err := c.Services().Delete(id)
+			err := c.Service().Delete(id)
 			utility.LogError(err, fmt.Sprintf("delete service %s failed", id), false)
 		}
 	},

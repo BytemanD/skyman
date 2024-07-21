@@ -30,7 +30,7 @@ var routerList = &cobra.Command{
 		if name != "" {
 			query.Set("name", name)
 		}
-		routers, err := c.Routers().List(query)
+		routers, err := c.Router().List(query)
 		utility.LogError(err, "list ports failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
@@ -54,7 +54,7 @@ var routerShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().NeutronV2()
-		router, err := c.Routers().Show(args[0])
+		router, err := c.Router().Show(args[0])
 		if err != nil {
 			utility.LogError(err, "show router failed", true)
 		}
@@ -86,7 +86,7 @@ var routerDelete = &cobra.Command{
 		c := openstack.DefaultClient().NeutronV2()
 		for _, router := range args {
 			fmt.Printf("Reqeust to delete router %s\n", router)
-			err := c.Routers().Delete(router)
+			err := c.Router().Delete(router)
 			if err != nil {
 				logging.Error("Delete router %s failed, %s", router, err)
 			}
@@ -111,7 +111,7 @@ var routerCreate = &cobra.Command{
 		if description != "" {
 			params["description"] = description
 		}
-		router, err := c.Routers().Create(params)
+		router, err := c.Router().Create(params)
 		utility.LogError(err, "create router failed", true)
 		cli.PrintRouter(*router)
 	},

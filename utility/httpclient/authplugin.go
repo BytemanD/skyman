@@ -11,15 +11,15 @@ type AuthPluginInterface interface {
 	GetSafeHeader(header http.Header) http.Header
 }
 
-type BasicHttpAuth struct {
+type BasicAuthPlugin struct {
 	UserName string
 	Password string
 }
 
-func (a BasicHttpAuth) AuthRequest(req *resty.Request) error {
+func (a BasicAuthPlugin) AuthRequest(req *resty.Request) error {
 	req.SetBasicAuth(a.UserName, a.Password)
 	return nil
 }
-func (a BasicHttpAuth) GetSafeHeader(header http.Header) http.Header {
+func (a BasicAuthPlugin) GetSafeHeader(header http.Header) http.Header {
 	return header
 }

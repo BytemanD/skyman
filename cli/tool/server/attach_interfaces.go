@@ -29,7 +29,7 @@ var attachInterfaces = &cobra.Command{
 
 		client := openstack.DefaultClient()
 		neutronClient := client.NeutronV2()
-		server, err := client.NovaV2().Servers().Show(serverId)
+		server, err := client.NovaV2().Server().Show(serverId)
 		utility.LogError(err, "show server failed:", true)
 
 		netStrRing := utility.StringRing{Items: args[1:]}
@@ -47,7 +47,7 @@ var attachInterfaces = &cobra.Command{
 					p := item.(int)
 					name := fmt.Sprintf("skyman-port-%d", p)
 					logging.Debug("creating port %s", name)
-					port, err := neutronClient.Ports().Create(
+					port, err := neutronClient.Port().Create(
 						map[string]interface{}{"name": name, "network_id": nets[p]})
 					if err != nil {
 						logging.Error("create port failed: %v", err)
@@ -77,20 +77,20 @@ var attachInterfaces = &cobra.Command{
 			ShowProgress: true,
 			Func: func(item interface{}) error {
 				p := item.(Interface)
-				attachment, err := client.NovaV2().Servers().AddInterface(server.Id, p.NetId, p.PortId)
+				attachment, err := client.NovaV2().Server().AddInterface(server.Id, p.NetId, p.PortId)
 				if err != nil {
 					logging.Error("[interface: %s] attach failed: %v", p, err)
 					return err
 				}
 				logging.Debug("[interface: %s] attaching", attachment.PortId)
 
-				interfaces, err := client.NovaV2().Servers().ListInterfaces(server.Id)
+				interfaces, err := client.NovaV2().Server().ListInterfaces(server.Id)
 				if err != nil {
 					utility.LogError(err, "list server interfaces failed:", false)
 					return err
 				}
 				for {
-					port, err := client.NeutronV2().Ports().Show(attachment.PortId)
+					port, err := client.NeutronV2().Port().Show(attachment.PortId)
 					if port != nil {
 						logging.Info("[interface: %s] vif type is %s", port.Id, port.BindingVifType)
 						if err == nil && !port.IsUnbound() {

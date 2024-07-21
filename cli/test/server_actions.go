@@ -74,16 +74,16 @@ func getServerBootOption(testId int) nova.ServerOpt {
 }
 func createDefaultServer(client *openstack.Openstack, testId int) (*nova.Server, error) {
 	bootOption := getServerBootOption(testId)
-	return client.NovaV2().Servers().Create(bootOption)
+	return client.NovaV2().Server().Create(bootOption)
 }
 func waitServerCreated(client *openstack.Openstack, server *nova.Server) error {
 	var err error
-	server, err = client.NovaV2().Servers().Show(server.Id)
+	server, err = client.NovaV2().Server().Show(server.Id)
 	if err != nil {
 		return err
 	}
 	logging.Info("[%s] creating with name %s", server.Id, server.Resource.Name)
-	server, err = client.NovaV2().Servers().WaitBooted(server.Id)
+	server, err = client.NovaV2().Server().WaitBooted(server.Id)
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func waitServerCreated(client *openstack.Openstack, server *nova.Server) error {
 func preTest(client *openstack.Openstack) {
 	logging.Info("check flavors ...")
 	for _, flavorId := range common.CONF.Test.Flavors {
-		flavor, err := client.NovaV2().Flavors().Found(flavorId)
+		flavor, err := client.NovaV2().Flavor().Found(flavorId)
 		utility.LogError(err, fmt.Sprintf("get flavor %s failed", flavorId), true)
 		server_actions.TEST_FLAVORS = append(server_actions.TEST_FLAVORS, *flavor)
 	}
@@ -105,7 +105,7 @@ func preTest(client *openstack.Openstack) {
 	}
 	logging.Info("check networks ...")
 	for _, idOrName := range common.CONF.Test.Networks {
-		_, err := client.NeutronV2().Networks().Show(idOrName)
+		_, err := client.NeutronV2().Network().Show(idOrName)
 		utility.LogError(err, fmt.Sprintf("get network %s failed", idOrName), true)
 	}
 }
@@ -122,7 +122,7 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		Total: len(serverActions),
 	}
 	if serverId != "" {
-		server, err = client.NovaV2().Servers().Found(serverId)
+		server, err = client.NovaV2().Server().Found(serverId)
 		if err != nil {
 			return fmt.Errorf("get server failed: %s", err)
 		}
@@ -146,7 +146,7 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		task.ServerId = server.Id
 		server_actions.TestTasks = append(server_actions.TestTasks, &task)
 		waitServerCreated(client, server)
-		server, err = client.NovaV2().Servers().Show(server.Id)
+		server, err = client.NovaV2().Server().Show(server.Id)
 		if err != nil {
 			task.Failed(fmt.Sprintf("server is not created: %s", err))
 			return task.GetError()
@@ -155,8 +155,8 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 			if !testFailed || common.CONF.Test.DeleteIfError {
 				task.SetStage("deleting")
 				logging.Info("[%s] deleting server", server.Id)
-				client.NovaV2().Servers().Delete(server.Id)
-				client.NovaV2().Servers().WaitDeleted(server.Id)
+				client.NovaV2().Server().Delete(server.Id)
+				client.NovaV2().Server().WaitDeleted(server.Id)
 			}
 			task.SetStage("")
 		}()

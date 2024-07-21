@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var attachVolumes = &cobra.Command{
+var attachVolume = &cobra.Command{
 	Use:   "add-volumes <server>",
 	Short: "Add volumes to server",
 	Args:  cobra.ExactArgs(1),
@@ -28,7 +28,7 @@ var attachVolumes = &cobra.Command{
 
 		client := openstack.DefaultClient()
 		cinderClient := client.CinderV2()
-		server, err := client.NovaV2().Servers().Show(serverId)
+		server, err := client.NovaV2().Server().Show(serverId)
 		utility.LogError(err, "show server failed:", true)
 
 		volumes := []Volume{}
@@ -48,7 +48,7 @@ var attachVolumes = &cobra.Command{
 					createOption["volume_type"] = volumeType
 				}
 				logging.Debug("creating volume %s", name)
-				volume, err := cinderClient.Volumes().CreateAndWait(createOption, 600)
+				volume, err := cinderClient.Volume().CreateAndWait(createOption, 600)
 				if err != nil {
 					logging.Error("create volume failed: %v", err)
 					return err
@@ -73,7 +73,7 @@ var attachVolumes = &cobra.Command{
 			Func: func(item interface{}) error {
 				p := item.(Volume)
 				logging.Debug("[volume: %s] attaching", p)
-				attachment, err := client.NovaV2().Servers().AddVolume(server.Id, p.Id)
+				attachment, err := client.NovaV2().Server().AddVolume(server.Id, p.Id)
 				if err != nil {
 					logging.Error("[volume: %s] attach failed: %v", p, err)
 					return err
@@ -83,16 +83,16 @@ var attachVolumes = &cobra.Command{
 				}
 				startTime := time.Now()
 				for {
-					attachedVolumes, err := client.NovaV2().Servers().ListVolumes(server.Id)
+					attachedVolume, err := client.NovaV2().Server().ListVolumes(server.Id)
 					if err != nil {
 						utility.LogError(err, "list server volumes failed:", false)
 						return err
 					}
-					for _, vol := range attachedVolumes {
+					for _, vol := range attachedVolume {
 						if vol.VolumeId != p.Id {
 							continue
 						}
-						v, err := client.CinderV2().Volumes().Show(vol.VolumeId)
+						v, err := client.CinderV2().Volume().Show(vol.VolumeId)
 						logging.Info("[volume: %s] status is %s", vol.Id, v.Status)
 						if err == nil && v.IsInuse() {
 							logging.Info("[volume: %s] attach success", p.Id)
@@ -115,10 +115,10 @@ var attachVolumes = &cobra.Command{
 }
 
 func init() {
-	attachVolumes.Flags().Int("nums", 1, "nums of interfaces")
-	attachVolumes.Flags().Int("parallel", runtime.NumCPU(), "nums of parallel")
-	attachVolumes.Flags().Int("size", 10, "size of volume")
-	attachVolumes.Flags().String("type", "", "attach volume with specified type")
+	attachVolume.Flags().Int("nums", 1, "nums of interfaces")
+	attachVolume.Flags().Int("parallel", runtime.NumCPU(), "nums of parallel")
+	attachVolume.Flags().Int("size", 10, "size of volume")
+	attachVolume.Flags().String("type", "", "attach volume with specified type")
 
-	ServerCommand.AddCommand(attachVolumes)
+	ServerCommand.AddCommand(attachVolume)
 }

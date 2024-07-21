@@ -31,7 +31,7 @@ var networkList = &cobra.Command{
 		if name != "" {
 			query.Set("name", name)
 		}
-		networks, err := c.Networks().List(query)
+		networks, err := c.Network().List(query)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -70,7 +70,7 @@ var networkDelete = &cobra.Command{
 
 		for _, net := range args {
 			fmt.Printf("Reqeust to delete network %s\n", net)
-			err := c.Networks().Delete(net)
+			err := c.Network().Delete(net)
 			if err != nil {
 				logging.Error("Delete network %s failed, %s", net, err)
 			}
@@ -84,7 +84,7 @@ var networkShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().NeutronV2()
 
-		network, err := c.Networks().Found(args[0])
+		network, err := c.Network().Found(args[0])
 		utility.LogError(err, "show network failed", true)
 		table := common.PrettyItemTable{
 			Item: *network,
@@ -122,7 +122,7 @@ var networkCreate = &cobra.Command{
 		if description != "" {
 			params["description"] = description
 		}
-		network, err := c.Networks().Create(params)
+		network, err := c.Network().Create(params)
 		utility.LogError(err, "create network failed", true)
 		cli.PrintNetwork(*network)
 	},

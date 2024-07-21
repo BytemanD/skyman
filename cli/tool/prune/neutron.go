@@ -25,7 +25,7 @@ var portPrune = &cobra.Command{
 			query.Set("network_id", network)
 		}
 		logging.Info("list ports ...")
-		ports, err := c.NeutronV2().Ports().List(query)
+		ports, err := c.NeutronV2().Port().List(query)
 		utility.LogError(err, "list ports failed", true)
 		filterPorts := []neutron.Port{}
 

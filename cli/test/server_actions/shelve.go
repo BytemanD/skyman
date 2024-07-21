@@ -16,7 +16,7 @@ func (t ServerShelve) Start() error {
 	if t.Server.IsShelved() {
 		return fmt.Errorf("server is shelved")
 	}
-	err := t.Client.NovaV2().Servers().Shelve(t.Server.Id)
+	err := t.Client.NovaV2().Server().Shelve(t.Server.Id)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func (t ServerUnshelve) Start() error {
 	if !t.Server.IsShelved() {
 		return fmt.Errorf("server is not shelved")
 	}
-	err := t.Client.NovaV2().Servers().Unshelve(t.Server.Id)
+	err := t.Client.NovaV2().Server().Unshelve(t.Server.Id)
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ type ServerToggleShelve struct {
 func (t ServerToggleShelve) Start() error {
 	t.RefreshServer()
 	if t.Server.IsShelved() {
-		err := t.Client.NovaV2().Servers().Unshelve(t.Server.Id)
+		err := t.Client.NovaV2().Server().Unshelve(t.Server.Id)
 		if err != nil {
 			return err
 		}
@@ -83,7 +83,7 @@ func (t ServerToggleShelve) Start() error {
 		}
 		return nil
 	} else {
-		err := t.Client.NovaV2().Servers().Shelve(t.Server.Id)
+		err := t.Client.NovaV2().Server().Shelve(t.Server.Id)
 		if err != nil {
 			return err
 		}

@@ -20,9 +20,9 @@ var consoleLog = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 		lines, _ := cmd.Flags().GetUint("lines")
-		server, err := client.NovaV2().Servers().Show(args[0])
+		server, err := client.NovaV2().Server().Show(args[0])
 		utility.LogError(err, "get server failed", true)
-		consoleLog, err := client.NovaV2().Servers().ConsoleLog(server.Id, lines)
+		consoleLog, err := client.NovaV2().Server().ConsoleLog(server.Id, lines)
 		utility.LogError(err, "get console log failed", true)
 		fmt.Println(consoleLog.Output)
 	},
@@ -48,9 +48,9 @@ var consoleUrl = &cobra.Command{
 			os.Exit(1)
 		}
 
-		server, err := client.NovaV2().Servers().Show(args[0])
+		server, err := client.NovaV2().Server().Show(args[0])
 		utility.LogError(err, "get server failed", true)
-		console, err := client.NovaV2().Servers().ConsoleUrl(server.Id, args[1])
+		console, err := client.NovaV2().Server().ConsoleUrl(server.Id, args[1])
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

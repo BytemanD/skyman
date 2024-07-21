@@ -18,7 +18,7 @@ var projectList = &cobra.Command{
 		long, _ := cmd.Flags().GetBool("long")
 
 		c := openstack.DefaultClient().KeystoneV3()
-		projects, err := c.Projects().List(nil)
+		projects, err := c.Project().List(nil)
 		utility.LogError(err, "list projects failed", true)
 
 		pt := common.PrettyTable{
@@ -40,7 +40,7 @@ var projectDelete = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().KeystoneV3()
-		err := c.Projects().Delete(args[0])
+		err := c.Project().Delete(args[0])
 		utility.LogError(err, "delete project failed", true)
 	},
 }
@@ -50,7 +50,7 @@ var projectShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().KeystoneV3()
-		project, err := c.Projects().Found(args[0])
+		project, err := c.Project().Found(args[0])
 		utility.LogError(err, "show project failed", true)
 		pt := common.PrettyItemTable{
 			Item: *project,

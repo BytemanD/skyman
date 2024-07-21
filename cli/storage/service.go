@@ -28,7 +28,7 @@ var list = &cobra.Command{
 			query.Set("host", host)
 		}
 
-		services, _ := client.CinderV2().Services().List(query)
+		services, _ := client.CinderV2().Service().List(query)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Binary"},

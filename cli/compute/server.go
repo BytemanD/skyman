@@ -59,13 +59,13 @@ var serverList = &cobra.Command{
 			query.Add("status", status)
 		}
 		if flavor != "" {
-			flavor, err := c.NovaV2().Flavors().Found(flavor)
+			flavor, err := c.NovaV2().Flavor().Found(flavor)
 			if err != nil {
 				logging.Fatal("%s", err)
 			}
 			query.Set("flavor", flavor.Id)
 		}
-		items, err := c.NovaV2().Servers().Detail(query)
+		items, err := c.NovaV2().Server().Detail(query)
 		utility.LogError(err, "list servers failed", true)
 
 		pt := common.PrettyTable{
@@ -148,7 +148,7 @@ var serverShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		c := openstack.DefaultClient()
-		server, err := c.NovaV2().Servers().Found(args[0])
+		server, err := c.NovaV2().Server().Found(args[0])
 		if err != nil {
 			logging.Fatal("%v", err)
 		}
@@ -247,20 +247,20 @@ var serverCreate = &cobra.Command{
 			createOption.Networks = nova.ParseServerOptNetworks(nics)
 		}
 		logging.Debug("networks %v", createOption.Networks)
-		server, err := client.NovaV2().Servers().Create(createOption)
+		server, err := client.NovaV2().Server().Create(createOption)
 		utility.LogError(err, "create server failed", true)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		server, err = client.NovaV2().Servers().Show(server.Id)
+		server, err = client.NovaV2().Server().Show(server.Id)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 		views.PrintServer(*server)
 		if wait {
-			_, err := client.NovaV2().Servers().WaitStatus(server.Id, "ACTIVE", 5)
+			_, err := client.NovaV2().Server().WaitStatus(server.Id, "ACTIVE", 5)
 			if err != nil {
 				logging.Error("Server %s create failed, %v", server.Id, err)
 			} else {
@@ -279,13 +279,13 @@ var serverDelete = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		for _, idOrName := range args {
-			client.NovaV2().Servers().Found(idOrName)
-			s, err := client.NovaV2().Servers().Found(idOrName)
+			client.NovaV2().Server().Found(idOrName)
+			s, err := client.NovaV2().Server().Found(idOrName)
 			if err != nil {
 				utility.LogError(err, fmt.Sprintf("found server %s failed", idOrName), false)
 				continue
 			}
-			err = client.NovaV2().Servers().Delete(s.Id)
+			err = client.NovaV2().Server().Delete(s.Id)
 			if err != nil {
 				utility.LogError(err, "delete server %s failed %s", false)
 				continue
@@ -294,7 +294,7 @@ var serverDelete = &cobra.Command{
 		}
 		if wait {
 			for _, id := range args {
-				client.NovaV2().Servers().WaitDeleted(id)
+				client.NovaV2().Server().WaitDeleted(id)
 			}
 		}
 	},
@@ -307,7 +307,7 @@ var serverStop = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 		for _, id := range args {
-			err := client.NovaV2().Servers().Stop(id)
+			err := client.NovaV2().Server().Stop(id)
 			if err != nil {
 				logging.Error("Reqeust to stop server failed, %v", err)
 			} else {
@@ -323,7 +323,7 @@ var serverStart = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 		for _, id := range args {
-			err := client.NovaV2().Servers().Start(id)
+			err := client.NovaV2().Server().Start(id)
 			if err != nil {
 				logging.Error("Reqeust to start server failed, %v", err)
 			} else {
@@ -343,7 +343,7 @@ var serverReboot = &cobra.Command{
 		wait, _ := cmd.Flags().GetBool("wait")
 
 		for _, id := range args {
-			err := client.NovaV2().Servers().Reboot(id, hard)
+			err := client.NovaV2().Server().Reboot(id, hard)
 			if err != nil {
 				logging.Fatal("Reqeust to reboot server failed, %v", err)
 			} else {
@@ -352,7 +352,7 @@ var serverReboot = &cobra.Command{
 		}
 		if wait {
 			for _, id := range args {
-				_, err := client.NovaV2().Servers().WaitStatus(id, "ACTIVE", 5)
+				_, err := client.NovaV2().Server().WaitStatus(id, "ACTIVE", 5)
 				if err == nil {
 					logging.Info("[%s] rebooted", id)
 				} else {
@@ -370,7 +370,7 @@ var serverPause = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		for _, id := range args {
-			err := client.NovaV2().Servers().Pause(id)
+			err := client.NovaV2().Server().Pause(id)
 			if err != nil {
 				logging.Error("Reqeust to pause server failed, %v", err)
 			} else {
@@ -387,7 +387,7 @@ var serverUnpause = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		for _, id := range args {
-			err := client.NovaV2().Servers().Unpause(id)
+			err := client.NovaV2().Server().Unpause(id)
 			if err != nil {
 				logging.Error("Reqeust to unpause server failed, %v", err)
 			} else {
@@ -404,12 +404,12 @@ var serverShelve = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		for _, id := range args {
-			server, err := client.NovaV2().Servers().Found(id)
+			server, err := client.NovaV2().Server().Found(id)
 			if err != nil {
 				utility.LogError(err, fmt.Sprintf("get server %s faield", id), false)
 				continue
 			}
-			err = client.NovaV2().Servers().Shelve(server.Id)
+			err = client.NovaV2().Server().Shelve(server.Id)
 			if err != nil {
 				logging.Error("Reqeust to shelve server failed, %v", err)
 			} else {
@@ -426,7 +426,7 @@ var serverUnshelve = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		for _, id := range args {
-			err := client.NovaV2().Servers().Unshelve(id)
+			err := client.NovaV2().Server().Unshelve(id)
 			if err != nil {
 				logging.Error("Reqeust to unshelve server failed, %v", err)
 			} else {
@@ -443,7 +443,7 @@ var serverSuspend = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		for _, id := range args {
-			err := client.NovaV2().Servers().Suspend(id)
+			err := client.NovaV2().Server().Suspend(id)
 			if err != nil {
 				logging.Error("Reqeust to susppend server failed, %v", err)
 			} else {
@@ -460,7 +460,7 @@ var serverResume = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		for _, id := range args {
-			err := client.NovaV2().Servers().Resume(id)
+			err := client.NovaV2().Server().Resume(id)
 			if err != nil {
 				logging.Error("Reqeust to resume server failed, %v", err)
 			} else {
@@ -501,7 +501,7 @@ var serverResize = &cobra.Command{
 
 		for _, serverId := range args {
 			if confirm {
-				if err := client.NovaV2().Servers().ResizeConfirm(serverId); err != nil {
+				if err := client.NovaV2().Server().ResizeConfirm(serverId); err != nil {
 					utility.LogError(err, "Reqeust to confirm resize for server failed", false)
 				} else {
 					logging.Info("requested to confirm resize for server %s", serverId)
@@ -509,7 +509,7 @@ var serverResize = &cobra.Command{
 				continue
 			}
 			if revert {
-				if err := client.NovaV2().Servers().ResizeRevert(serverId); err != nil {
+				if err := client.NovaV2().Server().ResizeRevert(serverId); err != nil {
 					utility.LogError(err, "Reqeust to revert resize for server failed", false)
 
 				} else {
@@ -518,10 +518,10 @@ var serverResize = &cobra.Command{
 				continue
 			}
 			if flavorId != "" && flavor == nil {
-				flavor, err = client.NovaV2().Flavors().Show(flavorId)
+				flavor, err = client.NovaV2().Flavor().Show(flavorId)
 				utility.LogError(err, fmt.Sprintf("Get flavor %s failed", flavorId), true)
 			}
-			err = client.NovaV2().Servers().Resize(serverId, flavor.Id)
+			err = client.NovaV2().Server().Resize(serverId, flavor.Id)
 			if err != nil {
 				utility.LogError(err, "Reqeust to resize server failed", false)
 			} else {
@@ -531,7 +531,7 @@ var serverResize = &cobra.Command{
 
 		if flavorId != "" && wait {
 			for _, serverId := range args {
-				client.NovaV2().Servers().WaitResized(serverId, flavor.Name)
+				client.NovaV2().Server().WaitResized(serverId, flavor.Name)
 			}
 		}
 	},
@@ -549,13 +549,13 @@ var serverMigrate = &cobra.Command{
 
 		srcHostMap := map[string]string{}
 		for _, serverId := range args {
-			server, err := client.NovaV2().Servers().Found(serverId)
+			server, err := client.NovaV2().Server().Found(serverId)
 			utility.LogError(err, "get server server failed", true)
 			if live {
 				srcHostMap[serverId] = server.Host
-				err = client.NovaV2().Servers().LiveMigrate(serverId, blockMigrate, host)
+				err = client.NovaV2().Server().LiveMigrate(serverId, blockMigrate, host)
 			} else {
-				err = client.NovaV2().Servers().Migrate(serverId, host)
+				err = client.NovaV2().Server().Migrate(serverId, host)
 			}
 			if err != nil {
 				utility.LogError(err, "Reqeust to migrate server failed", false)
@@ -565,7 +565,7 @@ var serverMigrate = &cobra.Command{
 		}
 		if wait {
 			for _, serverId := range args {
-				server, err := client.NovaV2().Servers().Servers().WaitTask(serverId, "")
+				server, err := client.NovaV2().Server().WaitTask(serverId, "")
 				if err != nil {
 					logging.Error("[%s] migrate failed: %s", serverId, err)
 					continue
@@ -606,7 +606,7 @@ var serverRebuild = &cobra.Command{
 			options["name"] = name
 		}
 
-		err := client.NovaV2().Servers().Rebuild(args[0], options)
+		err := client.NovaV2().Server().Rebuild(args[0], options)
 		if err != nil {
 			logging.Error("Reqeust to rebuild server failed, %v", err)
 		} else {
@@ -625,7 +625,7 @@ var serverEvacuate = &cobra.Command{
 		host, _ := cmd.Flags().GetString("host")
 		force, _ := cmd.Flags().GetBool("force")
 
-		err := client.NovaV2().Servers().Evacuate(args[0], password, host, force)
+		err := client.NovaV2().Server().Evacuate(args[0], password, host, force)
 		if err != nil {
 			utility.LogError(err, "Reqeust to evacuate server failed", true)
 		} else {
@@ -664,12 +664,12 @@ var serverSetPassword = &cobra.Command{
 			logging.Fatal("Passwords do not match.")
 		}
 		for _, s := range args {
-			server, err := client.NovaV2().Servers().Found(s)
+			server, err := client.NovaV2().Server().Found(s)
 			if err != nil {
 				utility.LogError(err, "show server failed", false)
 				continue
 			}
-			err = client.NovaV2().Servers().SetPassword(server.Id, string(newPasswd), user)
+			err = client.NovaV2().Server().SetPassword(server.Id, string(newPasswd), user)
 			if err != nil {
 				logging.Error("set password failed, %s", err)
 			} else {
@@ -686,9 +686,9 @@ var serverSetName = &cobra.Command{
 		idOrName := args[0]
 		name := args[1]
 		client := openstack.DefaultClient()
-		server, err := client.NovaV2().Servers().Found(idOrName)
+		server, err := client.NovaV2().Server().Found(idOrName)
 		utility.LogError(err, "get server failed", true)
-		err = client.NovaV2().Servers().SetName(server.Id, name)
+		err = client.NovaV2().Server().SetName(server.Id, name)
 		utility.LogError(err, "set server name failed", true)
 	},
 }
@@ -700,12 +700,12 @@ var serverSetState = &cobra.Command{
 		client := openstack.DefaultClient()
 		active, _ := cmd.Flags().GetBool("active")
 		for _, server := range args {
-			server, err := client.NovaV2().Servers().Found(server)
+			server, err := client.NovaV2().Server().Found(server)
 			if err != nil {
 				utility.LogError(err, "show server failed", false)
 				continue
 			}
-			err = client.NovaV2().Servers().SetState(server.Id, active)
+			err = client.NovaV2().Server().SetState(server.Id, active)
 			utility.LogError(err, "set server state failed", false)
 		}
 	},
@@ -732,7 +732,7 @@ var serverRegionLiveMigrate = &cobra.Command{
 			migrateErr  error
 		)
 		if live {
-			migrateResp, migrateErr = client.NovaV2().Servers().RegionLiveMigrate(
+			migrateResp, migrateErr = client.NovaV2().Server().RegionLiveMigrate(
 				serverId, destRegion, true, dryRun, host)
 		}
 		if migrateErr != nil {
@@ -788,7 +788,7 @@ var serverMigrationList = &cobra.Command{
 			},
 		}
 		for {
-			migrations, err := client.NovaV2().Servers().ListMigrations(serverId, query)
+			migrations, err := client.NovaV2().Server().ListMigrations(serverId, query)
 			if err != nil {
 				logging.Fatal("Reqeust to list server migration failed, %v", err)
 			}

@@ -15,7 +15,7 @@ import (
 
 func listServerActions(server string, actionName string, last int, long bool) {
 	client := openstack.DefaultClient()
-	actions, err := client.NovaV2().Servers().ListActions(server)
+	actions, err := client.NovaV2().Server().ListActions(server)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -43,7 +43,7 @@ func listServerActions(server string, actionName string, last int, long bool) {
 }
 func listServerActionsWithSpend(server string, actionName string, requestId string, last int, long bool) {
 	client := openstack.DefaultClient()
-	actionsWithEvents, err := client.NovaV2().Servers().ListActionsWithEvents(
+	actionsWithEvents, err := client.NovaV2().Server().ListActionsWithEvents(
 		server, actionName, requestId, last)
 	utility.LogError(err, "get server actions and events failed", true)
 
@@ -105,7 +105,7 @@ func listServerActionsWithSpend(server string, actionName string, requestId stri
 }
 func showAction(server string, requestId string, long bool) {
 	client := openstack.DefaultClient()
-	action, err := client.NovaV2().Servers().ShowAction(server, requestId)
+	action, err := client.NovaV2().Server().ShowAction(server, requestId)
 	utility.LogError(err, "get server action failed", true)
 	pt := common.PrettyTable{
 		Title: fmt.Sprintf("Action: %s", action.Action),

@@ -37,7 +37,7 @@ func PrintServerEvents(client *openstack.Openstack) (string, error) {
 		},
 	}
 	for _, task := range TestTasks {
-		actions, err := client.NovaV2().Servers().ListActionsWithEvents(task.ServerId, "", "", 0)
+		actions, err := client.NovaV2().Server().ListActionsWithEvents(task.ServerId, "", "", 0)
 		if err != nil {
 			return "", err
 		}

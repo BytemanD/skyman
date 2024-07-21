@@ -28,12 +28,12 @@ var sgList = &cobra.Command{
 		query := url.Values{}
 
 		if projectIdOrName != "" {
-			project, err := c.KeystoneV3().Projects().Found(projectIdOrName)
+			project, err := c.KeystoneV3().Project().Found(projectIdOrName)
 			utility.LogError(err, "get project failed", true)
 			query.Set("project_id", project.Id)
 		}
 
-		sgs, err := c.NeutronV2().SecurityGroups().List(query)
+		sgs, err := c.NeutronV2().SecurityGroup().List(query)
 		utility.LogError(err, "list security group failed", true)
 
 		pt := common.PrettyTable{
@@ -55,7 +55,7 @@ var sgShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient()
 
-		sg, err := c.NeutronV2().SecurityGroups().Found(args[0])
+		sg, err := c.NeutronV2().SecurityGroup().Found(args[0])
 		utility.LogError(err, "get security group failed", true)
 		pt := common.PrettyItemTable{
 			Item: *sg,

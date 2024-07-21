@@ -25,7 +25,7 @@ func (t ServerAttachInterface) Start() error {
 		return err
 	}
 	logging.Info("[%s] creating port", t.Server.Id)
-	port, err := t.Client.NeutronV2().Ports().Create(map[string]interface{}{
+	port, err := t.Client.NeutronV2().Port().Create(map[string]interface{}{
 		"network_id": nextNetwork,
 	})
 	if err != nil {
@@ -34,7 +34,7 @@ func (t ServerAttachInterface) Start() error {
 	}
 
 	logging.Info("[%s] attaching interface: %s", t.Server.Id, port.Id)
-	attachment, err := t.Client.NovaV2().Servers().AddInterface(t.Server.Id, "", port.Id)
+	attachment, err := t.Client.NovaV2().Server().AddInterface(t.Server.Id, "", port.Id)
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ type ServerDetachInterface struct {
 }
 
 func (t *ServerDetachInterface) lastInterface() (string, error) {
-	interfaces, err := t.Client.NovaV2().Servers().ListInterfaces(t.Server.Id)
+	interfaces, err := t.Client.NovaV2().Server().ListInterfaces(t.Server.Id)
 	if err != nil {
 		return "", err
 	}
@@ -79,11 +79,11 @@ func (t ServerDetachInterface) Start() error {
 	if err != nil {
 		return err
 	}
-	port, err := t.Client.NeutronV2().Ports().Show(portId)
+	port, err := t.Client.NeutronV2().Port().Show(portId)
 	if err != nil {
 		return err
 	}
-	err = t.Client.NovaV2().Servers().DeleteInterfaceAndWait(t.Server.Id, portId, time.Minute*5)
+	err = t.Client.NovaV2().Server().DeleteInterfaceAndWait(t.Server.Id, portId, time.Minute*5)
 	if err != nil {
 		return err
 	}
@@ -106,7 +106,7 @@ func (t ServerDetachInterface) Start() error {
 
 type ServerAttachHotPlug struct {
 	ServerActionTest
-	attachedPorts []*neutron.Port
+	attachedPort []*neutron.Port
 }
 
 func (t *ServerAttachHotPlug) Start() error {
@@ -125,7 +125,7 @@ func (t *ServerAttachHotPlug) Start() error {
 			return err
 		}
 		logging.Info("[%s] creating port", t.Server.Id)
-		port, err := t.Client.NeutronV2().Ports().Create(map[string]interface{}{
+		port, err := t.Client.NeutronV2().Port().Create(map[string]interface{}{
 			"network_id": nextNetwork,
 		})
 		if err != nil {
@@ -134,7 +134,7 @@ func (t *ServerAttachHotPlug) Start() error {
 		}
 
 		logging.Info("[%s] attaching interface %s", t.Server.Id, port.Id)
-		attachment, err := t.Client.NovaV2().Servers().AddInterface(t.Server.Id, "", port.Id)
+		attachment, err := t.Client.NovaV2().Server().AddInterface(t.Server.Id, "", port.Id)
 		if err != nil {
 			return err
 		}
@@ -148,11 +148,11 @@ func (t *ServerAttachHotPlug) Start() error {
 		if err := serverCheckers.MakesureInterfaceExist(attachment); err != nil {
 			return err
 		}
-		t.attachedPorts = append(t.attachedPorts, port)
+		t.attachedPort = append(t.attachedPort, port)
 	}
 
-	for _, port := range t.attachedPorts {
-		err = t.Client.NovaV2().Servers().DeleteInterfaceAndWait(t.Server.Id, port.Id, time.Minute*5)
+	for _, port := range t.attachedPort {
+		err = t.Client.NovaV2().Server().DeleteInterfaceAndWait(t.Server.Id, port.Id, time.Minute*5)
 		if err != nil {
 			return err
 		}
@@ -169,11 +169,11 @@ func (t *ServerAttachHotPlug) Start() error {
 	return nil
 }
 func (t ServerAttachHotPlug) Cleanup() {
-	for _, port := range t.attachedPorts {
-		logging.Info("[%s] cleanup %d interfaces", t.ServerId(), len(t.attachedPorts))
+	for _, port := range t.attachedPort {
+		logging.Info("[%s] cleanup %d interfaces", t.ServerId(), len(t.attachedPort))
 
 		logging.Info("[%s] deleting port %s", t.ServerId(), port.Id)
-		err := t.Client.NeutronV2().Ports().Delete(port.Id)
+		err := t.Client.NeutronV2().Port().Delete(port.Id)
 		if err != nil {
 			logging.Error("[%s] delete port %s failed", t.ServerId(), port.Id)
 		}

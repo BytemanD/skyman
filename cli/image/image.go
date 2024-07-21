@@ -183,9 +183,10 @@ var imageDelete = &cobra.Command{
 }
 
 var imageSave = &cobra.Command{
-	Use:   "save <image>",
-	Short: "Save image",
-	Args:  cobra.ExactArgs(1),
+	Use:     "save <image>",
+	Short:   "Save image",
+	Aliases: []string{"download"},
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		fileName, _ := cmd.Flags().GetString("file")
 

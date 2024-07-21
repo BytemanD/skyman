@@ -39,7 +39,7 @@ var volumeList = &cobra.Command{
 		if all {
 			query.Set("all_tenants", "true")
 		}
-		volumes, err := client.CinderV2().Volumes().Detail(query)
+		volumes, err := client.CinderV2().Volume().Detail(query)
 		utility.LogError(err, "list volume falied", true)
 		table := common.PrettyTable{
 			ShortColumns: []common.Column{
@@ -73,7 +73,7 @@ var volumeShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 		idOrName := args[0]
-		volume, err := client.CinderV2().Volumes().Found(idOrName)
+		volume, err := client.CinderV2().Volume().Found(idOrName)
 		utility.LogError(err, "get volume failed", true)
 		printVolume(*volume)
 	},
@@ -88,12 +88,12 @@ var volumeDelete = &cobra.Command{
 		cascade, _ := cmd.Flags().GetBool("cascade")
 
 		for _, idOrName := range args {
-			volume, err := client.CinderV2().Volumes().Found(idOrName)
+			volume, err := client.CinderV2().Volume().Found(idOrName)
 			if err != nil {
 				utility.LogError(err, "get volume failed", false)
 				continue
 			}
-			err = client.CinderV2().Volumes().Delete(volume.Id, force, cascade)
+			err = client.CinderV2().Volume().Delete(volume.Id, force, cascade)
 			if err == nil {
 				fmt.Printf("Requested to delete volume %s\n", idOrName)
 			} else {
@@ -123,7 +123,7 @@ var volumeCreate = &cobra.Command{
 
 		client := openstack.DefaultClient()
 
-		volume, err := client.CinderV2().Volumes().Create(params)
+		volume, err := client.CinderV2().Volume().Create(params)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -147,10 +147,10 @@ var volumeExtend = &cobra.Command{
 		idOrName := args[0]
 		size, _ := strconv.Atoi(args[1])
 		client := openstack.DefaultClient()
-		volume, err := client.CinderV2().Volumes().Found(idOrName)
+		volume, err := client.CinderV2().Volume().Found(idOrName)
 		utility.LogError(err, "get volume falied", true)
 
-		err = client.CinderV2().Volumes().Extend(volume.Id, size)
+		err = client.CinderV2().Volume().Extend(volume.Id, size)
 		utility.LogError(err, "extend volume falied", true)
 	},
 }
@@ -173,10 +173,10 @@ var volumeRetype = &cobra.Command{
 		migrationPolicy, _ := cmd.Flags().GetString("migration-policy")
 
 		client := openstack.DefaultClient()
-		volume, err := client.CinderV2().Volumes().Found(idOrName)
+		volume, err := client.CinderV2().Volume().Found(idOrName)
 		utility.LogError(err, "get volume falied", true)
 
-		err = client.CinderV2().Volumes().Retype(volume.Id, newType, migrationPolicy)
+		err = client.CinderV2().Volume().Retype(volume.Id, newType, migrationPolicy)
 		utility.LogError(err, "extend volume falied", true)
 	},
 }

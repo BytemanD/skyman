@@ -34,10 +34,10 @@ var detachVolumes = &cobra.Command{
 
 		client := openstack.DefaultClient()
 		cinderClient := client.CinderV2()
-		server, err := client.NovaV2().Servers().Show(serverId)
+		server, err := client.NovaV2().Server().Show(serverId)
 		utility.LogError(err, "show server failed:", true)
 
-		attachedVolumes, err := client.NovaV2().Servers().ListVolumes(server.Id)
+		attachedVolumes, err := client.NovaV2().Server().ListVolumes(server.Id)
 		utility.LogError(err, "list server interfaces failed:", true)
 
 		logging.Info("the server has %d volume(s)", len(attachedVolumes))
@@ -67,7 +67,7 @@ var detachVolumes = &cobra.Command{
 			Func: func(item interface{}) error {
 				p := item.(string)
 				logging.Debug("[volume: %s] detaching", p)
-				err := client.NovaV2().Servers().DeleteVolumeAndWait(server.Id, p, 600)
+				err := client.NovaV2().Server().DeleteVolumeAndWait(server.Id, p, 600)
 
 				if err != nil {
 					logging.Error("[volume: %s] detach failed: %v", p, err)
@@ -89,7 +89,7 @@ var detachVolumes = &cobra.Command{
 			Func: func(item interface{}) error {
 				p := item.(string)
 				logging.Debug("[volume: %s] deleting", p)
-				err := cinderClient.Volumes().Delete(p, true, true)
+				err := cinderClient.Volume().Delete(p, true, true)
 				// TODO: wait deleted
 				if err != nil {
 					logging.Error("[volume: %s] delete failed: %v", p, err)

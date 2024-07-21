@@ -20,7 +20,7 @@ func (o Openstack) PruneServers(query url.Values, yes bool, waitDeleted bool) {
 		query.Set("status", "error")
 	}
 	logging.Info("查询虚拟机: %v", query.Encode())
-	servers, err := c.Servers().List(query)
+	servers, err := c.Server().List(query)
 	utility.LogError(err, "query servers failed", true)
 	logging.Info("需要清理的虚拟机数量: %d\n", len(servers))
 	if len(servers) == 0 {
@@ -42,12 +42,12 @@ func (o Openstack) PruneServers(query url.Values, yes bool, waitDeleted bool) {
 		Func: func(o interface{}) error {
 			s := o.(nova.Server)
 			logging.Info("delete %s", s.Id)
-			err := c.Servers().Delete(s.Id)
+			err := c.Server().Delete(s.Id)
 			if err != nil {
 				return fmt.Errorf("delete %s failed: %v", s.Id, err)
 			}
 			if waitDeleted {
-				c.Servers().WaitDeleted(s.Id)
+				c.Server().WaitDeleted(s.Id)
 			}
 			return nil
 		},
@@ -64,7 +64,7 @@ func (o Openstack) PruneVolumes(query url.Values, matchName string, yes bool) {
 		query.Add("status", "error")
 	}
 	logging.Info("查询卷: %v", query)
-	volumes, err := c.Volumes().List(query)
+	volumes, err := c.Volume().List(query)
 	if matchName != "" {
 		filterdVolumes := []cinder.Volume{}
 		for _, vol := range volumes {
@@ -97,7 +97,7 @@ func (o Openstack) PruneVolumes(query url.Values, matchName string, yes bool) {
 		Func: func(i interface{}) error {
 			volume := i.(cinder.Volume)
 			logging.Debug("delete volume %s(%s)", volume.Id, volume.Name)
-			err := c.Volumes().Delete(volume.Id, true, true)
+			err := c.Volume().Delete(volume.Id, true, true)
 			if err != nil {
 				return fmt.Errorf("delete volume %s failed: %v", volume.Id, err)
 			}
@@ -127,7 +127,7 @@ func (o Openstack) PrunePorts(ports []neutron.Port) {
 		Func: func(i interface{}) error {
 			port := i.(neutron.Port)
 			logging.Debug("delete port %s(%s)", port.Id, port.Name)
-			err := c.Ports().Delete(port.Id)
+			err := c.Port().Delete(port.Id)
 			if err != nil {
 				return fmt.Errorf("delete port %s failed: %v", port.Id, err)
 			}

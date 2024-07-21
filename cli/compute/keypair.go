@@ -16,7 +16,7 @@ var keypairList = &cobra.Command{
 	Short: "List keypairs",
 	Run: func(_ *cobra.Command, _ []string) {
 		client := openstack.DefaultClient()
-		keypairs, err := client.NovaV2().Keypairs().List(nil)
+		keypairs, err := client.NovaV2().Keypair().List(nil)
 		if err != nil {
 			logging.Fatal("%s", err)
 		}

@@ -32,7 +32,7 @@ var agentList = &cobra.Command{
 		if host != "" {
 			query.Set("host", host)
 		}
-		agents, err := c.Agents().List(query)
+		agents, err := c.Agent().List(query)
 		utility.LogError(err, "list ports failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{

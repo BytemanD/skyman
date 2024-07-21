@@ -371,9 +371,9 @@ type ConsoleLog struct {
 	Output string `json:"output"`
 }
 type Console struct {
-	Type     string `json:"type"`
-	Url      string `json:"url"`
-	Protocol string `json:"protocol"`
+	Type     string `json:"type,omitempty"`
+	Url      string `json:"url,omitempty"`
+	Protocol string `json:"protocol,omitempty"`
 }
 
 type Migration struct {

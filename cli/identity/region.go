@@ -15,7 +15,7 @@ var list = &cobra.Command{
 	Short: "List regions",
 	Run: func(cmd *cobra.Command, _ []string) {
 		c := openstack.DefaultClient().KeystoneV3()
-		regions, err := c.Regions().List(nil)
+		regions, err := c.Region().List(nil)
 		utility.LogError(err, "list region failed", true)
 
 		pt := common.PrettyTable{

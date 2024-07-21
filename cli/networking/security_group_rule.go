@@ -23,12 +23,12 @@ var sgRuleList = &cobra.Command{
 		sgIdOrName, _ := cmd.Flags().GetString("security-group")
 		query := url.Values{}
 		if sgIdOrName != "" {
-			sg, err := c.NeutronV2().SecurityGroups().Found(sgIdOrName)
+			sg, err := c.NeutronV2().SecurityGroup().Found(sgIdOrName)
 			utility.LogError(err, "get security group failed", true)
 			query.Set("security_group_id", sg.Id)
 		}
 
-		sgRules, err := c.NeutronV2().SecurityGroupRules().List(query)
+		sgRules, err := c.NeutronV2().SecurityGroupRule().List(query)
 		utility.LogError(err, "list security group failed", true)
 
 		pt := common.PrettyTable{
@@ -59,7 +59,7 @@ var sgRuleShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient()
 
-		sg, err := c.NeutronV2().SecurityGroupRules().Show(args[0])
+		sg, err := c.NeutronV2().SecurityGroupRule().Show(args[0])
 		utility.LogError(err, "get security group rule failed", true)
 		pt := common.PrettyItemTable{
 			Item: *sg,

@@ -28,7 +28,7 @@ var subnetList = &cobra.Command{
 		if name != "" {
 			query.Set("name", name)
 		}
-		subnets, err := c.Subnets().List(query)
+		subnets, err := c.Subnet().List(query)
 		utility.LogError(err, "get subnets failed", true)
 
 		pt := common.PrettyTable{
@@ -64,7 +64,7 @@ var subnetCreate = &cobra.Command{
 		cidr, _ := cmd.Flags().GetString("cidr")
 		ipVersion, _ := cmd.Flags().GetInt("ip-version")
 
-		network, err := c.Networks().Found(netIdOrName)
+		network, err := c.Network().Found(netIdOrName)
 		utility.LogError(err, "get network failed", true)
 
 		params := map[string]interface{}{
@@ -79,7 +79,7 @@ var subnetCreate = &cobra.Command{
 		if description != "" {
 			params["description"] = description
 		}
-		subnet, err := c.Subnets().Create(params)
+		subnet, err := c.Subnet().Create(params)
 		utility.LogError(err, "create subnet failed", true)
 		cli.PrintSubnet(*subnet)
 	},
@@ -90,7 +90,7 @@ var subnetShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().NeutronV2()
-		subnet, err := c.Subnets().Found(args[0])
+		subnet, err := c.Subnet().Found(args[0])
 		utility.LogError(err, "show subnet failed", true)
 		table := common.PrettyItemTable{
 			Item: *subnet,
@@ -117,7 +117,7 @@ var subnetDelete = &cobra.Command{
 		c := openstack.DefaultClient().NeutronV2()
 		for _, subnet := range args {
 			fmt.Printf("Reqeust to delete subnet %s\n", subnet)
-			err := c.Subnets().Delete(subnet)
+			err := c.Subnet().Delete(subnet)
 			if err != nil {
 				logging.Error("Delete subnet %s failed, %s", subnet, err)
 			}

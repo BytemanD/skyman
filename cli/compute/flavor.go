@@ -53,7 +53,7 @@ var flavorList = &cobra.Command{
 			query.Set("minDisk", strconv.FormatUint(minDisk, 10))
 		}
 		client := openstack.DefaultClient()
-		flavors, err := client.NovaV2().Flavors().Detail(query)
+		flavors, err := client.NovaV2().Flavor().Detail(query)
 		utility.LogError(err, "get server failed %s", true)
 
 		filteredFlavors := []nova.Flavor{}
@@ -96,7 +96,7 @@ var flavorList = &cobra.Command{
 		if long {
 			pt.StyleSeparateRows = true
 			for i, flavor := range filteredFlavors {
-				extraSpecs, err := client.NovaV2().Flavors().ListExtraSpecs(flavor.Id)
+				extraSpecs, err := client.NovaV2().Flavor().ListExtraSpecs(flavor.Id)
 				if err != nil {
 					logging.Fatal("get flavor extra specs failed %s", err)
 				}
@@ -114,7 +114,7 @@ var flavorShow = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 		idOrName := args[0]
-		flavor, err := client.NovaV2().Flavors().ShowWithExtraSpecs(idOrName)
+		flavor, err := client.NovaV2().Flavor().ShowWithExtraSpecs(idOrName)
 		utility.LogError(err, "Show flavor failed", true)
 		views.PrintFlavor(*flavor)
 	},
@@ -126,7 +126,7 @@ var flavorDelete = &cobra.Command{
 	Args: cobra.MinimumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		flavorApi := client.NovaV2().Flavors()
+		flavorApi := client.NovaV2().Flavor()
 		for _, flavorId := range args {
 			flavor, err := flavorApi.Found(flavorId)
 			if err != nil {
@@ -191,12 +191,12 @@ var flavorCreate = &cobra.Command{
 
 		client := openstack.DefaultClient()
 
-		flavor, err := client.NovaV2().Flavors().Create(reqFlavor)
+		flavor, err := client.NovaV2().Flavor().Create(reqFlavor)
 		utility.LogError(err, "create flavor failed", true)
 
 		if len(properties) > 0 {
 			extraSpecs := getExtraSpecsMap(properties)
-			createdExtraSpecs, err := client.NovaV2().Flavors().SetExtraSpecs(flavor.Id, extraSpecs)
+			createdExtraSpecs, err := client.NovaV2().Flavor().SetExtraSpecs(flavor.Id, extraSpecs)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -224,9 +224,9 @@ var flavorSet = &cobra.Command{
 			extraSpecs[splited[0]] = splited[1]
 		}
 
-		flavor, err := client.NovaV2().Flavors().Found(idOrName)
+		flavor, err := client.NovaV2().Flavor().Found(idOrName)
 		utility.LogError(err, "Get flavor failed", true)
-		client.NovaV2().Flavors().SetExtraSpecs(flavor.Id, extraSpecs)
+		client.NovaV2().Flavor().SetExtraSpecs(flavor.Id, extraSpecs)
 	},
 }
 var flavorUnset = &cobra.Command{
@@ -237,10 +237,10 @@ var flavorUnset = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		properties, _ := cmds.Flags().GetStringArray("property")
-		flavor, err := client.NovaV2().Flavors().Found(args[0])
+		flavor, err := client.NovaV2().Flavor().Found(args[0])
 		utility.LogError(err, "Get flavor failed", true)
 		for _, property := range properties {
-			err := client.NovaV2().Flavors().DeleteExtraSpec(flavor.Id, property)
+			err := client.NovaV2().Flavor().DeleteExtraSpec(flavor.Id, property)
 			if err != nil {
 				utility.LogError(err, "delete extra spec failed", false)
 			}

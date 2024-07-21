@@ -23,12 +23,12 @@ type ServerLiveMigrate struct {
 func (t *ServerLiveMigrate) createClientServer() error {
 	clientServerOpt := t.getServerBootOption(fmt.Sprintf("client-%s", t.Server.Name))
 	clientServerOpt.AvailabilityZone = t.Server.AZ
-	clientServer, err := t.Client.NovaV2().Servers().Create(clientServerOpt)
+	clientServer, err := t.Client.NovaV2().Server().Create(clientServerOpt)
 	if err != nil {
 		return fmt.Errorf("create client instance failed: %s", err)
 	}
 	logging.Info("[%s] creating client server", t.ServerId())
-	clientServer, err = t.Client.NovaV2().Servers().WaitBooted(clientServer.Id)
+	clientServer, err = t.Client.NovaV2().Server().WaitBooted(clientServer.Id)
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func (t *ServerLiveMigrate) createClientServer() error {
 }
 func (t *ServerLiveMigrate) getClientGuest() (*guest.Guest, error) {
 	if t.clientGuest == nil {
-		host, err := t.Client.NovaV2().Hypervisors().Found(t.clientServer.Host)
+		host, err := t.Client.NovaV2().Hypervisor().Found(t.clientServer.Host)
 		if err != nil {
 			return nil, err
 		}
@@ -157,7 +157,7 @@ func (t *ServerLiveMigrate) checkPingBeforeMigrate(targetIp string) error {
 }
 
 func (t *ServerLiveMigrate) startLiveMigrate() error {
-	err := t.Client.NovaV2().Servers().LiveMigrate(t.Server.Id, "auto", "")
+	err := t.Client.NovaV2().Server().LiveMigrate(t.Server.Id, "auto", "")
 	if err != nil {
 		return err
 	}
@@ -165,7 +165,7 @@ func (t *ServerLiveMigrate) startLiveMigrate() error {
 	return t.WaitServerTaskFinished(true)
 }
 func (t ServerLiveMigrate) confirmServerHasIpAddress() error {
-	serverHost, err := t.Client.NovaV2().Hypervisors().Found(t.Server.Host)
+	serverHost, err := t.Client.NovaV2().Hypervisor().Found(t.Server.Host)
 	if err != nil {
 		return err
 	}
@@ -201,7 +201,7 @@ func (t *ServerLiveMigrate) Start() error {
 	}
 
 	if common.CONF.Test.LiveMigrate.PingEnabled {
-		interfaces, err := t.Client.NovaV2().Servers().ListInterfaces(t.ServerId())
+		interfaces, err := t.Client.NovaV2().Server().ListInterfaces(t.ServerId())
 		if err != nil {
 			return err
 		}
@@ -290,8 +290,8 @@ func (t *ServerLiveMigrate) confirmPingResult() error {
 func (t ServerLiveMigrate) Cleanup() {
 	if t.clientServer != nil {
 		logging.Info("[%s] deleting client server %s", t.ServerId(), t.clientServer.Id)
-		t.Client.NovaV2().Servers().Delete(t.clientServer.Id)
-		t.Client.NovaV2().Servers().WaitDeleted(t.clientServer.Id)
+		t.Client.NovaV2().Server().Delete(t.clientServer.Id)
+		t.Client.NovaV2().Server().WaitDeleted(t.clientServer.Id)
 	}
 }
 
@@ -310,7 +310,7 @@ func (t ServerMigrate) Start() error {
 	startTime := time.Now()
 	logging.Info("[%s] source host is %s", t.Server.Id, sourceHost)
 
-	err := t.Client.NovaV2().Servers().Migrate(t.Server.Id, "")
+	err := t.Client.NovaV2().Server().Migrate(t.Server.Id, "")
 	if err != nil {
 		return err
 	}

@@ -143,7 +143,7 @@ func (c QGAChecker) MakesureVolumeNotExists(attachment *nova.VolumeAttachment) e
 }
 
 func (c QGAChecker) MakesureVolumeSizeIs(attachment *nova.VolumeAttachment, size uint) error {
-	server, err := c.Client.NovaV2().Servers().Show(c.ServerId)
+	server, err := c.Client.NovaV2().Server().Show(c.ServerId)
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func (c QGAChecker) MakesureVolumeSizeIs(attachment *nova.VolumeAttachment, size
 }
 
 func GetQgaChecker(client *openstack.Openstack, server *nova.Server) (*QGAChecker, error) {
-	host, err := client.NovaV2().Hypervisors().Found(server.Host)
+	host, err := client.NovaV2().Hypervisor().Found(server.Host)
 	if err != nil {
 		return nil, fmt.Errorf("get hypervisor failed: %s", err)
 	}

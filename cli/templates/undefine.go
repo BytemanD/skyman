@@ -16,40 +16,40 @@ func deleteFlavor(client *openstack.Openstack, flavor Flavor) {
 	var f *nova.Flavor
 	var err error
 	if flavor.Id != "" {
-		f, err = client.NovaV2().Flavors().Show(flavor.Id)
+		f, err = client.NovaV2().Flavor().Show(flavor.Id)
 		if err != nil {
 			logging.Warning("get flavor %s failed: %s", flavor.Id, err)
 			return
 		}
 	} else if flavor.Name != "" {
-		f, err = client.NovaV2().Flavors().Found(flavor.Name)
+		f, err = client.NovaV2().Flavor().Found(flavor.Name)
 		if err != nil {
 			logging.Warning("get flavor %s failed, %s", flavor.Name, err)
 			return
 		}
 	}
 	logging.Info("deleting flavor %s", f.Id)
-	err = client.NovaV2().Flavors().Delete(f.Id)
+	err = client.NovaV2().Flavor().Delete(f.Id)
 	utility.LogError(err, fmt.Sprintf("delete flavor %s failed", f.Id), false)
 }
 func deleteNetwork(client *openstack.Openstack, network Network) {
-	net, err := client.NeutronV2().Networks().Found(network.Name)
+	net, err := client.NeutronV2().Network().Found(network.Name)
 	if err != nil {
 		logging.Warning("get network %s failed: %s", network.Name, err)
 		return
 	}
 	logging.Info("deleting network %s", network.Name)
-	err = client.NeutronV2().Networks().Delete(net.Id)
+	err = client.NeutronV2().Network().Delete(net.Id)
 	utility.LogError(err, fmt.Sprintf("delete network %s failed: %s", network.Name, err), false)
 }
 
 func deleteServer(client *openstack.Openstack, server Server, watch bool) {
-	s, err := client.NovaV2().Servers().Found(server.Name)
+	s, err := client.NovaV2().Server().Found(server.Name)
 	if err != nil {
 		logging.Warning("get server %s failed, %s", server.Name, err)
 		return
 	}
-	err = client.NovaV2().Servers().Delete(s.Id)
+	err = client.NovaV2().Server().Delete(s.Id)
 	if err != nil {
 		utility.LogError(err, fmt.Sprintf("delete server %s failed", s.Name), false)
 		return
@@ -57,7 +57,7 @@ func deleteServer(client *openstack.Openstack, server Server, watch bool) {
 
 	logging.Info("deleting server %s", server.Name)
 	if watch {
-		client.NovaV2().Servers().WaitDeleted(s.Id)
+		client.NovaV2().Server().WaitDeleted(s.Id)
 	}
 }
 

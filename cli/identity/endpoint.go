@@ -52,7 +52,7 @@ var endpointList = &cobra.Command{
 
 		serviceMap := map[string]keystone.Service{}
 		if serviceName != "" {
-			services, err := c.Services().ListByName(serviceName)
+			services, err := c.Service().ListByName(serviceName)
 			if err != nil {
 				logging.Fatal("get service '%s' failed, %v", serviceName, err)
 			}
@@ -64,9 +64,9 @@ var endpointList = &cobra.Command{
 				query.Add("service_id", service.Id)
 			}
 		}
-		items, err := c.Endpoints().List(query)
+		items, err := c.Endpoint().List(query)
 		if err != nil {
-			logging.Fatal("get services failed, %s", err)
+			logging.Fatal("get endpoint failed, %s", err)
 		}
 
 		// TODO: 优化
@@ -84,7 +84,7 @@ var endpointList = &cobra.Command{
 			}
 			serviceIds = append(serviceIds, endpoint.ServiceId)
 		}
-		services, err := c.Services().List(nil)
+		services, err := c.Service().List(nil)
 		utility.LogError(err, "get services failed", true)
 		for _, service := range services {
 			serviceMap[service.Id] = service
@@ -96,7 +96,7 @@ var endpointList = &cobra.Command{
 				{Name: "Service", Sort: true, Slot: func(item interface{}) interface{} {
 					p, _ := item.(keystone.Endpoint)
 					if _, ok := serviceMap[p.ServiceId]; !ok {
-						service, _ := c.Services().Show(p.ServiceId)
+						service, _ := c.Service().Show(p.ServiceId)
 						return service.Display()
 					} else {
 						return p.ServiceId
@@ -125,7 +125,7 @@ var endpointCreate = &cobra.Command{
 
 		c := openstack.DefaultClient().KeystoneV3()
 
-		service, err := c.Services().Found(s)
+		service, err := c.Service().Found(s)
 		utility.LogError(err, "get service failed", true)
 		interfaceMap := map[string]bool{
 			"public":   public,
@@ -173,7 +173,7 @@ var endpointDelete = &cobra.Command{
 		c := openstack.DefaultClient().KeystoneV3()
 		for _, id := range args {
 			logging.Info("request to delete endpoint %s", id)
-			err := c.Endpoints().Delete(id)
+			err := c.Endpoint().Delete(id)
 			utility.LogError(err, fmt.Sprintf("delete endpoint %s failed", id), false)
 		}
 	},

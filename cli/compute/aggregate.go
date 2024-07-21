@@ -22,7 +22,7 @@ var aggList = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 
 		client := openstack.DefaultClient()
-		aggregates, err := client.NovaV2().Aggregates().List(nil)
+		aggregates, err := client.NovaV2().Aggregate().List(nil)
 		utility.LogError(err, "list aggregates failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
@@ -64,7 +64,7 @@ var aggShow = &cobra.Command{
 		agg := args[0]
 
 		client := openstack.DefaultClient()
-		aggregate, err := client.NovaV2().Aggregates().Show(agg)
+		aggregate, err := client.NovaV2().Aggregate().Show(agg)
 		utility.LogError(err, "show aggregate failed", true)
 		pt := common.PrettyItemTable{
 			Item: *aggregate,

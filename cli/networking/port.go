@@ -43,7 +43,7 @@ var portList = &cobra.Command{
 		host, _ := cmd.Flags().GetString("host")
 		noHost, _ := cmd.Flags().GetBool("no-host")
 
-		ports, err := c.Ports().List(utility.UrlValues(map[string]string{
+		ports, err := c.Port().List(utility.UrlValues(map[string]string{
 			"name":            name,
 			"network_id":      network,
 			"device_id":       device_id,
@@ -85,14 +85,14 @@ var portList = &cobra.Command{
 			ColumnConfigs: []table.ColumnConfig{{Number: 4, Align: text.AlignRight}},
 		}
 		if noHost {
-			filteredPorts := []neutron.Port{}
+			filteredPort := []neutron.Port{}
 			for _, port := range ports {
 				if port.BindingHostId != "" {
 					continue
 				}
-				filteredPorts = append(filteredPorts, port)
+				filteredPort = append(filteredPort, port)
 			}
-			pt.AddItems(filteredPorts)
+			pt.AddItems(filteredPort)
 		} else {
 			pt.AddItems(ports)
 		}
@@ -108,7 +108,7 @@ var portShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().NeutronV2()
-		port, err := c.Ports().Found(args[0])
+		port, err := c.Port().Found(args[0])
 		if err != nil {
 			utility.LogError(err, "show port failed", true)
 		}
@@ -149,7 +149,7 @@ var portDelete = &cobra.Command{
 		tg := syncutils.TaskGroup{
 			Func: func(i interface{}) error {
 				p := i.(string)
-				port, err := c.Ports().Show(p)
+				port, err := c.Port().Show(p)
 				if err != nil {
 					return fmt.Errorf("show port %s failed: %v", p, err)
 				}
@@ -160,7 +160,7 @@ var portDelete = &cobra.Command{
 					}
 				}
 				logging.Info("Reqeust to delete port %s\n", port.Id)
-				err = c.Ports().Delete(p)
+				err = c.Port().Delete(p)
 				if err != nil {
 					utility.LogError(err, fmt.Sprintf("Delete port %s failed", p), false)
 				} else {

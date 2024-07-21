@@ -88,7 +88,6 @@ type Port struct {
 	DeviceId        string                 `json:"device_id"`
 	SecurityGroups  []string               `json:"security_groups"`
 	RevsionNumber   int                    `json:"revision_number"`
-	TenantId        string                 `json:"tenant_id,omitempty"`
 }
 type Agent struct {
 	model.Resource
@@ -183,6 +182,19 @@ func (rule SecurityGroupRule) PortRange() string {
 		portRange += fmt.Sprintf("%s:%d", portRange, rule.PortRangeMax)
 	}
 	return portRange
+}
+
+type QosRule struct {
+	model.Resource
+	QosPolicyId string `json:"qos_policy_id"`
+	Type        string `json:"type"`
+}
+
+type QosPolicy struct {
+	model.Resource
+	Shared  bool                     `json:"shared"`
+	Default bool                     `json:"default"`
+	Rules   []map[string]interface{} `json:"rules"`
 }
 
 type Routers []Router
