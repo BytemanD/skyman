@@ -151,7 +151,7 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 				networks = append(networks, nova.ServerOptNetwork{UUID: network.Id})
 			}
 		}
-		serverOption.Networks = server.Networks
+		serverOption.Networks = networks
 	}
 	if server.UserData != "" {
 		serverOption.UserData = utility.EncodedUserdata(server.UserData)
