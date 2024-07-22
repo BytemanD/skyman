@@ -150,7 +150,10 @@ var imageCreate = &cobra.Command{
 		if file != "" {
 			logging.Info("upload image")
 			err = client.Images().Upload(image.Id, file)
-			utility.LogError(err, "Upload image failed", true)
+			if err != nil {
+				client.Images().Delete(image.Id)
+				utility.LogError(err, "Upload image failed", true)
+			}
 			image, err = c.Images().Show(image.Id)
 			utility.LogError(err, "get image failed", true)
 		}

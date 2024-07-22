@@ -187,22 +187,20 @@ func (c ImageApi) Set(id string, params map[string]interface{}) (*glance.Image, 
 	return &body, nil
 }
 func (c ImageApi) Upload(id string, file string) error {
+	fileStat, err := os.Stat(file)
+	if err != nil {
+		return err
+	}
 	fileReader, err := os.Open(file)
 	if err != nil {
 		return err
 	}
 	defer fileReader.Close()
-	fileStat, err := fileReader.Stat()
-	if err != nil {
-		return err
-	}
-	utility.NewProcessReader(fileReader, int(fileStat.Size()))
-	req := c.session.GetRequest(resty.MethodPut, c.makeUrl(utility.UrlJoin("images", id, "file")))
-	req.SetHeader(httpclient.CONTENT_TYPE, httpclient.CONTENT_TYPE_STREAM)
-	// req.SetFile()
-
-	utility.NewProcessReader(fileReader, int(fileStat.Size()))
-
+	// TODO:
+	reader := utility.NewProcessReader(fileReader, int(fileStat.Size()))
+	req := c.session.GetRequest(resty.MethodPut, c.makeUrl(utility.UrlJoin("images", id, "file"))).
+		SetHeader(httpclient.CONTENT_TYPE, httpclient.CONTENT_TYPE_STREAM).
+		SetBody(reader)
 	_, err = c.session.Request(req)
 	return err
 }
@@ -221,6 +219,7 @@ func (c ImageApi) Download(id string, fileName string, process bool) error {
 			return err
 		}
 	}
+	// TODO
 
 	done := make(chan bool)
 	defer close(done)
@@ -229,7 +228,6 @@ func (c ImageApi) Download(id string, fileName string, process bool) error {
 		_, err = c.session.Request(req)
 		done <- true
 	}()
-
 	bar := pb.StartNew(int(image.Size))
 	currentSize := int64(0)
 	for {

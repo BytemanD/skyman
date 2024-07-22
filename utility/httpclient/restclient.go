@@ -73,10 +73,10 @@ func (c RESTClient) logReq(req *resty.Request) {
 }
 func (c RESTClient) logResp(resp *resty.Response) {
 	respBody := ""
-	if getRespContentType(resp) == CONTENT_TYPE_JSON {
-		respBody = string(resp.Body())
-	} else {
+	if getRespContentType(resp) == CONTENT_TYPE_STREAM {
 		respBody = "<octet-steam>"
+	} else {
+		respBody = string(resp.Body())
 	}
 	logging.Debug("RESP: [%d], \n    Headers: %v\n    Body: %s",
 		resp.StatusCode(), resp.Header(), respBody)
