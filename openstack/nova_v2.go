@@ -634,7 +634,7 @@ func (c serverApi) WaitTask(id string, taskState string) (*nova.Server, error) {
 		if err != nil {
 			return nil, err
 		}
-		logging.Info("[%s] %s", id, server.AllStatus())
+		logging.Info("[%s] %s progress: %d", id, server.AllStatus(), int(server.Progress))
 
 		if strings.ToUpper(server.Status) == "ERROR" {
 			return nil, fmt.Errorf("server %s status is ERROR", id)

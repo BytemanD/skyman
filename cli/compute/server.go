@@ -551,6 +551,7 @@ var serverMigrate = &cobra.Command{
 		for _, serverId := range args {
 			server, err := client.NovaV2().Server().Found(serverId)
 			utility.LogError(err, "get server server failed", true)
+			logging.Info("[%s] source host is %s", serverId, server.Host)
 			if live {
 				srcHostMap[serverId] = server.Host
 				err = client.NovaV2().Server().LiveMigrate(serverId, blockMigrate, host)
@@ -560,7 +561,7 @@ var serverMigrate = &cobra.Command{
 			if err != nil {
 				utility.LogError(err, "Reqeust to migrate server failed", false)
 			} else {
-				fmt.Printf("Requested to migrate server: %s\n", serverId)
+				logging.Info("[%s] requested to migrate server", serverId)
 			}
 		}
 		if wait {
