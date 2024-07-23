@@ -186,15 +186,18 @@ func (rule SecurityGroupRule) PortRange() string {
 
 type QosRule struct {
 	model.Resource
-	QosPolicyId string `json:"qos_policy_id"`
-	Type        string `json:"type"`
+	QosPolicyId  string `json:"qos_policy_id,omitempty"`
+	Type         string `json:"type,omitempty"`
+	Direction    string `json:"direction,omitempty"`
+	MaxKbps      int    `json:"max_kbps,omitempty"`
+	MinKbps      int    `json:"min_kbps,omitempty"`
+	MaxBurstKbps int    `json:"max_burst_kbps,omitempty"`
 }
-
 type QosPolicy struct {
 	model.Resource
-	Shared  bool                     `json:"shared"`
-	Default bool                     `json:"default"`
-	Rules   []map[string]interface{} `json:"rules"`
+	Shared  bool      `json:"shared,omitempty"`
+	Default bool      `json:"default,omitempty"`
+	Rules   []QosRule `json:"rules"`
 }
 
 type Routers []Router

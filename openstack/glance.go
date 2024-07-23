@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/BytemanD/easygo/pkg/compare"
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -14,7 +13,6 @@ import (
 	"github.com/BytemanD/skyman/openstack/model/glance"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/BytemanD/skyman/utility/httpclient"
-	"github.com/cheggaaa/pb/v3"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -228,25 +226,6 @@ func (c ImageApi) Download(id string, fileName string, process bool) error {
 		_, err = c.session.Request(req)
 		done <- true
 	}()
-	bar := pb.StartNew(int(image.Size))
-	currentSize := int64(0)
-	for {
-		if !utility.IsFileExists(fileName) {
-			time.Sleep(time.Second * 2)
-			continue
-		}
-		stat, err := os.Stat(fileName)
-		if err != nil {
-			break
-		}
-		bar.Add(int(stat.Size() - currentSize))
-		if bar.Current() == bar.Total() {
-			break
-		}
-		currentSize = stat.Size()
-		time.Sleep(time.Second * 2)
-	}
-	bar.Finish()
-	<-done
+	utility.WatchFileSize(fileName, int(image.Size))
 	return err
 }
