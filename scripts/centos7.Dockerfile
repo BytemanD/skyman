@@ -1,5 +1,8 @@
 FROM 93s63uis.mirror.aliyuncs.com/library/centos:7.8.2003 as Skylight-Centos7-Base
 
+RUN mkdir /etc/yum.repos.d/backup && mv /etc/yum.repos.d/*.repo /etc/yum.repos.d/backup
+RUN curl -o /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-7.repo
+
 # Install golang
 RUN yum install -y wget
 # Install required packages
