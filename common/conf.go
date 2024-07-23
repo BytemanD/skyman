@@ -56,8 +56,6 @@ type Server struct {
 	NamePrefix       string `yaml:"namePrefix"`
 }
 type Iperf struct {
-	GuestPath     string `yaml:"guestPath"`
-	LocalPath     string `yaml:"guestPath"`
 	ClientOptions string `yaml:"clientOptions"`
 	ServerOptions string `yaml:"serverOptions"`
 }

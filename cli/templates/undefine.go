@@ -55,7 +55,7 @@ func deleteServer(client *openstack.Openstack, server Server, watch bool) {
 		return
 	}
 
-	logging.Info("deleting server %s", server.Name)
+	logging.Info("[%s] deleting (%s)", s.Id, s.Name)
 	if watch {
 		client.NovaV2().Server().WaitDeleted(s.Id)
 	}

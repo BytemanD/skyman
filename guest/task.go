@@ -43,17 +43,17 @@ func installIperf(guest Guest, localIperf3File string) error {
 //
 //	192.168.192.168@a6ee919a-4026-4f0b-8d7e-404950a91eb3
 func TestNetQos(clientGuest Guest, serverGuest Guest, pps bool, localIperf3File string) (float64, float64, error) {
+	logging.Info("连接客户端实例: %s", clientGuest)
 	err := clientGuest.Connect()
 	if clientGuest.IsSame(serverGuest) {
 		logging.Error("客户端和服务端实例不能相同")
 		return 0, 0, err
 	}
-	logging.Info("连接客户端实例: %s", clientGuest.Domain)
 	if err != nil {
 		logging.Error("连接客户端实例失败, %s", err)
 		return 0, 0, err
 	}
-	logging.Info("连接服务端实例: %s", serverGuest.Domain)
+	logging.Info("连接服务端实例: %s", serverGuest)
 	err = serverGuest.Connect()
 	if err != nil {
 		logging.Error("连接服务端实例失败, %s", err)
@@ -74,14 +74,16 @@ func TestNetQos(clientGuest Guest, serverGuest Guest, pps bool, localIperf3File 
 		if localIperf3File == "" {
 			return 0, 0, fmt.Errorf("iperf3 is not installed in server guest")
 		}
+		logging.Info("拷贝安装包 -> 服务端")
 		if err := installIperf(serverGuest, localIperf3File); err != nil {
-			return 0, 0, fmt.Errorf("服务端拷贝iperf3失败: %s", err)
+			return 0, 0, fmt.Errorf("服务端端安装iperf3失败: %s", err)
 		}
 	}
 	if !clientGuest.HasCommand("iperf3") {
 		if localIperf3File == "" {
 			return 0, 0, fmt.Errorf("iperf3 is not installed in client guest")
 		}
+		logging.Info("拷贝安装包 -> 客户端")
 		if err := installIperf(clientGuest, localIperf3File); err != nil {
 			return 0, 0, fmt.Errorf("客户端安装iperf3失败: %s", err)
 		}

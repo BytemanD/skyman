@@ -149,7 +149,14 @@ func (c serverApi) Show(id string) (*nova.Server, error) {
 	return &body.Server, nil
 }
 func (c serverApi) Found(idOrName string) (*nova.Server, error) {
-	return FoundResource[nova.Server](c.ResourceApi, idOrName)
+	server, err := FoundResource[nova.Server](c.ResourceApi, idOrName)
+	if err != nil {
+		return nil, err
+	}
+	if server.Status == "" {
+		server, err = c.Show(server.Id)
+	}
+	return server, err
 }
 func (c serverApi) Create(options nova.ServerOpt) (*nova.Server, error) {
 	if options.Name == "" {
@@ -254,18 +261,18 @@ func (c serverApi) AddInterface(id string, netId, portId string) (*nova.Interfac
 		params["port_id"] = portId
 	}
 	body := struct{ InterfaceAttachment nova.InterfaceAttachment }{}
-	_, err := c.AppendUrl(id).
+	resp, err := c.AppendUrl(id).
 		SetBody(map[string]map[string]string{"interfaceAttachment": params}).
 		AppendUrl("os-interface").Post(&body)
 	if err != nil {
 		return nil, err
 	}
+	body.InterfaceAttachment.SetRequestId(resp.Header().Get(X_OPENSTACK_REQUEST_ID))
 	return &body.InterfaceAttachment, nil
 }
 func (c serverApi) DeleteInterface(id string, portId string) (*resty.Response, error) {
-	body := struct{ volumeAttachment nova.VolumeAttachment }{}
 	return c.AppendUrl(id).AppendUrl("os-interface").AppendUrl(portId).
-		Post(&body)
+		Delete(nil)
 }
 func (c serverApi) DeleteInterfaceAndWait(id string, portId string, timeout time.Duration) error {
 	resp, err := c.DeleteInterface(id, portId)
@@ -273,21 +280,20 @@ func (c serverApi) DeleteInterfaceAndWait(id string, portId string, timeout time
 		return err
 	}
 	reqId := resp.Header().Get(X_OPENSTACK_REQUEST_ID)
-	logging.Debug("request id: %s", reqId)
 	logging.Info("[%s] detaching interface %s, request id: %s", id, portId, reqId)
 
 	return utility.RetryWithErrors(
 		utility.RetryCondition{
 			Timeout:     timeout,
 			IntervalMin: time.Second * 2},
-		[]string{"ActionError"},
+		[]string{"ActionNotFinishedError"},
 		func() error {
 			action, err := c.ShowAction(id, reqId)
 			if err != nil {
 				return fmt.Errorf("get action events failed: %s", err)
 			}
 			if len(action.Events) == 0 || action.Events[0].FinishTime == "" {
-				return utility.NewActionError(reqId)
+				return utility.NewActionNotFinishedError(reqId)
 			}
 			logging.Info("[%s] action result: %s", id, action.Events[0].Result)
 			if action.Events[0].Result == "Error" {

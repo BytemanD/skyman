@@ -2,6 +2,7 @@ package server
 
 import (
 	"runtime"
+	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/syncutils"
@@ -45,7 +46,7 @@ var detachInterfaces = &cobra.Command{
 			Func: func(item interface{}) error {
 				p := item.(nova.InterfaceAttachment)
 				logging.Info("[interface: %s] detaching", p.PortId)
-				err := client.NovaV2().Server().DeleteInterfaceAndWait(server.Id, p.PortId, 600)
+				err := client.NovaV2().Server().DeleteInterfaceAndWait(server.Id, p.PortId, time.Minute*5)
 				if err != nil {
 					logging.Error("[interface: %s] detach failed: %v", p.PortId, err)
 					return err
