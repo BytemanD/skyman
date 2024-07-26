@@ -50,3 +50,15 @@ func printVolumeType(volumeType cinder.VolumeType) {
 	}
 	common.PrintPrettyItemTable(pt)
 }
+func printSnapshot(volume cinder.Snapshot) {
+	pt := common.PrettyItemTable{
+		Item: volume,
+		ShortFields: []common.Column{
+			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
+			{Name: "Status"},
+			{Name: "CreatedAt"}, {Name: "UpdatedAt"},
+			{Name: "UserId"}, {Name: "TenantId"},
+		},
+	}
+	common.PrintPrettyItemTable(pt)
+}

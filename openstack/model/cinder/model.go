@@ -87,6 +87,14 @@ type VolumeType struct {
 	ExtraSpecs                 map[string]string `json:"extra_specs,omitempty"`
 }
 
+func (volumeType VolumeType) GetExtraSpecsList() []string {
+	properties := []string{}
+	for key, value := range volumeType.ExtraSpecs {
+		properties = append(properties, fmt.Sprintf("%s=%s", key, value))
+	}
+	return properties
+}
+
 type Service struct {
 	model.Resource
 	Host           string `json:"host,omitempty"`
@@ -97,10 +105,6 @@ type Service struct {
 	DisabledReason string `json:"disabled_reason,omitempty"`
 }
 
-func (volumeType VolumeType) GetExtraSpecsList() []string {
-	properties := []string{}
-	for key, value := range volumeType.ExtraSpecs {
-		properties = append(properties, fmt.Sprintf("%s=%s", key, value))
-	}
-	return properties
+type Snapshot struct {
+	model.Resource
 }

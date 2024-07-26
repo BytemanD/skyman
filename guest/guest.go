@@ -64,7 +64,13 @@ func (g Guest) IsRunning() bool {
 	}
 	return domainInfo.State == libvirt.DOMAIN_RUNNING
 }
-
+func (g Guest) IsShutoff() bool {
+	domainInfo, err := g.domain.GetInfo()
+	if err != nil {
+		return false
+	}
+	return domainInfo.State == libvirt.DOMAIN_SHUTOFF
+}
 func ParseGuest(guestConnector string) (*Guest, error) {
 	values := strings.Split(guestConnector, ":")
 	var connection, domain string

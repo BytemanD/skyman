@@ -24,7 +24,16 @@ func (c ServerChecker) MakesureServerRunning() error {
 	}
 	return fmt.Errorf("server is not running (%s)", server.GetPowerState())
 }
-
+func (c ServerChecker) MakesureServerStopped() error {
+	server, err := c.Client.NovaV2().Server().Show(c.ServerId)
+	if err != nil {
+		return fmt.Errorf("get server failed: %s", err)
+	}
+	if server.IsStopped() {
+		return nil
+	}
+	return fmt.Errorf("server is not stopped (%s)", server.GetPowerState())
+}
 func (c ServerChecker) MakesureInterfaceExist(attachment *nova.InterfaceAttachment) error {
 	interfaces, err := c.Client.NovaV2().Server().ListInterfaces(c.ServerId)
 	if err != nil {

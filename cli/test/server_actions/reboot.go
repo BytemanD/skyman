@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/cli/test/checkers"
 )
 
 type ServerReboot struct {
@@ -72,8 +73,13 @@ func (t ServerStop) Start() error {
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
-	if !t.Server.IsStopped() {
-		return fmt.Errorf("server is not stopped")
+
+	serverCheckers, err := checkers.GetServerCheckers(t.Client, t.Server)
+	if err != nil {
+		return fmt.Errorf("get server checker failed: %s", err)
+	}
+	if err := serverCheckers.MakesureServerStopped(); err != nil {
+		return err
 	}
 	return nil
 }

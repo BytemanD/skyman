@@ -19,7 +19,15 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-const V2_1 = "v2.1"
+const (
+	V2_1                    = "v2.1"
+	URL_DETAIL              = "detail"
+	URL_SERVER_VOLUMES_BOOT = "os-volumes_boot"
+	URL_VOLUME_ATTACH       = "%s/os-volume_attachments"
+	URL_VOLUME_DETACH       = "%s/os-volume_attachments/%s"
+	URL_INTERFACE_ATTACH    = "%s/os-interface"
+	URL_INTERFACE_DETACH    = "%s/os-interface/%s"
+)
 
 type microVersion struct {
 	Version      int
@@ -131,7 +139,7 @@ func (c serverApi) ListByName(name string) ([]nova.Server, error) {
 }
 func (c serverApi) Detail(query url.Values) ([]nova.Server, error) {
 	body := struct{ Servers []nova.Server }{}
-	if _, err := c.AppendUrl("detail").SetQuery(query).Get(&body); err != nil {
+	if _, err := c.AppendUrl(URL_DETAIL).SetQuery(query).Get(&body); err != nil {
 		return nil, err
 	}
 	return body.Servers, nil
@@ -177,7 +185,7 @@ func (c serverApi) Create(options nova.ServerOpt) (*nova.Server, error) {
 	var err error
 	body := struct{ Server nova.Server }{}
 	if options.BlockDeviceMappingV2 != nil {
-		_, err = c.SetUrl("os-volumes_boot").
+		_, err = c.SetUrl(URL_SERVER_VOLUMES_BOOT).
 			SetBody(map[string]nova.ServerOpt{"server": options}).Post(&body)
 	} else {
 		_, err = c.SetBody(map[string]nova.ServerOpt{"server": options}).Post(&body)
@@ -194,24 +202,23 @@ func (c serverApi) Delete(id string) error {
 }
 func (c serverApi) ListVolumes(id string) ([]nova.VolumeAttachment, error) {
 	body := struct{ VolumeAttachments []nova.VolumeAttachment }{}
-	if _, err := c.AppendUrl(id).AppendUrl("os-volume_attachments").Get(&body); err != nil {
+	if _, err := c.AppendUrlf(URL_VOLUME_ATTACH, id).Get(&body); err != nil {
 		return nil, err
 	}
 	return body.VolumeAttachments, nil
 }
 func (c serverApi) AddVolume(id string, volumeId string) (*nova.VolumeAttachment, error) {
-	body := struct{ InterfaceAttachment nova.VolumeAttachment }{}
-	_, err := c.AppendUrl(id).
+	body := struct{ VolumeAttachment nova.VolumeAttachment }{}
+	_, err := c.AppendUrlf(URL_VOLUME_ATTACH, id).
 		SetBody(map[string]map[string]string{"volumeAttachment": {"volumeId": volumeId}}).
-		AppendUrl("os-volume_attachments").Post(&body)
+		Post(&body)
 	if err != nil {
 		return nil, err
 	}
-	return &body.InterfaceAttachment, nil
+	return &body.VolumeAttachment, nil
 }
 func (c serverApi) DeleteVolume(id string, volumeId string) error {
-	_, err := c.AppendUrl(id).AppendUrl("os-volume_attachments").AppendUrl(volumeId).
-		Delete(nil)
+	_, err := c.AppendUrlf(URL_VOLUME_DETACH, id, volumeId).Delete(nil)
 	return err
 }
 func (c serverApi) DeleteVolumeAndWait(id string, volumeId string, waitSeconds int) error {
@@ -243,7 +250,7 @@ func (c serverApi) DeleteVolumeAndWait(id string, volumeId string, waitSeconds i
 }
 func (c serverApi) ListInterfaces(id string) ([]nova.InterfaceAttachment, error) {
 	body := struct{ InterfaceAttachments []nova.InterfaceAttachment }{}
-	if _, err := c.AppendUrl(id).AppendUrl("os-interface").Get(&body); err != nil {
+	if _, err := c.AppendUrlf(URL_INTERFACE_ATTACH, id).Get(&body); err != nil {
 		return nil, err
 	}
 	return body.InterfaceAttachments, nil
@@ -260,9 +267,9 @@ func (c serverApi) AddInterface(id string, netId, portId string) (*nova.Interfac
 		params["port_id"] = portId
 	}
 	body := struct{ InterfaceAttachment nova.InterfaceAttachment }{}
-	resp, err := c.AppendUrl(id).
+	resp, err := c.AppendUrlf(URL_INTERFACE_ATTACH, id).
 		SetBody(map[string]map[string]string{"interfaceAttachment": params}).
-		AppendUrl("os-interface").Post(&body)
+		Post(&body)
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +277,7 @@ func (c serverApi) AddInterface(id string, netId, portId string) (*nova.Interfac
 	return &body.InterfaceAttachment, nil
 }
 func (c serverApi) DeleteInterface(id string, portId string) (*resty.Response, error) {
-	return c.AppendUrl(id).AppendUrl("os-interface").AppendUrl(portId).
+	return c.AppendUrlf(URL_INTERFACE_DETACH, id, portId).
 		Delete(nil)
 }
 func (c serverApi) DeleteInterfaceAndWait(id string, portId string, timeout time.Duration) error {

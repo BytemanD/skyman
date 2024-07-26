@@ -298,7 +298,7 @@ func init() {
 	for _, actions := range arrayutils.SplitStrings(server_actions.ACTIONS.Keys(), 5) {
 		supportedActions = append(supportedActions, strings.Join(actions, ", "))
 	}
-	serverAction.Flags().String("actions", "", "Test actions\nFormat: <action>[:count], "+
+	serverAction.Flags().StringP("actions", "A", "", "Test actions\nFormat: <action>[:count], "+
 		"multiple actions separate by ','.\nExample: reboot,live_migrate:3\n"+
 		"Actions: "+strings.Join(supportedActions, ",\n         "),
 	)

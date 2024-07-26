@@ -198,7 +198,7 @@ func (server Server) IsMigrating() bool {
 	return strings.ToUpper(server.Status) == "MIGRATING"
 }
 func (server Server) IsStopped() bool {
-	return server.StatusIs("STOPPED")
+	return server.StatusIs("SHUTOFF")
 }
 func (server Server) IsPaused() bool {
 	return server.StatusIs("PAUSED")

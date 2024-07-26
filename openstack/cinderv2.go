@@ -77,28 +77,6 @@ func (c CinderV2) Volume() volumeApi {
 		},
 	}
 }
-func (c CinderV2) VolumeType() volumeTypeApi {
-	return volumeTypeApi{
-		ResourceApi: ResourceApi{
-			Endpoint:    c.BaseUrl,
-			BaseUrl:     "types",
-			Client:      c.session,
-			SingularKey: "volume_type",
-			PluralKey:   "volume_types",
-		},
-	}
-}
-func (c CinderV2) Service() volumeServiceApi {
-	return volumeServiceApi{
-		ResourceApi: ResourceApi{
-			Endpoint:    c.BaseUrl,
-			BaseUrl:     "os-services",
-			Client:      c.session,
-			SingularKey: "service",
-			PluralKey:   "services",
-		},
-	}
-}
 
 // volume api
 type volumeApi struct {
@@ -221,6 +199,17 @@ type volumeTypeApi struct {
 	ResourceApi
 }
 
+func (c CinderV2) VolumeType() volumeTypeApi {
+	return volumeTypeApi{
+		ResourceApi: ResourceApi{
+			Endpoint:    c.BaseUrl,
+			BaseUrl:     "types",
+			Client:      c.session,
+			SingularKey: "volume_type",
+			PluralKey:   "volume_types",
+		},
+	}
+}
 func (c volumeTypeApi) List(query url.Values) ([]cinder.VolumeType, error) {
 	body := struct {
 		VolumeTypes []cinder.VolumeType `json:"volume_types"`
@@ -268,6 +257,18 @@ type volumeServiceApi struct {
 	ResourceApi
 }
 
+func (c CinderV2) Service() volumeServiceApi {
+	return volumeServiceApi{
+		ResourceApi: ResourceApi{
+			Endpoint:    c.BaseUrl,
+			BaseUrl:     "os-services",
+			Client:      c.session,
+			SingularKey: "service",
+			PluralKey:   "services",
+		},
+	}
+}
+
 func (c volumeServiceApi) List(query url.Values) ([]cinder.Service, error) {
 	body := struct{ Services []cinder.Service }{}
 	_, err := c.SetQuery(query).Get(&body)
@@ -275,4 +276,44 @@ func (c volumeServiceApi) List(query url.Values) ([]cinder.Service, error) {
 		return nil, err
 	}
 	return body.Services, nil
+}
+
+// snapshot api
+type snapshotApi struct {
+	ResourceApi
+}
+
+func (c CinderV2) Snapshot() snapshotApi {
+	return snapshotApi{
+		ResourceApi: ResourceApi{
+			Endpoint:    c.BaseUrl,
+			BaseUrl:     "snapshots",
+			Client:      c.session,
+			SingularKey: "snapshot",
+			PluralKey:   "snapshots",
+		},
+	}
+}
+func (c snapshotApi) List(query url.Values) ([]cinder.Snapshot, error) {
+	body := struct{ Snapshots []cinder.Snapshot }{}
+	_, err := c.SetQuery(query).Get(&body)
+	if err != nil {
+		return nil, err
+	}
+	return body.Snapshots, nil
+}
+func (c snapshotApi) Show(id string) (*cinder.Snapshot, error) {
+	body := struct{ Snapshot cinder.Snapshot }{}
+	_, err := c.AppendUrl(id).Get(&body)
+	if err != nil {
+		return nil, err
+	}
+	return &body.Snapshot, nil
+}
+func (c snapshotApi) Delete(id string) error {
+	_, err := c.AppendUrl(id).Delete(nil)
+	return err
+}
+func (c snapshotApi) Found(idOrName string) (*cinder.Snapshot, error) {
+	return FoundResource[cinder.Snapshot](c.ResourceApi, idOrName)
 }

@@ -221,6 +221,10 @@ func (api *ResourceApi) AppendUrl(url string) *ResourceApi {
 	api.BaseUrl = utility.UrlJoin(api.BaseUrl, url)
 	return api
 }
+func (api *ResourceApi) AppendUrlf(u string, args ...any) *ResourceApi {
+	api.BaseUrl = utility.UrlJoin(api.BaseUrl, fmt.Sprintf(u, args...))
+	return api
+}
 func (api *ResourceApi) PopUrl() *ResourceApi {
 	if api.BaseUrl != "" {
 		values := strings.Split(api.BaseUrl, "/")

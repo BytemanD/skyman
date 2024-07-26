@@ -61,9 +61,24 @@ func (c QGAChecker) MakesureServerRunning() error {
 	}
 	return c.makesureQGAConnected(&serverGuest)
 }
+func (c QGAChecker) MakesureServerStopped() error {
+	logging.Info("[%s] connecting to guest ...", c.ServerId)
+	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
+	if err := serverGuest.Connect(); err != nil {
+		return err
+	}
+	if serverGuest.IsShutoff() {
+		return nil
+	}
+	return fmt.Errorf("guest is not shutoff")
+}
 func (c QGAChecker) MakesureInterfaceExist(attachment *nova.InterfaceAttachment) error {
 	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
 	serverGuest.Connect()
+	if serverGuest.IsShutoff() {
+		logging.Warning("[%s] guest is shutoff, skip to check interfaces", c.ServerId)
+		return nil
+	}
 
 	return utility.RetryWithErrors(
 		utility.RetryCondition{
@@ -94,6 +109,10 @@ func (c QGAChecker) MakesureInterfaceExist(attachment *nova.InterfaceAttachment)
 func (c QGAChecker) MakesureInterfaceNotExists(port *neutron.Port) error {
 	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
 	serverGuest.Connect()
+	if serverGuest.IsShutoff() {
+		logging.Warning("[%s] guest is shutoff, skip to check interfaces", c.ServerId)
+		return nil
+	}
 	ipaddrs := serverGuest.GetIpaddrs()
 	logging.Debug("[%s] found ip addresses: %s", c.ServerId, ipaddrs)
 
@@ -110,6 +129,10 @@ func (c QGAChecker) MakesureInterfaceNotExists(port *neutron.Port) error {
 func (c QGAChecker) MakesureVolumeExist(attachment *nova.VolumeAttachment) error {
 	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
 	serverGuest.Connect()
+	if serverGuest.IsShutoff() {
+		logging.Warning("[%s] guest is shutoff, skip to check block devices", c.ServerId)
+		return nil
+	}
 	guestBlockDevices, err := serverGuest.GetBlockDevices()
 	if err != nil {
 		return fmt.Errorf("get block devices failed: %s", err)
@@ -127,6 +150,14 @@ func (c QGAChecker) MakesureVolumeExist(attachment *nova.VolumeAttachment) error
 func (c QGAChecker) MakesureVolumeNotExists(attachment *nova.VolumeAttachment) error {
 	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
 	serverGuest.Connect()
+	if serverGuest.IsShutoff() {
+		logging.Warning("[%s] guest is shutoff, skip to check block devices", c.ServerId)
+		return nil
+	}
+	if serverGuest.IsShutoff() {
+		logging.Warning("[%s] guest is shutoff, skip to check block devices", c.ServerId)
+		return nil
+	}
 	guestBlockDevices, err := serverGuest.GetBlockDevices()
 	if err != nil {
 		return fmt.Errorf("get block devices failed: %s", err)
@@ -153,6 +184,10 @@ func (c QGAChecker) MakesureVolumeSizeIs(attachment *nova.VolumeAttachment, size
 	}
 	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
 	serverGuest.Connect()
+	if serverGuest.IsShutoff() {
+		logging.Warning("[%s] guest is shutoff, skip to check block devices", c.ServerId)
+		return nil
+	}
 	guestBlockDevices, err := serverGuest.GetBlockDevices()
 	if err != nil {
 		return fmt.Errorf("get block devices failed: %s", err)

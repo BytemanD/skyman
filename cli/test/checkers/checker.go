@@ -11,6 +11,7 @@ import (
 
 type ServerCheckerInterface interface {
 	MakesureServerRunning() error
+	MakesureServerStopped() error
 	// MakesureHostname(hostname string) error
 	MakesureInterfaceExist(attachment *nova.InterfaceAttachment) error
 	MakesureInterfaceNotExists(port *neutron.Port) error
@@ -24,6 +25,14 @@ type ServerCheckers []ServerCheckerInterface
 func (checkers ServerCheckers) MakesureServerRunning() error {
 	for _, checker := range checkers {
 		if err := checker.MakesureServerRunning(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (checkers ServerCheckers) MakesureServerStopped() error {
+	for _, checker := range checkers {
+		if err := checker.MakesureServerStopped(); err != nil {
 			return err
 		}
 	}

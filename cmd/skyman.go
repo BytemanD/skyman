@@ -163,7 +163,7 @@ func main() {
 		compute.Keypair, compute.Compute, compute.Console,
 		compute.Migration, compute.AZ, compute.Aggregate,
 		image.Image,
-		storage.Volume,
+		storage.Volume, storage.Snapshot,
 		networking.Router, networking.Network, networking.Subnet, networking.Port,
 		networking.Security, networking.SG,
 		templates.DefineCmd, templates.UndefineCmd,
