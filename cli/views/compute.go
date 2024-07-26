@@ -54,10 +54,10 @@ func PrintServer(server nova.Server) {
 			{Name: "Image",
 				Slot: func(item interface{}) interface{} {
 					p, _ := item.(nova.Server)
-					if p.Image.Name != "" {
-						return fmt.Sprintf("%s (%s)", p.Image.Name, p.Image.Id)
+					if p.ImageName() != "" {
+						return fmt.Sprintf("%s (%s)", p.ImageName(), p.ImageId())
 					} else {
-						return p.Image.Id
+						return p.ImageId()
 					}
 				}},
 			{Name: "AZ", Text: "AZ"}, {Name: "Host"},

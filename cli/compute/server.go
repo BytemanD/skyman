@@ -105,7 +105,7 @@ var serverList = &cobra.Command{
 			pt.LongColumns = append(pt.LongColumns,
 				common.Column{Name: "Image", Slot: func(item interface{}) interface{} {
 					p, _ := (item).(nova.Server)
-					return p.Image.Name
+					return p.ImageName()
 				}},
 			)
 		}
@@ -114,15 +114,19 @@ var serverList = &cobra.Command{
 		for {
 			if long && verbose {
 				for i, server := range items {
-					if _, ok := imageMap[server.Image.Id]; !ok {
-						image, err := c.GlanceV2().Images().Show(server.Image.Id)
-						if err != nil {
-							logging.Warning("get image %s faield, %s", server.Image.Id, err)
-						} else {
-							imageMap[server.Image.Id] = *image
+
+					if _, ok := imageMap[server.ImageId()]; !ok {
+						imageId := server.ImageId()
+						if imageId != "" {
+							image, err := c.GlanceV2().Images().Show(imageId)
+							if err != nil {
+								logging.Warning("get image %s faield, %s", server.ImageId(), err)
+							} else {
+								imageMap[server.ImageId()] = *image
+							}
+							items[i].SetImageName(imageMap[server.ImageId()].Name)
 						}
 					}
-					items[i].Image.Name = imageMap[server.Image.Id].Name
 				}
 			}
 			pt.CleanItems()
@@ -152,8 +156,8 @@ var serverShow = &cobra.Command{
 		if err != nil {
 			logging.Fatal("%v", err)
 		}
-		if image, err := c.GlanceV2().Images().Show(server.Image.Id); err == nil {
-			server.Image.Name = image.Name
+		if image, err := c.GlanceV2().Images().Show(server.ImageId()); err == nil {
+			server.SetImageName(image.Name)
 		}
 		views.PrintServer(*server)
 	},

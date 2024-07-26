@@ -86,7 +86,7 @@ type Server struct {
 	Host           string                  `json:"OS-EXT-SRV-ATTR:host,omitempty"`
 	AZ             string                  `json:"OS-EXT-AZ:availability_zone,omitempty"`
 	Flavor         Flavor                  `json:"flavor,omitempty"`
-	Image          Image                   `json:"image,omitempty"`
+	Image          interface{}             `json:"image,omitempty"`
 	Fault          Fault                   `json:"fault,omitempty"`
 	Addresses      map[string]AddressList  `json:"addresses,omitempty"`
 	InstanceName   string                  `json:"OS-EXT-SRV-ATTR:instance_name,omitempty"`
@@ -119,6 +119,27 @@ type Servers []Server
 type ServersResp struct {
 	model.RequestId
 	Items []Server
+}
+
+func (s Server) ImageId() string {
+	if p, ok := s.Image.(map[string]string); ok {
+		return p["id"]
+	}
+	return ""
+}
+
+func (s Server) ImageName() string {
+	if p, ok := s.Image.(map[string]string); ok {
+		return p["name"]
+	}
+	return ""
+}
+func (s *Server) SetImageName(name string) {
+	if p, ok := s.Image.(map[string]string); ok {
+		p["name"] = name
+	}
+	s.Image = s
+	// return ""
 }
 
 func (server *Server) GetPowerState() string {

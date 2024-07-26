@@ -174,11 +174,11 @@ func inspect(client *openstack.Openstack, serverId string) (*ServerInspect, erro
 		return nil, err
 	}
 	logging.Info("get server image")
-	image, err := client.GlanceV2().Images().Show(server.Image.Id)
+	image, err := client.GlanceV2().Images().Show(server.ImageId())
 	if err != nil {
 		return nil, err
 	}
-	server.Image.Name = image.Name
+	server.SetImageName(image.Name)
 	interfaceAttachmetns, err := client.NovaV2().Server().ListInterfaces(serverId)
 	if err != nil {
 		return nil, err

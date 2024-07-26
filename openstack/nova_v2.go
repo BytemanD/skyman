@@ -178,9 +178,9 @@ func (c serverApi) Create(options nova.ServerOpt) (*nova.Server, error) {
 	body := struct{ Server nova.Server }{}
 	if options.BlockDeviceMappingV2 != nil {
 		_, err = c.SetUrl("os-volumes_boot").
-			SetBody(map[string]nova.ServerOpt{"server": options}).Post(&c.body)
+			SetBody(map[string]nova.ServerOpt{"server": options}).Post(&body)
 	} else {
-		_, err = c.SetBody(map[string]nova.ServerOpt{"server": options}).Post(&c.body)
+		_, err = c.SetBody(map[string]nova.ServerOpt{"server": options}).Post(&body)
 	}
 	if err != nil {
 		return nil, err
@@ -210,9 +210,8 @@ func (c serverApi) AddVolume(id string, volumeId string) (*nova.VolumeAttachment
 	return &body.InterfaceAttachment, nil
 }
 func (c serverApi) DeleteVolume(id string, volumeId string) error {
-	body := struct{ volumeAttachment nova.VolumeAttachment }{}
 	_, err := c.AppendUrl(id).AppendUrl("os-volume_attachments").AppendUrl(volumeId).
-		Post(&body)
+		Delete(nil)
 	return err
 }
 func (c serverApi) DeleteVolumeAndWait(id string, volumeId string, waitSeconds int) error {
