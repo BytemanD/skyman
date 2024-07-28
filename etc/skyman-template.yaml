@@ -32,7 +32,7 @@ auth:
 test:
   # web:
   #   port: 80
-  tasks: 1
+  total: 1
   workers: 1
   useServers:
   deleteIfError: false
@@ -45,7 +45,7 @@ test:
   flavors:
   images:
   networks:
-  actions:
+  actionTasks:
   interfaceHotplug:
     nums: 1
   volumeHotplug:

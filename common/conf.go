@@ -87,7 +87,7 @@ type Web struct {
 	Port int `yaml:"port"`
 }
 type Test struct {
-	Tasks            int                `yaml:"tasks"`
+	Total            int                `yaml:"total"`
 	Workers          int                `yaml:"workers"`
 	Web              Web                `yaml:"web"`
 	DeleteIfError    bool               `yaml:"deleteIfError"`
@@ -101,7 +101,7 @@ type Test struct {
 	Networks         []string           `yaml:"networks"`
 	VolumeType       string             `yaml:"volumeType"`
 	VolumeSize       int                `yaml:"volumeSize"`
-	Actions          []string           `yaml:"volumeType"`
+	ActionTasks      []string           `yaml:"actionTasks"`
 	InterfaceHotplug InterfaceHotplug   `yaml:"interfaceHotplug"`
 	VolumeHotplug    VolumeHotplug      `yaml:"volumeHotplug"`
 	UseServers       []string           `yaml:"userServers"`
@@ -146,8 +146,8 @@ func LoadConfig(configFile string) error {
 	if CONF.Test.BootVolumeSize <= 0 {
 		CONF.Test.BootVolumeSize = 50
 	}
-	if CONF.Test.Tasks <= 0 {
-		CONF.Test.Tasks = 1
+	if CONF.Test.Total <= 0 {
+		CONF.Test.Total = 1
 	}
 	if CONF.Test.InterfaceHotplug.Nums == 0 {
 		CONF.Test.InterfaceHotplug.Nums = 1
