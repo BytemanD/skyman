@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -38,9 +40,26 @@ var snapshotList = &cobra.Command{
 		utility.LogError(err, "list snapshot falied", true)
 		table := common.PrettyTable{
 			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
+				{Name: "Id"}, {Name: "Name"},
+				{Name: "Status", AutoColor: true},
+				{Name: "Size"},
+				{Name: "VolumeId", Text: "Volume", Slot: func(item interface{}) interface{} {
+					p, _ := item.(cinder.Snapshot)
+					if p.VolumeId == "" {
+						return ""
+					}
+					if vol, err := client.CinderV2().Volume().Show(p.VolumeId); err != nil {
+						logging.Warning("get volume %s failed: %s", p.VolumeId, err)
+						return p.VolumeId
+					} else {
+						return vol.NameOrId()
+					}
+				}},
 			},
-			LongColumns: []common.Column{},
+			LongColumns: []common.Column{
+				{Name: "Description"},
+				{Name: "CreatedAt"},
+			},
 		}
 		table.AddItems(snapshots)
 		if long {
@@ -85,34 +104,24 @@ var snapshotDelete = &cobra.Command{
 	},
 }
 
-// var snapshotCreate = &cobra.Command{
-// 	Use:   "create <name>",
-// 	Short: "Create snapshot",
-// 	Args:  cobra.ExactArgs(1),
-// 	Run: func(cmd *cobra.Command, args []string) {
-// 		size, _ := cmd.Flags().GetUint("size")
-// 		snapshotType, _ := cmd.Flags().GetString("type")
+var snapshotCreate = &cobra.Command{
+	Use:   "create <volume>",
+	Short: "Create snapshot",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		force, _ := cmd.Flags().GetBool("force")
+		name, _ := cmd.Flags().GetString("name")
 
-// 		params := map[string]interface{}{
-// 			"name": args[0],
-// 		}
-// 		if size > 0 {
-// 			params["size"] = size
-// 		}
-// 		if snapshotType != "" {
-// 			params["snapshot_type"] = snapshotType
-// 		}
+		client := openstack.DefaultClient()
 
-// 		client := openstack.DefaultClient()
+		volume, err := client.CinderV2().Volume().Found(args[0])
+		utility.LogIfError(err, true, "get volume %s failed", args[0])
 
-// 		snapshot, err := client.CinderV2().Snapshot().Create(params)
-// 		if err != nil {
-// 			fmt.Println(err)
-// 			os.Exit(1)
-// 		}
-// 		printSnapshot(*snapshot)
-// },
-// }
+		snapshot, err := client.CinderV2().Snapshot().Create(volume.Id, name, force)
+		utility.LogIfError(err, true, "create snaphost failed")
+		printSnapshot(*snapshot)
+	},
+}
 
 func init() {
 	snapshotList.Flags().BoolP("long", "l", false, "List additional fields in output")
@@ -120,8 +129,11 @@ func init() {
 	snapshotList.Flags().StringP("name", "n", "", "Search by snapshot name")
 	snapshotList.Flags().String("status", "", "Search by snapshot status")
 
+	snapshotCreate.Flags().Bool("force", false, "Ignores the current status of the volume ")
+	snapshotCreate.Flags().StringP("name", "n", "", "snapshot name")
+
 	Snapshot.AddCommand(
-		snapshotList, snapshotShow,
+		snapshotList, snapshotShow, snapshotCreate,
 		snapshotDelete,
 	)
 }

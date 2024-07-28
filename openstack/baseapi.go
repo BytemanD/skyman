@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -281,6 +282,10 @@ func (api ResourceApi) Patch(res interface{}) (*resty.Response, error) {
 	return resp, json.Unmarshal(resp.Body(), res)
 }
 
+type ResourceInterface interface {
+	GetName() string
+}
+
 func FoundResource[T any](api ResourceApi, idOrName string) (*T, error) {
 	if api.SingularKey == "" || api.PluralKey == "" {
 		return nil, fmt.Errorf("resource api %v SingularKey or PluralKey is empty", api)
@@ -315,6 +320,17 @@ func FoundResource[T any](api ResourceApi, idOrName string) (*T, error) {
 	case 1:
 		return &body2[0], nil
 	default:
+		fileted := []T{}
+		for _, t := range body2 {
+			value := reflect.ValueOf(t)
+			valueName := value.FieldByName("Name")
+			if valueName.Kind() == reflect.String && valueName.String() == idOrName {
+				fileted = append(fileted, t)
+			}
+		}
+		if len(fileted) == 1 {
+			return &fileted[0], nil
+		}
 		return nil, fmt.Errorf("found multi resources with name %s ", idOrName)
 	}
 }

@@ -32,6 +32,13 @@ func (resource Resource) GetStructTags() []string {
 	}
 	return tags
 }
+func (resource Resource) NameOrId() string {
+	if resource.Name != "" {
+		return resource.Name
+	} else {
+		return resource.Id
+	}
+}
 
 type ApiVersion struct {
 	Id         string `json:"id"`

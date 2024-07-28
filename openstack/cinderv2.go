@@ -317,3 +317,20 @@ func (c snapshotApi) Delete(id string) error {
 func (c snapshotApi) Found(idOrName string) (*cinder.Snapshot, error) {
 	return FoundResource[cinder.Snapshot](c.ResourceApi, idOrName)
 }
+func (c snapshotApi) Create(volumeId string, name string, force bool) (*cinder.Snapshot, error) {
+	body := struct {
+		Snapshot cinder.Snapshot
+	}{}
+	params := map[string]interface{}{
+		"volume_id": volumeId,
+		"name":      name,
+	}
+	if force {
+		params["force"] = force
+	}
+	_, err := c.SetBody(map[string]interface{}{"snapshot": params}).Post(&body)
+	if err != nil {
+		return nil, err
+	}
+	return &body.Snapshot, err
+}

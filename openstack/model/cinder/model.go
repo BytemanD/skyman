@@ -107,4 +107,9 @@ type Service struct {
 
 type Snapshot struct {
 	model.Resource
+	Size      uint                   `json:"size,omitempty"`
+	VolumeId  string                 `json:"volume_id,omitempty"`
+	ProjectId string                 `json:"os-extended-snapshot-attributes:project_id,omitempty"`
+	Progress  string                 `json:"os-extended-snapshot-attributes:progress,omitempty"`
+	Metadata  map[string]interface{} `json:"metadata:progress,omitempty"`
 }

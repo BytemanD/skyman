@@ -1,16 +1,39 @@
 package storage
 
 import (
+	"encoding/json"
 	"strings"
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
 )
 
-func printVolume(volume cinder.Volume) {
+func printResource(resource any, fields []common.Column) {
 	pt := common.PrettyItemTable{
-		Item: volume,
-		ShortFields: []common.Column{
+		Item:        resource,
+		ShortFields: fields,
+	}
+	common.PrintPrettyItemTable(pt)
+}
+func printVolumeType(volumeType cinder.VolumeType) {
+	printResource(
+		volumeType,
+		[]common.Column{
+			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
+			{Name: "IsPublic"}, {Name: "IsEncrypted"},
+			{Name: "QosSpecsId"},
+			{Name: "ExtraSpecs", Slot: func(item interface{}) interface{} {
+				p, _ := item.(cinder.VolumeType)
+				return strings.Join(p.GetExtraSpecsList(), "\n")
+			}},
+		},
+	)
+}
+
+func printVolume(volume cinder.Volume) {
+	printResource(
+		volume,
+		[]common.Column{
 			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 			{Name: "Status"}, {Name: "TaskStatus"},
 			{Name: "Size"}, {Name: "Bootable"},
@@ -32,33 +55,27 @@ func printVolume(volume cinder.Volume) {
 			{Name: "CreatedAt"}, {Name: "UpdatedAt"},
 			{Name: "UserId"}, {Name: "TenantId"},
 		},
-	}
-	common.PrintPrettyItemTable(pt)
+	)
 }
-func printVolumeType(volumeType cinder.VolumeType) {
-	pt := common.PrettyItemTable{
-		Item: volumeType,
-		ShortFields: []common.Column{
-			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
-			{Name: "IsPublic"}, {Name: "IsEncrypted"},
-			{Name: "QosSpecsId"},
-			{Name: "ExtraSpecs", Slot: func(item interface{}) interface{} {
-				p, _ := item.(cinder.VolumeType)
-				return strings.Join(p.GetExtraSpecsList(), "\n")
-			}},
-		},
-	}
-	common.PrintPrettyItemTable(pt)
-}
-func printSnapshot(volume cinder.Snapshot) {
-	pt := common.PrettyItemTable{
-		Item: volume,
-		ShortFields: []common.Column{
+func printSnapshot(snapshot cinder.Snapshot) {
+	printResource(
+		snapshot,
+		[]common.Column{
 			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 			{Name: "Status"},
+			{Name: "VolumeId"},
+			{Name: "Size"},
+			{Name: "Metadata", Slot: func(item interface{}) interface{} {
+				p, _ := item.(cinder.Snapshot)
+				if p.Metadata == nil {
+					return ""
+				}
+				metatadata, _ := json.Marshal(p.Metadata)
+				return string(metatadata)
+			}},
+			{Name: "Progress"},
+			{Name: "ProjectId"},
 			{Name: "CreatedAt"}, {Name: "UpdatedAt"},
-			{Name: "UserId"}, {Name: "TenantId"},
 		},
-	}
-	common.PrintPrettyItemTable(pt)
+	)
 }
