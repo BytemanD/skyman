@@ -18,6 +18,7 @@ import (
 type ServerAction interface {
 	Start() error
 	// Rollback()
+	TearDown() error
 	Cleanup()
 	ServerId() string
 }
@@ -199,10 +200,76 @@ func (t ServerActionTest) getServerBootOption(name string) nova.ServerOpt {
 	}
 	return opt
 }
+func (t *ServerActionTest) GetRootVolume() (*nova.VolumeAttachment, error) {
+	if t.Server.RootBdmType != "volume" {
+		return nil, fmt.Errorf("root bdm is not volume")
+	}
+	volumes, err := t.Client.NovaV2().Server().ListVolumes(t.Server.Id)
+	if err != nil {
+		return nil, err
+	}
+	for _, volume := range volumes {
+		if volume.Device == t.Server.RootDeviceName {
+			return &volume, nil
+		}
+	}
+	return nil, fmt.Errorf("root volume not found")
+}
+func (t *ServerActionTest) WaitSnapshotCreated(snapshotId string) error {
+	return utility.RetryWithErrors(
+		utility.RetryCondition{
+			Timeout:     time.Minute * 5,
+			IntervalMin: time.Second * 2},
+		[]string{"SnapshotIsNotAvailable"},
+		func() error {
+			snapshot, err := t.Client.CinderV2().Snapshot().Show(snapshotId)
+			if err != nil {
+				return err
+			}
+			logging.Info("[%s] snapshot status is %s", t.ServerId(), snapshot.Status)
+			switch snapshot.Status {
+			case "error":
+				return fmt.Errorf("snapshot is error")
+			case "available":
+				return nil
+			default:
+				return utility.NewSnapshotIsNotAvailable(snapshotId)
+			}
+		},
+	)
+}
+func (t *ServerActionTest) WaitVolumeTaskDone(volumeId string) error {
+	return utility.RetryWithErrors(
+		utility.RetryCondition{
+			Timeout:      time.Minute * 10,
+			IntervalMin:  time.Second,
+			IntervalStep: time.Second,
+			IntervalMax:  time.Second * 10},
+		[]string{"VolumeHasTaskError"},
+		func() error {
+			vol, err := t.Client.CinderV2().Volume().Show(volumeId)
+			if err != nil {
+				return err
+			}
+			logging.Info("[%s] volume %s state=%s, staskState=%s", t.ServerId(),
+				volumeId, vol.Status, vol.TaskStatus)
+			if vol.IsError() {
+				return fmt.Errorf("volume %s is error", volumeId)
+			}
+			if (vol.IsAvailable() || vol.IsInuse()) && vol.TaskStatus == "" {
+				return nil
+			}
+			return utility.NewVolumeHasTaskError(volumeId)
+		},
+	)
+}
 
 type EmptyCleanup struct {
 }
 
+func (t EmptyCleanup) TearDown() error {
+	return nil
+}
+
 func (t EmptyCleanup) Cleanup() {
-	// logging.Info("[%s] clean up", t.Server.Id)
 }

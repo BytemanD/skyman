@@ -15,6 +15,7 @@ import (
 
 type ServerLiveMigrate struct {
 	ServerActionTest
+	EmptyCleanup
 	clientServer  *nova.Server
 	clientGuest   *guest.Guest
 	clientPingPid int

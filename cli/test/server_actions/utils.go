@@ -35,6 +35,7 @@ var (
 	ACTION_DETACH_VOLUME     = "volume_detach"
 	ACTION_VOLUME_HOTPLUG    = "volume_hotplug"
 	ACTION_VOLUME_EXTEND     = "volume_extend"
+	ACTION_REVERT_SYSTEM     = "revert_system"
 )
 
 type ActionCreatorFunc func(server *nova.Server, client *openstack.Openstack) ServerAction
@@ -175,5 +176,7 @@ func init() {
 	ACTIONS.register(ACTION_VOLUME_EXTEND, func(s *nova.Server, c *openstack.Openstack) ServerAction {
 		return &ServerExtendVolume{ServerActionTest: ServerActionTest{Server: s, Client: c}}
 	})
-
+	ACTIONS.register(ACTION_REVERT_SYSTEM, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return &ServerRevertToSnapshot{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
 }

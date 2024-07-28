@@ -106,6 +106,7 @@ func (t ServerDetachInterface) Start() error {
 
 type ServerAttachHotPlug struct {
 	ServerActionTest
+	EmptyCleanup
 	attachedPort []*neutron.Port
 }
 

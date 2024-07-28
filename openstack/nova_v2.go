@@ -661,6 +661,27 @@ func (c serverApi) WaitResized(id string, newFlavorName string) (*nova.Server, e
 	}
 	return nil, fmt.Errorf("server %s not resized", id)
 }
+func (c serverApi) StopAndWait(id string) error {
+	if err := c.Stop(id); err != nil {
+		return err
+	}
+	return utility.RetryWithErrors(
+		utility.RetryCondition{
+			Timeout:     time.Minute * 5,
+			IntervalMin: time.Second * 2},
+		[]string{"ServerNotStopped"},
+		func() error {
+			server, err := c.Show(id)
+			if err != nil {
+				return fmt.Errorf("get server %s failed: %s", id, err)
+			}
+			if server.IsStopped() {
+				return nil
+			}
+			return utility.NewServerNotStopped(id)
+		},
+	)
+}
 func (c serverApi) WaitRebooted(id string, newFlavorName string) (*nova.Server, error) {
 	server, err := c.WaitTask(id, "")
 	if err != nil {

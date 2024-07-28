@@ -75,6 +75,7 @@ func (t ServerDetachVolume) Start() error {
 
 type ServerVolumeHotPlug struct {
 	ServerActionTest
+	EmptyCleanup
 	attachments []string
 }
 

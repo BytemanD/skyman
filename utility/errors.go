@@ -14,6 +14,8 @@ type GuestNoIpaddressError ErrArgs
 type VolumeHasTaskError ErrArgs
 type GuestHasNoIpaddressError ErrArgs
 type PingLossPackage ErrArgs
+type ServerNotStopped ErrArgs
+type SnapshotIsNotAvailable ErrArgs
 
 func (e ActionNotFinishedError) Error() string {
 	return fmt.Sprintf("action %s is not finished", e.Args...)
@@ -30,6 +32,12 @@ func (e PingLossPackage) Error() string {
 func (e VolumeHasTaskError) Error() string {
 	return fmt.Sprintf("volume %s has task", e.Args...)
 }
+func (e ServerNotStopped) Error() string {
+	return fmt.Sprintf("server %s is not stopped", e.Args...)
+}
+func (e SnapshotIsNotAvailable) Error() string {
+	return fmt.Sprintf("snapshot %s is not available", e.Args...)
+}
 
 func NewActionNotFinishedError(args ...interface{}) ActionNotFinishedError {
 	return ActionNotFinishedError{Args: args}
@@ -45,4 +53,10 @@ func NewGuestHasNoIpaddressError(ipAddress []string) GuestHasNoIpaddressError {
 }
 func NewPingLossPackage(lossed int) PingLossPackage {
 	return PingLossPackage{Args: []interface{}{lossed}}
+}
+func NewServerNotStopped(serverId string) ServerNotStopped {
+	return ServerNotStopped{Args: []interface{}{serverId}}
+}
+func NewSnapshotIsNotAvailable(snapshotId string) SnapshotIsNotAvailable {
+	return SnapshotIsNotAvailable{Args: []interface{}{snapshotId}}
 }

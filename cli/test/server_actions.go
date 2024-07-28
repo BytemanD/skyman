@@ -25,11 +25,15 @@ var TestActions []string
 
 func runActionTest(action server_actions.ServerAction) error {
 	defer func() {
-		logging.Info("[%s] cleanup ...", action.ServerId())
+		logging.Info("[%s] >>>> cleanup ...", action.ServerId())
 		action.Cleanup()
 	}()
 
 	if err := action.Start(); err != nil {
+		return err
+	}
+	logging.Info("[%s] >>>> tear down ...", action.ServerId())
+	if err := action.TearDown(); err != nil {
 		return err
 	}
 
