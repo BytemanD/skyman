@@ -122,6 +122,23 @@ var snapshotCreate = &cobra.Command{
 		printSnapshot(*snapshot)
 	},
 }
+var snapshotRevert = &cobra.Command{
+	Use:   "revert <snapshot>",
+	Short: "revert snapshot",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		client := openstack.DefaultClient()
+
+		snapshot, err := client.CinderV2().Snapshot().Found(args[0])
+		utility.LogIfError(err, true, "get snapshot %s failed", args[0])
+
+		volume, err := client.CinderV2().Volume().Show(snapshot.VolumeId)
+		utility.LogIfError(err, true, "get volume %s failed", snapshot.VolumeId)
+
+		err = client.CinderV2().Volume().Revert(volume.Id, snapshot.Id)
+		utility.LogIfError(err, true, "revert volume %s failed", snapshot.VolumeId)
+	},
+}
 
 func init() {
 	snapshotList.Flags().BoolP("long", "l", false, "List additional fields in output")
@@ -133,7 +150,7 @@ func init() {
 	snapshotCreate.Flags().StringP("name", "n", "", "snapshot name")
 
 	Snapshot.AddCommand(
-		snapshotList, snapshotShow, snapshotCreate,
+		snapshotList, snapshotShow, snapshotCreate, snapshotRevert,
 		snapshotDelete,
 	)
 }

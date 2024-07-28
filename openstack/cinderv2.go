@@ -188,10 +188,17 @@ func (c volumeApi) Retype(id string, newType string, migrationPolicy string) err
 }
 
 func (c volumeApi) doAction(id string, data interface{}) error {
-	reqBody, _ := json.Marshal(data)
 	_, err := c.AppendUrl(id).AppendUrl("action").
-		SetBody(reqBody).Post(nil)
+		SetBody(data).Post(nil)
 	return err
+}
+func (c volumeApi) Revert(id string, snapshotId string) error {
+	data := struct {
+		Revert map[string]string `json:"revert"`
+	}{
+		Revert: map[string]string{"snapshot_id": snapshotId},
+	}
+	return c.doAction(id, data)
 }
 
 // volume type api

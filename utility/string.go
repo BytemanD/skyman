@@ -51,15 +51,15 @@ func LogError(err error, message string, exit bool) {
 		os.Exit(1)
 	}
 }
-func LogIfError(err error, exit bool, format string, args ...string) {
+func LogIfError(err error, exit bool, format string, args ...interface{}) {
 	if err == nil {
 		return
 	}
 	if compare.IsType[httpclient.HttpError](err) {
 		httpError, _ := err.(httpclient.HttpError)
-		logging.Error(fmt.Sprintf(format, args)+": [%s] %s", httpError.Reason, httpError.Message)
+		logging.Error(fmt.Sprintf(format, args...)+": [%s] %s", httpError.Reason, httpError.Message)
 	} else {
-		logging.Error(fmt.Sprintf(format, args)+": %v", err)
+		logging.Error(fmt.Sprintf(format, args...)+": %v", err)
 	}
 	if exit {
 		os.Exit(1)
