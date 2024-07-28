@@ -132,8 +132,9 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 	)
 	success, failed, skip := 0, 0, 0
 	task := server_actions.TestTask{
-		Id:    testId,
-		Total: len(serverActions),
+		Id:      testId,
+		Actions: strings.Join(serverActions, ","),
+		Total:   len(serverActions),
 	}
 	if serverId != "" {
 		server, err = client.NovaV2().Server().Found(serverId)

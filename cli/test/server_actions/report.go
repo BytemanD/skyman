@@ -61,6 +61,7 @@ func PrintServerEvents(client *openstack.Openstack) (string, error) {
 type TestTask struct {
 	Id            int      `json:"id"`
 	ServerId      string   `json:"serverId"`
+	Actions       string   `json:"actions"`
 	Total         int      `json:"total"`
 	Complated     int      `json:"completed"`
 	Stage         string   `json:"stage"`
@@ -110,6 +111,7 @@ func PrintTestTasks() string {
 				return utility.ColorString(p.Result)
 			}},
 			{Name: "Total", Align: text.AlignRight},
+			{Name: "Actions"},
 			{Name: "FailedActinos", Slot: func(item interface{}) interface{} {
 				p := item.(TestTask)
 				return strings.Join(p.FailedActions, ", ")
