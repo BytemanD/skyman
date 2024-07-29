@@ -19,6 +19,7 @@ type ServerLiveMigrate struct {
 	clientServer  *nova.Server
 	clientGuest   *guest.Guest
 	clientPingPid int
+	enablePing    bool
 }
 
 func (t *ServerLiveMigrate) createClientServer() error {
@@ -192,16 +193,15 @@ func (t ServerLiveMigrate) confirmServerHasIpAddress() error {
 }
 
 func (t *ServerLiveMigrate) Start() error {
-	if !common.CONF.Test.QGAChecker.Enabled &&
-		common.CONF.Test.LiveMigrate.PingEnabled {
-		logging.Warning("[%s] qga checker is disabled but ping is enabled, ping check will be ignored", t.ServerId())
+	if common.CONF.Test.QGAChecker.Enabled && common.CONF.Test.LiveMigrate.PingEnabled {
+		t.enablePing = true
 	}
 	t.RefreshServer()
 	if !t.Server.IsActive() {
 		return fmt.Errorf("server is not active")
 	}
 
-	if common.CONF.Test.LiveMigrate.PingEnabled {
+	if t.enablePing {
 		interfaces, err := t.Client.NovaV2().Server().ListInterfaces(t.ServerId())
 		if err != nil {
 			return err
@@ -231,6 +231,8 @@ func (t *ServerLiveMigrate) Start() error {
 		if err != nil {
 			return fmt.Errorf("start ping process failed: %s", err)
 		}
+	} else {
+		logging.Warning("[%s] ping check is disabled", t.ServerId())
 	}
 	sourceHost := t.Server.Host
 	logging.Info("[%s] source host is %s", t.Server.Id, sourceHost)
@@ -261,8 +263,7 @@ func (t *ServerLiveMigrate) confirmLiveMigrated(sourceHost string) error {
 	return nil
 }
 func (t *ServerLiveMigrate) confirmPingResult() error {
-	if !common.CONF.Test.QGAChecker.Enabled ||
-		!common.CONF.Test.LiveMigrate.PingEnabled {
+	if !t.enablePing {
 		return nil
 	}
 	if t.clientPingPid == 0 {
@@ -303,8 +304,8 @@ type ServerMigrate struct {
 
 func (t ServerMigrate) Start() error {
 	t.RefreshServer()
-	if !t.Server.IsActive() {
-		return fmt.Errorf("server is not active")
+	if !t.Server.IsActive() && !t.Server.IsStopped() {
+		return fmt.Errorf("server status is not active or stopped")
 	}
 
 	sourceHost := t.Server.Host
