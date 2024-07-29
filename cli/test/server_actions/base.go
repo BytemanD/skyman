@@ -16,10 +16,10 @@ import (
 )
 
 type ServerAction interface {
+	RefreshServer() error
 	Start() error
-	// Rollback()
+	Skip() (bool, string)
 	TearDown() error
-	Cleanup()
 	ServerId() string
 }
 type ServerActionTest struct {
@@ -270,6 +270,6 @@ type EmptyCleanup struct {
 func (t EmptyCleanup) TearDown() error {
 	return nil
 }
-
-func (t EmptyCleanup) Cleanup() {
+func (t EmptyCleanup) Skip() (bool, string) {
+	return false, ""
 }

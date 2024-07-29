@@ -153,7 +153,7 @@ func init() {
 		return &ServerResume{ServerActionTest: ServerActionTest{Server: s, Client: c}}
 	})
 	ACTIONS.register(ACTION_TOGGLE_SUSPEND, func(s *nova.Server, c *openstack.Openstack) ServerAction {
-		return ServerToggleSuspend{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+		return &ServerToggleSuspend{ServerActionTest: ServerActionTest{Server: s, Client: c}}
 	})
 	ACTIONS.register(ACTION_ATTACH_INTERFACE, func(s *nova.Server, c *openstack.Openstack) ServerAction {
 		return &ServerAttachInterface{ServerActionTest: ServerActionTest{Server: s, Client: c}}

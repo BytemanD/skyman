@@ -35,11 +35,13 @@ type ServerResume struct {
 	EmptyCleanup
 }
 
-func (t ServerResume) Start() error {
-	t.RefreshServer()
+func (t *ServerResume) Skip() (bool, string) {
 	if !t.Server.IsSuspended() {
-		return fmt.Errorf("server is not suspended")
+		return true, "server is not suspended"
 	}
+	return false, ""
+}
+func (t ServerResume) Start() error {
 	err := t.Client.NovaV2().Server().Resume(t.Server.Id)
 	if err != nil {
 		return err
@@ -60,7 +62,6 @@ type ServerToggleSuspend struct {
 }
 
 func (t ServerToggleSuspend) Start() error {
-	t.RefreshServer()
 	if t.Server.IsSuspended() {
 		err := t.Client.NovaV2().Server().Resume(t.Server.Id)
 		if err != nil {

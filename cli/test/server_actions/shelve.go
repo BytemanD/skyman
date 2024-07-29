@@ -11,11 +11,13 @@ type ServerShelve struct {
 	EmptyCleanup
 }
 
-func (t ServerShelve) Start() error {
-	t.RefreshServer()
+func (t *ServerShelve) Skip() (bool, string) {
 	if t.Server.IsShelved() {
-		return fmt.Errorf("server is shelved")
+		return true, "server is shelved"
 	}
+	return false, ""
+}
+func (t ServerShelve) Start() error {
 	err := t.Client.NovaV2().Server().Shelve(t.Server.Id)
 	if err != nil {
 		return err
@@ -39,11 +41,13 @@ type ServerUnshelve struct {
 	EmptyCleanup
 }
 
-func (t ServerUnshelve) Start() error {
-	t.RefreshServer()
+func (t *ServerUnshelve) Skip() (bool, string) {
 	if !t.Server.IsShelved() {
-		return fmt.Errorf("server is not shelved")
+		return true, "server is not shelved"
 	}
+	return false, ""
+}
+func (t ServerUnshelve) Start() error {
 	err := t.Client.NovaV2().Server().Unshelve(t.Server.Id)
 	if err != nil {
 		return err

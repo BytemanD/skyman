@@ -21,21 +21,19 @@ import (
 	"github.com/spf13/viper"
 )
 
-func runActionTest(action server_actions.ServerAction) error {
+func runActionTest(action server_actions.ServerAction) (bool, error) {
+	skip, reason := false, ""
+	if skip, reason = action.Skip(); skip {
+		logging.Warning("[%s] skip this task for the reason: %s", action.ServerId(), reason)
+		return true, nil
+	}
 	defer func() {
-		logging.Info("[%s] >>>> cleanup ...", action.ServerId())
-		action.Cleanup()
+		logging.Info("[%s] >>>> tear down ...", action.ServerId())
+		if err := action.TearDown(); err != nil {
+			logging.Error("[%s] tear down failed: %s", action.ServerId(), err)
+		}
 	}()
-
-	if err := action.Start(); err != nil {
-		return err
-	}
-	logging.Info("[%s] >>>> tear down ...", action.ServerId())
-	if err := action.TearDown(); err != nil {
-		return err
-	}
-
-	return nil
+	return false, action.Start()
 }
 
 func getServerBootOption(testId int) nova.ServerOpt {
@@ -126,15 +124,13 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		return nil
 	}
 	var (
-		server     *nova.Server
-		err        error
-		testFailed bool
+		server *nova.Server
+		err    error
 	)
-	success, failed, skip := 0, 0, 0
+	// success, failed := 0, 0
 	task := server_actions.TestTask{
-		Id:      testId,
-		Actions: strings.Join(serverActions, ","),
-		Total:   len(serverActions),
+		Id:           testId,
+		TotalActions: serverActions,
 	}
 	if serverId != "" {
 		server, err = client.NovaV2().Server().Found(serverId)
@@ -156,21 +152,24 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		}
 		server, err = createDefaultServer(client, testId)
 		if err != nil {
-			task.Failed(fmt.Sprintf("create server failed: %s", err))
+			task.MarkFailed(fmt.Sprintf("create server failed: %s", err))
 			return task.GetError()
 		}
 		logging.Info("[%s] ======== Test actions: %s", server.Id, strings.Join(serverActions, ","))
 		task.SetStage("creating")
 		task.ServerId = server.Id
 		server_actions.TestTasks = append(server_actions.TestTasks, &task)
-		waitServerCreated(client, server)
+		if err := waitServerCreated(client, server); err != nil {
+			task.MarkFailed(fmt.Sprintf("create failed: %s", err))
+			return task.GetError()
+		}
 		server, err = client.NovaV2().Server().Show(server.Id)
 		if err != nil {
-			task.Failed(fmt.Sprintf("server is not created: %s", err))
+			task.MarkFailed(fmt.Sprintf("get server failed: %s", err))
 			return task.GetError()
 		}
 		defer func() {
-			if !testFailed || common.CONF.Test.DeleteIfError {
+			if !task.HasFailed() || common.CONF.Test.DeleteIfError {
 				task.SetStage("deleting")
 				logging.Info("[%s] deleting server", server.Id)
 				client.NovaV2().Server().Delete(server.Id)
@@ -180,7 +179,7 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		}()
 		serverCheckers, err := checkers.GetServerCheckers(client, server)
 		if err != nil {
-			task.Failed(fmt.Sprintf("get server checker failed: %s", err))
+			task.MarkFailed(fmt.Sprintf("get server checker failed: %s", err))
 			return task.GetError()
 		}
 		if err := serverCheckers.MakesureServerRunning(); err != nil {
@@ -191,21 +190,27 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		action := server_actions.ACTIONS.Get(actionName, server, client)
 		if action == nil {
 			logging.Error("[%s] action '%s' not found", server.Id, action)
-			skip++
+			task.SkipActions = append(task.SkipActions, actionName)
 			continue
 		}
 		logging.Info(utility.BlueString(fmt.Sprintf("[%s] ==== %s", server.Id, actionName)))
 		task.SetStage(actionName)
-		err = runActionTest(action)
+		// 更新实例信息
+		if err := action.RefreshServer(); err != nil {
+			return fmt.Errorf("refresh server failed: %s", err)
+		}
+		// 开始测试
+		skip, err := runActionTest(action)
+		// 更新测试结果
 		task.IncrementCompleted()
-		if err != nil {
-			failed++
-			testFailed = true
-			task.AddFailedAction(actionName)
-			task.Failed(fmt.Sprintf("test action '%s' failed: %s", actionName, err))
+		if skip {
+			task.SkipActions = append(task.SkipActions, actionName)
+		} else if err != nil {
+			task.FailedActions = append(task.FailedActions, actionName)
+			task.MarkFailed(fmt.Sprintf("test action '%s' failed: %s", actionName, err))
 			logging.Error("[%s] %s", server.Id, task.GetError())
 		} else {
-			success++
+			task.SuccessActions = append(task.SuccessActions, actionName)
 			logging.Success("[%s] test action '%s' success", server.Id, actionName)
 		}
 		if i < len(serverActions)-1 {
@@ -213,15 +218,14 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		}
 	}
 
-	result := fmt.Sprintf("all actions: %d, success: %d, failed: %d, skip: %d",
-		len(serverActions), success, failed, skip)
-	if len(serverActions) == success {
-		task.Success()
-		logging.Success("[%s] %s", server.Id, result)
-	} else if failed > 0 {
-		logging.Error("[%s] %s", server.Id, result)
+	if task.AllSuccess() {
+		task.MarkSuccess()
+		logging.Success("[%s] %s", server.Id, task.GetResultString())
+	} else if task.HasFailed() {
+		logging.Error("[%s] %s", server.Id, task.GetResultString())
 	} else {
-		logging.Warning("[%s] %s", server.Id, result)
+		task.MarkWarning()
+		logging.Warning("[%s] %s", server.Id, task.GetResultString())
 	}
 	return nil
 }
@@ -327,13 +331,13 @@ func init() {
 
 	serverAction.Flags().Int("action-interval", 0, "Action interval")
 	serverAction.Flags().Int("total", 0, i18n.T("theNumOfTask"))
-	serverAction.Flags().Int("workers", 0, i18n.T("theNumOfWorker"))
+	serverAction.Flags().Int("worker", 0, i18n.T("theNumOfWorker"))
 	serverAction.Flags().String("servers", "", "Use existing servers")
 	serverAction.Flags().Bool("report-events", false, i18n.T("reportServerEvents"))
 	serverAction.Flags().Bool("web", false, "Start web server")
 
-	viper.BindPFlag("test.tasks", serverAction.Flags().Lookup("tasks"))
-	viper.BindPFlag("test.workers", serverAction.Flags().Lookup("workers"))
+	viper.BindPFlag("test.total", serverAction.Flags().Lookup("total"))
+	viper.BindPFlag("test.workers", serverAction.Flags().Lookup("worker"))
 	viper.BindPFlag("test.actionInterval", serverAction.Flags().Lookup("action-interval"))
 
 	TestCmd.AddCommand(serverAction)

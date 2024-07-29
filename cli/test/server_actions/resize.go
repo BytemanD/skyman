@@ -34,7 +34,6 @@ func (t ServerResize) nextFlavor() (*nova.Flavor, error) {
 }
 
 func (t ServerResize) Start() error {
-	t.RefreshServer()
 	nextFlavor, err := t.nextFlavor()
 	if err != nil {
 		return err

@@ -12,11 +12,13 @@ type ServerReboot struct {
 	EmptyCleanup
 }
 
-func (t ServerReboot) Start() error {
-	t.RefreshServer()
+func (t *ServerReboot) Skip() (bool, string) {
 	if !t.Server.IsActive() {
-		return fmt.Errorf("server is not active")
+		return true, "server is not active"
 	}
+	return false, ""
+}
+func (t ServerReboot) Start() error {
 	err := t.Client.NovaV2().Server().Reboot(t.Server.Id, false)
 	if err != nil {
 		return err
@@ -37,10 +39,6 @@ type ServerHardReboot struct {
 }
 
 func (t ServerHardReboot) Start() error {
-	t.RefreshServer()
-	if !t.Server.IsActive() {
-		return fmt.Errorf("server is not active")
-	}
 	err := t.Client.NovaV2().Server().Reboot(t.Server.Id, true)
 	if err != nil {
 		return err
@@ -60,11 +58,13 @@ type ServerStop struct {
 	EmptyCleanup
 }
 
-func (t ServerStop) Start() error {
-	t.RefreshServer()
+func (t ServerStop) Skip() (bool, string) {
 	if !t.Server.IsActive() {
-		return fmt.Errorf("server is not active")
+		return true, "server is not active"
 	}
+	return false, ""
+}
+func (t ServerStop) Start() error {
 	err := t.Client.NovaV2().Server().Stop(t.Server.Id)
 	if err != nil {
 		return err
@@ -89,11 +89,13 @@ type ServerStart struct {
 	EmptyCleanup
 }
 
-func (t ServerStart) Start() error {
-	t.RefreshServer()
+func (t ServerStart) Skip() (bool, string) {
 	if !t.Server.IsStopped() {
-		return fmt.Errorf("server is not stopped")
+		return true, "server is not stopped"
 	}
+	return false, ""
+}
+func (t ServerStart) Start() error {
 	err := t.Client.NovaV2().Server().Start(t.Server.Id)
 	if err != nil {
 		return err

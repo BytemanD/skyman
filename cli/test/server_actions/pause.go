@@ -11,11 +11,15 @@ type ServerPause struct {
 	EmptyCleanup
 }
 
-func (t ServerPause) Start() error {
-	t.RefreshServer()
+func (t *ServerPause) Skip() (bool, string) {
 	if !t.Server.IsActive() {
-		return fmt.Errorf("server is not active")
+		return true, "server is not active"
 	}
+	return false, ""
+}
+
+func (t ServerPause) Start() error {
+
 	err := t.Client.NovaV2().Server().Pause(t.Server.Id)
 	if err != nil {
 		return err
@@ -35,11 +39,14 @@ type ServerUnpause struct {
 	EmptyCleanup
 }
 
-func (t ServerUnpause) Start() error {
-	t.RefreshServer()
+func (t *ServerUnpause) Skip() (bool, string) {
 	if !t.Server.IsPaused() {
-		return fmt.Errorf("server is not paused")
+		return true, "server is not paused"
 	}
+	return false, ""
+}
+
+func (t ServerUnpause) Start() error {
 	err := t.Client.NovaV2().Server().Unpause(t.Server.Id)
 	if err != nil {
 		return err

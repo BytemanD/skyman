@@ -2,6 +2,7 @@ package server_actions
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -16,7 +17,6 @@ type ServerAttachInterface struct {
 }
 
 func (t ServerAttachInterface) Start() error {
-	t.RefreshServer()
 	if !t.Server.IsActive() {
 		return fmt.Errorf("server is not active")
 	}
@@ -110,11 +110,15 @@ type ServerAttachHotPlug struct {
 	attachedPort []*neutron.Port
 }
 
-func (t *ServerAttachHotPlug) Start() error {
+func (t *ServerAttachHotPlug) Skip() (bool, string) {
 	t.RefreshServer()
 	if !t.Server.IsActive() {
-		return fmt.Errorf("server is not active")
+		return true, "server is not active"
 	}
+	return false, ""
+}
+
+func (t *ServerAttachHotPlug) Start() error {
 	serverCheckers, err := checkers.GetServerCheckers(t.Client, t.Server)
 	if err != nil {
 		return fmt.Errorf("get server checker failed: %s", err)
@@ -169,14 +173,20 @@ func (t *ServerAttachHotPlug) Start() error {
 	}
 	return nil
 }
-func (t ServerAttachHotPlug) Cleanup() {
+func (t ServerAttachHotPlug) TearDown() error {
+	deleteFailed := []string{}
+	logging.Info("[%s] cleanup %d interfaces", t.ServerId(), len(t.attachedPort))
 	for _, port := range t.attachedPort {
-		logging.Info("[%s] cleanup %d interfaces", t.ServerId(), len(t.attachedPort))
-
 		logging.Info("[%s] deleting port %s", t.ServerId(), port.Id)
 		err := t.Client.NeutronV2().Port().Delete(port.Id)
 		if err != nil {
-			logging.Error("[%s] delete port %s failed", t.ServerId(), port.Id)
+			deleteFailed = append(deleteFailed, port.Id)
+			logging.Error("[%s] delete port %s failed: %s", t.ServerId(), port.Id, err)
 		}
+	}
+	if len(deleteFailed) > 0 {
+		return fmt.Errorf("delete port(s) %s failed", strings.Join(deleteFailed, ","))
+	} else {
+		return nil
 	}
 }

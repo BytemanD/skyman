@@ -7,7 +7,6 @@ import (
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
-	"github.com/BytemanD/skyman/utility"
 	"github.com/jedib0t/go-pretty/v6/text"
 )
 
@@ -59,15 +58,17 @@ func PrintServerEvents(client *openstack.Openstack) (string, error) {
 }
 
 type TestTask struct {
-	Id            int      `json:"id"`
-	ServerId      string   `json:"serverId"`
-	Actions       string   `json:"actions"`
-	Total         int      `json:"total"`
-	Complated     int      `json:"completed"`
-	Stage         string   `json:"stage"`
-	Result        string   `json:"result"`
-	Message       string   `json:"message"`
-	FailedActions []string `json:"failedActions"`
+	Id             int      `json:"id"`
+	ServerId       string   `json:"serverId"`
+	TotalActions   []string `json:"totalActions"`
+	SuccessActions []string `json:"successActions"`
+	SkipActions    []string `json:"skipActions"`
+	FailedActions  []string `json:"failedActions"`
+	Stage          string   `json:"stage"`
+	Result         string   `json:"result"`
+	Message        string   `json:"message"`
+	Complated      int      `json:"completed"`
+	resultEmoji    string
 }
 
 func (t *TestTask) SetStage(stage string) {
@@ -80,14 +81,31 @@ func (t *TestTask) setResult(result string, message string) {
 func (t *TestTask) IncrementCompleted() {
 	t.Complated += 1
 }
-func (t *TestTask) Success() {
+func (t *TestTask) MarkSuccess() {
 	t.SetStage("")
 	t.setResult("success", "")
 }
-func (t *TestTask) Failed(message string) {
+func (t *TestTask) MarkFailed(message string) {
 	t.SetStage("")
 	t.setResult("failed", message)
 }
+func (t *TestTask) MarkWarning() {
+	t.SetStage("")
+	t.setResult("warning", t.Message)
+}
+func (t *TestTask) GetResultEmoji() string {
+	switch t.Result {
+	case "success":
+		return "😄"
+	case "warning":
+		return "😥"
+	case "failed":
+		return "😭"
+	default:
+		return "😶"
+	}
+}
+
 func (t *TestTask) AddFailedAction(action string) {
 	t.FailedActions = append(t.FailedActions, action)
 }
@@ -97,6 +115,20 @@ func (t TestTask) GetError() error {
 	}
 	return nil
 }
+func (t TestTask) AllSuccess() bool {
+	return len(t.TotalActions) == len(t.SuccessActions)
+}
+func (t TestTask) HasFailed() bool {
+	return len(t.FailedActions) > 0
+}
+func (t TestTask) HasSkip() bool {
+	return len(t.SkipActions) > 0
+}
+func (t TestTask) GetResultString() string {
+	return fmt.Sprintf("all actions: %d, success: %d, failed: %d, skip: %d",
+		len(t.TotalActions), len(t.SuccessActions), len(t.FailedActions),
+		len(t.SkipActions))
+}
 
 var TestTasks = []*TestTask{}
 
@@ -105,16 +137,31 @@ func PrintTestTasks() string {
 	pt := common.PrettyTable{
 		Style: common.STYLE_LIGHT,
 		ShortColumns: []common.Column{
-			{Name: "ServerId"},
-			{Name: "Result", Slot: func(item interface{}) interface{} {
+			{Name: "#", Align: text.AlignCenter, Slot: func(item interface{}) interface{} {
 				p := item.(TestTask)
-				return utility.ColorString(p.Result)
+				return p.GetResultEmoji()
 			}},
-			{Name: "Total", Align: text.AlignRight},
-			{Name: "Actions"},
-			{Name: "FailedActinos", Slot: func(item interface{}) interface{} {
+			{Name: "ServerId"},
+			{Name: "Actions", Slot: func(item interface{}) interface{} {
 				p := item.(TestTask)
-				return strings.Join(p.FailedActions, ", ")
+				return strings.Join(p.TotalActions, ",")
+			}},
+			{Name: "Result", Text: "Success/Skip/Failed", Align: text.AlignCenter,
+				Slot: func(item interface{}) interface{} {
+					p, _ := item.(TestTask)
+					return fmt.Sprintf("%d/%d/%d", len(p.SuccessActions),
+						len(p.SkipActions), len(p.FailedActions),
+					)
+				}},
+			{Name: "Message", Slot: func(item interface{}) interface{} {
+				p, _ := item.(TestTask)
+				if p.Message != "" {
+					return p.Message
+				} else if p.HasFailed() {
+					return fmt.Sprintf("failed actions: %s", strings.Join(p.FailedActions, ", "))
+				} else {
+					return ""
+				}
 			}},
 		},
 	}

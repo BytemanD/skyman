@@ -15,7 +15,6 @@ type ServerExtendVolume struct {
 }
 
 func (t ServerExtendVolume) Start() error {
-	t.RefreshServer()
 	attachment, err := t.lastVolume()
 	if err != nil {
 		return err

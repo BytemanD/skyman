@@ -12,11 +12,13 @@ type ServerRename struct {
 	EmptyCleanup
 }
 
-func (t ServerRename) Start() error {
-	t.RefreshServer()
+func (t *ServerRename) Skip() (bool, string) {
 	if t.Server.IsShelved() {
-		return fmt.Errorf("server is shelved")
+		return true, "server is shelved"
 	}
+	return false, ""
+}
+func (t ServerRename) Start() error {
 	newName := fmt.Sprintf("server-%v", time.Now())
 	logging.Info("[%s] old name is %s", t.Server.Id, t.Server.Name)
 	err := t.Client.NovaV2().Server().SetName(t.Server.Id, newName)

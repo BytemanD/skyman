@@ -2,6 +2,7 @@ package server_actions
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli/test/checkers"
@@ -14,7 +15,6 @@ type ServerAttachVolume struct {
 }
 
 func (t ServerAttachVolume) Start() error {
-	t.RefreshServer()
 	logging.Info("[%s] creating volume", t.ServerId())
 	volume, err := t.CreateBlankVolume()
 	if err != nil {
@@ -130,13 +130,20 @@ func (t *ServerVolumeHotPlug) Start() error {
 	return nil
 }
 
-func (t ServerVolumeHotPlug) Cleanup() {
+func (t ServerVolumeHotPlug) TearDown() error {
+	deleteFailed := []string{}
 	logging.Info("[%s] cleanup %d volumes", t.ServerId(), len(t.attachments))
 	for _, volId := range t.attachments {
 		logging.Info("[%s] deleting volume %s", t.ServerId(), volId)
 		err := t.Client.CinderV2().Volume().Delete(volId, true, true)
 		if err != nil {
-			logging.Error("[%s] delete volume %s failed", t.ServerId(), volId)
+			logging.Error("[%s] delete volume %s failed: %s", t.ServerId(), volId, err)
+			deleteFailed = append(deleteFailed, volId)
 		}
+	}
+	if len(deleteFailed) > 0 {
+		return fmt.Errorf("delete volume(s) %s failed", strings.Join(deleteFailed, ","))
+	} else {
+		return nil
 	}
 }

@@ -9,7 +9,6 @@ type ServerRevertToSnapshot struct {
 }
 
 func (t *ServerRevertToSnapshot) Start() error {
-	t.RefreshServer()
 	t.srcStatus = t.Server.Status
 	if t.Server.IsActive() {
 		logging.Info("[%s] stopping", t.ServerId())

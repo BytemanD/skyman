@@ -191,16 +191,18 @@ func (t ServerLiveMigrate) confirmServerHasIpAddress() error {
 	}
 	return nil
 }
-
+func (t ServerLiveMigrate) Skip() (bool, string) {
+	if !t.Server.IsActive() {
+		return true, "server is not active"
+	}
+	return false, ""
+}
 func (t *ServerLiveMigrate) Start() error {
 	if common.CONF.Test.QGAChecker.Enabled && common.CONF.Test.LiveMigrate.PingEnabled {
 		t.enablePing = true
+	} else if common.CONF.Test.LiveMigrate.PingEnabled {
+		logging.Warning("[%s] disable ping check because qga checker is disabled", t.ServerId())
 	}
-	t.RefreshServer()
-	if !t.Server.IsActive() {
-		return fmt.Errorf("server is not active")
-	}
-
 	if t.enablePing {
 		interfaces, err := t.Client.NovaV2().Server().ListInterfaces(t.ServerId())
 		if err != nil {
@@ -231,8 +233,6 @@ func (t *ServerLiveMigrate) Start() error {
 		if err != nil {
 			return fmt.Errorf("start ping process failed: %s", err)
 		}
-	} else {
-		logging.Warning("[%s] ping check is disabled", t.ServerId())
 	}
 	sourceHost := t.Server.Host
 	logging.Info("[%s] source host is %s", t.Server.Id, sourceHost)
@@ -289,12 +289,17 @@ func (t *ServerLiveMigrate) confirmPingResult() error {
 	}
 	return nil
 }
-func (t ServerLiveMigrate) Cleanup() {
+func (t ServerLiveMigrate) TearDown() error {
 	if t.clientServer != nil {
 		logging.Info("[%s] deleting client server %s", t.ServerId(), t.clientServer.Id)
-		t.Client.NovaV2().Server().Delete(t.clientServer.Id)
-		t.Client.NovaV2().Server().WaitDeleted(t.clientServer.Id)
+		if err := t.Client.NovaV2().Server().Delete(t.clientServer.Id); err != nil {
+			return err
+		}
+		if err := t.Client.NovaV2().Server().WaitDeleted(t.clientServer.Id); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 type ServerMigrate struct {
@@ -303,7 +308,6 @@ type ServerMigrate struct {
 }
 
 func (t ServerMigrate) Start() error {
-	t.RefreshServer()
 	if !t.Server.IsActive() && !t.Server.IsStopped() {
 		return fmt.Errorf("server status is not active or stopped")
 	}
