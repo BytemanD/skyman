@@ -35,7 +35,8 @@ func (t *ServerLiveMigrate) createClientServer() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] client server (%s) created", t.ServerId(), t.clientServer.Name)
+	logging.Info("[%s] client server (%s) created, host: %s", t.ServerId(),
+		t.clientServer.Name, t.clientServer.Host)
 	return nil
 }
 func (t *ServerLiveMigrate) waitServerBooted(serverId string) error {
@@ -198,6 +199,7 @@ func (t ServerLiveMigrate) confirmServerHasIpAddress() error {
 		return err
 	}
 	serverGuest := &guest.Guest{Connection: serverHost.HostIp, Domain: t.ServerId()}
+	logging.Info("[%s] connecting to guest ...", t.ServerId())
 	serverGuest.Connect()
 	logging.Info("[%s] connecting to qga ...", t.ServerId())
 	serverGuest.ConnectToQGA(common.CONF.Test.QGAChecker.QgaConnectTimeout)

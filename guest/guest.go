@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"libvirt.org/go/libvirt"
 )
 
@@ -18,6 +19,7 @@ type Guest struct {
 }
 
 func (guest *Guest) Connect() error {
+	logging.Debug("connecting to %s ...", guest)
 	conn, err := libvirt.NewConnect(fmt.Sprintf("qemu+tcp://%s/system", guest.Connection))
 	if err != nil {
 		return err

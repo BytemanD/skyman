@@ -68,7 +68,6 @@ type TestTask struct {
 	Result         string   `json:"result"`
 	Message        string   `json:"message"`
 	Complated      int      `json:"completed"`
-	resultEmoji    string
 }
 
 func (t *TestTask) SetStage(stage string) {
