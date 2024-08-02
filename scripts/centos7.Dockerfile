@@ -8,8 +8,8 @@ RUN yum install -y wget
 # Install required packages
 RUN yum install -y git rpm-build rpmdevtools -y which
 # Install upx
-RUN yum install -y http://rpmfind.net/linux/epel/7/x86_64/Packages/u/ucl-1.03-24.el7.x86_64.rpm
-RUN yum install -y http://rpmfind.net/linux/epel/7/x86_64/Packages/u/upx-3.96-9.el7.x86_64.rpm
+RUN yum install -y https://mirrors.aliyun.com/epel/7/x86_64/Packages/u/ucl-1.03-24.el7.x86_64.rpm
+RUN yum install -y https://mirrors.aliyun.com/epel/7/x86_64/Packages/u/upx-3.96-9.el7.x86_64.rpm
 # Install make
 RUN yum install -y make
 
