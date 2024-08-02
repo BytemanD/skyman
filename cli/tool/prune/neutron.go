@@ -20,10 +20,15 @@ var portPrune = &cobra.Command{
 
 		name, _ := cmd.Flags().GetString("name")
 		network, _ := cmd.Flags().GetString("network")
+		device, _ := cmd.Flags().GetString("device")
 		query := url.Values{}
 		if network != "" {
 			query.Set("network_id", network)
 		}
+		if device != "" {
+			query.Set("device_id", device)
+		}
+
 		logging.Info("list ports ...")
 		ports, err := c.NeutronV2().Port().List(query)
 		utility.LogError(err, "list ports failed", true)
@@ -39,7 +44,7 @@ var portPrune = &cobra.Command{
 			filterPorts = append(filterPorts, port)
 		}
 		if len(filterPorts) == 0 {
-			logging.Info("nothing to do")
+			logging.Info("all ports is not unbound nothing to do")
 			return
 		}
 		c.PrunePorts(filterPorts)
@@ -49,4 +54,5 @@ var portPrune = &cobra.Command{
 func init() {
 	portPrune.Flags().StringP("name", "n", "", "filter by name")
 	portPrune.Flags().String("network", "", "filter by network id")
+	portPrune.Flags().String("device", "", "filter by device id")
 }

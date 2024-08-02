@@ -367,6 +367,7 @@ func (guest Guest) Ping(targetIp string, interval float32, count int, useInterfa
 	if useInterface != "" {
 		cmd += fmt.Sprintf(" -I %s", useInterface)
 	}
+	logging.Info("[%s] Run: %s", guest.Domain, cmd)
 	logging.Debug("ping %s -> %s", useInterface, targetIp)
 	return guest.Exec(cmd, wait)
 }

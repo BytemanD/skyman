@@ -2,6 +2,7 @@ package server_actions
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"syscall"
 	"time"
@@ -30,14 +31,39 @@ func (t *ServerLiveMigrate) createClientServer() error {
 		return fmt.Errorf("create client instance failed: %s", err)
 	}
 	logging.Info("[%s] creating client server", t.ServerId())
-	clientServer, err = t.Client.NovaV2().Server().WaitBooted(clientServer.Id)
+	t.clientServer, err = t.Client.NovaV2().Server().WaitBooted(clientServer.Id)
 	if err != nil {
 		return err
 	}
-	t.clientServer = clientServer
 	logging.Info("[%s] client server (%s) created", t.ServerId(), t.clientServer.Name)
 	return nil
 }
+func (t *ServerLiveMigrate) waitServerBooted(serverId string) error {
+	return utility.RetryWithErrors(
+		utility.RetryCondition{
+			Timeout:      time.Minute * 10,
+			IntervalMin:  time.Second * 2,
+			IntervalStep: time.Second,
+			IntervalMax:  time.Second * 10,
+		},
+		[]string{"ServerNotBooted"},
+		func() error {
+			consoleLog, err := t.Client.NovaV2().Server().ConsoleLog(serverId, 50)
+			if err != nil {
+				return fmt.Errorf("get console log failed: %s", err)
+			}
+			// TODO: set key world by config file.
+			reg := regexp.MustCompile(` login:`)
+			result := reg.FindStringSubmatch(consoleLog.Output)
+			logging.Debug("[%s] client console log: %s", t.ServerId(), consoleLog.Output)
+			if len(result) > 0 {
+				return nil
+			}
+			return utility.NewServerNotBootedError(serverId)
+		},
+	)
+}
+
 func (t *ServerLiveMigrate) getClientGuest() (*guest.Guest, error) {
 	if t.clientGuest == nil {
 		host, err := t.Client.NovaV2().Hypervisor().Found(t.clientServer.Host)
@@ -79,7 +105,7 @@ func (t *ServerLiveMigrate) startPing(targetIp string) error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] ping -> %s", t.ServerId(), targetIp)
+	logging.Info("[%s] client ping -> %s", t.ServerId(), targetIp)
 	result := clientGuest.Ping(targetIp, common.CONF.Test.LiveMigrate.PingInterval, 0, ipaddrs[0], false)
 	if result.ErrData != "" {
 		return fmt.Errorf("run ping to %s failed: %s", targetIp, result.ErrData)
@@ -135,7 +161,7 @@ func (t *ServerLiveMigrate) checkPingBeforeMigrate(targetIp string) error {
 			if err := t.startPing(targetIp); err != nil {
 				return err
 			}
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 30)
 			if err := t.stopPing(); err != nil {
 				return fmt.Errorf("stop ping process failed: %s", err)
 			}
@@ -212,7 +238,7 @@ func (t *ServerLiveMigrate) Start() error {
 			logging.Warning("[%s] server has no interface, skip to run ping process", t.ServerId())
 			return nil
 		}
-		// 先检查实例是否有IP
+		// 检查实例是否有IP
 		if err := t.confirmServerHasIpAddress(); err != nil {
 			return err
 		}
@@ -221,7 +247,11 @@ func (t *ServerLiveMigrate) Start() error {
 		if err != nil {
 			return err
 		}
-		// 先检测ping 是否丢包
+		logging.Info("[%s] waiting client booted", t.ServerId())
+		if err := t.waitServerBooted(t.clientServer.Id); err != nil {
+			return err
+		}
+		// 检测ping 是否丢包
 		err = t.checkPingBeforeMigrate(interfaces[0].GetIPAddresses()[0])
 		if err != nil {
 			return fmt.Errorf("ping check failed: %s", err)
@@ -241,6 +271,7 @@ func (t *ServerLiveMigrate) Start() error {
 		return err
 	}
 	if err := t.confirmLiveMigrated(sourceHost); err != nil {
+		logging.Error("[%s] migrate failed: %s", t.ServerId(), err)
 		return err
 	}
 	logging.Info("[%s] migrated, %s -> %s, used: %v",
