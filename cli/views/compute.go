@@ -9,12 +9,13 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/jedib0t/go-pretty/v6/list"
 )
 
-func PrintServer(server nova.Server) {
+func PrintServer(server nova.Server, client *openstack.Openstack) {
 	pt := common.PrettyItemTable{
 		Item: server,
 		ShortFields: []common.Column{
@@ -87,6 +88,18 @@ func PrintServer(server nova.Server) {
 					return p.Fault.Details
 				}},
 			{Name: "UserId"},
+			{Name: "TenantId", Text: "ProjectId", Slot: func(item interface{}) interface{} {
+				p, _ := item.(nova.Server)
+				if client != nil {
+					project, err := client.KeystoneV3().Project().Show(p.TenantId)
+					if err != nil {
+						logging.Warning("get project %s failed: %s", p.TenantId, err)
+					} else {
+						return fmt.Sprintf("%s (%s)", project.Id, project.Name)
+					}
+				}
+				return p.TenantId
+			}},
 		},
 	}
 	common.PrintPrettyItemTable(pt)

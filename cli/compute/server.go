@@ -159,7 +159,7 @@ var serverShow = &cobra.Command{
 		if image, err := c.GlanceV2().Images().Show(server.ImageId()); err == nil {
 			server.SetImageName(image.Name)
 		}
-		views.PrintServer(*server)
+		views.PrintServer(*server, c)
 	},
 }
 var serverCreate = &cobra.Command{
@@ -262,7 +262,7 @@ var serverCreate = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		views.PrintServer(*server)
+		views.PrintServer(*server, nil)
 		if wait {
 			_, err := client.NovaV2().Server().WaitStatus(server.Id, "ACTIVE", 5)
 			if err != nil {

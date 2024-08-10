@@ -24,7 +24,7 @@ var serverFind = &cobra.Command{
 				continue
 			}
 			logging.Info("found server in region '%s'", region.Id)
-			views.PrintServer(*server)
+			views.PrintServer(*server, c)
 			break
 		}
 	},
