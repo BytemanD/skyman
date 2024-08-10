@@ -493,3 +493,16 @@ func ParseExtraSpecsMap(extraSpecs []string) ExtraSpecs {
 	}
 	return extraSpecsMap
 }
+
+type PageInfo struct {
+	PageSize int `json:"page_size"`
+}
+type Capacity struct {
+	AllowedSoldNum int    `json:"allowed_sold_num"`
+	AZ             string `json:"az"`
+	FlavorId       string `json:"flavor_id"`
+}
+type FlavorCapacities struct {
+	PageInfo   PageInfo   `json:"page_info"`
+	Capacities []Capacity `json:"capacities"`
+}

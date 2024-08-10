@@ -898,6 +898,14 @@ func (c hypervisorApi) Uptime(id string) (*nova.Hypervisor, error) {
 	}
 	return body.Hypervisor, nil
 }
+func (c hypervisorApi) FlavorCapacities(query url.Values) (*nova.FlavorCapacities, error) {
+	body := nova.FlavorCapacities{}
+	_, err := c.AppendUrl("statistics/flavor-capacities").SetQuery(query).Get(&body)
+	if err != nil {
+		return nil, err
+	}
+	return &body, nil
+}
 
 // keypair api
 type keypairApi struct{ ResourceApi }
