@@ -23,7 +23,7 @@ var flavorCapacities = &cobra.Command{
 
 		query := url.Values{}
 		if az != "" {
-			query.Set("az", "az")
+			query.Set("az", az)
 		}
 		if flavor != "" {
 			query.Set("flavor", flavor)
@@ -32,7 +32,7 @@ var flavorCapacities = &cobra.Command{
 		utility.LogError(err, "get flavor capacities failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
-				{Name: "FlavorId"}, {Name: "AZ", Text: "Availability Zone"}, {Name: "AllowedSoldNum"},
+				{Name: "FlavorId"}, {Name: "AZ", Text: "Availability Zone"}, {Name: "AllowedSoldNum", Sort: true},
 			},
 		}
 		pt.AddItems(capacities.Capacities)
