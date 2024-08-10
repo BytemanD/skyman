@@ -49,9 +49,6 @@ var serverList = &cobra.Command{
 		if name != "" {
 			query.Set("name", name)
 		}
-		if host != "" {
-			query.Set("host", host)
-		}
 		if all {
 			query.Set("all_tenants", strconv.FormatBool(all))
 		}
@@ -65,8 +62,18 @@ var serverList = &cobra.Command{
 			}
 			query.Set("flavor", flavor.Id)
 		}
-		items, err := c.NovaV2().Server().Detail(query)
-		utility.LogError(err, "list servers failed", true)
+		items := []nova.Server{}
+		if host != "" {
+			for _, h := range strings.Split(host, ",") {
+				if h == "" {
+					continue
+				}
+				query.Set("host", h)
+				tmpItems, err := c.NovaV2().Server().Detail(query)
+				utility.LogError(err, "list servers failed", true)
+				items = append(items, tmpItems...)
+			}
+		}
 
 		pt := common.PrettyTable{
 			Search: search,
@@ -818,7 +825,7 @@ var serverMigrationList = &cobra.Command{
 func init() {
 	// Server list flags
 	serverList.Flags().StringP("name", "n", "", "Search by server name")
-	serverList.Flags().String("host", "", "Search by hostname")
+	serverList.Flags().String("host", "", "Search by hostnam, split with ','")
 	serverList.Flags().BoolP("all", "a", false, "Display servers from all tenants")
 	serverList.Flags().StringArrayP("status", "s", nil, "Search by server status")
 	serverList.Flags().String("flavor", "", "Search by flavor")
