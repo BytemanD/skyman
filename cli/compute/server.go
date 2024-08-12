@@ -67,6 +67,9 @@ var serverList = &cobra.Command{
 			p, err := c.KeystoneV3().Project().Found(project)
 			utility.LogIfError(err, true, "get project %s failed", project)
 			query.Set("tenant_id", p.Id)
+			if !all {
+				logging.Warning("--all is not set, options --project mybe ignore")
+			}
 		}
 		items := []nova.Server{}
 		if host != "" {
@@ -75,10 +78,14 @@ var serverList = &cobra.Command{
 					continue
 				}
 				query.Set("host", h)
-				tmpItems, err := c.NovaV2().Server().Detail(query)
-				utility.LogError(err, "list servers failed", true)
-				items = append(items, tmpItems...)
 			}
+			tmpItems, err := c.NovaV2().Server().Detail(query)
+			utility.LogError(err, "list servers failed", true)
+			items = append(items, tmpItems...)
+		} else {
+			tmpItems, err := c.NovaV2().Server().Detail(query)
+			utility.LogError(err, "list servers failed", true)
+			items = append(items, tmpItems...)
 		}
 
 		pt := common.PrettyTable{

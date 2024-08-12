@@ -68,7 +68,7 @@ func (c RESTClient) logReq(req *resty.Request) {
 		data, _ := json.Marshal(&req.Body)
 		body = string(data)
 	}
-	logging.Debug("REQ: %s %s,\n    Query: %v\n    Headers: %v \n    Body: %v",
+	logging.Debug("REQ: %s %s, Query: %v\n    Headers: %v \n    Body: %v",
 		req.Method, req.URL, req.QueryParam.Encode(), encodedHeader, body)
 }
 func (c RESTClient) logResp(resp *resty.Response) {
