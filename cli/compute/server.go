@@ -37,6 +37,7 @@ var serverList = &cobra.Command{
 		host, _ := cmd.Flags().GetString("host")
 		statusList, _ := cmd.Flags().GetStringArray("status")
 		flavor, _ := cmd.Flags().GetString("flavor")
+		project, _ := cmd.Flags().GetString("project")
 		all, _ := cmd.Flags().GetBool("all")
 		dsc, _ := cmd.Flags().GetBool("dsc")
 		search, _ := cmd.Flags().GetString("search")
@@ -61,6 +62,11 @@ var serverList = &cobra.Command{
 				logging.Fatal("%s", err)
 			}
 			query.Set("flavor", flavor.Id)
+		}
+		if project != "" {
+			p, err := c.KeystoneV3().Project().Found(project)
+			utility.LogIfError(err, true, "get project %s failed", project)
+			query.Set("tenant_id", p.Id)
 		}
 		items := []nova.Server{}
 		if host != "" {
@@ -829,6 +835,7 @@ func init() {
 	serverList.Flags().BoolP("all", "a", false, "Display servers from all tenants")
 	serverList.Flags().StringArrayP("status", "s", nil, "Search by server status")
 	serverList.Flags().String("flavor", "", "Search by flavor")
+	serverList.Flags().String("project", "", "Search by project")
 	serverList.Flags().BoolP("verbose", "v", false, "List verbose fields in output")
 	serverList.Flags().Bool("dsc", false, "Sort name by dsc")
 	serverList.Flags().String("search", "", i18n.T("localFuzzySearch"))
