@@ -14,6 +14,7 @@ import (
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
+	"github.com/BytemanD/skyman/openstack/model/glance"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
@@ -252,8 +253,79 @@ var serverInspect = &cobra.Command{
 		}
 	},
 }
+var serverClone = &cobra.Command{
+	Use:   "clone <server>",
+	Short: "clone server (实验性功能)",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		serverName, _ := cmd.Flags().GetString("name")
+		withHost, _ := cmd.Flags().GetBool("with-host")
+
+		client := openstack.DefaultClient()
+
+		server, err := client.NovaV2().Server().Found(args[0])
+		utility.LogIfError(err, true, "get sever %s failed", args[0])
+
+		flavor, err := client.NovaV2().Flavor().Found(server.Flavor.OriginalName)
+		utility.LogIfError(err, true, "get flavor %s failed", server.Flavor.OriginalName)
+
+		if serverName == "" {
+			serverName = fmt.Sprintf("%s-clone", serverName)
+		}
+		createOpt := nova.ServerOpt{
+			Name:             serverName,
+			Flavor:           flavor.Id,
+			AvailabilityZone: server.AZ,
+			MinCount:         1,
+			MaxCount:         1,
+			SecurityGroups:   server.SecurityGroups,
+			KeyName:          server.KeyName,
+			//TODO: parse userData
+			// UserData:         server.UserData,
+		}
+		logging.Info("boot bdm type: %s", server.RootBdmType)
+		logging.Info("root device name: %s", server.RootDeviceName)
+		if server.RootBdmType == "volume" {
+			attachments, err := client.NovaV2().Server().ListVolumes(server.Id)
+			utility.LogIfError(err, true, "get volume attachments failed")
+			for _, attachment := range attachments {
+				if attachment.Device != server.RootDeviceName {
+					continue
+				}
+				logging.Info("system volume is: %s", attachment.VolumeId)
+				systemVolume, err := client.CinderV2().Volume().Show(attachment.VolumeId)
+				utility.LogIfError(err, true, "get volume %s failed", attachment.VolumeId)
+				createOpt.BlockDeviceMappingV2 = []nova.BlockDeviceMappingV2{
+					{
+						BootIndex:          0,
+						UUID:               server.Image.(glance.Image).Id,
+						VolumeSize:         uint16(systemVolume.Size),
+						VolumeType:         systemVolume.VolumeType,
+						SourceType:         "image",
+						DestinationType:    "volume",
+						DeleteOnTemination: true,
+					},
+				}
+				break
+			}
+
+		} else {
+			createOpt.Image = fmt.Sprintf("%s", server.Image)
+		}
+		if withHost {
+			createOpt.AvailabilityZone = fmt.Sprintf("%s:%s", server.AZ, server.Host)
+		} else {
+			createOpt.AvailabilityZone = server.AZ
+		}
+		newServer, err := client.NovaV2().Server().Create(createOpt)
+		utility.LogIfError(err, true, "create server failed")
+		client.NovaV2().Server().WaitStatus(newServer.Id, "ACTIVE", 2)
+	},
+}
 
 func init() {
+	serverClone.Flags().String("name", "", "New server name")
+	serverClone.Flags().Bool("same-host", false, "Use same host as specified server")
 
-	ServerCommand.AddCommand(serverInspect)
+	ServerCommand.AddCommand(serverInspect, serverClone)
 }
