@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/guest"
 	"github.com/BytemanD/skyman/openstack"
@@ -93,7 +94,7 @@ func (c QGAChecker) MakesureInterfaceExist(attachment *nova.InterfaceAttachment)
 			logging.Debug("[%s] found ip address on guest: %v", c.ServerId, ipaddrs)
 			notFoundIpaddress := []string{}
 			for _, fixedIpaddr := range attachment.FixedIps {
-				if utility.StringsContains(fixedIpaddr.IpAddress, ipaddrs) {
+				if stringutils.ContainsString(ipaddrs, fixedIpaddr.IpAddress) {
 					logging.Info("[%s] ip address %s exists on guest", c.ServerId, fixedIpaddr.IpAddress)
 				} else {
 					notFoundIpaddress = append(notFoundIpaddress, fixedIpaddr.IpAddress)

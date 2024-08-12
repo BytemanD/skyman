@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/cli/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
@@ -38,6 +39,7 @@ var serverList = &cobra.Command{
 		statusList, _ := cmd.Flags().GetStringArray("status")
 		flavor, _ := cmd.Flags().GetString("flavor")
 		project, _ := cmd.Flags().GetString("project")
+		az, _ := cmd.Flags().GetString("az")
 		all, _ := cmd.Flags().GetBool("all")
 		dsc, _ := cmd.Flags().GetBool("dsc")
 		search, _ := cmd.Flags().GetString("search")
@@ -63,6 +65,7 @@ var serverList = &cobra.Command{
 			}
 			query.Set("flavor", flavor.Id)
 		}
+		filterHosts := utility.Split(host, ",")
 		if project != "" {
 			p, err := c.KeystoneV3().Project().Found(project)
 			utility.LogIfError(err, true, "get project %s failed", project)
@@ -71,17 +74,49 @@ var serverList = &cobra.Command{
 				logging.Warning("--all is not set, options --project mybe ignore")
 			}
 		}
+		if az != "" {
+			computeService, err := c.NovaV2().Service().ListCompute()
+			utility.LogIfError(err, true, "list compute service failed")
+
+			computeService = utility.Filter[nova.Service](
+				computeService,
+				func(x nova.Service) bool {
+					return x.Zone == az
+				},
+			)
+			azHosts := []string{}
+			for _, s := range computeService {
+				azHosts = append(azHosts, s.Host)
+			}
+			logging.Debug("hosts matched az %s: %s", az, azHosts)
+			if len(azHosts) == 0 {
+				logging.Fatal("hosts matched az %s is none", az)
+			}
+			if len(filterHosts) == 0 {
+				filterHosts = azHosts
+			} else {
+				filterHosts = utility.Filter[string](
+					filterHosts,
+					func(x string) bool {
+						return stringutils.ContainsString(azHosts, x)
+					},
+				)
+			}
+		}
 		items := []nova.Server{}
-		if host != "" {
-			for _, h := range strings.Split(host, ",") {
+		if host != "" || az != "" {
+			if len(filterHosts) == 0 {
+				logging.Fatal("hosts matched is none")
+			}
+			for _, h := range filterHosts {
 				if h == "" {
 					continue
 				}
 				query.Set("host", h)
+				tmpItems, err := c.NovaV2().Server().Detail(query)
+				utility.LogError(err, "list servers failed", true)
+				items = append(items, tmpItems...)
 			}
-			tmpItems, err := c.NovaV2().Server().Detail(query)
-			utility.LogError(err, "list servers failed", true)
-			items = append(items, tmpItems...)
 		} else {
 			tmpItems, err := c.NovaV2().Server().Detail(query)
 			utility.LogError(err, "list servers failed", true)
@@ -843,6 +878,7 @@ func init() {
 	serverList.Flags().StringArrayP("status", "s", nil, "Search by server status")
 	serverList.Flags().String("flavor", "", "Search by flavor")
 	serverList.Flags().String("project", "", "Search by project")
+	serverList.Flags().String("az", "", "Search by availability zone (admin)")
 	serverList.Flags().BoolP("verbose", "v", false, "List verbose fields in output")
 	serverList.Flags().Bool("dsc", false, "Sort name by dsc")
 	serverList.Flags().String("search", "", i18n.T("localFuzzySearch"))

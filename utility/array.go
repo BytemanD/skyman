@@ -38,11 +38,12 @@ func (r *StringRing) Sample(count int) []string {
 	return sample
 }
 
-func StringsContains(s string, array []string) bool {
-	for _, item := range array {
-		if item == s {
-			return true
+func Filter[T any](items []T, filterFun func(x T) bool) []T {
+	filterd := []T{}
+	for _, item := range items {
+		if filterFun(item) {
+			filterd = append(filterd, item)
 		}
 	}
-	return false
+	return filterd
 }

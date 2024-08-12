@@ -938,6 +938,11 @@ func (c computeServiceApi) List(query url.Values) ([]nova.Service, error) {
 	}
 	return body.Services, nil
 }
+func (c computeServiceApi) ListCompute() ([]nova.Service, error) {
+	query := url.Values{}
+	query.Set("binary", "nova-compute")
+	return c.List(query)
+}
 func (c computeServiceApi) GetByHostBinary(host string, binary string) (*nova.Service, error) {
 	services, err := c.List(utility.UrlValues(map[string]string{"host": host, "binary": binary}))
 	if err != nil {

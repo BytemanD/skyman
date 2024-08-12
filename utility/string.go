@@ -117,3 +117,11 @@ func UnmarshalJsonKey(bytes []byte, key string, v any) error {
 		return json.Unmarshal(tmpBytes, &v)
 	}
 }
+
+func Split(s string, sep string) []string {
+	if s == "" {
+		return []string{}
+	} else {
+		return strings.Split(s, ",")
+	}
+}
