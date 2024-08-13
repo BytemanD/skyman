@@ -15,8 +15,9 @@ import (
 var FlavorCommand = &cobra.Command{Use: "flavor", Short: "flavor tools"}
 
 var flavorClone = &cobra.Command{
-	Use:   "clone <flavor id> <new flavor name>",
-	Short: "clone flavor",
+	Use:     "clone <flavor id> <new flavor name>",
+	Aliases: []string{"copy"},
+	Short:   "clone flavor",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.ExactArgs(2)(cmd, args); err != nil {
 			return err

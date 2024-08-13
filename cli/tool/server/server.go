@@ -14,7 +14,6 @@ import (
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
-	"github.com/BytemanD/skyman/openstack/model/glance"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
@@ -254,9 +253,10 @@ var serverInspect = &cobra.Command{
 	},
 }
 var serverClone = &cobra.Command{
-	Use:   "clone <server>",
-	Short: "clone server (实验性功能)",
-	Args:  cobra.ExactArgs(1),
+	Use:     "clone <server>",
+	Aliases: []string{"copy"},
+	Short:   "clone server (实验性功能)",
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		serverName, _ := cmd.Flags().GetString("name")
 		withHost, _ := cmd.Flags().GetBool("with-host")
@@ -270,7 +270,7 @@ var serverClone = &cobra.Command{
 		utility.LogIfError(err, true, "get flavor %s failed", server.Flavor.OriginalName)
 
 		if serverName == "" {
-			serverName = fmt.Sprintf("%s-clone", serverName)
+			serverName = fmt.Sprintf("%s-clone", server.Name)
 		}
 		createOpt := nova.ServerOpt{
 			Name:             serverName,
@@ -292,13 +292,14 @@ var serverClone = &cobra.Command{
 				if attachment.Device != server.RootDeviceName {
 					continue
 				}
-				logging.Info("system volume is: %s", attachment.VolumeId)
 				systemVolume, err := client.CinderV2().Volume().Show(attachment.VolumeId)
 				utility.LogIfError(err, true, "get volume %s failed", attachment.VolumeId)
+
+				logging.Info("use image: %s", systemVolume.VolumeImageMetadata["image_id"])
 				createOpt.BlockDeviceMappingV2 = []nova.BlockDeviceMappingV2{
 					{
 						BootIndex:          0,
-						UUID:               server.Image.(glance.Image).Id,
+						UUID:               systemVolume.VolumeImageMetadata["image_id"],
 						VolumeSize:         uint16(systemVolume.Size),
 						VolumeType:         systemVolume.VolumeType,
 						SourceType:         "image",
@@ -310,7 +311,10 @@ var serverClone = &cobra.Command{
 			}
 
 		} else {
-			createOpt.Image = fmt.Sprintf("%s", server.Image)
+			if image, ok := server.Image.(map[string]interface{}); !ok {
+				logging.Fatal("parse server image failed, image: %v", image)
+				createOpt.Image = fmt.Sprintf("%s", image["id"])
+			}
 		}
 		if withHost {
 			createOpt.AvailabilityZone = fmt.Sprintf("%s:%s", server.AZ, server.Host)
