@@ -2,6 +2,7 @@ package compute
 
 import (
 	"net/url"
+	"sort"
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
@@ -32,9 +33,12 @@ var flavorCapacities = &cobra.Command{
 		utility.LogError(err, "get flavor capacities failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
-				{Name: "FlavorId"}, {Name: "AZ", Text: "Availability Zone"}, {Name: "AllowedSoldNum", Sort: true},
+				{Name: "FlavorId"}, {Name: "AZ", Text: "Availability Zone"}, {Name: "AllowedSoldNum"},
 			},
 		}
+		sort.SliceStable(capacities.Capacities, func(i, j int) bool {
+			return capacities.Capacities[i].AllowedSoldNum < capacities.Capacities[j].AllowedSoldNum
+		})
 		pt.AddItems(capacities.Capacities)
 		common.PrintPrettyTable(pt, true)
 	},
