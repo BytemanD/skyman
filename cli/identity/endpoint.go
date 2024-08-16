@@ -95,8 +95,8 @@ var endpointList = &cobra.Command{
 				{Name: "Id"}, {Name: "RegionId", Sort: true},
 				{Name: "Service", Sort: true, Slot: func(item interface{}) interface{} {
 					p, _ := item.(keystone.Endpoint)
-					if _, ok := serviceMap[p.ServiceId]; !ok {
-						service, _ := c.Service().Show(p.ServiceId)
+					fmt.Println(p.ServiceId)
+					if service, ok := serviceMap[p.ServiceId]; ok {
 						return service.Display()
 					} else {
 						return p.ServiceId
