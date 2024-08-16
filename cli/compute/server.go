@@ -27,6 +27,29 @@ import (
 
 var Server = &cobra.Command{Use: "server"}
 
+func refreshServers(c *openstack.Openstack, filterHosts []string, host, az string, query url.Values) []nova.Server {
+	items := []nova.Server{}
+	if host != "" || az != "" {
+		if len(filterHosts) == 0 {
+			logging.Fatal("hosts matched is none")
+		}
+		for _, h := range filterHosts {
+			if h == "" {
+				continue
+			}
+			query.Set("host", h)
+			tmpItems, err := c.NovaV2().Server().Detail(query)
+			utility.LogError(err, "list servers failed", true)
+			items = append(items, tmpItems...)
+		}
+	} else {
+		tmpItems, err := c.NovaV2().Server().Detail(query)
+		utility.LogError(err, "list servers failed", true)
+		items = append(items, tmpItems...)
+	}
+	return items
+}
+
 var serverList = &cobra.Command{
 	Use:   "list",
 	Short: i18n.T("listServers"),
@@ -47,7 +70,7 @@ var serverList = &cobra.Command{
 		fields, _ := cmd.Flags().GetString("fields")
 
 		long, _ := cmd.Flags().GetBool("long")
-		verbose, _ := cmd.Flags().GetBool("verbose")
+		// verbose, _ := cmd.Flags().GetBool("verbose")
 		watch, _ := cmd.Flags().GetBool("watch")
 		watchInterval, _ := cmd.Flags().GetUint16("watch-interval")
 
@@ -105,27 +128,9 @@ var serverList = &cobra.Command{
 				)
 			}
 		}
-		items := []nova.Server{}
-		if host != "" || az != "" {
-			if len(filterHosts) == 0 {
-				logging.Fatal("hosts matched is none")
-			}
-			for _, h := range filterHosts {
-				if h == "" {
-					continue
-				}
-				query.Set("host", h)
-				tmpItems, err := c.NovaV2().Server().Detail(query)
-				utility.LogError(err, "list servers failed", true)
-				items = append(items, tmpItems...)
-			}
-		} else {
-			tmpItems, err := c.NovaV2().Server().Detail(query)
-			utility.LogError(err, "list servers failed", true)
-			items = append(items, tmpItems...)
-		}
 
 		projectMap := map[string]auth.Project{}
+		imageMap := map[string]glance.Image{}
 		pt := common.PrettyTable{
 			Search: search,
 			ShortColumns: []common.Column{
@@ -145,11 +150,7 @@ var serverList = &cobra.Command{
 				{Name: "AZ", Text: "AZ"}, {Name: "InstanceName"},
 				{Name: "Flavor", Slot: func(item interface{}) interface{} {
 					p, _ := (item).(nova.Server)
-					if !verbose {
-						return p.Flavor.OriginalName
-					} else {
-						return fmt.Sprintf("%s\n[%s]", p.Flavor.OriginalName, p.Flavor.BaseInfo())
-					}
+					return p.Flavor.OriginalName
 				}},
 				{Name: "Project", Slot: func(item interface{}) interface{} {
 					p, _ := (item).(nova.Server)
@@ -162,11 +163,30 @@ var serverList = &cobra.Command{
 					}
 					return p.TenantId
 				}},
+				{Name: "Vcpus", Slot: func(item interface{}) interface{} {
+					p, _ := (item).(nova.Server)
+					return p.Flavor.Vcpus
+				}},
+				{Name: "Ram", Slot: func(item interface{}) interface{} {
+					p, _ := (item).(nova.Server)
+					return p.Flavor.Ram
+				}},
+				{Name: "Image", Slot: func(item interface{}) interface{} {
+					p, _ := (item).(nova.Server)
+					imageId := p.ImageId()
+					if imageId == "" {
+						return ""
+					}
+					if image, ok := imageMap[imageId]; ok {
+						return image.Name
+					}
+					if image, err := c.GlanceV2().Images().Show(imageId); err == nil {
+						imageMap[imageId] = *image
+						return image.Name
+					}
+					return imageId
+				}},
 			},
-		}
-		if fields != "" {
-			pt.AddDisplayFields("Id")
-			pt.AddDisplayFields(strings.Split(fields, ",")...)
 		}
 		if dsc {
 			pt.ShortColumns[1].SortMode = table.Dsc
@@ -174,48 +194,26 @@ var serverList = &cobra.Command{
 		if long {
 			pt.StyleSeparateRows = true
 		}
-		if verbose {
-			pt.LongColumns = append(pt.LongColumns,
-				common.Column{Name: "Image", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(nova.Server)
-					return p.ImageName()
-				}},
-			)
+		if fields != "" {
+			pt.AddDisplayFields("Id")
+			pt.AddDisplayFields(strings.Split(fields, ",")...)
 		}
-
-		imageMap := map[string]glance.Image{}
+		items := refreshServers(c, filterHosts, host, az, query)
 		for {
-			if long && verbose {
-				for i, server := range items {
-
-					if _, ok := imageMap[server.ImageId()]; !ok {
-						imageId := server.ImageId()
-						if imageId != "" {
-							image, err := c.GlanceV2().Images().Show(imageId)
-							if err != nil {
-								logging.Warning("get image %s faield, %s", server.ImageId(), err)
-							} else {
-								imageMap[server.ImageId()] = *image
-							}
-							items[i].SetImageName(imageMap[server.ImageId()].Name)
-						}
-					}
-				}
-			}
-			pt.CleanItems()
 			pt.AddItems(items)
-			if watch {
-				cmd := exec.Command("clear")
-				cmd.Stdout = os.Stdout
-				cmd.Run()
-				var timeNow = time.Now().Format("2006-01-02 15:04:05")
-				fmt.Printf("Every %ds\tNow: %s\n", watchInterval, timeNow)
-			}
 			common.PrintPrettyTable(pt, long)
 			if !watch {
 				break
 			}
+			items = refreshServers(c, filterHosts, host, az, query)
+			pt.CleanItems()
 			time.Sleep(time.Second * time.Duration(watchInterval))
+
+			cmd := exec.Command("clear")
+			cmd.Stdout = os.Stdout
+			cmd.Run()
+			var timeNow = time.Now().Format("2006-01-02 15:04:05")
+			fmt.Printf("Every %ds\tNow: %s\n", watchInterval, timeNow)
 		}
 	},
 }

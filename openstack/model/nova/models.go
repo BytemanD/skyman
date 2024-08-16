@@ -122,15 +122,15 @@ type ServersResp struct {
 }
 
 func (s Server) ImageId() string {
-	if p, ok := s.Image.(map[string]string); ok {
-		return p["id"]
+	if p, ok := s.Image.(map[string]interface{}); ok {
+		return p["id"].(string)
 	}
 	return ""
 }
 
 func (s Server) ImageName() string {
-	if p, ok := s.Image.(map[string]string); ok {
-		return p["name"]
+	if p, ok := s.Image.(map[string]interface{}); ok {
+		return p["name"].(string)
 	}
 	return ""
 }
