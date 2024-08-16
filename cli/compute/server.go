@@ -19,6 +19,7 @@ import (
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/auth"
 	"github.com/BytemanD/skyman/openstack/model/glance"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
@@ -43,6 +44,7 @@ var serverList = &cobra.Command{
 		all, _ := cmd.Flags().GetBool("all")
 		dsc, _ := cmd.Flags().GetBool("dsc")
 		search, _ := cmd.Flags().GetString("search")
+		fields, _ := cmd.Flags().GetString("fields")
 
 		long, _ := cmd.Flags().GetBool("long")
 		verbose, _ := cmd.Flags().GetBool("verbose")
@@ -123,6 +125,7 @@ var serverList = &cobra.Command{
 			items = append(items, tmpItems...)
 		}
 
+		projectMap := map[string]auth.Project{}
 		pt := common.PrettyTable{
 			Search: search,
 			ShortColumns: []common.Column{
@@ -148,7 +151,22 @@ var serverList = &cobra.Command{
 						return fmt.Sprintf("%s\n[%s]", p.Flavor.OriginalName, p.Flavor.BaseInfo())
 					}
 				}},
+				{Name: "Project", Slot: func(item interface{}) interface{} {
+					p, _ := (item).(nova.Server)
+					if project, ok := projectMap[p.TenantId]; ok {
+						return project.Name
+					}
+					if project, err := c.KeystoneV3().Project().Show(p.TenantId); err == nil {
+						projectMap[p.TenantId] = *project
+						return project.Name
+					}
+					return p.TenantId
+				}},
 			},
+		}
+		if fields != "" {
+			pt.AddDisplayFields("Id")
+			pt.AddDisplayFields(strings.Split(fields, ",")...)
 		}
 		if dsc {
 			pt.ShortColumns[1].SortMode = table.Dsc
@@ -884,6 +902,7 @@ func init() {
 	serverList.Flags().String("search", "", i18n.T("localFuzzySearch"))
 	serverList.Flags().Bool("watch", false, "List loop")
 	serverList.Flags().Uint16P("watch-interval", "i", 2, "Loop interval")
+	serverList.Flags().String("fields", "", "Show specified fields")
 
 	// Server create flags
 	serverCreate.Flags().String("flavor", "", "Create server with this flavor")

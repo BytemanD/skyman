@@ -58,8 +58,21 @@ type PrettyTable struct {
 	tableWriter       table.Writer
 	Filters           map[string]string
 	Search            string
+	DisplayFields     []string
 }
 
+func (pt *PrettyTable) AddDisplayFields(fields ...string) {
+	if pt.DisplayFields == nil {
+		pt.DisplayFields = []string{}
+	}
+	pt.DisplayFields = []string{"Id"}
+	for _, colName := range fields {
+		if stringutils.ContainsString(pt.DisplayFields, colName) {
+			continue
+		}
+		pt.DisplayFields = append(pt.DisplayFields, colName)
+	}
+}
 func (pt *PrettyTable) AddItems(items interface{}) {
 	value := reflect.ValueOf(items)
 	for i := 0; i < value.Len(); i++ {
@@ -131,9 +144,19 @@ func (pt PrettyTable) RenderToTable(long bool) string {
 	}
 	headerRow := table.Row{}
 	columns := pt.ShortColumns
-	if long {
-		columns = append(columns, pt.LongColumns...)
+	if pt.DisplayFields == nil || len(pt.DisplayFields) == 0 {
+		if long {
+			columns = append(columns, pt.LongColumns...)
+		}
+	} else {
+		columns = utility.Filter(
+			append(pt.ShortColumns, pt.LongColumns...),
+			func(x Column) bool {
+				return stringutils.ContainsString(pt.DisplayFields, x.Name)
+			},
+		)
 	}
+
 	sortBy := []table.SortBy{}
 	for _, column := range columns {
 		var title string
