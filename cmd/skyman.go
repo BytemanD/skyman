@@ -138,6 +138,8 @@ func main() {
 			}
 			logging.BasicConfig(logging.LogConfig{Level: logLevel, Output: common.CONF.LogFile, EnableColor: common.CONF.EnableLogColor})
 			logging.Debug("load config file from %s", viper.ConfigFileUsed())
+			computeApiVersion, _ := cmd.Flags().GetString("compute-api-version")
+			openstack.COMPUTE_API_VERSION = computeApiVersion
 		},
 	}
 
@@ -153,6 +155,8 @@ func main() {
 	viper.BindPFlag("format", rootCmd.PersistentFlags().Lookup("format"))
 	viper.BindPFlag("logFile", rootCmd.PersistentFlags().Lookup("log-file"))
 	viper.BindPFlag("enableLogColor", rootCmd.PersistentFlags().Lookup("log-color"))
+
+	rootCmd.PersistentFlags().String("compute-api-version", "", i18n.T("logFile"))
 
 	rootCmd.AddCommand(
 		versionCmd,

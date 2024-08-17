@@ -102,12 +102,13 @@ func NewRestClient2(baseUrl string, authPlugin httpclient.AuthPluginInterface) R
 }
 
 type Openstack struct {
-	keystoneClient *KeystoneV3
-	glanceClient   *Glance
-	neutronClient  *NeutronV2
-	cinderClient   *CinderV2
-	novaClient     *NovaV2
-	AuthPlugin     auth.AuthPlugin
+	keystoneClient    *KeystoneV3
+	glanceClient      *Glance
+	neutronClient     *NeutronV2
+	cinderClient      *CinderV2
+	novaClient        *NovaV2
+	AuthPlugin        auth.AuthPlugin
+	ComputeApiVersion string
 }
 
 func (o Openstack) Region() string {
@@ -120,7 +121,7 @@ func NewClient(authUrl string, user auth.User, project auth.Project, regionName 
 	return &Openstack{AuthPlugin: passwordAuth}
 }
 
-func Client(region string) *Openstack {
+func ClientWithRegion(region string) *Openstack {
 	user := auth.User{
 		Name:     common.CONF.Auth.User.Name,
 		Password: common.CONF.Auth.User.Password,
@@ -138,7 +139,9 @@ func Client(region string) *Openstack {
 }
 
 func DefaultClient() *Openstack {
-	return Client(common.CONF.Auth.Region.Id)
+	c := ClientWithRegion(common.CONF.Auth.Region.Id)
+	c.ComputeApiVersion = "2.1"
+	return c
 }
 
 func getMicroVersion(vertionStr string) microVersion {

@@ -18,7 +18,7 @@ var serverFind = &cobra.Command{
 		utility.LogError(err, "get regions failed", true)
 		for _, region := range regions {
 			logging.Info("try to find server in region '%s'", region.Id)
-			client2 := openstack.Client(region.Id).NovaV2()
+			client2 := openstack.ClientWithRegion(region.Id).NovaV2()
 			server, err := client2.Server().Found(args[0])
 			if err != nil {
 				continue

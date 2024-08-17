@@ -29,6 +29,8 @@ const (
 	URL_INTERFACE_DETACH    = "%s/os-interface/%s"
 )
 
+var COMPUTE_API_VERSION string
+
 type microVersion struct {
 	Version      int
 	MicroVersion int
@@ -56,10 +58,13 @@ func (o *Openstack) NovaV2() *NovaV2 {
 			logging.Warning("get current version failed: %v", err)
 		} else {
 			o.novaClient.MicroVersion = *currentVersion
+			if COMPUTE_API_VERSION != "" {
+				o.novaClient.MicroVersion.Version = COMPUTE_API_VERSION
+			}
 		}
 		o.novaClient.RestClient2.AddBaseHeader("Openstack-Api-Version", o.novaClient.MicroVersion.Version)
 		o.novaClient.RestClient2.AddBaseHeader("X-Openstack-Nova-Api-Version", o.novaClient.MicroVersion.Version)
-		logging.Debug("current nova version: %s", o.novaClient.MicroVersion)
+		logging.Debug("current nova version: %s", o.novaClient.MicroVersion.VersoinInfo())
 	}
 	return o.novaClient
 }
