@@ -175,6 +175,7 @@ var DefineCmd = &cobra.Command{
 		createTemplate, err := LoadCreateTemplate(args[0])
 		utility.LogError(err, "load template file failed", true)
 
+		replace, _ := cmd.Flags().GetBool("replace")
 		for _, server := range createTemplate.Servers {
 			if server.Name == "" {
 				logging.Fatal("invalid config, server name is empty")
@@ -187,6 +188,13 @@ var DefineCmd = &cobra.Command{
 			}
 		}
 		client := openstack.DefaultClient()
+		if replace {
+			logging.Info("destroy resources")
+			if err := destroyFromTemplate(client, createTemplate); err != nil {
+				utility.LogError(err, "destroy resource failed", true)
+			}
+		}
+
 		for _, flavor := range createTemplate.Flavors {
 			createFlavor(client, flavor)
 		}
@@ -199,4 +207,8 @@ var DefineCmd = &cobra.Command{
 			utility.LogError(err, "create server failed", true)
 		}
 	},
+}
+
+func init() {
+	DefineCmd.Flags().Bool("replace", false, "Replace resources")
 }
