@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/BytemanD/easygo/pkg/global/gitutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/BytemanD/easygo/pkg/syscmd"
 
 	"github.com/BytemanD/skyman/cli/compute"
 	"github.com/BytemanD/skyman/cli/identity"
@@ -43,10 +44,26 @@ var LOGO = `
 `
 
 func getVersion() string {
-	if Version == "" {
-		return gitutils.GetVersion()
+	describeTag, err := syscmd.GetOutput("git", "describe", "--tags", "--abbrev=1")
+	if err != nil {
+		return "unkown"
 	}
-	return fmt.Sprint(Version)
+	dirty := ""
+	if porcelain, err := syscmd.GetOutput("git", "status", "--porcelain"); err != nil {
+		return "unkown"
+	} else if porcelain != "" {
+		dirty = "-dev"
+	}
+
+	values := strings.Split(describeTag, "-")
+	switch len(values) {
+	case 0:
+		return "unknown"
+	case 1:
+		return fmt.Sprintf("%s%s", strings.Join(values[0:1], "-"), dirty)
+	default:
+		return fmt.Sprintf("%s%s", strings.Join(values[0:2], "-"), dirty)
+	}
 }
 
 var versionCmd = &cobra.Command{
