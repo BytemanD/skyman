@@ -54,7 +54,10 @@ var interfaceAttachPort = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 
-		attachment, err := client.NovaV2().Server().AddInterface(args[0], "", args[1])
+		server, err := client.NovaV2().Server().Found(args[0])
+		utility.LogIfError(err, true, "get server %s failed", args[0])
+
+		attachment, err := client.NovaV2().Server().AddInterface(server.Id, "", args[1])
 		utility.LogError(err, fmt.Sprintf("Attach port %s to server failed", args[1]), true)
 		printinterfaceAttachments([]nova.InterfaceAttachment{*attachment})
 	},
@@ -65,8 +68,10 @@ var interfaceAttachNet = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
+		server, err := client.NovaV2().Server().Found(args[0])
+		utility.LogIfError(err, true, "get server %s failed", args[0])
 
-		attachment, err := client.NovaV2().Server().AddInterface(args[0], args[1], "")
+		attachment, err := client.NovaV2().Server().AddInterface(server.Id, args[1], "")
 		utility.LogError(err, fmt.Sprintf("Attach network %s to server failed", args[1]), true)
 		printinterfaceAttachments([]nova.InterfaceAttachment{*attachment})
 	},
@@ -77,8 +82,9 @@ var interfaceDetach = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-
-		_, err := client.NovaV2().Server().DeleteInterface(args[0], args[1])
+		server, err := client.NovaV2().Server().Found(args[0])
+		utility.LogIfError(err, true, "get server %s failed", args[0])
+		_, err = client.NovaV2().Server().DeleteInterface(server.Id, args[1])
 		utility.LogError(err, "Detach port from server failed", true)
 	},
 }
