@@ -110,15 +110,17 @@ var volumeCreate = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		size, _ := cmd.Flags().GetUint("size")
 		volumeType, _ := cmd.Flags().GetString("type")
+		multiattach, _ := cmd.Flags().GetBool("multiattach")
 
-		params := map[string]interface{}{
-			"name": args[0],
-		}
+		params := map[string]interface{}{"name": args[0]}
 		if size > 0 {
 			params["size"] = size
 		}
 		if volumeType != "" {
 			params["volume_type"] = volumeType
+		}
+		if multiattach {
+			params["multiattach"] = multiattach
 		}
 
 		client := openstack.DefaultClient()
@@ -189,6 +191,7 @@ func init() {
 
 	volumeCreate.Flags().Uint("size", 0, "Volume size (GB)")
 	volumeCreate.Flags().String("type", "", "Volume type")
+	volumeCreate.Flags().Bool("multiattach", false, "Allow multiattach")
 	volumeCreate.MarkFlagRequired("size")
 
 	volumeDelete.Flags().Bool("force", false, "Force delete volume.")
