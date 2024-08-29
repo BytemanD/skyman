@@ -398,10 +398,17 @@ func (c serverApi) SetPassword(id string, password, user string) error {
 	_, err := c.doAction("changePassword", id, data)
 	return err
 }
-func (c serverApi) SetName(id string, name string) error {
-	data := map[string]interface{}{"name": name}
-	_, err := c.doAction("adminPass", id, data)
+func (c serverApi) Set(id string, params map[string]interface{}) error {
+	body := struct {
+		Server map[string]interface{} `json:"server"`
+	}{
+		Server: params,
+	}
+	_, err := c.AppendUrl(id).SetBody(body).Put(nil)
 	return err
+}
+func (c serverApi) SetName(id string, name string) error {
+	return c.Set(id, map[string]interface{}{"name": name})
 }
 func (c serverApi) SetState(id string, active bool) error {
 	data := map[string]interface{}{}

@@ -710,82 +710,87 @@ var serverEvacuate = &cobra.Command{
 	},
 }
 
-var serverSet = &cobra.Command{Use: "set"}
-
-var serverSetPassword = &cobra.Command{
-	Use:   "password <server> [<server> ...]",
-	Short: "set password for server",
-	Args:  cobra.MinimumNArgs(1),
+var serverSet = &cobra.Command{
+	Use:   "set <server> [<server> ...]",
+	Short: "Update server",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.MinimumNArgs(1)(cmd, args); err != nil {
+			return err
+		}
+		serverStatus, _ := cmd.Flags().GetString("status")
+		if serverStatus != "" && serverStatus != "active" && serverStatus != "error" {
+			return fmt.Errorf("flag --status must be active or error")
+		}
+		password, _ := cmd.Flags().GetString("password")
+		passwordPrompt, _ := cmd.Flags().GetBool("password-prompt")
+		if passwordPrompt && password != "" {
+			return fmt.Errorf("flag --password and password-prompt is confict")
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		serverName, _ := cmd.Flags().GetString("name")
+		passwordPrompt, _ := cmd.Flags().GetBool("password-prompt")
+		serverPassword, _ := cmd.Flags().GetString("password")
 		user, _ := cmd.Flags().GetString("user")
+		serverStatus, _ := cmd.Flags().GetString("status")
+		description, _ := cmd.Flags().GetString("description")
 
-		var (
-			newPasswd []byte
-			again     []byte
-		)
-		for {
-			fmt.Printf("New password: ")
-			newPasswd, _ = gopass.GetPasswd()
-			if string(newPasswd) == "" {
-				logging.Error("Password is empty.")
-				continue
-			}
+		if passwordPrompt {
+			serverPassword = getPasswordInput()
+		}
+		params := map[string]interface{}{}
+		if serverName != "" {
+			params["name"] = serverName
+		}
+		if description != "" {
+			params["description"] = description
+		}
 
-			fmt.Printf("Again: ")
-			again, _ = gopass.GetPasswd()
-			if string(again) == string(newPasswd) {
-				break
-			}
-			logging.Fatal("Passwords do not match.")
-		}
-		for _, s := range args {
-			server, err := client.NovaV2().Server().Found(s)
-			if err != nil {
-				utility.LogError(err, "show server failed", false)
-				continue
-			}
-			err = client.NovaV2().Server().SetPassword(server.Id, string(newPasswd), user)
-			if err != nil {
-				logging.Error("set password failed, %s", err)
-			} else {
-				logging.Info("Reqeust to set password successs")
-			}
-		}
-	},
-}
-var serverSetName = &cobra.Command{
-	Use:   "name <server> <new name>",
-	Short: "Set name for server",
-	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
-		idOrName := args[0]
-		name := args[1]
 		client := openstack.DefaultClient()
-		server, err := client.NovaV2().Server().Found(idOrName)
-		utility.LogError(err, "get server failed", true)
-		err = client.NovaV2().Server().SetName(server.Id, name)
-		utility.LogError(err, "set server name failed", true)
-	},
-}
-var serverSetState = &cobra.Command{
-	Use:   "state <server> [<server> ...]",
-	Short: "Set state for server(s)",
-	Args:  cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
-		active, _ := cmd.Flags().GetBool("active")
-		for _, server := range args {
-			server, err := client.NovaV2().Server().Found(server)
-			if err != nil {
-				utility.LogError(err, "show server failed", false)
-				continue
+		for _, idOrName := range args {
+			server, err := client.NovaV2().Server().Found(idOrName)
+			utility.LogError(err, "get server failed", true)
+
+			if len(params) > 0 {
+				err = client.NovaV2().Server().Set(server.Id, params)
+				utility.LogIfError(err, false, "set server name failed for %s", idOrName)
 			}
-			err = client.NovaV2().Server().SetState(server.Id, active)
-			utility.LogError(err, "set server state failed", false)
+			if serverStatus != "" {
+				if server.Status == "active" {
+					err = client.NovaV2().Server().SetState(server.Id, true)
+				} else if server.Status == "error" {
+					err = client.NovaV2().Server().SetState(server.Id, false)
+				}
+				utility.LogIfError(err, false, "set server status failed for %s", idOrName)
+			}
+			if serverPassword != "" {
+				err = client.NovaV2().Server().SetPassword(server.Id, serverPassword, user)
+				utility.LogIfError(err, false, "set server password failed for %s", idOrName)
+			}
 		}
 	},
 }
+
+func getPasswordInput() string {
+	var newPasswd, again []byte
+	for {
+		fmt.Printf("New password: ")
+		newPasswd, _ = gopass.GetPasswd()
+		if string(newPasswd) == "" {
+			logging.Error("Password is empty.")
+			continue
+		}
+		fmt.Printf("Again: ")
+		again, _ = gopass.GetPasswd()
+		if string(again) == string(newPasswd) {
+			break
+		}
+		logging.Fatal("Passwords do not match.")
+	}
+	return string(newPasswd)
+}
+
 var serverRegion = &cobra.Command{Use: "region"}
 var serverRegionLiveMigrate = &cobra.Command{
 	Use:   "migrate <server> <dest region>",
@@ -963,17 +968,18 @@ func init() {
 
 	serverMigration.AddCommand(serverMigrationList)
 
-	serverSetPassword.Flags().String("user", "", "User name")
-	serverSetState.Flags().Bool("active", false,
-		"Request the server be reset to 'active' state instead of'error' state")
+	serverSet.Flags().String("name", "", "Server name")
+	serverSet.Flags().String("password", "", "User password")
+	serverSet.Flags().Bool("password-prompt", false, "User password")
+	serverSet.Flags().String("user", "", "Username")
+	serverSet.Flags().String("status", "", "Server status, active or error")
+	serverSet.Flags().String("description", "", "Server description")
 
 	serverRebuild.Flags().String("image", "", "Name or ID of server.")
 	serverRebuild.Flags().String("rebuild-password", "", " Set the provided admin password on the rebuilt server.")
 	serverRebuild.Flags().String("name", "", "Name for the new server.")
 
 	common.RegistryLongFlag(serverList, serverMigrationList)
-
-	serverSet.AddCommand(serverSetPassword, serverSetName, serverSetState)
 
 	Server.AddCommand(
 		serverList, serverShow, serverCreate, serverDelete,
