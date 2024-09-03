@@ -506,3 +506,27 @@ type FlavorCapacities struct {
 	PageInfo   PageInfo   `json:"page_info"`
 	Capacities []Capacity `json:"capacities"`
 }
+
+// {"injected_file_content_bytes": -1, "metadata_items": -1, "server_group_members": -1,
+//
+//	"server_groups": -1, "ram": -1, "floating_ips": 10, "key_pairs": -1,
+//
+// "id": "4f362d490e5848ab9f1be44b5479b084",
+//
+// "instances": -1, "security_group_rules": 20, "injected_files": -1, "cores": -1,
+//
+//	"fixed_ips": -1, "injected_file_path_bytes": -1, "security_groups": 10}}
+type QuotaSet struct {
+	Instances                int `json:"instances"`
+	Cores                    int `json:"cores"`
+	Ram                      int `json:"ram"`
+	MetadataItems            int `json:"metadata_items"`
+	Keypairs                 int `json:"key_pairs"`
+	FloatingIps              int `json:"floating_ips"`
+	SecurityGroups           int `json:"server_groups"`
+	SecurityGroupsMembers    int `json:"server_group_members"`
+	FixedIps                 int `json:"fixed_ips"`
+	InjectedFiles            int `json:"injected_files"`
+	InjectedFileContentBytes int `json:"injected_file_content_bytes"`
+	InjectedFilePathBytes    int `json:"injected_file_path_bytes"`
+}

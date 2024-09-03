@@ -140,6 +140,13 @@ func (plugin PasswordAuthPlugin) GetSafeHeader(header http.Header) http.Header {
 	}
 	return safeHeaders
 }
+func (plugin PasswordAuthPlugin) GetProjectId() (string, error) {
+	_, err := plugin.GetTokenId()
+	if err != nil {
+		return "", err
+	}
+	return plugin.tokenCache.token.Project.Id, nil
+}
 
 func NewPasswordAuth(authUrl string, user User, project Project, regionName string) *PasswordAuthPlugin {
 	return &PasswordAuthPlugin{

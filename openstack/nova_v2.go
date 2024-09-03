@@ -36,6 +36,17 @@ type microVersion struct {
 	MicroVersion int
 }
 
+func (v microVersion) LargeEqual(other string) bool {
+	otherMicroVersion := getMicroVersion(other)
+	if v.Version > otherMicroVersion.Version {
+		return true
+	} else if v.Version == otherMicroVersion.Version {
+		return v.MicroVersion >= otherMicroVersion.MicroVersion
+	} else {
+		return false
+	}
+}
+
 type NovaV2 struct {
 	RestClient2
 	currentVersion *model.ApiVersion
@@ -1141,4 +1152,22 @@ func (c serverGroupApi) List(query url.Values) ([]nova.ServerGroup, error) {
 		return nil, err
 	}
 	return body.ServerGroups, nil
+}
+
+// quota api
+type computeQuotaApi struct{ ResourceApi }
+
+func (c NovaV2) Quota() computeQuotaApi {
+	return computeQuotaApi{
+		ResourceApi: novaResourceApi(c, "os-quota-sets", "quota_set", "quota_sets"),
+	}
+}
+func (c computeQuotaApi) Show(projectId string) (*nova.QuotaSet, error) {
+	body := struct {
+		QuotaSet nova.QuotaSet `json:"quota_set"`
+	}{}
+	if _, err := c.AppendUrl(projectId).Get(&body); err != nil {
+		return nil, err
+	}
+	return &body.QuotaSet, nil
 }

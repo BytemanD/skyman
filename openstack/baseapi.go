@@ -114,6 +114,9 @@ type Openstack struct {
 func (o Openstack) Region() string {
 	return o.AuthPlugin.Region()
 }
+func (o Openstack) ProjectId() (string, error) {
+	return o.AuthPlugin.GetProjectId()
+}
 
 func NewClient(authUrl string, user auth.User, project auth.Project, regionName string) *Openstack {
 	passwordAuth := auth.NewPasswordAuth(authUrl, user, project, regionName)
@@ -176,15 +179,11 @@ func (api ResourceApi) mustHasBaseUrl() error {
 	return nil
 }
 func (api *ResourceApi) MicroVersionLargeEqual(version string) bool {
-	clientVersion := getMicroVersion(api.MicroVersion.Version)
-	otherVersion := getMicroVersion(version)
-	if clientVersion.Version > otherVersion.Version {
-		return true
-	} else if clientVersion.Version == otherVersion.Version {
-		return clientVersion.MicroVersion >= otherVersion.MicroVersion
-	} else {
-		return false
-	}
+	clientVersion := api.GetMicroVersion()
+	return clientVersion.LargeEqual(version)
+}
+func (api *ResourceApi) GetMicroVersion() microVersion {
+	return getMicroVersion(api.MicroVersion.Version)
 }
 func (api *ResourceApi) SetHeader(h, v string) *ResourceApi {
 	if api.headers == nil {

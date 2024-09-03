@@ -15,4 +15,5 @@ type AuthPlugin interface {
 	Region() string
 	AuthRequest(req *resty.Request) error
 	GetSafeHeader(header http.Header) http.Header
+	GetProjectId() (string, error)
 }

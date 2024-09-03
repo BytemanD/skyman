@@ -16,6 +16,7 @@ import (
 	"github.com/BytemanD/skyman/cli/identity"
 	"github.com/BytemanD/skyman/cli/image"
 	"github.com/BytemanD/skyman/cli/networking"
+	"github.com/BytemanD/skyman/cli/quota"
 	"github.com/BytemanD/skyman/cli/storage"
 	"github.com/BytemanD/skyman/cli/templates"
 	"github.com/BytemanD/skyman/cli/test"
@@ -156,7 +157,7 @@ func main() {
 	viper.BindPFlag("logFile", rootCmd.PersistentFlags().Lookup("log-file"))
 	viper.BindPFlag("enableLogColor", rootCmd.PersistentFlags().Lookup("log-color"))
 
-	rootCmd.PersistentFlags().String("compute-api-version", "", i18n.T("logFile"))
+	rootCmd.PersistentFlags().String("compute-api-version", "", "Compute API version")
 
 	rootCmd.AddCommand(
 		versionCmd,
@@ -170,6 +171,8 @@ func main() {
 		storage.Volume, storage.Snapshot,
 		networking.Router, networking.Network, networking.Subnet, networking.Port,
 		networking.Security, networking.SG,
+
+		quota.QuotaCmd,
 		templates.DefineCmd, templates.UndefineCmd,
 		tool.ToolCmd,
 		test.TestCmd,
