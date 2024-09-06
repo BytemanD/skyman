@@ -130,7 +130,11 @@ func (s Server) ImageId() string {
 
 func (s Server) ImageName() string {
 	if p, ok := s.Image.(map[string]interface{}); ok {
-		return p["name"].(string)
+		if p["name"] == nil {
+			return ""
+		} else if name, ok := p["name"].(string); ok {
+			return name
+		}
 	}
 	return ""
 }
