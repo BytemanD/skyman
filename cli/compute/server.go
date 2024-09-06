@@ -757,7 +757,7 @@ var serverSet = &cobra.Command{
 				utility.LogIfError(err, false, "set server name failed for %s", idOrName)
 			}
 			if serverStatus != "" {
-				if server.Status == "active" {
+				if serverStatus == "active" {
 					err = client.NovaV2().Server().SetState(server.Id, true)
 				} else if server.Status == "error" {
 					err = client.NovaV2().Server().SetState(server.Id, false)
