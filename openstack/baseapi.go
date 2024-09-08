@@ -330,6 +330,9 @@ func FoundResource[T any](api ResourceApi, idOrName string) (*T, error) {
 				fileted = append(fileted, t)
 			}
 		}
+		if len(fileted) == 0 {
+			return nil, fmt.Errorf("resource %s not found", idOrName)
+		}
 		if len(fileted) == 1 {
 			return &fileted[0], nil
 		}
