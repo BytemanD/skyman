@@ -118,7 +118,7 @@ var csDelete = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 		err := client.NovaV2().Service().Delete(args[0], args[1])
-		utility.LogError(err, "Delete service failed, %v", true)
+		utility.LogError(err, "delete service failed", true)
 	},
 }
 
