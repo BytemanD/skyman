@@ -49,11 +49,15 @@ type AllocationPool struct {
 	Start string `json:"start,omitempty"`
 	End   string `json:"end,omitempty"`
 }
+type HostRouter struct {
+	NextHop     string `json:"nexthop,omitempty"`
+	Destination string `json:"destination,omitempty"`
+}
 type Subnet struct {
 	model.Resource
 	NetworkId       string           `json:"network_id,omitempty"`
 	Cidr            string           `json:"cidr,omitempty"`
-	HostRouters     []string         `json:"host_routes,omitempty"`
+	HostRouters     []HostRouter     `json:"host_routes,omitempty"`
 	RevisionNumber  int              `json:"revision_number,omitempty"`
 	IpVersion       int              `json:"ip_version,omitempty"`
 	Tags            []string         `json:"tags,omitempty"`
