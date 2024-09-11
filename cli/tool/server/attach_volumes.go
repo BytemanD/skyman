@@ -19,8 +19,6 @@ var attachVolume = &cobra.Command{
 	Short: "Add volumes to server",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		serverId := args[0]
-
 		nums, _ := cmd.Flags().GetInt("nums")
 		parallel, _ := cmd.Flags().GetInt("parallel")
 		size, _ := cmd.Flags().GetInt("size")
@@ -28,7 +26,7 @@ var attachVolume = &cobra.Command{
 
 		client := openstack.DefaultClient()
 		cinderClient := client.CinderV2()
-		server, err := client.NovaV2().Server().Show(serverId)
+		server, err := client.NovaV2().Server().Found(args[0])
 		utility.LogError(err, "show server failed:", true)
 
 		volumes := []Volume{}

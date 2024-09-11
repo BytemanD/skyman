@@ -20,8 +20,6 @@ var attachInterfaces = &cobra.Command{
 	Short: "Add interfaces to server",
 	Args:  cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		serverId := args[0]
-
 		nums, _ := cmd.Flags().GetInt("nums")
 		parallel, _ := cmd.Flags().GetInt("parallel")
 		// clean, _ := cmd.Flags().GetBool("clean")
@@ -29,10 +27,17 @@ var attachInterfaces = &cobra.Command{
 
 		client := openstack.DefaultClient()
 		neutronClient := client.NeutronV2()
-		server, err := client.NovaV2().Server().Show(serverId)
+		server, err := client.NovaV2().Server().Found(args[0])
 		utility.LogError(err, "show server failed:", true)
 
-		netStrRing := utility.StringRing{Items: args[1:]}
+		netIds := []string{}
+		for _, idOrName := range args[1:] {
+			net, err := client.NeutronV2().Network().Found(idOrName)
+			utility.LogIfError(err, true, "get net %s failed:", idOrName)
+			netIds = append(netIds, net.Id)
+		}
+
+		netStrRing := utility.StringRing{Items: netIds}
 		nets := netStrRing.Sample(nums)
 
 		interfaces := []Interface{}
