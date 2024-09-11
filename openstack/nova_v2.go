@@ -680,9 +680,10 @@ func (c serverApi) WaitResized(id string, newFlavorName string) (*nova.Server, e
 		return nil, err
 	}
 	if server.Flavor.OriginalName == newFlavorName {
-		return server, err
+		return server, nil
+	} else {
+		return nil, fmt.Errorf("flavor is not %s", newFlavorName)
 	}
-	return nil, fmt.Errorf("server %s not resized", id)
 }
 func (c serverApi) StopAndWait(id string) error {
 	if err := c.Stop(id); err != nil {

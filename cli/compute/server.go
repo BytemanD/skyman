@@ -571,12 +571,15 @@ var serverResize = &cobra.Command{
 		flavorId, _ := cmd.Flags().GetString("flavor")
 		var (
 			flavor *nova.Flavor
-			err    error
 		)
-
+		servers := []nova.Server{}
 		for _, serverId := range args {
+			server, err := client.NovaV2().Server().Found(serverId)
+			if err != nil {
+				utility.LogIfError(err, true, "get server %s failed", serverId)
+			}
 			if confirm {
-				if err := client.NovaV2().Server().ResizeConfirm(serverId); err != nil {
+				if err := client.NovaV2().Server().ResizeConfirm(server.Id); err != nil {
 					utility.LogError(err, "Reqeust to confirm resize for server failed", false)
 				} else {
 					logging.Info("requested to confirm resize for server %s", serverId)
@@ -584,7 +587,7 @@ var serverResize = &cobra.Command{
 				continue
 			}
 			if revert {
-				if err := client.NovaV2().Server().ResizeRevert(serverId); err != nil {
+				if err := client.NovaV2().Server().ResizeRevert(server.Id); err != nil {
 					utility.LogError(err, "Reqeust to revert resize for server failed", false)
 
 				} else {
@@ -596,17 +599,25 @@ var serverResize = &cobra.Command{
 				flavor, err = client.NovaV2().Flavor().Show(flavorId)
 				utility.LogError(err, fmt.Sprintf("Get flavor %s failed", flavorId), true)
 			}
-			err = client.NovaV2().Server().Resize(serverId, flavor.Id)
+			logging.Info("[%s] flavor is %s", server.Id, server.Flavor.OriginalName)
+			err = client.NovaV2().Server().Resize(server.Id, flavor.Id)
 			if err != nil {
-				utility.LogError(err, "Reqeust to resize server failed", false)
+				utility.LogIfError(err, false, "[%s] reqeust to resize server failed", server.Id)
 			} else {
-				logging.Info("requested to resize server %s", serverId)
+				logging.Info("[%s] requested to resize", serverId)
+				servers = append(servers, *server)
 			}
 		}
 
 		if flavorId != "" && wait {
-			for _, serverId := range args {
-				client.NovaV2().Server().WaitResized(serverId, flavor.Name)
+			for _, server := range servers {
+				_, err := client.NovaV2().Server().WaitResized(server.Id, flavor.Name)
+				if err != nil {
+					utility.LogIfError(err, false, "server %s resize failed: %s", server.Id, err)
+				} else {
+					logging.Success("[%s] resize success", server.Id)
+				}
+
 			}
 		}
 	},

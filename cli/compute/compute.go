@@ -1,9 +1,7 @@
 package compute
 
 import (
-	"fmt"
 	"net/url"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -78,7 +76,6 @@ var csDisable = &cobra.Command{
 		service, err := client.NovaV2().Service().Disable(args[0], args[1], reason)
 		if err != nil {
 			utility.LogError(err, "set service disable failed", true)
-			os.Exit(1)
 		}
 		views.PrintServiceTable(*service)
 	},
@@ -92,7 +89,6 @@ var csUp = &cobra.Command{
 		service, err := client.NovaV2().Service().Up(args[0], args[1])
 		if err != nil {
 			utility.LogError(err, "set service up failed", true)
-			os.Exit(1)
 		}
 		views.PrintServiceTable(*service)
 	},
@@ -105,8 +101,7 @@ var csDown = &cobra.Command{
 		client := openstack.DefaultClient()
 		service, err := client.NovaV2().Service().Down(args[0], args[1])
 		if err != nil {
-			fmt.Printf("Set service down failed: %v", err)
-			os.Exit(1)
+			utility.LogError(err, "set service down failed", true)
 		}
 		views.PrintServiceTable(*service)
 	},
