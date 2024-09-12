@@ -90,7 +90,7 @@ func (c EndpointApi) Create(endpoint keystone.Endpoint) (*keystone.Endpoint, err
 	}
 
 	reqBody, _ := json.Marshal(Body{Endpoint: endpoint})
-	resp, err := c.KeystoneV3.session.Post("endpoints", reqBody, nil)
+	resp, err := c.KeystoneV3.Post("endpoints", reqBody, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (c ServiceApi) Create(service keystone.Service) (*keystone.Service, error) 
 	}
 
 	reqBody, _ := json.Marshal(serviceBody{Service: service})
-	resp, err := c.KeystoneV3.session.Post("services", reqBody, nil)
+	resp, err := c.KeystoneV3.Post("services", reqBody, nil)
 	if err != nil {
 		return nil, err
 	}

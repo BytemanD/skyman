@@ -192,5 +192,7 @@ func init() {
 	endpointCreate.Flags().Bool("admin", false, "Create admin endpoint")
 	endpointCreate.Flags().Bool("internal", false, "Create internal endpoint")
 
+	endpointCreate.MarkFlagRequired("region")
+
 	Endpoint.AddCommand(endpointList, endpointCreate, endpointDelete)
 }
