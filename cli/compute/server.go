@@ -503,12 +503,14 @@ var serverUnshelve = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 
-		for _, id := range args {
-			err := client.NovaV2().Server().Unshelve(id)
+		for _, idorName := range args {
+			server, err := client.NovaV2().Server().Found(idorName)
+			utility.LogIfError(err, true, "get server %s faield", idorName)
+			err = client.NovaV2().Server().Unshelve(server.Id)
 			if err != nil {
 				logging.Error("Reqeust to unshelve server failed, %v", err)
 			} else {
-				fmt.Printf("Requested to unshelve server: %s\n", id)
+				fmt.Printf("Requested to unshelve server: %s\n", idorName)
 			}
 		}
 	},
@@ -683,6 +685,9 @@ var serverRebuild = &cobra.Command{
 		rebuildPassword, _ := cmd.Flags().GetString("rebuild-password")
 		name, _ := cmd.Flags().GetString("name")
 
+		server, err := client.NovaV2().Server().Found(args[0])
+		utility.LogIfError(err, true, "get server %s failed", args[0])
+
 		options := map[string]interface{}{}
 		if imageIdOrName != "" {
 			image, err := client.GlanceV2().Images().Found(imageIdOrName)
@@ -696,7 +701,7 @@ var serverRebuild = &cobra.Command{
 			options["name"] = name
 		}
 
-		err := client.NovaV2().Server().Rebuild(args[0], options)
+		err = client.NovaV2().Server().Rebuild(server.Id, options)
 		if err != nil {
 			logging.Error("Reqeust to rebuild server failed, %v", err)
 		} else {
