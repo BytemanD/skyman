@@ -38,6 +38,9 @@ var attachInterfaces = &cobra.Command{
 		}
 
 		netStrRing := utility.StringRing{Items: netIds}
+		if nums == 0 {
+			nums = len(netIds)
+		}
 		nets := netStrRing.Sample(nums)
 
 		interfaces := []Interface{}

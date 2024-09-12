@@ -38,7 +38,9 @@ var interfaceList = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		attachments, err := client.NovaV2().Server().ListInterfaces(args[0])
+		server, err := client.NovaV2().Server().Found(args[0])
+		utility.LogIfError(err, true, "get server %s faield", args[0])
+		attachments, err := client.NovaV2().Server().ListInterfaces(server.Id)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
