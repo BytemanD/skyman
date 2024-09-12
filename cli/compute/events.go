@@ -13,9 +13,12 @@ import (
 	"github.com/BytemanD/skyman/utility"
 )
 
-func listServerActions(server string, actionName string, last int, long bool) {
+func listServerActions(idOrString string, actionName string, last int, long bool) {
 	client := openstack.DefaultClient()
-	actions, err := client.NovaV2().Server().ListActions(server)
+	server, err := client.NovaV2().Server().Found(idOrString)
+	utility.LogIfError(err, true, "get server %s faield", idOrString)
+
+	actions, err := client.NovaV2().Server().ListActions(server.Id)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -41,10 +44,13 @@ func listServerActions(server string, actionName string, last int, long bool) {
 	pt.Items = common.LastItems(pt.Items, last)
 	common.PrintPrettyTable(pt, long)
 }
-func listServerActionsWithSpend(server string, actionName string, requestId string, last int, long bool) {
+func listServerActionsWithSpend(idOrString string, actionName string, requestId string, last int, long bool) {
 	client := openstack.DefaultClient()
+	server, err := client.NovaV2().Server().Found(idOrString)
+	utility.LogIfError(err, true, "get server %s faield", idOrString)
+
 	actionsWithEvents, err := client.NovaV2().Server().ListActionsWithEvents(
-		server, actionName, requestId, last)
+		server.Id, actionName, requestId, last)
 	utility.LogError(err, "get server actions and events failed", true)
 
 	pt := common.PrettyTable{
@@ -103,9 +109,12 @@ func listServerActionsWithSpend(server string, actionName string, requestId stri
 	pt.AddItems(actionsWithEvents)
 	common.PrintPrettyTable(pt, long)
 }
-func showAction(server string, requestId string, long bool) {
+func showAction(idOrString string, requestId string, long bool) {
 	client := openstack.DefaultClient()
-	action, err := client.NovaV2().Server().ShowAction(server, requestId)
+	server, err := client.NovaV2().Server().Found(idOrString)
+	utility.LogIfError(err, true, "get server %s faield", idOrString)
+
+	action, err := client.NovaV2().Server().ShowAction(server.Id, requestId)
 	utility.LogError(err, "get server action failed", true)
 	pt := common.PrettyTable{
 		Title: fmt.Sprintf("Action: %s", action.Action),
