@@ -111,7 +111,7 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 		flavor, err = client.NovaV2().Flavor().Show(server.Flavor.Id)
 	} else if server.Flavor.Name != "" {
 		logging.Info("find flavor %s", server.Flavor.Name)
-		flavor, err = client.NovaV2().Flavor().Found(server.Flavor.Name)
+		flavor, err = client.NovaV2().Flavor().Found(server.Flavor.Name, false)
 	}
 	utility.LogError(err, "get flavor failed", true)
 	serverOption.Flavor = flavor.Id

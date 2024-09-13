@@ -128,7 +128,7 @@ var flavorDelete = &cobra.Command{
 		client := openstack.DefaultClient()
 		flavorApi := client.NovaV2().Flavor()
 		for _, flavorId := range args {
-			flavor, err := flavorApi.Found(flavorId)
+			flavor, err := flavorApi.Found(flavorId, false)
 			if err != nil {
 				utility.LogError(err, "Get flavor failed", false)
 				continue
@@ -223,29 +223,21 @@ var flavorSet = &cobra.Command{
 			}
 			extraSpecs[splited[0]] = splited[1]
 		}
+		noProperties, _ := cmds.Flags().GetStringArray("no-property")
 
-		flavor, err := client.NovaV2().Flavor().Found(idOrName)
+		flavor, err := client.NovaV2().Flavor().Found(idOrName, true)
+
 		utility.LogError(err, "Get flavor failed", true)
 		client.NovaV2().Flavor().SetExtraSpecs(flavor.Id, extraSpecs)
-	},
-}
-var flavorUnset = &cobra.Command{
-	Use:   "unset <flavor id or name>",
-	Short: "Unset flavor properties",
-	Args:  cobra.ExactArgs(1),
-	Run: func(cmds *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
-
-		properties, _ := cmds.Flags().GetStringArray("property")
-		flavor, err := client.NovaV2().Flavor().Found(args[0])
-		utility.LogError(err, "Get flavor failed", true)
-		for _, property := range properties {
+		for _, property := range noProperties {
+			if _, ok := flavor.ExtraSpecs[property]; !ok {
+				continue
+			}
 			err := client.NovaV2().Flavor().DeleteExtraSpec(flavor.Id, property)
 			if err != nil {
 				utility.LogError(err, "delete extra spec failed", false)
 			}
 		}
-
 	},
 }
 
@@ -270,9 +262,9 @@ func init() {
 
 	flavorSet.Flags().StringArrayP("property", "p", []string{},
 		"Property to add or modify for this flavor (repeat option to set multiple properties)")
-	flavorUnset.Flags().StringArrayP("property", "p", []string{},
-		"Property to add or modify for this flavor (repeat option to set multiple properties)")
+	flavorSet.Flags().StringArrayP("no-property", "r", []string{},
+		"Property to remove for this flavor (repeat option to set multiple properties)")
 
 	Flavor.AddCommand(flavorList, flavorShow, flavorCreate, flavorDelete,
-		flavorSet, flavorUnset)
+		flavorSet)
 }

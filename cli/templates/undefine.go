@@ -20,7 +20,7 @@ func deleteFlavor(client *openstack.Openstack, flavor Flavor) error {
 			return nil
 		}
 	} else if flavor.Name != "" {
-		f, err = client.NovaV2().Flavor().Found(flavor.Name)
+		f, err = client.NovaV2().Flavor().Found(flavor.Name, false)
 		if err != nil {
 			logging.Warning("get flavor %s failed, %s", flavor.Name, err)
 			return nil

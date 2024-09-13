@@ -94,7 +94,7 @@ func waitServerCreated(client *openstack.Openstack, server *nova.Server) error {
 func preTest(client *openstack.Openstack) {
 	logging.Info("check flavors ...")
 	for _, flavorId := range common.CONF.Test.Flavors {
-		flavor, err := client.NovaV2().Flavor().Found(flavorId)
+		flavor, err := client.NovaV2().Flavor().Found(flavorId, false)
 		utility.LogError(err, fmt.Sprintf("get flavor %s failed", flavorId), true)
 		server_actions.TEST_FLAVORS = append(server_actions.TEST_FLAVORS, *flavor)
 	}

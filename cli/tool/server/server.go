@@ -266,7 +266,7 @@ var serverClone = &cobra.Command{
 		server, err := client.NovaV2().Server().Found(args[0])
 		utility.LogIfError(err, true, "get sever %s failed", args[0])
 
-		flavor, err := client.NovaV2().Flavor().Found(server.Flavor.OriginalName)
+		flavor, err := client.NovaV2().Flavor().Found(server.Flavor.OriginalName, false)
 		utility.LogIfError(err, true, "get flavor %s failed", server.Flavor.OriginalName)
 
 		if serverName == "" {

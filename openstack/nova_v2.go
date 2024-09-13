@@ -758,7 +758,7 @@ func (c flavorApi) Show(id string) (*nova.Flavor, error) {
 	return &body.Flavor, nil
 }
 func (c flavorApi) ShowWithExtraSpecs(id string) (*nova.Flavor, error) {
-	flavor, err := c.Found(id)
+	flavor, err := c.Show(id)
 	if err != nil {
 		return nil, err
 	}
@@ -779,16 +779,29 @@ func (c flavorApi) SetExtraSpecs(id string, extraSpecs map[string]string) (nova.
 	return respBody.ExtraSpecs, err
 }
 func (c flavorApi) DeleteExtraSpec(id string, extraSpec string) error {
-	_, err := c.AppendUrl(id).Delete(nil)
+	_, err := c.AppendUrl(id).AppendUrl("os-extra_specs").
+		AppendUrl(extraSpec).Delete(nil)
 	return err
 }
 func (c flavorApi) Delete(id string) error {
 	_, err := c.AppendUrl(id).Delete(nil)
 	return err
 }
-func (c flavorApi) Found(idOrName string) (*nova.Flavor, error) {
-	return FoundResource[nova.Flavor](c.ResourceApi, idOrName)
+func (c flavorApi) Found(idOrName string, withExtraSpecs bool) (*nova.Flavor, error) {
+	flavor, err := FoundResource[nova.Flavor](c.ResourceApi, idOrName)
+	if err != nil {
+		return nil, err
+	}
+	if withExtraSpecs {
+		extraSpecs, err := c.ListExtraSpecs(flavor.Id)
+		if err != nil {
+			return nil, err
+		}
+		flavor.ExtraSpecs = extraSpecs
+	}
+	return flavor, nil
 }
+
 func (c flavorApi) Create(flavor nova.Flavor) (*nova.Flavor, error) {
 	respBody := struct{ Flavor nova.Flavor }{}
 	_, err := c.SetBody(map[string]nova.Flavor{"flavor": flavor}).Post(&respBody)

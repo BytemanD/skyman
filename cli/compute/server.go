@@ -84,7 +84,7 @@ var serverList = &cobra.Command{
 			query.Add("status", status)
 		}
 		if flavor != "" {
-			flavor, err := c.NovaV2().Flavor().Found(flavor)
+			flavor, err := c.NovaV2().Flavor().Found(flavor, false)
 			if err != nil {
 				logging.Fatal("%s", err)
 			}
