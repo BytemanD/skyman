@@ -73,7 +73,10 @@ var interfaceAttachNet = &cobra.Command{
 		server, err := client.NovaV2().Server().Found(args[0])
 		utility.LogIfError(err, true, "get server %s failed", args[0])
 
-		attachment, err := client.NovaV2().Server().AddInterface(server.Id, args[1], "")
+		network, err := client.NeutronV2().Network().Found(args[1])
+		utility.LogIfError(err, true, "get network %s failed", args[1])
+
+		attachment, err := client.NovaV2().Server().AddInterface(server.Id, network.Id, "")
 		utility.LogError(err, fmt.Sprintf("Attach network %s to server failed", args[1]), true)
 		printinterfaceAttachments([]nova.InterfaceAttachment{*attachment})
 	},
