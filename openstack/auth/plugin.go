@@ -16,4 +16,5 @@ type AuthPlugin interface {
 	AuthRequest(req *resty.Request) error
 	GetSafeHeader(header http.Header) http.Header
 	GetProjectId() (string, error)
+	IsAdmin() bool
 }

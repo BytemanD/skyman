@@ -39,6 +39,9 @@ var tokenIssue = &cobra.Command{
 					p, _ := (item).(auth.Token)
 					return p.User.Id
 				}},
+				{Name: "IsAdmin", Slot: func(item interface{}) interface{} {
+					return client.AuthPlugin.IsAdmin()
+				}},
 			},
 		}
 		common.PrintPrettyItemTable(pt)

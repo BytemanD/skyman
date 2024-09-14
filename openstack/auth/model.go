@@ -61,13 +61,16 @@ type Catalog struct {
 	Id        string     `json:"id"`
 	Endpoints []Endpoint `json:"endpoints"`
 }
-
+type Role struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
 type Token struct {
 	IsDomain  bool      `json:"is_domain"`
 	Methods   []string  `json:"methods"`
 	ExpiresAt string    `json:"expires_at"`
-	Name      bool      `json:"name"`
 	Catalogs  []Catalog `json:"catalog"`
+	Roles     []Role    `json:"roles"`
 	Project   Project
 	User      User
 }

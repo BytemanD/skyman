@@ -147,7 +147,14 @@ func (plugin PasswordAuthPlugin) GetProjectId() (string, error) {
 	}
 	return plugin.tokenCache.token.Project.Id, nil
 }
-
+func (plugin PasswordAuthPlugin) IsAdmin() bool {
+	for _, role := range plugin.tokenCache.token.Roles {
+		if role.Name == "admin" {
+			return true
+		}
+	}
+	return false
+}
 func NewPasswordAuth(authUrl string, user User, project Project, regionName string) *PasswordAuthPlugin {
 	return &PasswordAuthPlugin{
 		session:           httpclient.New(),

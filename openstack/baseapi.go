@@ -155,17 +155,17 @@ func getMicroVersion(vertionStr string) microVersion {
 }
 
 type ResourceApi struct {
-	Endpoint     string
-	BaseUrl      string
-	Client       *httpclient.RESTClient
-	MicroVersion model.ApiVersion
-
-	query       url.Values
-	headers     map[string]string
-	body        interface{}
-	result      interface{}
-	SingularKey string
-	PluralKey   string
+	Endpoint        string
+	BaseUrl         string
+	Client          *httpclient.RESTClient
+	MicroVersion    model.ApiVersion
+	EnableAllTenant bool
+	query           url.Values
+	headers         map[string]string
+	body            interface{}
+	result          interface{}
+	SingularKey     string
+	PluralKey       string
 }
 
 func (api ResourceApi) makeUrl() string {
@@ -283,6 +283,9 @@ func (api ResourceApi) Patch(res interface{}) (*resty.Response, error) {
 	}
 	return resp, json.Unmarshal(resp.Body(), res)
 }
+func (api ResourceApi) IsAdmin() bool {
+	return api.Client.AuthPlugin.IsAdmin()
+}
 
 type ResourceInterface interface {
 	GetName() string
@@ -307,7 +310,12 @@ func FoundResource[T any](api ResourceApi, idOrName string) (*T, error) {
 	if httpError, _ := err.(httpclient.HttpError); !httpError.IsNotFound() {
 		return nil, err
 	}
-	resp, err = api.PopUrl().AddQuery("name", idOrName).Get(nil)
+	api.PopUrl().AddQuery("name", idOrName)
+	if api.IsAdmin() && api.EnableAllTenant {
+		api.AddQuery("all_tenants", "true")
+	}
+
+	resp, err = api.Get(nil)
 	if err != nil {
 		return nil, err
 	}

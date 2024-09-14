@@ -124,12 +124,13 @@ type serverApi struct {
 
 func novaResourceApi(c NovaV2, baseUrl, singularKey, pluralKey string) ResourceApi {
 	api := ResourceApi{
-		Endpoint:     c.BaseUrl,
-		BaseUrl:      baseUrl,
-		Client:       c.session,
-		MicroVersion: c.MicroVersion,
-		SingularKey:  singularKey,
-		PluralKey:    pluralKey,
+		EnableAllTenant: true,
+		Endpoint:        c.BaseUrl,
+		BaseUrl:         baseUrl,
+		Client:          c.session,
+		MicroVersion:    c.MicroVersion,
+		SingularKey:     singularKey,
+		PluralKey:       pluralKey,
 	}
 	api.SetHeaders(c.session.BaseHeaders)
 	return api
