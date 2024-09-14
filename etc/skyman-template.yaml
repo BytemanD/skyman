@@ -26,8 +26,6 @@ auth:
 # iperf:
 #   clientOptions: -t 60 -P 10
 #   ServerOptions:
-#   guestPath:
-#   localPath:
 
 test:
   # web:

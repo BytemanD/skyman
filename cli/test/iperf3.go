@@ -33,28 +33,39 @@ const SERVER_IPERF3_TEST_EXAMPLE = `
 
 type QosItem struct {
 	Position string
-	Value    string
 	BpsBurst string
 	BpsPeak  string
 	PPSBurst string
 	PPSPeak  string
 }
 
+const (
+	QUOTA_VIF_INBOUND_PEAK      = "quota:vif_inbound_peak"
+	QUOTA_VIF_INBOUND_BURST     = "quota:vif_inbound_burst"
+	QUOTA_VIF_INBOUND_PPS_PEAK  = "quota:vif_inbound_pps_peak"
+	QUOTA_VIF_INBOUND_PPS_PEADK = "quota:vif_inbound_pps_burst"
+
+	QUOTA_VIF_OUTBOUND_PEAK     = "quota:vif_outbound_peak"
+	QUOTA_VIF_OUTBOUND_BURST    = "quota:vif_outbound_burst"
+	QUOTA_VIF_OUTBOUND_PPS_PEAK = "quota:vif_outbound_pps_peak"
+	QUOTA_VIF_OUTBOUND_PPS_PEAD = "quota:vif_outbound_pps_burst"
+)
+
 func printServerQOSItems(server nova.Server) {
 	items := []QosItem{
 		{
 			Position: "入向",
-			BpsBurst: server.Flavor.ExtraSpecs.Get("quota:vif_inbound_burst"),
-			BpsPeak:  server.Flavor.ExtraSpecs.Get("quota:vif_inbound_peak"),
-			PPSBurst: server.Flavor.ExtraSpecs.Get("quota:vif_inbound_pps_burst"),
-			PPSPeak:  server.Flavor.ExtraSpecs.Get("quota:vif_inbound_pps_burst"),
+			BpsPeak:  server.Flavor.ExtraSpecs.Get(QUOTA_VIF_INBOUND_PEAK),
+			BpsBurst: server.Flavor.ExtraSpecs.Get(QUOTA_VIF_INBOUND_BURST),
+			PPSPeak:  server.Flavor.ExtraSpecs.Get(QUOTA_VIF_INBOUND_PPS_PEAK),
+			PPSBurst: server.Flavor.ExtraSpecs.Get(QUOTA_VIF_INBOUND_PPS_PEADK),
 		},
 		{
 			Position: "出向",
-			BpsBurst: server.Flavor.ExtraSpecs.Get("quota:vif_inbound_burst"),
-			BpsPeak:  server.Flavor.ExtraSpecs.Get("quota:vif_inbound_peak"),
-			PPSBurst: server.Flavor.ExtraSpecs.Get("quota:vif_inbound_pps_burst"),
-			PPSPeak:  server.Flavor.ExtraSpecs.Get("quota:vif_inbound_pps_burst"),
+			BpsPeak:  server.Flavor.ExtraSpecs.Get(QUOTA_VIF_OUTBOUND_PEAK),
+			BpsBurst: server.Flavor.ExtraSpecs.Get(QUOTA_VIF_OUTBOUND_BURST),
+			PPSPeak:  server.Flavor.ExtraSpecs.Get(QUOTA_VIF_OUTBOUND_PPS_PEAK),
+			PPSBurst: server.Flavor.ExtraSpecs.Get(QUOTA_VIF_OUTBOUND_PPS_PEAD),
 		},
 	}
 	t := table.NewItemsTable([]string{"Position", "BpsBurst", "BpsPeak", "PPSBurst", "PPSPeak"}, items)

@@ -97,7 +97,9 @@ func TestNetQos(clientGuest Guest, serverGuest Guest, pps bool, localIperf3File 
 		}
 	}
 	if pps {
-		common.CONF.Iperf.ClientOptions += "-l 16"
+		splitOptions := strings.Split(common.CONF.Iperf.ClientOptions, " ")
+		splitOptions = append(splitOptions, "-l", "16")
+		common.CONF.Iperf.ClientOptions = strings.Join(splitOptions, " ")
 	}
 
 	fomatTime := time.Now().Format(time.RFC3339)

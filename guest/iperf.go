@@ -205,7 +205,7 @@ func (reports IperfReports) PrintPps() {
 		rowConfigAutoMerge,
 	)
 	tableWriter.AppendHeader(
-		table.Row{"", "Sender", "Receiver"},
+		table.Row{"", "Sender(Lost/Total)", "Receiver(Lost/Total)"},
 		rowConfigAutoMerge, rowConfigAutoMerge, rowConfigAutoMerge,
 	)
 	var (
