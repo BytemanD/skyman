@@ -77,9 +77,9 @@ var testNetQos = &cobra.Command{
 
 		openstackClient := openstack.DefaultClient()
 		logging.Info("get server and client")
-		serverInstance, err := openstackClient.NovaV2().Server().Show(server)
+		serverInstance, err := openstackClient.NovaV2().Server().Found(server)
 		utility.LogError(err, "get server failed", true)
-		clientInstance, err := openstackClient.NovaV2().Server().Show(client)
+		clientInstance, err := openstackClient.NovaV2().Server().Found(client)
 		utility.LogError(err, "get client failed", true)
 
 		if !serverInstance.IsActive() {
