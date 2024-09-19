@@ -13,6 +13,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/stringutils"
 
 	"github.com/BytemanD/skyman/cli/compute"
+	"github.com/BytemanD/skyman/cli/context"
 	"github.com/BytemanD/skyman/cli/identity"
 	"github.com/BytemanD/skyman/cli/image"
 	"github.com/BytemanD/skyman/cli/networking"
@@ -122,6 +123,18 @@ func main() {
 				os.Exit(1)
 			}
 			conf, _ := cmd.Flags().GetString("conf")
+			if conf == "" {
+				ctxConf, err := context.LoadContextConf()
+				if err != nil {
+					logging.Debug("load context failed: %s", err)
+				} else {
+					if ctx := ctxConf.GetCurrent(); ctx != nil {
+						logging.Debug("use conf from context")
+						conf = ctx.Conf
+					}
+				}
+			}
+
 			if err := common.LoadConfig(conf); err != nil {
 				fmt.Printf("load config failed: %v\n", err)
 				os.Exit(1)
@@ -160,7 +173,7 @@ func main() {
 	rootCmd.PersistentFlags().String("compute-api-version", "", "Compute API version")
 
 	rootCmd.AddCommand(
-		versionCmd,
+		versionCmd, context.ContextCmd,
 		identity.Token,
 		identity.Service, identity.Endpoint, identity.Region,
 		identity.User, identity.Project,
