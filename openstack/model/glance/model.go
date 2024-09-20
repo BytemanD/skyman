@@ -6,6 +6,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/dustin/go-humanize"
 )
 
 const (
@@ -63,7 +64,8 @@ func (img *Image) SetRaw(raw map[string]interface{}) {
 }
 
 func (img Image) HumanSize() string {
-	return humanSize(img.Size)
+	return humanize.IBytes(uint64(img.Size))
+	// return humanSize(img.Size)
 }
 
 func (img Image) GetProperties() map[string]interface{} {

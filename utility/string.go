@@ -86,21 +86,6 @@ func RedString(s string) string {
 	return color.New(color.FgRed).Sprintf(s)
 }
 
-func HumanBytes(value int) string {
-	switch {
-	case value >= TB:
-		return fmt.Sprintf("%.2f TB", float32(value)/TB)
-	case value >= GB:
-		return fmt.Sprintf("%.2f GB", float32(value)/GB)
-	case value >= MB:
-		return fmt.Sprintf("%.2f MB", float32(value)/MB)
-	case value >= KB:
-		return fmt.Sprintf("%.2f KB", float32(value)/KB)
-	default:
-		return fmt.Sprintf("%d B", value)
-	}
-}
-
 func MatchPingResult(text string) []string {
 	reg := regexp.MustCompile(`(\d+) packets transmitted, (\d+) received,[^\n]+`)
 	return reg.FindStringSubmatch(text)

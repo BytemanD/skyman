@@ -11,6 +11,7 @@ import (
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/dustin/go-humanize"
 )
 
 var POWER_STATE = []string{
@@ -41,7 +42,7 @@ func (flavor Flavor) BaseInfo() string {
 }
 
 func (flavor Flavor) HumanRam() string {
-	return utility.HumanBytes(flavor.Ram * utility.MB)
+	return humanize.IBytes(uint64(flavor.Ram) * utility.MB)
 }
 
 type ExtraSpecs map[string]string
