@@ -639,34 +639,36 @@ var serverMigrate = &cobra.Command{
 		wait, _ := cmd.Flags().GetBool("wait")
 
 		srcHostMap := map[string]string{}
-		for _, serverId := range args {
-			server, err := client.NovaV2().Server().Found(serverId)
+		servers := []*nova.Server{}
+		for _, idOrName := range args {
+			server, err := client.NovaV2().Server().Found(idOrName)
 			utility.LogError(err, "get server server failed", true)
-			logging.Info("[%s] source host is %s", serverId, server.Host)
+			servers = append(servers, server)
+			logging.Info("[%s] source host is %s", server.Id, server.Host)
 			if live {
-				srcHostMap[serverId] = server.Host
-				err = client.NovaV2().Server().LiveMigrate(serverId, blockMigrate, host)
+				srcHostMap[server.Id] = server.Host
+				err = client.NovaV2().Server().LiveMigrate(server.Id, blockMigrate, host)
 			} else {
-				err = client.NovaV2().Server().Migrate(serverId, host)
+				err = client.NovaV2().Server().Migrate(server.Id, host)
 			}
 			if err != nil {
 				utility.LogError(err, "Reqeust to migrate server failed", false)
 			} else {
-				logging.Info("[%s] requested to migrate server", serverId)
+				logging.Info("[%s] requested to migrate server", server.Id)
 			}
 		}
 		if wait {
-			for _, serverId := range args {
-				server, err := client.NovaV2().Server().WaitTask(serverId, "")
+			for _, server := range servers {
+				server, err := client.NovaV2().Server().WaitTask(server.Id, "")
 				if err != nil {
-					logging.Error("[%s] migrate failed: %s", serverId, err)
+					logging.Error("[%s] migrate failed: %s", server.Id, err)
 					continue
 				}
-				if server.Host == srcHostMap[serverId] {
-					logging.Error("[%s] migrate failed, host not changed", serverId)
+				if server.Host == srcHostMap[server.Id] {
+					logging.Error("[%s] migrate failed, host not changed", server.Id)
 				} else {
 					logging.Success("[%s] migrate success, %s -> %s",
-						serverId, srcHostMap[serverId], server.Host)
+						server.Id, srcHostMap[server.Id], server.Host)
 				}
 
 			}
