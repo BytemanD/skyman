@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/utility"
 	"gopkg.in/yaml.v3"
 )
 
@@ -17,9 +18,7 @@ func getContextFilePath() (f string) {
 	if err != nil {
 		panic(err)
 	}
-	f = filepath.Join(u.HomeDir, DEFAULT_CONTEXT_FILE)
-	logging.Debug("context file path: %s", f)
-	return
+	return filepath.Join(u.HomeDir, DEFAULT_CONTEXT_FILE)
 }
 
 type Context struct {
@@ -47,7 +46,17 @@ func (c *ContextConf) Save() (err error) {
 	if err != nil {
 		return
 	}
+	if c.filePath == "" {
+		return fmt.Errorf("context file is empty")
+	}
 	logging.Debug("save context to %s", c.filePath)
+	if !utility.IsFileExists(c.filePath) {
+		if f, err := os.OpenFile(c.filePath, os.O_CREATE, 0644); err == nil {
+			f.Close()
+		} else {
+			panic(err)
+		}
+	}
 	return os.WriteFile(c.filePath, data, 0644)
 }
 

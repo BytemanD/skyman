@@ -13,7 +13,10 @@ import (
 
 func LoadContextConf() (*ContextConf, error) {
 	filePath := getContextFilePath()
-	conf := ContextConf{}
+	logging.Debug("context file path: %s", filePath)
+	conf := ContextConf{
+		filePath: filePath,
+	}
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -25,7 +28,6 @@ func LoadContextConf() (*ContextConf, error) {
 	if err := yaml.Unmarshal(data, &conf); err != nil {
 		return nil, err
 	}
-	conf.filePath = filePath
 	return &conf, nil
 }
 
@@ -66,7 +68,7 @@ var setCmd = &cobra.Command{
 		}
 		cConf.SetContext(args[0], confPathAbs)
 		if err := cConf.Save(); err != nil {
-			logging.Fatal("set context failed: %s", err)
+			logging.Fatal("save context failed: %s", err)
 		}
 	},
 }
