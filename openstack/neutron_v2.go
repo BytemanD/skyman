@@ -224,7 +224,7 @@ func (c NeutronV2) Port() portApi {
 			Endpoint:    c.BaseUrl,
 			BaseUrl:     "ports",
 			Client:      c.session,
-			SingularKey: "subnet",
+			SingularKey: "port",
 			PluralKey:   "ports",
 		},
 	}
