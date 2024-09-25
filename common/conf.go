@@ -33,7 +33,9 @@ type ConfGroup struct {
 	LogFile        string `yaml:"logFile"`
 	EnableLogColor bool   `yaml:"enableLogColor"`
 
-	Auth  Auth  `yaml:"auth"`
+	Auth    Auth        `yaml:"auth"`
+	Neutron NeutronConf `yaml:"neutron"`
+
 	Iperf Iperf `yaml:"iperf"`
 	Test  Test  `yaml:"test"`
 }
@@ -43,6 +45,9 @@ type Auth struct {
 	User            auth.User       `yaml:"user"`
 	Project         auth.Project    `yaml:"project"`
 	TokenExpireTime int             `yaml:"tokenExpireTime"`
+}
+type NeutronConf struct {
+	Endpoint string `yaml:"endpoint"`
 }
 
 type Server struct {
@@ -119,6 +124,7 @@ func LoadConfig(configFile string) error {
 		"AUTH.USER.DOMAIN", "USER_DOMAIN",
 		"AUTH.PROJECT", "PROJECT",
 		"AUTH.REGION", "REGION",
+		"NEUTRON.ENDPOINT", "NEUTRON_ENDPOINT",
 		".", "_"))
 
 	viper.SetConfigType("yaml")

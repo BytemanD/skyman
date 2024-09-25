@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"os"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
@@ -25,7 +25,7 @@ type NeutronV2 struct {
 }
 
 func (o *Openstack) getEndpoint() (string, error) {
-	endpoint := os.Getenv("OS_NEUTRON_ENDPOINT")
+	endpoint := common.CONF.Neutron.Endpoint
 	if endpoint != "" {
 		return endpoint, nil
 	}
