@@ -23,6 +23,11 @@ auth:
     domain:
       name: Default
 
+# neutron 配置
+# 通过环境变量可覆盖配置(例如: OS_NEUTRON_ENDPOINT)
+neutron:
+  endpoint:
+
 # iperf:
 #   clientOptions: -t 60 -P 10
 #   ServerOptions:

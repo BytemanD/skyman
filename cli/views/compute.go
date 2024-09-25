@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -129,7 +130,9 @@ func PrintFlavor(server nova.Flavor) {
 				}},
 			{Name: "ExtraSpecs", Slot: func(item interface{}) interface{} {
 				p, _ := item.(nova.Flavor)
-				return strings.Join(p.ExtraSpecs.GetList(), "\n")
+				extraSpecs := p.ExtraSpecs.GetList()
+				sort.Strings(extraSpecs)
+				return strings.Join(extraSpecs, "\n")
 			}},
 		},
 	}

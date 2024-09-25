@@ -102,7 +102,7 @@ func TestNetQos(clientGuest Guest, serverGuest Guest, pps bool, localIperf3File 
 		common.CONF.Iperf.ClientOptions = strings.Join(splitOptions, " ")
 	}
 
-	fomatTime := time.Now().Format(time.RFC3339)
+	fomatTime := time.Now().Format("20060102_150405")
 	serverPids := []int{}
 	for _, serverAddress := range serverAddresses {
 		logfile := fmt.Sprintf("/tmp/iperf3_s_%s_%s", fomatTime, serverAddress)

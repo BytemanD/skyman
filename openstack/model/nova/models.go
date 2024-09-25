@@ -173,7 +173,7 @@ func (server Server) GetFlavorExtraSpecsString() string {
 	for key, value := range server.Flavor.ExtraSpecs {
 		extraList = append(extraList, key+"="+value)
 	}
-	sort.Sort(sort.StringSlice(extraList))
+	sort.Strings(extraList)
 	return strings.Join(extraList, "\n")
 }
 func (server Server) GetFaultString() string {
@@ -185,7 +185,7 @@ func (server Server) AllStatus() string {
 		server.Status, server.TaskState, server.GetPowerState())
 }
 func (server Server) StatusIs(status string) bool {
-	return strings.ToUpper(server.Status) == strings.ToUpper(status)
+	return strings.EqualFold(server.Status, status)
 }
 func (server Server) InResize() bool {
 	return server.Status == "VERIFY_RESIZE" || server.Status == "RESIZE"
