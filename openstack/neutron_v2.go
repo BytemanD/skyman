@@ -25,9 +25,8 @@ type NeutronV2 struct {
 }
 
 func (o *Openstack) getEndpoint() (string, error) {
-	endpoint := common.CONF.Neutron.Endpoint
-	if endpoint != "" {
-		return endpoint, nil
+	if common.CONF.Neutron.Endpoint != "" {
+		return common.CONF.Neutron.Endpoint, nil
 	}
 	return o.AuthPlugin.GetServiceEndpoint("network", "neutron", "public")
 }

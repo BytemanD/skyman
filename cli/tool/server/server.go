@@ -168,8 +168,8 @@ func (serverInspect *ServerInspect) Print() {
 	fmt.Println(string(result))
 }
 
-func inspect(client *openstack.Openstack, serverId string) (*ServerInspect, error) {
-	server, err := client.NovaV2().Server().Show(serverId)
+func inspect(client *openstack.Openstack, idOrName string) (*ServerInspect, error) {
+	server, err := client.NovaV2().Server().Found(idOrName)
 	if err != nil {
 		return nil, err
 	}
@@ -179,17 +179,17 @@ func inspect(client *openstack.Openstack, serverId string) (*ServerInspect, erro
 		return nil, err
 	}
 	server.SetImageName(image.Name)
-	interfaceAttachmetns, err := client.NovaV2().Server().ListInterfaces(serverId)
+	interfaceAttachmetns, err := client.NovaV2().Server().ListInterfaces(server.Id)
 	if err != nil {
 		return nil, err
 	}
 	logging.Info("list server volumes")
-	volumeAttachments, err := client.NovaV2().Server().ListVolumes(serverId)
+	volumeAttachments, err := client.NovaV2().Server().ListVolumes(server.Id)
 	if err != nil {
 		return nil, err
 	}
 	logging.Info("list server ations")
-	actions, err := client.NovaV2().Server().ListActions(serverId)
+	actions, err := client.NovaV2().Server().ListActions(server.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -228,11 +228,9 @@ var serverInspect = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 
-		serverId := args[0]
 		format, _ := cmd.Flags().GetString("format")
-
-		serverInspect, err := inspect(client, serverId)
-		utility.LogError(err, "inspect sever faield", true)
+		serverInspect, err := inspect(client, args[0])
+		utility.LogIfError(err, true, "inspect sever %s faield", args[0])
 
 		switch format {
 		case "json":
