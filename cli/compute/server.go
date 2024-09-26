@@ -381,12 +381,17 @@ var serverStop = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		for _, id := range args {
-			err := client.NovaV2().Server().Stop(id)
+		for _, idOrName := range args {
+			server, err := client.NovaV2().Server().Found(idOrName)
 			if err != nil {
-				logging.Error("Reqeust to stop server failed, %v", err)
+				logging.Error("get server %s failed, %v", idOrName, err)
+				continue
+			}
+			err = client.NovaV2().Server().Stop(server.Id)
+			if err != nil {
+				logging.Error("Reqeust to stop server %s failed, %v", idOrName, err)
 			} else {
-				fmt.Printf("Requested to stop server: %s\n", id)
+				logging.Info("Requested to stop server: %s\n", idOrName)
 			}
 		}
 	},
@@ -397,12 +402,17 @@ var serverStart = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		for _, id := range args {
-			err := client.NovaV2().Server().Start(id)
+		for _, idOrName := range args {
+			server, err := client.NovaV2().Server().Found(idOrName)
+			if err != nil {
+				logging.Error("get server %s failed, %v", idOrName, err)
+				continue
+			}
+			err = client.NovaV2().Server().Start(server.Id)
 			if err != nil {
 				logging.Error("Reqeust to start server failed, %v", err)
 			} else {
-				fmt.Printf("Requested to start server: %s\n", id)
+				fmt.Printf("Requested to start server: %s\n", server.Id)
 			}
 		}
 	},
@@ -447,12 +457,17 @@ var serverPause = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 
-		for _, id := range args {
-			err := client.NovaV2().Server().Pause(id)
+		for _, idOrName := range args {
+			server, err := client.NovaV2().Server().Found(idOrName)
+			if err != nil {
+				logging.Error("get server %s failed, %v", idOrName, err)
+				continue
+			}
+			err = client.NovaV2().Server().Pause(server.Id)
 			if err != nil {
 				logging.Error("Reqeust to pause server failed, %v", err)
 			} else {
-				fmt.Printf("Requested to pause server: %s\n", id)
+				fmt.Printf("Requested to pause server: %s\n", idOrName)
 			}
 		}
 	},
@@ -464,12 +479,17 @@ var serverUnpause = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 
-		for _, id := range args {
-			err := client.NovaV2().Server().Unpause(id)
+		for _, idOrName := range args {
+			server, err := client.NovaV2().Server().Found(idOrName)
+			if err != nil {
+				logging.Error("get server %s failed, %v", idOrName, err)
+				continue
+			}
+			err = client.NovaV2().Server().Unpause(server.Id)
 			if err != nil {
 				logging.Error("Reqeust to unpause server failed, %v", err)
 			} else {
-				fmt.Printf("Requested to unpause server: %s\n", id)
+				fmt.Printf("Requested to unpause server: %s\n", server.Id)
 			}
 		}
 	},
