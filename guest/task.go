@@ -159,3 +159,17 @@ func TestNetQos(clientGuest Guest, serverGuest Guest, pps bool, localIperf3File 
 	}
 	return reports.SendTotal.Value, reports.ReceiveTotal.Value, nil
 }
+
+func TestFio(serverGuest Guest, opts FioOptions) error {
+	logging.Debug("连接实例: %s", serverGuest)
+	if err := serverGuest.Connect(); err != nil {
+		return fmt.Errorf("连接实例失败, %s", err)
+	}
+
+	result, err := serverGuest.RunFio(opts)
+	if err != nil {
+		return err
+	}
+	fmt.Println(result)
+	return nil
+}

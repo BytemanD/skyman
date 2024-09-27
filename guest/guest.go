@@ -3,6 +3,7 @@ package guest
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"libvirt.org/go/libvirt"
@@ -16,6 +17,16 @@ type Guest struct {
 	conn       libvirt.Connect
 	domain     *libvirt.Domain
 	domainName string
+}
+
+type FioOptions struct {
+	RW       string
+	Numjobs  int
+	Runtime  int
+	Size     string
+	FileName string
+	IODepth  int
+	BS       string
 }
 
 func (guest *Guest) Connect() error {
@@ -73,6 +84,41 @@ func (g Guest) IsShutoff() bool {
 	}
 	return domainInfo.State == libvirt.DOMAIN_SHUTOFF
 }
+
+// testType: iops || bandwidth || latency
+func (g Guest) RunFio(opts FioOptions) (string, error) {
+	if err := g.Connect(); err != nil {
+		return "", fmt.Errorf("连接实例失败, %s", err)
+	}
+	rmFile := false
+	if opts.FileName == "" {
+		logging.Warning("disk path is none, use root path")
+		opts.FileName = fmt.Sprintf("/iotest_%s", time.Now().Format("2006-01-02_150405"))
+		rmFile = true
+	}
+	fioCmd := []string{
+		"fio", fmt.Sprintf("-name=Fio_%s_Test", opts.RW),
+		"-group_reporting", "-ioengine=libaio", "-direct=1",
+		fmt.Sprintf("-rw=%s", opts.RW),
+		fmt.Sprintf("-size=%s", opts.Size),
+		fmt.Sprintf("-numjobs=%d", opts.Numjobs),
+		fmt.Sprintf("-runtime=%d", opts.Runtime),
+		fmt.Sprintf("-iodepth=%d", opts.IODepth),
+		fmt.Sprintf("-bs=%s", opts.BS),
+		fmt.Sprintf("-filename=%s", opts.FileName),
+	}
+	fmt.Printf(">> %s\n", strings.Join(fioCmd, " "))
+	execResult := g.Exec(strings.Join(fioCmd, " "), true)
+	if execResult.Failed {
+		logging.Error("test failed: %s\n%s", execResult.OutData, execResult.ErrData)
+		return "", fmt.Errorf("run fio failed")
+	}
+	if rmFile {
+		g.Exec("rm -rf "+opts.FileName, true)
+	}
+	return execResult.OutData, nil
+}
+
 func ParseGuest(guestConnector string) (*Guest, error) {
 	values := strings.Split(guestConnector, ":")
 	var connection, domain string

@@ -16,7 +16,7 @@ import (
 
 const SERVER_IPERF3_TEST_EXAMPLE = `
 ## 客户端向服务端打流:
-  skyman tool server iperf3-test <服务端虚拟机 UUID> --client <客户端虚拟机 UUID>
+  skyman test server-iperf3 <服务端虚拟机> --client <客户端虚拟机>
 
 ## 设置iperf3 客户端参数
 1. 设置打流时间为60s, 编辑配置文件(默认为 /etc/skyman/skyman.yaml), 设置如下:
@@ -74,7 +74,7 @@ func printServerQOSItems(server nova.Server) {
 }
 
 var testNetQos = &cobra.Command{
-	Use:     "server-net-qos <server> --client <client>",
+	Use:     "server-iperf3 <server> --client <client>",
 	Short:   i18n.T("testServerNetworkQOS"),
 	Long:    "基于iperf3工具测试两个虚拟机的网络QOS",
 	Example: strings.TrimRight(SERVER_IPERF3_TEST_EXAMPLE, "\n"),
