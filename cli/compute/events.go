@@ -13,12 +13,10 @@ import (
 	"github.com/BytemanD/skyman/utility"
 )
 
-func listServerActions(idOrString string, actionName string, last int, long bool) {
+func listServerActions(serverId string, actionName string, last int, long bool) {
 	client := openstack.DefaultClient()
-	server, err := client.NovaV2().Server().Found(idOrString)
-	utility.LogIfError(err, true, "get server %s faield", idOrString)
 
-	actions, err := client.NovaV2().Server().ListActions(server.Id)
+	actions, err := client.NovaV2().Server().ListActions(serverId)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -44,13 +42,10 @@ func listServerActions(idOrString string, actionName string, last int, long bool
 	pt.Items = common.LastItems(pt.Items, last)
 	common.PrintPrettyTable(pt, long)
 }
-func listServerActionsWithSpend(idOrString string, actionName string, requestId string, last int, long bool) {
+func listServerActionsWithSpend(serverId string, actionName string, requestId string, last int, long bool) {
 	client := openstack.DefaultClient()
-	server, err := client.NovaV2().Server().Found(idOrString)
-	utility.LogIfError(err, true, "get server %s faield", idOrString)
-
 	actionsWithEvents, err := client.NovaV2().Server().ListActionsWithEvents(
-		server.Id, actionName, requestId, last)
+		serverId, actionName, requestId, last)
 	utility.LogError(err, "get server actions and events failed", true)
 
 	pt := common.PrettyTable{
@@ -109,12 +104,10 @@ func listServerActionsWithSpend(idOrString string, actionName string, requestId 
 	pt.AddItems(actionsWithEvents)
 	common.PrintPrettyTable(pt, long)
 }
-func showAction(idOrString string, requestId string, long bool) {
+func showAction(serverId string, requestId string, long bool) {
 	client := openstack.DefaultClient()
-	server, err := client.NovaV2().Server().Found(idOrString)
-	utility.LogIfError(err, true, "get server %s faield", idOrString)
 
-	action, err := client.NovaV2().Server().ShowAction(server.Id, requestId)
+	action, err := client.NovaV2().Server().ShowAction(serverId, requestId)
 	utility.LogError(err, "get server action failed", true)
 	pt := common.PrettyTable{
 		Title: fmt.Sprintf("Action: %s", action.Action),
@@ -146,22 +139,29 @@ var serverAction = &cobra.Command{
 	Short: "Get server action(s)",
 	Args:  cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
-		server, requestId := args[0], ""
 		long, _ := cmd.Flags().GetBool("long")
 		actionName, _ := cmd.Flags().GetString("name")
 		spend, _ := cmd.Flags().GetBool("spend")
 		last, _ := cmd.Flags().GetInt("last")
 
+		requestId := ""
 		if len(args) == 2 {
 			requestId = args[1]
 		}
-
-		if spend {
-			listServerActionsWithSpend(server, actionName, requestId, last, long)
-		} else if requestId == "" {
-			listServerActions(server, actionName, last, long)
+		client := openstack.DefaultClient()
+		server, err := client.NovaV2().Server().Found(args[0])
+		var serverId string
+		if err == nil {
+			serverId = server.Id
 		} else {
-			showAction(server, requestId, long)
+			serverId = args[0]
+		}
+		if spend {
+			listServerActionsWithSpend(serverId, actionName, requestId, last, long)
+		} else if requestId == "" {
+			listServerActions(serverId, actionName, last, long)
+		} else {
+			showAction(serverId, requestId, long)
 		}
 	},
 }
