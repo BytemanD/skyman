@@ -116,6 +116,8 @@ var portShow = &cobra.Command{
 			Item: *port,
 			ShortFields: []common.Column{
 				{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
+				{Name: "Status"},
+				{Name: "AdminStateUp"},
 				{Name: "MACAddress", Text: "MAC Address"},
 				{Name: "BindingVnicType"},
 				{Name: "BindingVifType"},

@@ -80,6 +80,7 @@ type FixedIp struct {
 }
 type Port struct {
 	model.Resource
+	AdminStateUp    bool                   `json:"admin_state_up,omitempty"`
 	MACAddress      string                 `json:"mac_address"`
 	BindingHostId   string                 `json:"binding:host_id,omitempty"`
 	BindingVnicType string                 `json:"binding:vnic_type,omitempty"`
