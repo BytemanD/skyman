@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1151,6 +1152,60 @@ func (c aggregateApi) Show(id string) (*nova.Aggregate, error) {
 		return nil, err
 	}
 	return &body.Aggregate, nil
+}
+func (c aggregateApi) Found(idOrName string) (*nova.Aggregate, error) {
+	agg, err := c.Show(idOrName)
+	if err == nil {
+		return agg, nil
+	}
+	if !compare.IsType[httpclient.HttpError](err) {
+		return nil, err
+	}
+	httpError, _ := err.(httpclient.HttpError)
+	if !httpError.IsNotFound() {
+		return nil, err
+	}
+	aggs, err := c.List(nil)
+	if err != nil {
+		return nil, err
+	}
+	aggs = utility.Filter[nova.Aggregate](aggs, func(x nova.Aggregate) bool {
+		return x.Name == idOrName
+	})
+	switch len(aggs) {
+	case 0:
+		return nil, fmt.Errorf("aggregate %s not found", idOrName)
+	case 1:
+		return &aggs[0], nil
+	default:
+		return nil, fmt.Errorf("found multi aggregates with name %s", idOrName)
+	}
+}
+func (c aggregateApi) AddHost(id int, host string) (*nova.Aggregate, error) {
+	body := struct {
+		AddHost map[string]string `json:"add_host"`
+	}{
+		AddHost: map[string]string{"host": host},
+	}
+	respBody := struct{ Aggregate nova.Aggregate }{}
+	if _, err := c.AppendUrl(strconv.Itoa(id)).AppendUrl("action").
+		SetBody(&body).Post(&respBody); err != nil {
+		return nil, err
+	}
+	return &respBody.Aggregate, nil
+}
+func (c aggregateApi) RemoveHost(id int, host string) (*nova.Aggregate, error) {
+	body := struct {
+		RemoveHost map[string]string `json:"remove_host"`
+	}{
+		RemoveHost: map[string]string{"host": host},
+	}
+	respBody := struct{ Aggregate nova.Aggregate }{}
+	if _, err := c.AppendUrl(strconv.Itoa(id)).AppendUrl("action").
+		SetBody(&body).Post(&respBody); err != nil {
+		return nil, err
+	}
+	return &respBody.Aggregate, nil
 }
 
 // server group api

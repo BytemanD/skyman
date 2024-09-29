@@ -1,6 +1,11 @@
 package common
 
-import "github.com/BytemanD/easygo/pkg/global/logging"
+import (
+	"strings"
+
+	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/openstack/model/nova"
+)
 
 const (
 	DEFAULT     = "default"
@@ -34,4 +39,24 @@ func PrintPrettyItemTable(table PrettyItemTable) string {
 			GetOutputFormats())
 	}
 	return ""
+}
+
+func PrintAggregate(aggregate nova.Aggregate) {
+	pt := PrettyItemTable{
+		Item: aggregate,
+		ShortFields: []Column{
+			{Name: "Id"}, {Name: "Name"}, {Name: "AvailabilityZone"},
+			{Name: "Hosts", Slot: func(item interface{}) interface{} {
+				p, _ := (item).(nova.Aggregate)
+				return strings.Join(p.Hosts, "\n")
+			}},
+			{Name: "Metadata", Slot: func(item interface{}) interface{} {
+				p, _ := (item).(nova.Aggregate)
+				return p.MarshalMetadata()
+			}},
+			{Name: "CreatedAt"}, {Name: "UpdatedAt"},
+			{Name: "Deleted"}, {Name: "DeletedAt"},
+		},
+	}
+	PrintPrettyItemTable(pt)
 }
