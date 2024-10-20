@@ -3,6 +3,7 @@ package networking
 import (
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -54,7 +55,7 @@ var routerShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().NeutronV2()
-		router, err := c.Router().Show(args[0])
+		router, err := c.Router().Found(args[0])
 		if err != nil {
 			utility.LogError(err, "show router failed", true)
 		}
@@ -117,6 +118,93 @@ var routerCreate = &cobra.Command{
 	},
 }
 
+var routerInterface = &cobra.Command{Use: "interface"}
+
+var interfaceAdd = &cobra.Command{
+	Use:     "add <router> <interface>",
+	Short:   "Add an internal network interface to a router.",
+	Example: "  interface add ROUTER <SUBNET>\n  interface add ROUTER port=<PORT>",
+	Args:    cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		c := openstack.DefaultClient().NeutronV2()
+		r, i := args[0], args[1]
+
+		router, err := c.Router().Found(r)
+		utility.LogIfError(err, true, "get router %s failed", r)
+
+		if strings.HasPrefix(i, "port=") {
+			i = strings.Replace(i, "port=", "", 1)
+			port, err := c.Port().Found(i)
+			utility.LogIfError(err, true, "get port,  %s failed", i)
+			err = c.Router().AddPort(router.Id, port.Id)
+			utility.LogIfError(err, true, "add port,  failed")
+			logging.Info("added subnet %s to router %s", i, r)
+		} else {
+			subnet, err := c.Subnet().Found(i)
+			utility.LogIfError(err, true, "get subnet %s failed", i)
+			err = c.Router().AddSubnet(router.Id, subnet.Id)
+			utility.LogIfError(err, true, "add interface failed")
+			logging.Info("added subnet %s to router %s", i, r)
+
+		}
+	},
+}
+
+var interfaceRemove = &cobra.Command{
+	Use:     "remove <router> <interface>",
+	Short:   "Remove an internal network interface from a router. interface: <SUBNET>|<port=PORT>",
+	Example: "  interface remove ROUTER <SUBNET>\n  interface remove ROUTER port=<PORT>",
+	Args:    cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		c := openstack.DefaultClient().NeutronV2()
+		r, i := args[0], args[1]
+
+		router, err := c.Router().Found(r)
+		utility.LogIfError(err, true, "get router %s failed", r)
+		if strings.HasPrefix(i, "port=") {
+			i = strings.Replace(i, "port=", "", 1)
+			port, err := c.Port().Found(i)
+			utility.LogIfError(err, true, "get port %s failed", i)
+			err = c.Router().RemovePort(router.Id, port.Id)
+			utility.LogIfError(err, true, "remove interface failed")
+			logging.Info("remoeved port %s from router %s", i, r)
+		} else {
+			subnet, err := c.Subnet().Found(i)
+			utility.LogIfError(err, true, "get subnet %s failed", i)
+			err = c.Router().RemoveSubnet(router.Id, subnet.Id)
+			utility.LogIfError(err, true, "remove interface failed")
+			logging.Info("remoeved subnet %s from router %s", i, r)
+		}
+	},
+}
+var interfaceList = &cobra.Command{
+	Use:   "list <router>",
+	Short: "list router interfaces",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		c := openstack.DefaultClient().NeutronV2()
+		r := args[0]
+
+		router, err := c.Router().Found(r)
+		utility.LogIfError(err, true, "get router %s failed", r)
+
+		query := url.Values{}
+		query.Set("device_id", router.Id)
+		ports, err := c.Port().List(query)
+		utility.LogIfError(err, true, "list router ports failed")
+		pt := common.PrettyTable{
+			ShortColumns: []common.Column{
+				{Name: "Id"}, {Name: "Name", Sort: true},
+				{Name: "Status", AutoColor: true},
+				{Name: "MACAddress", Text: "MAC Address"},
+				{Name: "FixedIps"},
+			},
+		}
+		pt.AddItems(ports)
+		common.PrintPrettyTable(pt, false)
+	},
+}
+
 func init() {
 	routerList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	routerList.Flags().StringP("name", "n", "", "Search by router name")
@@ -124,5 +212,8 @@ func init() {
 	routerCreate.Flags().String("description", "", "Set router description")
 	routerCreate.Flags().Bool("disable", false, "Disable router")
 
-	Router.AddCommand(routerList, routerShow, routerDelete, routerCreate)
+	routerInterface.AddCommand(interfaceAdd, interfaceRemove, interfaceList)
+
+	Router.AddCommand(routerList, routerShow, routerDelete, routerCreate,
+		routerInterface)
 }

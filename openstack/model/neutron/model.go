@@ -78,6 +78,12 @@ type FixedIp struct {
 	SubnetId  string `json:"subnet_id,omitempty"`
 	IpAddress string `json:"ip_address,omitempty"`
 }
+
+func (fixedIp FixedIp) String() string {
+	data, _ := json.Marshal(fixedIp)
+	return string(data)
+}
+
 type Port struct {
 	model.Resource
 	AdminStateUp    bool                   `json:"admin_state_up,omitempty"`

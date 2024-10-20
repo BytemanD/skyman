@@ -112,6 +112,43 @@ func (c routerApi) Delete(id string) error {
 	_, err := c.AppendUrl(id).Delete(nil)
 	return err
 }
+func (c routerApi) Found(idOrName string) (*neutron.Router, error) {
+	return FoundResource[neutron.Router](c.ResourceApi, idOrName)
+}
+
+// Interface: subnet-id | port=port-id
+func (c routerApi) AddSubnet(routerId, subnetId string) error {
+	body := map[string]string{"subnet_id": subnetId}
+	if _, err := c.AppendUrl(routerId).AppendUrl("add_router_interface").
+		SetBody(&body).Put(nil); err != nil {
+		return err
+	}
+	return nil
+}
+func (c routerApi) AddPort(routerId, portId string) error {
+	body := map[string]string{"port_id": portId}
+	if _, err := c.AppendUrl(routerId).AppendUrl("add_router_interface").
+		SetBody(&body).Put(nil); err != nil {
+		return err
+	}
+	return nil
+}
+func (c routerApi) RemoveSubnet(routerId, subnetId string) error {
+	body := map[string]string{"subnet_id": subnetId}
+	if _, err := c.AppendUrl(routerId).AppendUrl("remove_router_interface").
+		SetBody(&body).Put(nil); err != nil {
+		return err
+	}
+	return nil
+}
+func (c routerApi) RemovePort(routerId, portId string) error {
+	body := map[string]string{"port_id": portId}
+	if _, err := c.AppendUrl(routerId).AppendUrl("remove_router_interface").
+		SetBody(&body).Put(nil); err != nil {
+		return err
+	}
+	return nil
+}
 
 // network api
 type networkApi struct {
