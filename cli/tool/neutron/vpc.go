@@ -85,17 +85,17 @@ var vpcDelete = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		vpc := args[0]
-		routerName, _ := cmd.Flags().GetString("router-name")
+		vpcRouter, _ := cmd.Flags().GetString("router")
 
-		if routerName == "" {
-			routerName = fmt.Sprintf("%s-router", vpc)
+		if vpcRouter == "" {
+			vpcRouter = fmt.Sprintf("%s-router", vpc)
 		}
 
 		c := openstack.DefaultClient().NeutronV2()
 		// get vpc router
-		logging.Info("get router %s", routerName)
-		router, err := c.Router().Found(routerName)
-		utility.LogIfError(err, true, "get router %s failed", routerName)
+		logging.Info("get router %s", vpcRouter)
+		router, err := c.Router().Found(vpcRouter)
+		utility.LogIfError(err, true, "get router %s failed", vpcRouter)
 		// remove router ports
 		routerPorts, err := c.ListRouterPorts(router.Id)
 		utility.LogIfError(err, true, "list router ports failed")
@@ -119,17 +119,17 @@ var vpcDelete = &cobra.Command{
 		}
 
 		// delete vpc router
-		logging.Info("delete vpc router %s", routerName)
+		logging.Info("delete vpc router %s", vpcRouter)
 		err = c.Router().Delete(router.Id)
-		utility.LogIfError(err, true, "dele router %s failed", routerName)
+		utility.LogIfError(err, true, "dele router %s failed", vpcRouter)
 		logging.Info("VPC %s delete success", vpc)
 	},
 }
 
 func init() {
-	vpcCreate.Flags().StringP("ip-version", "n", "4", "IP version")
+	vpcCreate.Flags().StringP("ip-version", "v", "4", "IP version")
 
-	vpcDelete.Flags().StringP("router-name", "n", "", "Router name")
+	vpcDelete.Flags().StringP("router", "r", "", "Router id or name")
 
 	Vpc.AddCommand(vpcCreate, vpcDelete)
 }
