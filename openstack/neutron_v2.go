@@ -166,7 +166,11 @@ func (c NeutronV2) Network() networkApi {
 		},
 	}
 }
-
+func (c NeutronV2) ListRouterPorts(routerId string) (neutron.Ports, error) {
+	query := url.Values{}
+	query.Set("device_id", routerId)
+	return c.Port().List(query)
+}
 func (c networkApi) List(query url.Values) ([]neutron.Network, error) {
 	body := struct{ Networks []neutron.Network }{}
 	if _, err := c.SetQuery(query).Get(&body); err != nil {
