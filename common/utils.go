@@ -3,7 +3,9 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/stringutils"
@@ -65,4 +67,23 @@ func RepeatFunc(nums int, function func()) {
 	for i := 0; i < nums; i++ {
 		function()
 	}
+}
+func ValidIpv4(cidr string, maxMask ...int) bool {
+	values := strings.Split(cidr, "/")
+	if len(values) == 2 {
+		validMaxkMask := 32
+		if len(maxMask) > 0 {
+			validMaxkMask = maxMask[0]
+		}
+		if mask, err := strconv.Atoi(values[1]); err != nil {
+			return false
+		} else if mask <= 0 || mask > validMaxkMask {
+			return false
+		}
+	}
+	parsed := net.ParseIP(values[0])
+	if parsed == nil || parsed.To4() == nil {
+		return false
+	}
+	return true
 }

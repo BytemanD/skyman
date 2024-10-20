@@ -2,10 +2,12 @@ package neutron
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
 
+	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
@@ -16,13 +18,36 @@ var Vpc = &cobra.Command{Use: "vpc"}
 var vpcCreate = &cobra.Command{
 	Use:   "create <name> <cidr>",
 	Short: "Create VPC",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.ExactArgs(2)(cmd, args); err != nil {
+			return err
+		}
+
+		ipVersion, _ := cmd.Flags().GetString("ip-version")
+		ipVersions := strings.Split(ipVersion, ",")
+		for _, v := range ipVersions {
+			switch v {
+			case "4":
+				if !common.ValidIpv4(args[1], 30) {
+					return fmt.Errorf("invalid IPv4 address: %s", args[1])
+				}
+			case "6":
+				continue
+			default:
+				return fmt.Errorf("invalid ip vresion: %s", v)
+			}
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		vpc, cidr := args[0], args[1]
+
 		c := openstack.DefaultClient().NeutronV2()
 		routerName := fmt.Sprintf("%s-router", vpc)
 		networkName := fmt.Sprintf("%s-network", vpc)
 		subnetName := fmt.Sprintf("%s-subnet", vpc)
+		ipVersion, _ := cmd.Flags().GetString("ip-version")
+		ipVersions := strings.Split(ipVersion, ",")
 
 		// create router
 		routerParams := map[string]interface{}{"name": routerName}
@@ -35,18 +60,23 @@ var vpcCreate = &cobra.Command{
 		network, err := c.Network().Create(networkParams)
 		utility.LogIfError(err, true, "create network %s failed", networkParams)
 		// create router
-		subnetParams := map[string]interface{}{
-			"name": subnetName, "network_id": network.Id,
-			"cidr": cidr, "ip_version": "4",
+		for _, v := range ipVersions {
+			subneVerionName := fmt.Sprintf("%s-v%s", subnetName, v)
+			subnetParams := map[string]interface{}{
+				"name":       subneVerionName,
+				"network_id": network.Id,
+				"ip_version": v,
+				"cidr":       cidr,
+			}
+			logging.Info("create subnet %s", subneVerionName)
+			subnet, err := c.Subnet().Create(subnetParams)
+			utility.LogIfError(err, true, "create subnet %s failed", subnetName)
+			// add router interface
+			logging.Info("add subnet %s to router %s", subneVerionName, routerName)
+			err = c.Router().AddSubnet(router.Id, subnet.Id)
+			utility.LogIfError(err, true, "add subnet %s to router %s failed", subnetName, routerName)
+			logging.Info("create VPC %s success", vpc)
 		}
-		logging.Info("create subnet %s", subnetName)
-		subnet, err := c.Subnet().Create(subnetParams)
-		utility.LogIfError(err, true, "create subnet %s failed", subnetName)
-		// add router interface
-		logging.Info("add subnet %s to router %s", subnetName, routerName)
-		err = c.Router().AddSubnet(router.Id, subnet.Id)
-		utility.LogIfError(err, true, "add subnet %s to router %s failed", subnetName, routerName)
-		logging.Info("create VPC %s success", vpc)
 	},
 }
 var vpcDelete = &cobra.Command{
@@ -97,7 +127,9 @@ var vpcDelete = &cobra.Command{
 }
 
 func init() {
-	vpcDelete.Flags().StringP("router-name", "n", "", "router name")
+	vpcCreate.Flags().StringP("ip-version", "n", "4", "IP version")
+
+	vpcDelete.Flags().StringP("router-name", "n", "", "Router name")
 
 	Vpc.AddCommand(vpcCreate, vpcDelete)
 }
