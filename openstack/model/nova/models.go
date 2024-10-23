@@ -437,10 +437,10 @@ type AvailabilityZone struct {
 	Hosts     map[string]AZHost `json:"hosts,omitempty"`
 }
 type Aggregate struct {
-	Id               int               `json:"id"`
-	Name             string            `json:"name"`
-	AvailabilityZone string            `json:"availability_zone"`
-	Deleted          bool              `json:"deleted"`
+	Id               int               `json:"id,omitempty""`
+	Name             string            `json:"name,omitempty""`
+	AvailabilityZone string            `json:"availability_zone,omitempty""`
+	Deleted          bool              `json:"deleted,omitempty""`
 	Hosts            []string          `json:"hosts,omitempty"`
 	Metadata         map[string]string `json:"metadata,omitempty"`
 	CreatedAt        string            `json:"created_at,omitempty"`

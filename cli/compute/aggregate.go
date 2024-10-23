@@ -68,6 +68,37 @@ var aggShow = &cobra.Command{
 		common.PrintAggregate(*aggregate)
 	},
 }
+var aggCreate = &cobra.Command{
+	Use:   "create <name>",
+	Short: "create aggregate",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		name := args[0]
+		az, _ := cmd.Flags().GetString("az")
+		agg := nova.Aggregate{Name: name}
+		if az != "" {
+			agg.AvailabilityZone = az
+		}
+		client := openstack.DefaultClient()
+		aggregate, err := client.NovaV2().Aggregate().Create(agg)
+		utility.LogIfError(err, true, "create aggregate %s failed", name)
+		common.PrintAggregate(*aggregate)
+	},
+}
+var aggDelete = &cobra.Command{
+	Use:   "delete <aggregate> [<aggregate> ...]",
+	Short: "delete aggregate(s)",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(_ *cobra.Command, args []string) {
+		client := openstack.DefaultClient()
+		for _, agg := range args {
+			aggregate, err := client.NovaV2().Aggregate().Found(agg)
+			utility.LogIfError(err, true, "get aggregate %s failed", agg)
+			err = client.NovaV2().Aggregate().Delete(aggregate.Id)
+			utility.LogIfError(err, true, "delete aggregate %s failed", agg)
+		}
+	},
+}
 var aggAdd = &cobra.Command{Use: "add"}
 var aggRemove = &cobra.Command{Use: "remove"}
 var addHost = &cobra.Command{
@@ -114,7 +145,9 @@ func init() {
 	aggList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	aggList.Flags().String("name", "", "List By aggregate name")
 
+	aggCreate.Flags().String("az", "", "The availability zone of the aggregate")
+
 	aggAdd.AddCommand(addHost)
 	aggRemove.AddCommand(removeHost)
-	Aggregate.AddCommand(aggList, aggShow, aggAdd, aggRemove)
+	Aggregate.AddCommand(aggList, aggShow, aggCreate, aggDelete, aggAdd, aggRemove)
 }

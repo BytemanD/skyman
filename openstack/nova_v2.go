@@ -1153,6 +1153,27 @@ func (c aggregateApi) Show(id string) (*nova.Aggregate, error) {
 	}
 	return &body.Aggregate, nil
 }
+func (c aggregateApi) Create(agg nova.Aggregate) (*nova.Aggregate, error) {
+	body := struct {
+		Aggregate nova.Aggregate `json:"aggregate"`
+	}{Aggregate: agg}
+	respBody := struct {
+		Aggregate nova.Aggregate `json:"aggregate"`
+	}{}
+
+	if _, err := c.SetBody(&body).Post(&respBody); err != nil {
+		return nil, err
+	} else {
+		return &respBody.Aggregate, nil
+	}
+}
+
+func (c aggregateApi) Delete(id int) error {
+	if _, err := c.AppendUrl(strconv.Itoa(id)).Delete(nil); err != nil {
+		return err
+	}
+	return nil
+}
 func (c aggregateApi) Found(idOrName string) (*nova.Aggregate, error) {
 	agg, err := c.Show(idOrName)
 	if err == nil {
