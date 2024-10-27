@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-
-	"github.com/BytemanD/skyman/common"
 )
 
 type GuestConnection struct {
@@ -42,10 +40,19 @@ func installIperf(guest Guest, localIperf3File string) error {
 // 参数为客户端和服务端实例的连接地址, 格式: "连接地址@实例 UUID". e.g.
 //
 //	192.168.192.168@a6ee919a-4026-4f0b-8d7e-404950a91eb3
-func TestNetQos(clientGuest Guest, serverGuest Guest, pps bool, localIperf3File string) (float64, float64, error) {
-	logging.Info("连接客户端实例: %s", clientGuest)
-	err := clientGuest.Connect()
-	if clientGuest.IsSame(serverGuest) {
+type NetQosTest struct {
+	ClientGuest     Guest
+	ServerGuest     Guest
+	PPS             bool
+	LocalIperf3File string
+	ClientOptions   string
+	ServerOptions   string
+}
+
+func (t *NetQosTest) Run() (float64, float64, error) {
+	logging.Info("连接客户端实例: %s", t.ClientGuest)
+	err := t.ClientGuest.Connect()
+	if t.ClientGuest.IsSame(t.ServerGuest) {
 		logging.Error("客户端和服务端实例不能相同")
 		return 0, 0, err
 	}
@@ -53,16 +60,16 @@ func TestNetQos(clientGuest Guest, serverGuest Guest, pps bool, localIperf3File 
 		logging.Error("连接客户端实例失败, %s", err)
 		return 0, 0, err
 	}
-	logging.Info("连接服务端实例: %s", serverGuest)
-	err = serverGuest.Connect()
+	logging.Info("连接服务端实例: %s", t.ServerGuest)
+	err = t.ServerGuest.Connect()
 	if err != nil {
 		logging.Error("连接服务端实例失败, %s", err)
 		return 0, 0, err
 	}
 
 	logging.Info("获取客户端和服务端实例IP地址")
-	clientAddresses := clientGuest.GetIpaddrs()
-	serverAddresses := serverGuest.GetIpaddrs()
+	clientAddresses := t.ClientGuest.GetIpaddrs()
+	serverAddresses := t.ServerGuest.GetIpaddrs()
 	logging.Info("客户端实例IP地址: %s", clientAddresses)
 	logging.Info("服务端实例IP地址: %s", serverAddresses)
 
@@ -70,36 +77,36 @@ func TestNetQos(clientGuest Guest, serverGuest Guest, pps bool, localIperf3File 
 		logging.Fatal("客户端和服务端实例必须至少有一张启用的网卡")
 	}
 
-	if !serverGuest.HasCommand("iperf3") {
-		if localIperf3File == "" {
+	if !t.ServerGuest.HasCommand("iperf3") {
+		if t.LocalIperf3File == "" {
 			return 0, 0, fmt.Errorf("iperf3 is not installed in server guest")
 		}
 		logging.Info("拷贝安装包 -> 服务端")
-		if err := installIperf(serverGuest, localIperf3File); err != nil {
+		if err := installIperf(t.ServerGuest, t.LocalIperf3File); err != nil {
 			return 0, 0, fmt.Errorf("服务端端安装iperf3失败: %s", err)
 		}
 	}
-	if !clientGuest.HasCommand("iperf3") {
-		if localIperf3File == "" {
+	if !t.ClientGuest.HasCommand("iperf3") {
+		if t.LocalIperf3File == "" {
 			return 0, 0, fmt.Errorf("iperf3 is not installed in client guest")
 		}
 		logging.Info("拷贝安装包 -> 客户端")
-		if err := installIperf(clientGuest, localIperf3File); err != nil {
+		if err := installIperf(t.ClientGuest, t.LocalIperf3File); err != nil {
 			return 0, 0, fmt.Errorf("客户端安装iperf3失败: %s", err)
 		}
 	}
-	clientOptions := strings.Split(common.CONF.Iperf.ClientOptions, " ")
+	clientOptions := strings.Split(t.ClientOptions, " ")
 	times := 10
-	for i, option := range strings.Split(common.CONF.Iperf.ClientOptions, " ") {
+	for i, option := range strings.Split(t.ClientOptions, " ") {
 		if option == "-t" || option == "--time" {
 			times, _ = strconv.Atoi(clientOptions[i+1])
 			break
 		}
 	}
-	if pps {
-		splitOptions := strings.Split(common.CONF.Iperf.ClientOptions, " ")
+	if t.PPS {
+		splitOptions := strings.Split(t.ClientOptions, " ")
 		splitOptions = append(splitOptions, "-l", "16")
-		common.CONF.Iperf.ClientOptions = strings.Join(splitOptions, " ")
+		t.ClientOptions = strings.Join(splitOptions, " ")
 	}
 
 	fomatTime := time.Now().Format("20060102_150405")
@@ -107,15 +114,15 @@ func TestNetQos(clientGuest Guest, serverGuest Guest, pps bool, localIperf3File 
 	for _, serverAddress := range serverAddresses {
 		logfile := fmt.Sprintf("/tmp/iperf3_s_%s_%s", fomatTime, serverAddress)
 		logging.Info("启动服务端: %s", serverAddress)
-		execResult := serverGuest.RunIperfServer(
-			serverAddress, logfile, common.CONF.Iperf.ServerOptions)
+		execResult := t.ServerGuest.RunIperfServer(
+			serverAddress, logfile, t.ServerOptions)
 		if execResult.Failed {
 			return 0, 0, err
 		}
 		serverPids = append(serverPids, execResult.Pid)
 	}
 	if len(serverPids) > 0 {
-		defer serverGuest.Kill(9, serverPids)
+		defer t.ServerGuest.Kill(9, serverPids)
 	}
 
 	jobs := []Job{}
@@ -123,14 +130,14 @@ func TestNetQos(clientGuest Guest, serverGuest Guest, pps bool, localIperf3File 
 		logfile := fmt.Sprintf("/tmp/iperf3_c_%s_%s", fomatTime, serverAddresses[i])
 		logging.Info("启动客户端: %s -> %s", clientAddresses[i], serverAddresses[i])
 		var execResult ExecResult
-		if !pps {
-			execResult = clientGuest.RunIperfClient(
+		if !t.PPS {
+			execResult = t.ClientGuest.RunIperfClient(
 				clientAddresses[i], serverAddresses[i], logfile,
-				common.CONF.Iperf.ClientOptions)
+				t.ClientOptions)
 		} else {
-			execResult = clientGuest.RunIperfClientUdp(
+			execResult = t.ClientGuest.RunIperfClientUdp(
 				clientAddresses[i], serverAddresses[i], logfile,
-				common.CONF.Iperf.ClientOptions)
+				t.ClientOptions)
 		}
 		jobs = append(jobs, Job{
 			SourceIp: clientAddresses[i],
@@ -143,16 +150,16 @@ func TestNetQos(clientGuest Guest, serverGuest Guest, pps bool, localIperf3File 
 	logging.Info("等待测试结束(%ds) ...", times)
 	time.Sleep(time.Second * time.Duration(times))
 	for _, job := range jobs {
-		clientGuest.GetExecStatusOutput(job.Pid)
+		t.ClientGuest.GetExecStatusOutput(job.Pid)
 	}
 	logging.Info("测试结束")
 
 	reports := NewIperfReports()
 	for _, job := range jobs {
-		execResult := clientGuest.Cat(job.Logfile)
+		execResult := t.ClientGuest.Cat(job.Logfile)
 		reports.Add(job.SourceIp, job.DestIp, execResult.OutData)
 	}
-	if !pps {
+	if !t.PPS {
 		reports.PrintBps()
 	} else {
 		reports.PrintPps()
@@ -160,13 +167,18 @@ func TestNetQos(clientGuest Guest, serverGuest Guest, pps bool, localIperf3File 
 	return reports.SendTotal.Value, reports.ReceiveTotal.Value, nil
 }
 
-func TestFio(serverGuest Guest, opts FioOptions) error {
-	logging.Debug("连接实例: %s", serverGuest)
-	if err := serverGuest.Connect(); err != nil {
+type FioTest struct {
+	Guest   Guest
+	Options FioOptions
+}
+
+func (t *FioTest) Run() error {
+	logging.Debug("连接实例: %s", t.Guest)
+	if err := t.Guest.Connect(); err != nil {
 		return fmt.Errorf("连接实例失败, %s", err)
 	}
 
-	result, err := serverGuest.RunFio(opts)
+	result, err := t.Guest.RunFio(t.Options)
 	if err != nil {
 		return err
 	}

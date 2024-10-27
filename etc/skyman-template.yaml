@@ -28,10 +28,6 @@ auth:
 neutron:
   endpoint:
 
-# iperf:
-#   clientOptions: -t 60 -P 10
-#   ServerOptions:
-
 test:
   # web:
   #   port: 80

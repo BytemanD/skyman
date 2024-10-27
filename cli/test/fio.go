@@ -90,7 +90,10 @@ var testFio = &cobra.Command{
 		}
 		for _, opts := range testOptsList {
 			logging.Info("============= Test %s %s =================", testType, opts.RW)
-			err = guest.TestFio(serverConn, opts)
+			job := guest.FioTest{
+				Guest: serverConn, Options: opts,
+			}
+			err = job.Run()
 			utility.LogIfError(err, true, "test failed")
 		}
 	},

@@ -20,15 +20,10 @@ const SERVER_IPERF3_TEST_EXAMPLE = `
 
 ## 设置iperf3 客户端参数
 1. 设置打流时间为60s, 编辑配置文件(默认为 /etc/skyman/skyman.yaml), 设置如下:
-  +------------------------------------------------------+
-  | iperf:                                               |
-  |   clientOptions: -t 60                               |
-  +------------------------------------------------------+
+  skyman test server-iperf3 <服务端虚拟机> --client <客户端虚拟机> --client-options '-t 60'
+  
 2. 设置打流时间为60s, 并发数为10, 编辑配置文件, 设置如下:
-  +------------------------------------------------------+
-  | iperf:                                               |
-  |   clientOptions: -t 60 -P 10                         |
-  +------------------------------------------------------+
+  skyman test server-iperf3 <服务端虚拟机> --client <客户端虚拟机> --client-options '-t 60 -P 10'
 `
 
 type QosItem struct {
@@ -85,6 +80,8 @@ var testNetQos = &cobra.Command{
 
 		pps, _ := cmd.Flags().GetBool("pps")
 		localIperf3File, _ := cmd.Flags().GetString("iperf3-package")
+		serverOptions, _ := cmd.Flags().GetString("server-options")
+		cilentOptions, _ := cmd.Flags().GetString("client-options")
 
 		openstackClient := openstack.DefaultClient()
 		logging.Info("get server and client")
@@ -116,7 +113,16 @@ var testNetQos = &cobra.Command{
 		printServerQOSItems(*clientInstance)
 
 		logging.Info("start test with QGA")
-		_, _, err = guest.TestNetQos(clientConn, serverConn, pps, localIperf3File)
+
+		job := guest.NetQosTest{
+			ClientGuest:     clientConn,
+			ServerGuest:     serverConn,
+			PPS:             pps,
+			LocalIperf3File: localIperf3File,
+			ServerOptions:   serverOptions,
+			ClientOptions:   cilentOptions,
+		}
+		_, _, err = job.Run()
 		if err != nil {
 			logging.Fatal("test failed, %s", err)
 		}
@@ -127,6 +133,8 @@ func init() {
 	testNetQos.Flags().StringP("client", "C", "", "客户端实例")
 	testNetQos.Flags().Bool("pps", false, "测试PPS")
 	testNetQos.Flags().String("iperf3-package", "", "iperf3 安装包")
+	testNetQos.Flags().String("server-options", "", "iperf3 服务端参数")
+	testNetQos.Flags().String("client-options", "", "iperf3 客户端参数")
 
 	testNetQos.MarkFlagRequired("client")
 

@@ -43,7 +43,7 @@ var qgaExec = &cobra.Command{
 	Use:     "qga-exec <domain> <command>",
 	Short:   "执行QGA命令",
 	Long:    "执行 Libvirt QGA(qemu-guest-agent) 命令",
-	Example: "e.g.\nqga-exec HOST@DOMAIN_UUID 'ls -l'",
+	Example: "qga-exec HOST@DOMAIN_UUID 'ls -l'",
 	Args:    cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		guestConnector, command := args[0], args[1:]
@@ -152,11 +152,13 @@ var iperf3Test = &cobra.Command{
 	Short:   "测试实例BPS/PPS",
 	Long:    "基于 iperf3 工具测试实例的网络BPS/PPS",
 	Args:    cobra.ExactArgs(1),
-	Example: "guest-bps-test <hostA>@<domain1-uuid> --client <hostB>@<domain2-uuid>",
+	Example: "iperf3-test <hostA>@<domain1-uuid> --client <hostB>@<domain2-uuid>",
 	Run: func(cmd *cobra.Command, args []string) {
 		client, _ := cmd.Flags().GetString("client")
 		pps, _ := cmd.Flags().GetBool("pps")
 		iperf3Package, _ := cmd.Flags().GetString("iperf3-package")
+		serverOptions, _ := cmd.Flags().GetString("server-options")
+		cilentOptions, _ := cmd.Flags().GetString("client-options")
 
 		serverGuest, err := getGuest(args[0])
 		utility.LogError(err, "parse server guest failed", true)
@@ -164,7 +166,15 @@ var iperf3Test = &cobra.Command{
 		clientGuest, err := getGuest(client)
 		utility.LogError(err, "parse client guest failed", true)
 
-		_, _, err = guest.TestNetQos(*serverGuest, *clientGuest, pps, iperf3Package)
+		job := guest.NetQosTest{
+			ClientGuest:     *clientGuest,
+			ServerGuest:     *serverGuest,
+			PPS:             pps,
+			LocalIperf3File: iperf3Package,
+			ServerOptions:   serverOptions,
+			ClientOptions:   cilentOptions,
+		}
+		_, _, err = job.Run()
 		utility.LogError(err, "测试失败", true)
 	},
 }
@@ -176,6 +186,9 @@ func init() {
 	iperf3Test.Flags().Bool("pps", false, "测试PPS")
 	iperf3Test.Flags().String("iperf3-package", "", "iperf3 安装包")
 	iperf3Test.MarkFlagRequired("client")
+
+	iperf3Test.Flags().String("server-options", "", "iperf3 服务端参数")
+	iperf3Test.Flags().String("client-options", "", "iperf3 客户端参数")
 
 	qgaPasswd.Flags().StringP("user", "u", "root", "用户名")
 

@@ -35,8 +35,6 @@ type ConfGroup struct {
 
 	Auth    Auth        `yaml:"auth"`
 	Neutron NeutronConf `yaml:"neutron"`
-
-	Iperf Iperf `yaml:"iperf"`
 }
 type Auth struct {
 	Url             string          `yaml:"url"`
@@ -47,10 +45,6 @@ type Auth struct {
 }
 type NeutronConf struct {
 	Endpoint string `yaml:"endpoint"`
-}
-type Iperf struct {
-	ClientOptions string `yaml:"clientOptions"`
-	ServerOptions string `yaml:"serverOptions"`
 }
 
 func LoadConfig(configFile string) error {
