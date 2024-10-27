@@ -11,12 +11,12 @@ import (
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 )
 
-type ServerAttachInterface struct {
+type ServerAttachPort struct {
 	ServerActionTest
 	EmptyCleanup
 }
 
-func (t ServerAttachInterface) Start() error {
+func (t ServerAttachPort) Start() error {
 	if !t.Server.IsActive() {
 		return fmt.Errorf("server is not active")
 	}
@@ -33,8 +33,43 @@ func (t ServerAttachInterface) Start() error {
 		return err
 	}
 
-	logging.Info("[%s] attaching interface: %s", t.Server.Id, port.Id)
+	logging.Info("[%s] attaching port: %s", t.Server.Id, port.Id)
 	attachment, err := t.Client.NovaV2().Server().AddInterface(t.Server.Id, "", port.Id)
+	if err != nil {
+		return err
+	}
+	if err := t.WaitServerTaskFinished(false); err != nil {
+		return err
+	}
+	if err := t.ServerMustNotError(); err != nil {
+		return err
+	}
+	serverCheckers, err := checkers.GetServerCheckers(t.Client, t.Server)
+	if err != nil {
+		return fmt.Errorf("get server checker failed: %s", err)
+	}
+	if err := serverCheckers.MakesureInterfaceExist(attachment); err != nil {
+		return err
+	}
+	return nil
+}
+
+type ServerAttachNet struct {
+	ServerActionTest
+	EmptyCleanup
+}
+
+func (t ServerAttachNet) Start() error {
+	if !t.Server.IsActive() {
+		return fmt.Errorf("server is not active")
+	}
+	nextNetwork, err := t.nextNetwork()
+	if err != nil {
+		return err
+	}
+
+	logging.Info("[%s] attaching net: %s", t.Server.Id, nextNetwork)
+	attachment, err := t.Client.NovaV2().Server().AddInterface(t.Server.Id, nextNetwork, "")
 	if err != nil {
 		return err
 	}

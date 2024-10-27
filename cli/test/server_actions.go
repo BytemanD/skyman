@@ -188,7 +188,7 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		}
 	}
 	for i, actionName := range serverActions {
-		action := server_actions.ACTIONS.Get(actionName, server, client)
+		action := server_actions.VALID_ACTIONS.Get(actionName, server, client)
 		if action == nil {
 			logging.Error("[%s] action '%s' not found", server.Id, action)
 			task.SkipActions = append(task.SkipActions, actionName)
@@ -232,7 +232,6 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 }
 
 var cliActions = []string{}
-var TestActions = [][]string{}
 
 var serverAction = &cobra.Command{
 	Use:   "server-actions <TASK FILE> [server]",
@@ -258,7 +257,7 @@ var serverAction = &cobra.Command{
 			logging.Info("load task file %s failed", args[0])
 			os.Exit(1)
 		}
-
+		var TestActions = [][]string{}
 		// 检查 actions
 		if len(cliActions) == 0 {
 			for _, actions := range common.TASK_CONF.ActionTasks {
@@ -275,6 +274,12 @@ var serverAction = &cobra.Command{
 			logging.Error("test actions is empty")
 			return
 		}
+
+		logging.Info("===== sever action tasks =====")
+		for i, act := range TestActions {
+			logging.Info("%d. %s", i+1, act)
+		}
+		logging.Info("==============================")
 
 		if servers != "" {
 			common.TASK_CONF.UseServers = strings.Split(servers, ",")
@@ -327,7 +332,7 @@ var serverAction = &cobra.Command{
 func init() {
 	supportedActions := []string{}
 
-	for _, actions := range arrayutils.SplitStrings(server_actions.ACTIONS.Keys(), 5) {
+	for _, actions := range arrayutils.SplitStrings(server_actions.VALID_ACTIONS.Keys(), 5) {
 		supportedActions = append(supportedActions, strings.Join(actions, ", "))
 	}
 	serverAction.Flags().StringP("actions", "A", "", "Test actions\nFormat: <action>[:count], "+
