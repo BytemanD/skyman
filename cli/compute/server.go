@@ -430,9 +430,11 @@ var serverReboot = &cobra.Command{
 		servers := []nova.Server{}
 		for _, idOrName := range args {
 			server, err := client.NovaV2().Server().Found(idOrName)
+			if err != nil {
+				logging.Error("get server %s failed, %v", idOrName, err)
+				continue
+			}
 			servers = append(servers, *server)
-			utility.LogIfError(err, true, "get server %s failed:", idOrName)
-
 			err = client.NovaV2().Server().Reboot(server.Id, hard)
 			if err != nil {
 				logging.Fatal("Reqeust to reboot server failed, %v", err)

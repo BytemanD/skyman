@@ -187,7 +187,7 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 			return err
 		}
 	}
-	for i, actionName := range serverActions {
+	for _, actionName := range serverActions {
 		action := server_actions.VALID_ACTIONS.Get(actionName, server, client)
 		if action == nil {
 			logging.Error("[%s] action '%s' not found", server.Id, action)
@@ -199,6 +199,10 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		// 更新实例信息
 		if err := action.RefreshServer(); err != nil {
 			return fmt.Errorf("refresh server failed: %s", err)
+		}
+		if actionInterval > 0 {
+			logging.Info("[%s] sleep %d seconds", server.Id, actionInterval)
+			time.Sleep(time.Second * time.Duration(actionInterval))
 		}
 		// 开始测试
 		skip, err := runActionTest(action)
@@ -213,9 +217,6 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 		} else {
 			task.SuccessActions = append(task.SuccessActions, actionName)
 			logging.Success("[%s] test action '%s' success", server.Id, actionName)
-		}
-		if i < len(serverActions)-1 {
-			time.Sleep(time.Second * time.Duration(actionInterval))
 		}
 	}
 
@@ -249,14 +250,31 @@ var serverAction = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		actionInterval, _ := cmd.Flags().GetInt("action-interval")
-		servers, _ := cmd.Flags().GetString("servers")
-		web, _ := cmd.Flags().GetBool("web")
-
 		if err := common.LoadTaskConfig(args[0]); err != nil {
 			logging.Info("load task file %s failed", args[0])
 			os.Exit(1)
 		}
+
+		total, _ := cmd.Flags().GetInt("total")
+		worker, _ := cmd.Flags().GetInt("worker")
+		servers, _ := cmd.Flags().GetString("servers")
+		actionInterval, _ := cmd.Flags().GetInt("action-interval")
+		reportEvents, _ := cmd.Flags().GetBool("report-events")
+		web, _ := cmd.Flags().GetBool("web")
+
+		if worker > 0 {
+			common.TASK_CONF.Workers = worker
+		}
+		if total > 0 {
+			common.TASK_CONF.Total = total
+		}
+		if actionInterval >= 0 {
+			common.TASK_CONF.ActionInterval = actionInterval
+		}
+		if servers != "" {
+			common.TASK_CONF.UseServers = strings.Split(servers, ",")
+		}
+
 		var TestActions = [][]string{}
 		// 检查 actions
 		if len(cliActions) == 0 {
@@ -281,9 +299,6 @@ var serverAction = &cobra.Command{
 		}
 		logging.Info("==============================")
 
-		if servers != "" {
-			common.TASK_CONF.UseServers = strings.Split(servers, ",")
-		}
 		client := openstack.DefaultClient()
 		// 测试前检查
 		preTest(client)
@@ -291,7 +306,8 @@ var serverAction = &cobra.Command{
 		if web {
 			go RunSimpleWebServer()
 		}
-		logging.Info("tasks total: %d, workers: %d", common.TASK_CONF.Total, common.TASK_CONF.Workers)
+		logging.Info("tasks total: %d, workers: %d, action interval: %d",
+			common.TASK_CONF.Total, common.TASK_CONF.Workers, common.TASK_CONF.ActionInterval)
 		var taskGroup syncutils.TaskGroup = syncutils.TaskGroup{
 			MaxWorker: common.TASK_CONF.Workers,
 		}
@@ -300,7 +316,8 @@ var serverAction = &cobra.Command{
 			taskGroup.Items = arrayutils.Range(1, len(common.TASK_CONF.UseServers)+1)
 			taskGroup.Func = func(item interface{}) error {
 				index := item.(int)
-				err := runTests(client, common.TASK_CONF.UseServers[index-1], index, actionInterval, TestActions)
+				err := runTests(client, common.TASK_CONF.UseServers[index-1], index,
+					common.TASK_CONF.ActionInterval, TestActions)
 				if err != nil {
 					logging.Error("[%s] test failed: %s", common.TASK_CONF.UseServers[index-1], err)
 				}
@@ -309,7 +326,7 @@ var serverAction = &cobra.Command{
 		} else {
 			taskGroup.Items = arrayutils.Range(1, common.TASK_CONF.Total+1)
 			taskGroup.Func = func(item interface{}) error {
-				err := runTests(client, "", item.(int), actionInterval, TestActions)
+				err := runTests(client, "", item.(int), common.TASK_CONF.ActionInterval, TestActions)
 				if err != nil {
 					logging.Error("test failed: %s", err)
 				}
@@ -319,7 +336,6 @@ var serverAction = &cobra.Command{
 		taskGroup.Start()
 
 		server_actions.PrintTestTasks()
-		reportEvents, _ := cmd.Flags().GetBool("report-events")
 		if reportEvents {
 			server_actions.PrintServerEvents(client)
 		}

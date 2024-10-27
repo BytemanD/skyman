@@ -17,7 +17,7 @@ type ServerAttachPort struct {
 }
 
 func (t ServerAttachPort) Start() error {
-	if !t.Server.IsActive() {
+	if t.Server.IsError() {
 		return fmt.Errorf("server is not active")
 	}
 	nextNetwork, err := t.nextNetwork()
@@ -60,7 +60,7 @@ type ServerAttachNet struct {
 }
 
 func (t ServerAttachNet) Start() error {
-	if !t.Server.IsActive() {
+	if t.Server.IsError() {
 		return fmt.Errorf("server is not active")
 	}
 	nextNetwork, err := t.nextNetwork()
@@ -106,9 +106,8 @@ func (t *ServerDetachInterface) lastInterface() (string, error) {
 }
 
 func (t ServerDetachInterface) Start() error {
-	t.RefreshServer()
-	if !t.Server.IsActive() {
-		return fmt.Errorf("server is not active")
+	if t.Server.IsError() {
+		return fmt.Errorf("server is error")
 	}
 	portId, err := t.lastInterface()
 	if err != nil {
@@ -146,7 +145,6 @@ type ServerAttachHotPlug struct {
 }
 
 func (t *ServerAttachHotPlug) Skip() (bool, string) {
-	t.RefreshServer()
 	if !t.Server.IsActive() {
 		return true, "server is not active"
 	}
