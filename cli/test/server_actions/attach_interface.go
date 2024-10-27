@@ -123,7 +123,7 @@ func (t *ServerAttachHotPlug) Start() error {
 	if err != nil {
 		return fmt.Errorf("get server checker failed: %s", err)
 	}
-	for i := 1; i <= common.CONF.Test.InterfaceHotplug.Nums; i++ {
+	for i := 1; i <= common.TASK_CONF.InterfaceHotplug.Nums; i++ {
 		logging.Info("[%s] attach interface %d", t.ServerId(), i)
 		nextNetwork, err := t.nextNetwork()
 		if err != nil {

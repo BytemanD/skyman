@@ -70,14 +70,14 @@ func (t *ServerActionTest) WaitServerTaskFinished(showProgress bool) error {
 	}
 }
 func (t *ServerActionTest) nextNetwork() (string, error) {
-	if len(common.CONF.Test.Networks) == 0 {
+	if len(common.TASK_CONF.Networks) == 0 {
 		return "", fmt.Errorf("the num of networks == 0")
 	}
-	if t.networkIndex >= len(common.CONF.Test.Networks)-1 {
+	if t.networkIndex >= len(common.TASK_CONF.Networks)-1 {
 		t.networkIndex = 0
 	}
 	defer func() { t.networkIndex += 1 }()
-	return common.CONF.Test.Networks[t.networkIndex], nil
+	return common.TASK_CONF.Networks[t.networkIndex], nil
 }
 func (t *ServerActionTest) lastVolume() (*nova.VolumeAttachment, error) {
 	volumes, err := t.Client.NovaV2().Server().ListVolumes(t.Server.Id)
@@ -124,10 +124,10 @@ func (t ServerActionTest) ServerMustNotError() error {
 
 func (t ServerActionTest) CreateBlankVolume() (*cinder.Volume, error) {
 	options := map[string]interface{}{
-		"size": common.CONF.Test.VolumeSize,
+		"size": common.TASK_CONF.VolumeSize,
 	}
-	if common.CONF.Test.VolumeType != "" {
-		options["volume_type"] = common.CONF.Test.VolumeType
+	if common.TASK_CONF.VolumeType != "" {
+		options["volume_type"] = common.TASK_CONF.VolumeType
 	}
 	volume, err := t.Client.CinderV2().Volume().Create(options)
 	if err != nil {
@@ -168,35 +168,35 @@ func (t ServerActionTest) getServerBootOption(name string) nova.ServerOpt {
 	opt := nova.ServerOpt{
 		Name:             name,
 		Flavor:           TEST_FLAVORS[0].Id,
-		Image:            common.CONF.Test.Images[0],
-		AvailabilityZone: common.CONF.Test.AvailabilityZone,
+		Image:            common.TASK_CONF.Images[0],
+		AvailabilityZone: common.TASK_CONF.AvailabilityZone,
 	}
-	if len(common.CONF.Test.Networks) >= 1 {
+	if len(common.TASK_CONF.Networks) >= 1 {
 		opt.Networks = []nova.ServerOptNetwork{
-			{UUID: common.CONF.Test.Networks[0]},
+			{UUID: common.TASK_CONF.Networks[0]},
 		}
 	} else {
 		logging.Warning("boot without network")
 	}
-	if common.CONF.Test.BootWithSG != "" {
+	if common.TASK_CONF.BootWithSG != "" {
 		opt.SecurityGroups = append(opt.SecurityGroups,
 			neutron.SecurityGroup{
-				Resource: model.Resource{Name: common.CONF.Test.BootWithSG},
+				Resource: model.Resource{Name: common.TASK_CONF.BootWithSG},
 			})
 	}
-	if common.CONF.Test.BootFromVolume {
+	if common.TASK_CONF.BootFromVolume {
 		opt.BlockDeviceMappingV2 = []nova.BlockDeviceMappingV2{
 			{
-				UUID:               common.CONF.Test.Images[0],
-				VolumeSize:         common.CONF.Test.BootVolumeSize,
+				UUID:               common.TASK_CONF.Images[0],
+				VolumeSize:         common.TASK_CONF.BootVolumeSize,
 				SourceType:         "image",
 				DestinationType:    "volume",
-				VolumeType:         common.CONF.Test.BootVolumeType,
+				VolumeType:         common.TASK_CONF.BootVolumeType,
 				DeleteOnTemination: true,
 			},
 		}
 	} else {
-		opt.Image = common.CONF.Test.Images[0]
+		opt.Image = common.TASK_CONF.Images[0]
 	}
 	return opt
 }

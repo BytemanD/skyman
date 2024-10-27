@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -40,35 +41,35 @@ func getServerBootOption(testId int) nova.ServerOpt {
 	opt := nova.ServerOpt{
 		Name:             fmt.Sprintf("skyman-server-%d-%v", testId, time.Now().Format("20060102-150405")),
 		Flavor:           server_actions.TEST_FLAVORS[0].Id,
-		Image:            common.CONF.Test.Images[0],
-		AvailabilityZone: common.CONF.Test.AvailabilityZone,
+		Image:            common.TASK_CONF.Images[0],
+		AvailabilityZone: common.TASK_CONF.AvailabilityZone,
 	}
-	if len(common.CONF.Test.Networks) >= 1 {
+	if len(common.TASK_CONF.Networks) >= 1 {
 		opt.Networks = []nova.ServerOptNetwork{
-			{UUID: common.CONF.Test.Networks[0]},
+			{UUID: common.TASK_CONF.Networks[0]},
 		}
 	} else {
 		logging.Warning("boot without network")
 	}
-	if common.CONF.Test.BootWithSG != "" {
+	if common.TASK_CONF.BootWithSG != "" {
 		opt.SecurityGroups = append(opt.SecurityGroups,
 			neutron.SecurityGroup{
-				Resource: model.Resource{Name: common.CONF.Test.BootWithSG},
+				Resource: model.Resource{Name: common.TASK_CONF.BootWithSG},
 			})
 	}
-	if common.CONF.Test.BootFromVolume {
+	if common.TASK_CONF.BootFromVolume {
 		opt.BlockDeviceMappingV2 = []nova.BlockDeviceMappingV2{
 			{
-				UUID:               common.CONF.Test.Images[0],
-				VolumeSize:         common.CONF.Test.BootVolumeSize,
+				UUID:               common.TASK_CONF.Images[0],
+				VolumeSize:         common.TASK_CONF.BootVolumeSize,
 				SourceType:         "image",
 				DestinationType:    "volume",
-				VolumeType:         common.CONF.Test.BootVolumeType,
+				VolumeType:         common.TASK_CONF.BootVolumeType,
 				DeleteOnTemination: true,
 			},
 		}
 	} else {
-		opt.Image = common.CONF.Test.Images[0]
+		opt.Image = common.TASK_CONF.Images[0]
 	}
 	return opt
 }
@@ -93,18 +94,18 @@ func waitServerCreated(client *openstack.Openstack, server *nova.Server) error {
 
 func preTest(client *openstack.Openstack) {
 	logging.Info("check flavors ...")
-	for _, flavorId := range common.CONF.Test.Flavors {
+	for _, flavorId := range common.TASK_CONF.Flavors {
 		flavor, err := client.NovaV2().Flavor().Found(flavorId, false)
 		utility.LogError(err, fmt.Sprintf("get flavor %s failed", flavorId), true)
 		server_actions.TEST_FLAVORS = append(server_actions.TEST_FLAVORS, *flavor)
 	}
 	logging.Info("check images ...")
-	for _, idOrName := range common.CONF.Test.Images {
+	for _, idOrName := range common.TASK_CONF.Images {
 		_, err := client.GlanceV2().Images().Found(idOrName)
 		utility.LogError(err, fmt.Sprintf("get image %s failed", idOrName), true)
 	}
 	logging.Info("check networks ...")
-	for _, idOrName := range common.CONF.Test.Networks {
+	for _, idOrName := range common.TASK_CONF.Networks {
 		_, err := client.NeutronV2().Network().Show(idOrName)
 		utility.LogError(err, fmt.Sprintf("get network %s failed", idOrName), true)
 	}
@@ -147,7 +148,7 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 			logging.Error("test flavors is empty")
 			return fmt.Errorf("test flavors is empty")
 		}
-		if len(common.CONF.Test.Images) == 0 {
+		if len(common.TASK_CONF.Images) == 0 {
 			return fmt.Errorf("test images is empty")
 		}
 		server, err = createDefaultServer(client, testId)
@@ -169,7 +170,7 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 			return task.GetError()
 		}
 		defer func() {
-			if !task.HasFailed() || common.CONF.Test.DeleteIfError {
+			if !task.HasFailed() || common.TASK_CONF.DeleteIfError {
 				task.SetStage("deleting")
 				logging.Info("[%s] deleting server", server.Id)
 				client.NovaV2().Server().Delete(server.Id)
@@ -234,10 +235,10 @@ var cliActions = []string{}
 var TestActions = [][]string{}
 
 var serverAction = &cobra.Command{
-	Use:   "server-actions [server]",
+	Use:   "server-actions <TASK FILE> [server]",
 	Short: "Test server actions",
 	Args: func(cmd *cobra.Command, args []string) error {
-		if err := cobra.ExactArgs(0)(cmd, args); err != nil {
+		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
 			return err
 		}
 		actions, _ := cmd.Flags().GetString("actions")
@@ -253,13 +254,14 @@ var serverAction = &cobra.Command{
 		servers, _ := cmd.Flags().GetString("servers")
 		web, _ := cmd.Flags().GetBool("web")
 
-		if web {
-			go RunSimpleWebServer()
+		if err := common.LoadTaskConfig(args[0]); err != nil {
+			logging.Info("load task file %s failed", args[0])
+			os.Exit(1)
 		}
 
 		// 检查 actions
 		if len(cliActions) == 0 {
-			for _, actions := range common.CONF.Test.ActionTasks {
+			for _, actions := range common.TASK_CONF.ActionTasks {
 				if testActions, err := server_actions.ParseServerActions(actions); err != nil {
 					logging.Fatal("parse action failed: %s", err)
 				} else {
@@ -273,30 +275,34 @@ var serverAction = &cobra.Command{
 			logging.Error("test actions is empty")
 			return
 		}
+
 		if servers != "" {
-			common.CONF.Test.UseServers = strings.Split(servers, ",")
+			common.TASK_CONF.UseServers = strings.Split(servers, ",")
 		}
 		client := openstack.DefaultClient()
 		// 测试前检查
 		preTest(client)
 
-		logging.Info("tasks total: %d, workers: %d", common.CONF.Test.Total, common.CONF.Test.Workers)
-		var taskGroup syncutils.TaskGroup = syncutils.TaskGroup{
-			MaxWorker: common.CONF.Test.Workers,
+		if web {
+			go RunSimpleWebServer()
 		}
-		if len(common.CONF.Test.UseServers) > 0 {
-			logging.Info("test with servers: %s", strings.Join(common.CONF.Test.UseServers, ","))
-			taskGroup.Items = arrayutils.Range(1, len(common.CONF.Test.UseServers)+1)
+		logging.Info("tasks total: %d, workers: %d", common.TASK_CONF.Total, common.TASK_CONF.Workers)
+		var taskGroup syncutils.TaskGroup = syncutils.TaskGroup{
+			MaxWorker: common.TASK_CONF.Workers,
+		}
+		if len(common.TASK_CONF.UseServers) > 0 {
+			logging.Info("test with servers: %s", strings.Join(common.TASK_CONF.UseServers, ","))
+			taskGroup.Items = arrayutils.Range(1, len(common.TASK_CONF.UseServers)+1)
 			taskGroup.Func = func(item interface{}) error {
 				index := item.(int)
-				err := runTests(client, common.CONF.Test.UseServers[index-1], index, actionInterval, TestActions)
+				err := runTests(client, common.TASK_CONF.UseServers[index-1], index, actionInterval, TestActions)
 				if err != nil {
-					logging.Error("[%s] test failed: %s", common.CONF.Test.UseServers[index-1], err)
+					logging.Error("[%s] test failed: %s", common.TASK_CONF.UseServers[index-1], err)
 				}
 				return nil
 			}
 		} else {
-			taskGroup.Items = arrayutils.Range(1, common.CONF.Test.Total+1)
+			taskGroup.Items = arrayutils.Range(1, common.TASK_CONF.Total+1)
 			taskGroup.Func = func(item interface{}) error {
 				err := runTests(client, "", item.(int), actionInterval, TestActions)
 				if err != nil {

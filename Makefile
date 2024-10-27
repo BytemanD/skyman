@@ -29,6 +29,7 @@ build-rpm: dist/skyman
 	mkdir -p /root/rpmbuild/SOURCES
 	cp dist/skyman etc/skyman-template.yaml  locale/* static/* /root/rpmbuild/SOURCES
 	cp etc/resource-template.yaml /root/rpmbuild/SOURCES
+	cp etc/server-actions-test-template.yaml /root/rpmbuild/SOURCES
 	rpmbuild -bb $(BUILD_SPEC)
 	mv /root/rpmbuild/RPMS/x86_64/skyman-$(VERSION)-1.x86_64.rpm dist/
 	rm -rf $(BUILD_SPEC)

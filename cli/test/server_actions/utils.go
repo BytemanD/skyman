@@ -80,7 +80,8 @@ func ParseServerActions(actions string) ([]string, error) {
 	if actions == "" {
 		return serverActions, nil
 	}
-	for _, action := range strings.Split(actions, ",") {
+	for _, act := range strings.Split(actions, ",") {
+		action := strings.TrimSpace(act)
 		if !strings.Contains(action, ":") {
 			if !ACTIONS.Contains(action) {
 				return nil, fmt.Errorf("action '%s' not found", action)

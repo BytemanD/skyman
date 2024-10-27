@@ -1,0 +1,22 @@
+total: 1
+workers: 1
+
+actionTasks:
+  - stop, revert_system, reboot
+
+deleteIfError: true
+# availabilityZone: <AZ>:<HOST> ecloud_computeEnhance_c5e_zone:rock7
+bootFromVolume: true
+flavors:
+  - <FLAVOR ID>
+  - <FLAVOR ID>
+images:
+  - <IMAGE UUID>
+networks:
+  - <NETWORK UUID>
+attachInterfaceLoop:
+  nums: 1
+attachVolumeLoop:
+  nums: 1
+qgaChecker:
+  # enabled: False

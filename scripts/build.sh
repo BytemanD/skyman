@@ -46,6 +46,8 @@ function rpmBuild() {
 
     mkdir -p /root/rpmbuild/SOURCES
     cp dist/skyman etc/skyman-template.yaml locale/* /root/rpmbuild/SOURCES || exit 1
+    cp etc/resource-template.yaml /root/rpmbuild/SOURCES || exit 1
+    cp etc/server-actions-test-template.yaml /root/rpmbuild/SOURCES || exit 1
     rpmbuild -bb ${buldingSpec} || exit 1
 
     ls -1 /root/rpmbuild/RPMS/x86_64/skyman-*.rpm |while read line

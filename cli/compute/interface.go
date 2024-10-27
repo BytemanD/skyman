@@ -59,7 +59,10 @@ var interfaceAttachPort = &cobra.Command{
 		server, err := client.NovaV2().Server().Found(args[0])
 		utility.LogIfError(err, true, "get server %s failed", args[0])
 
-		attachment, err := client.NovaV2().Server().AddInterface(server.Id, "", args[1])
+		port, err := client.NeutronV2().Port().Found(args[1])
+		utility.LogIfError(err, true, "get volume %s faield", args[1])
+
+		attachment, err := client.NovaV2().Server().AddInterface(server.Id, "", port.Id)
 		utility.LogError(err, fmt.Sprintf("Attach port %s to server failed", args[1]), true)
 		printinterfaceAttachments([]nova.InterfaceAttachment{*attachment})
 	},
@@ -89,8 +92,12 @@ var interfaceDetach = &cobra.Command{
 		client := openstack.DefaultClient()
 		server, err := client.NovaV2().Server().Found(args[0])
 		utility.LogIfError(err, true, "get server %s failed", args[0])
-		_, err = client.NovaV2().Server().DeleteInterface(server.Id, args[1])
-		utility.LogError(err, "Detach port from server failed", true)
+
+		port, err := client.NeutronV2().Port().Found(args[1])
+		utility.LogIfError(err, true, "get volume %s faield", args[1])
+
+		_, err = client.NovaV2().Server().DeleteInterface(server.Id, port.Id)
+		utility.LogIfError(err, true, "Detach port %s from server failed", args[1])
 	},
 }
 
