@@ -290,6 +290,15 @@ func (c portApi) Show(id string) (*neutron.Port, error) {
 	}
 	return &body.Port, nil
 }
+func (c portApi) Update(id string, options map[string]interface{}) (*neutron.Port, error) {
+	body := struct{ Port neutron.Port }{}
+	if _, err := c.AppendUrl(id).
+		SetBody(map[string]interface{}{"port": options}).
+		Put(&body); err != nil {
+		return nil, err
+	}
+	return &body.Port, nil
+}
 func (c portApi) Found(idOrName string) (*neutron.Port, error) {
 	return FoundResource[neutron.Port](c.ResourceApi, idOrName)
 }

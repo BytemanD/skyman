@@ -344,6 +344,6 @@ func FoundResource[T any](api ResourceApi, idOrName string) (*T, error) {
 		if len(fileted) == 1 {
 			return &fileted[0], nil
 		}
-		return nil, fmt.Errorf("found multi resources with name %s ", idOrName)
+		return nil, fmt.Errorf("found %s resources with name %s ", len(fileted), idOrName)
 	}
 }
