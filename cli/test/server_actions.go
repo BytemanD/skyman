@@ -251,7 +251,7 @@ var serverAction = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := common.LoadTaskConfig(args[0]); err != nil {
-			logging.Info("load task file %s failed", args[0])
+			logging.Error("load task file %s failed: %s", args[0], err)
 			os.Exit(1)
 		}
 
