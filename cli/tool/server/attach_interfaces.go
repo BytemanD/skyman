@@ -32,7 +32,9 @@ var attachInterfaces = &cobra.Command{
 		neutronClient := client.NeutronV2()
 		server, err := client.NovaV2().Server().Found(args[0])
 		utility.LogError(err, "show server failed:", true)
-
+		if server.IsError() {
+			utility.LogIfError(err, true, "server %s is Error", args[0])
+		}
 		var securityGroup *neutron.SecurityGroup
 		if sg != "" {
 			securityGroup, err = neutronClient.SecurityGroup().Found(sg)

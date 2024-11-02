@@ -36,7 +36,9 @@ var detachVolumes = &cobra.Command{
 		cinderClient := client.CinderV2()
 		server, err := client.NovaV2().Server().Show(serverId)
 		utility.LogError(err, "show server failed:", true)
-
+		if server.IsError() {
+			utility.LogIfError(err, true, "server %s is Error", args[0])
+		}
 		attachedVolumes, err := client.NovaV2().Server().ListVolumes(server.Id)
 		utility.LogError(err, "list server interfaces failed:", true)
 

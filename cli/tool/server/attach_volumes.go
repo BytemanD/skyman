@@ -28,6 +28,9 @@ var attachVolume = &cobra.Command{
 		cinderClient := client.CinderV2()
 		server, err := client.NovaV2().Server().Found(args[0])
 		utility.LogError(err, "show server failed:", true)
+		if server.IsError() {
+			utility.LogIfError(err, true, "server %s is Error", args[0])
+		}
 
 		volumes := []Volume{}
 		mu := sync.Mutex{}
