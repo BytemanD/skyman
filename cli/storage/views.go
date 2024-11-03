@@ -79,3 +79,25 @@ func printSnapshot(snapshot cinder.Snapshot) {
 		},
 	)
 }
+func printBackup(backup cinder.Backup) {
+	printResource(
+		backup,
+		[]common.Column{
+			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
+			{Name: "Status"},
+			{Name: "VolumeId"},
+			{Name: "Size"},
+			{Name: "Metadata", Slot: func(item interface{}) interface{} {
+				p, _ := item.(cinder.Snapshot)
+				if p.Metadata == nil {
+					return ""
+				}
+				metatadata, _ := json.Marshal(p.Metadata)
+				return string(metatadata)
+			}},
+			{Name: "Progress"},
+			{Name: "ProjectId"},
+			{Name: "CreatedAt"}, {Name: "UpdatedAt"},
+		},
+	)
+}

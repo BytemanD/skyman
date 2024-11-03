@@ -181,7 +181,7 @@ func main() {
 		compute.Keypair, compute.Compute, compute.Console,
 		compute.Migration, compute.AZ, compute.Aggregate,
 		image.Image,
-		storage.Volume, storage.Snapshot,
+		storage.Volume, storage.Snapshot, storage.Backup,
 		networking.Router, networking.Network, networking.Subnet, networking.Port,
 		networking.Security, networking.SG,
 

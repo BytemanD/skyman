@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
-	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -36,25 +34,14 @@ var snapshotList = &cobra.Command{
 		if all {
 			query.Set("all_tenants", "true")
 		}
-		snapshots, err := client.CinderV2().Snapshot().List(query)
+		snapshots, err := client.CinderV2().Snapshot().Detail(query)
 		utility.LogError(err, "list snapshot falied", true)
 		table := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name"},
 				{Name: "Status", AutoColor: true},
 				{Name: "Size"},
-				{Name: "VolumeId", Text: "Volume", Slot: func(item interface{}) interface{} {
-					p, _ := item.(cinder.Snapshot)
-					if p.VolumeId == "" {
-						return ""
-					}
-					if vol, err := client.CinderV2().Volume().Show(p.VolumeId); err != nil {
-						logging.Warning("get volume %s failed: %s", p.VolumeId, err)
-						return p.VolumeId
-					} else {
-						return vol.NameOrId()
-					}
-				}},
+				{Name: "VolumeId"},
 			},
 			LongColumns: []common.Column{
 				{Name: "Description"},
@@ -119,6 +106,8 @@ var snapshotCreate = &cobra.Command{
 
 		snapshot, err := client.CinderV2().Snapshot().Create(volume.Id, name, force)
 		utility.LogIfError(err, true, "create snaphost failed")
+		snapshot, err = client.CinderV2().Snapshot().Show(snapshot.Id)
+		utility.LogIfError(err, true, "show snapshot failed")
 		printSnapshot(*snapshot)
 	},
 }

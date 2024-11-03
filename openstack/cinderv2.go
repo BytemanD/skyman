@@ -309,6 +309,14 @@ func (c snapshotApi) List(query url.Values) ([]cinder.Snapshot, error) {
 	}
 	return body.Snapshots, nil
 }
+func (c snapshotApi) Detail(query url.Values) ([]cinder.Snapshot, error) {
+	body := struct{ Snapshots []cinder.Snapshot }{}
+	_, err := c.AppendUrl("detail").SetQuery(query).Get(&body)
+	if err != nil {
+		return nil, err
+	}
+	return body.Snapshots, nil
+}
 func (c snapshotApi) Show(id string) (*cinder.Snapshot, error) {
 	body := struct{ Snapshot cinder.Snapshot }{}
 	_, err := c.AppendUrl(id).Get(&body)
@@ -340,4 +348,69 @@ func (c snapshotApi) Create(volumeId string, name string, force bool) (*cinder.S
 		return nil, err
 	}
 	return &body.Snapshot, err
+}
+
+// snapshot api
+type backupApi struct {
+	ResourceApi
+}
+
+func (c CinderV2) Backup() backupApi {
+	return backupApi{
+		ResourceApi: ResourceApi{
+			Endpoint:    c.BaseUrl,
+			BaseUrl:     "backups",
+			Client:      c.session,
+			SingularKey: "backup",
+			PluralKey:   "backups",
+		},
+	}
+}
+func (c backupApi) List(query url.Values) ([]cinder.Backup, error) {
+	body := struct{ Backups []cinder.Backup }{}
+	_, err := c.SetQuery(query).Get(&body)
+	if err != nil {
+		return nil, err
+	}
+	return body.Backups, nil
+}
+func (c backupApi) Detail(query url.Values) ([]cinder.Backup, error) {
+	body := struct{ Backups []cinder.Backup }{}
+	_, err := c.AppendUrl("detail").SetQuery(query).Get(&body)
+	if err != nil {
+		return nil, err
+	}
+	return body.Backups, nil
+}
+func (c backupApi) Show(id string) (*cinder.Backup, error) {
+	body := struct{ Backup cinder.Backup }{}
+	_, err := c.AppendUrl(id).Get(&body)
+	if err != nil {
+		return nil, err
+	}
+	return &body.Backup, nil
+}
+func (c backupApi) Delete(id string) error {
+	_, err := c.AppendUrl(id).Delete(nil)
+	return err
+}
+func (c backupApi) Found(idOrName string) (*cinder.Backup, error) {
+	return FoundResource[cinder.Backup](c.ResourceApi, idOrName)
+}
+func (c backupApi) Create(volumeId string, name string, force bool) (*cinder.Backup, error) {
+	body := struct {
+		Backup cinder.Backup
+	}{}
+	params := map[string]interface{}{
+		"volume_id": volumeId,
+		"name":      name,
+	}
+	if force {
+		params["force"] = force
+	}
+	_, err := c.SetBody(map[string]interface{}{"backup": params}).Post(&body)
+	if err != nil {
+		return nil, err
+	}
+	return &body.Backup, err
 }
