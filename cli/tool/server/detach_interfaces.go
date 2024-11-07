@@ -17,15 +17,13 @@ var detachInterfaces = &cobra.Command{
 	Short: "Remove interfaces from server",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		serverId := args[0]
-
 		nums, _ := cmd.Flags().GetInt("nums")
 		parallel, _ := cmd.Flags().GetInt("parallel")
 		clean, _ := cmd.Flags().GetBool("clean")
 
 		client := openstack.DefaultClient()
 		neutronClient := client.NeutronV2()
-		server, err := client.NovaV2().Server().Show(serverId)
+		server, err := client.NovaV2().Server().Found(args[0])
 		utility.LogError(err, "show server failed:", true)
 		if server.IsError() {
 			utility.LogIfError(err, true, "server %s is Error", args[0])
