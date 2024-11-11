@@ -55,7 +55,8 @@ func (o Openstack) PruneServers(query url.Values, yes bool, waitDeleted bool) {
 	}
 	tg.Start()
 }
-func (o Openstack) PruneVolumes(query url.Values, matchName string, yes bool) {
+func (o Openstack) PruneVolumes(query url.Values, matchName string, volumeType string,
+	yes bool) {
 	c := o.CinderV2()
 	if query == nil {
 		query = url.Values{}
@@ -63,17 +64,20 @@ func (o Openstack) PruneVolumes(query url.Values, matchName string, yes bool) {
 	if len(query) == 0 {
 		query.Add("status", "error")
 	}
-	logging.Info("查询卷: %v", query)
+	logging.Info("查询卷: %s", query.Encode())
 	volumes, err := c.Volume().List(query)
-	if matchName != "" {
-		filterdVolumes := []cinder.Volume{}
-		for _, vol := range volumes {
-			if strings.Contains(vol.Name, matchName) {
-				filterdVolumes = append(filterdVolumes, vol)
-			}
+	filterdVolumes := []cinder.Volume{}
+	for _, vol := range volumes {
+		if volumeType != "" && vol.VolumeType != volumeType {
+			continue
 		}
-		volumes = filterdVolumes
+		if matchName != "" && !strings.Contains(vol.Name, matchName) {
+			continue
+		}
+		filterdVolumes = append(filterdVolumes, vol)
 	}
+	volumes = filterdVolumes
+
 	if err != nil {
 		logging.Error("get volumes failed, %s", err)
 		return
@@ -83,10 +87,10 @@ func (o Openstack) PruneVolumes(query url.Values, matchName string, yes bool) {
 		return
 	}
 	if !yes {
-		fmt.Printf("即将清理 %d 个卷:\n", len(volumes))
 		for _, server := range volumes {
 			fmt.Printf("%s (%s)\n", server.Id, server.Name)
 		}
+		fmt.Printf("即将清理 %d 个卷:\n", len(volumes))
 		yes = stringutils.ScanfComfirm("是否删除?", []string{"yes", "y"}, []string{"no", "n"})
 		if !yes {
 			return

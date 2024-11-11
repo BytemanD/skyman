@@ -28,6 +28,8 @@ var volumeList = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		status, _ := cmd.Flags().GetString("status")
 		all, _ := cmd.Flags().GetBool("all")
+		sort, _ := cmd.Flags().GetString("sort")
+		limit, _ := cmd.Flags().GetInt("limit")
 
 		query := url.Values{}
 		if name != "" {
@@ -35,6 +37,12 @@ var volumeList = &cobra.Command{
 		}
 		if status != "" {
 			query.Set("status", status)
+		}
+		if sort != "" {
+			query.Set("sort", sort)
+		}
+		if limit > 0 {
+			query.Set("limit", strconv.Itoa(limit))
 		}
 		if all {
 			query.Set("all_tenants", "true")
@@ -188,6 +196,8 @@ func init() {
 	volumeList.Flags().Bool("all", false, "List volumes of all tenants")
 	volumeList.Flags().StringP("name", "n", "", "Search by volume name")
 	volumeList.Flags().String("status", "", "Search by volume status")
+	volumeList.Flags().String("sort", "", "Sort by specified field")
+	volumeList.Flags().Int("limit", 0, "limit")
 
 	volumeCreate.Flags().Uint("size", 0, "Volume size (GB)")
 	volumeCreate.Flags().String("type", "", "Volume type")

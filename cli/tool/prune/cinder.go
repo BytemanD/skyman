@@ -16,18 +16,21 @@ var volumePrune = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		yes, _ := cmd.Flags().GetBool("yes")
 		status, _ := cmd.Flags().GetString("status")
+		volumeType, _ := cmd.Flags().GetString("type")
 
 		query := url.Values{}
+		query.Set("sort", "created_at:desc")
 		if status != "" {
 			query.Add("status", status)
 		}
 		c := openstack.DefaultClient()
-		c.PruneVolumes(query, name, yes)
+		c.PruneVolumes(query, name, volumeType, yes)
 	},
 }
 
 func init() {
 	volumePrune.Flags().StringP("name", "n", "", "Filter by volume name")
-	volumePrune.Flags().StringP("status", "s", "error", "Search by server status")
+	volumePrune.Flags().StringP("status", "s", "error", "Search by volume status")
+	volumePrune.Flags().StringP("type", "t", "", "Search by volume type")
 	volumePrune.Flags().BoolP("yes", "y", false, i18n.T("answerYes"))
 }
