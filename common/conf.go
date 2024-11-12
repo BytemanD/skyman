@@ -1,6 +1,7 @@
 package common
 
 import (
+	"os"
 	"strings"
 
 	"github.com/BytemanD/skyman/common/i18n"
@@ -33,8 +34,9 @@ type ConfGroup struct {
 	LogFile        string `yaml:"logFile"`
 	EnableLogColor bool   `yaml:"enableLogColor"`
 
-	Auth    Auth        `yaml:"auth"`
-	Neutron NeutronConf `yaml:"neutron"`
+	Auth     Auth        `yaml:"auth"`
+	Identity Identity    `yaml:"identity"`
+	Neutron  NeutronConf `yaml:"neutron"`
 }
 type Auth struct {
 	Url             string          `yaml:"url"`
@@ -42,6 +44,13 @@ type Auth struct {
 	User            auth.User       `yaml:"user"`
 	Project         auth.Project    `yaml:"project"`
 	TokenExpireTime int             `yaml:"tokenExpireTime"`
+}
+
+type Api struct {
+	Version string `yaml:"version"`
+}
+type Identity struct {
+	Api Api `yaml:"api"`
 }
 type NeutronConf struct {
 	Endpoint string `yaml:"endpoint"`
@@ -74,6 +83,15 @@ func LoadConfig(configFile string) error {
 	i18n.InitLocalizer(CONF.Language)
 	if CONF.Auth.TokenExpireTime <= 0 {
 		CONF.Auth.TokenExpireTime = DEFAULT_TOKEN_EXPIRE_TIME
+	}
+
+	// 环境变量
+	if os.Getenv("OS_IDENTITY_API_VERSION") != "" {
+		CONF.Identity.Api.Version = os.Getenv("OS_IDENTITY_API_VERSION")
+	}
+	// 默认值
+	if CONF.Identity.Api.Version == "" {
+		CONF.Identity.Api.Version = "3"
 	}
 	return nil
 }

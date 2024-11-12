@@ -119,6 +119,7 @@ func (o Openstack) ProjectId() (string, error) {
 }
 
 func NewClient(authUrl string, user auth.User, project auth.Project, regionName string) *Openstack {
+	authUrl = utility.VersionUrl(authUrl, fmt.Sprintf("v%s", common.CONF.Identity.Api.Version))
 	passwordAuth := auth.NewPasswordAuth(authUrl, user, project, regionName)
 	passwordAuth.SetHttpTimeout(common.CONF.HttpTimeout)
 	return &Openstack{AuthPlugin: passwordAuth}
