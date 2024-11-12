@@ -110,14 +110,19 @@ var addHost = &cobra.Command{
 		client := openstack.DefaultClient()
 		aggregate, err := client.NovaV2().Aggregate().Found(idOrName)
 		utility.LogIfError(err, true, "get aggregate %s failed", idOrName)
+		added := 0
 		for _, host := range hosts {
 			agg, err := client.NovaV2().Aggregate().AddHost(aggregate.Id, host)
 			utility.LogIfError(err, false, "add %s to aggregate %s failed", host, idOrName)
 			if err == nil {
 				aggregate = agg
+			} else {
+				added += 1
 			}
 		}
-		common.PrintAggregate(*aggregate)
+		if added != 0 {
+			common.PrintAggregate(*aggregate)
+		}
 	},
 }
 var removeHost = &cobra.Command{

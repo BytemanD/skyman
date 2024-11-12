@@ -37,7 +37,7 @@ var hypervisorList = &cobra.Command{
 		utility.LogError(err, "list hypervisors failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Hostname"}, {Name: "HostIp"},
+				{Name: "Id"}, {Name: "HypervisorHostname"}, {Name: "HostIp"},
 				{Name: "Status", AutoColor: true}, {Name: "State", AutoColor: true},
 			},
 			LongColumns: []common.Column{
