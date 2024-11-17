@@ -76,7 +76,7 @@ var hypervisorShow = &cobra.Command{
 
 		pt := common.PrettyItemTable{
 			ShortFields: []common.Column{
-				{Name: "Id"}, {Name: "Hostname"}, {Name: "HostIp"},
+				{Name: "Id"}, {Name: "HypervisorHostname"}, {Name: "HostIp"},
 				{Name: "Status"}, {Name: "State"},
 				{Name: "Type"}, {Name: "Version"},
 				{Name: "Vcpus"}, {Name: "VcpusUsed"},
