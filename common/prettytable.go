@@ -143,18 +143,29 @@ func (pt PrettyTable) RenderToTable(long bool) string {
 		// tableWriter.Style().Title.Align = text.AlignCenter
 	}
 	headerRow := table.Row{}
-	columns := pt.ShortColumns
-	if pt.DisplayFields == nil || len(pt.DisplayFields) == 0 {
-		if long {
-			columns = append(columns, pt.LongColumns...)
+
+	columns := []Column{}
+	if pt.DisplayFields != nil && len(pt.DisplayFields) > 0 {
+		for _, field := range pt.DisplayFields {
+			found := utility.Filter(
+				append(pt.ShortColumns, pt.LongColumns...),
+				func(x Column) bool {
+					return x.Name == field
+				},
+			)
+			if len(found) > 0 {
+				columns = append(columns, found...)
+			} else {
+				columns = append(columns, Column{Name: field})
+			}
 		}
 	} else {
-		columns = utility.Filter(
-			append(pt.ShortColumns, pt.LongColumns...),
-			func(x Column) bool {
-				return stringutils.ContainsString(pt.DisplayFields, x.Name)
-			},
-		)
+		columns = pt.ShortColumns
+		if pt.DisplayFields == nil || len(pt.DisplayFields) == 0 {
+			if long {
+				columns = append(columns, pt.LongColumns...)
+			}
+		}
 	}
 
 	sortBy := []table.SortBy{}
