@@ -39,6 +39,7 @@ type ServerActionsTestConf struct {
 	Web              Web                `yaml:"web"`
 	ActionTasks      []string           `yaml:"actionTasks"`
 	DeleteIfError    bool               `yaml:"deleteIfError"`
+	DeleteIfSuccess  bool               `yaml:"deleteIfSuccess"`
 	AvailabilityZone string             `yaml:"availabilityZone"`
 	BootFromVolume   bool               `yaml:"bootFromVolume"`
 	BootVolumeSize   uint16             `yaml:"bootVolumeSize"`

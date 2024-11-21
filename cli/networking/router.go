@@ -1,7 +1,6 @@
 package networking
 
 import (
-	"fmt"
 	"net/url"
 	"strings"
 
@@ -85,11 +84,16 @@ var routerDelete = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().NeutronV2()
-		for _, router := range args {
-			fmt.Printf("Reqeust to delete router %s\n", router)
-			err := c.Router().Delete(router)
+		for _, arg := range args {
+			router, err := c.Router().Found(arg)
 			if err != nil {
-				logging.Error("Delete router %s failed, %s", router, err)
+				logging.Warning("get router %s failed", arg)
+				continue
+			}
+			logging.Info("Reqeust to delete router %s\n", arg)
+			err = c.Router().Delete(router.Id)
+			if err != nil {
+				logging.Error("Delete router %s failed, %s", arg, err)
 			}
 		}
 	},
@@ -173,7 +177,7 @@ var interfaceRemove = &cobra.Command{
 			utility.LogIfError(err, true, "get subnet %s failed", i)
 			err = c.Router().RemoveSubnet(router.Id, subnet.Id)
 			utility.LogIfError(err, true, "remove interface failed")
-			logging.Info("remoeved subnet %s from router %s", i, r)
+			logging.Info("removed subnet %s from router %s", i, r)
 		}
 	},
 }

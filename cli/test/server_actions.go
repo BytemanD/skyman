@@ -170,7 +170,7 @@ func runTest(client *openstack.Openstack, serverId string, testId int, actionInt
 			return task.GetError()
 		}
 		defer func() {
-			if !task.HasFailed() || common.TASK_CONF.DeleteIfError {
+			if (!task.HasFailed() && common.TASK_CONF.DeleteIfSuccess) || (task.HasFailed() && common.TASK_CONF.DeleteIfError) {
 				task.SetStage("deleting")
 				logging.Info("[%s] deleting server", server.Id)
 				client.NovaV2().Server().Delete(server.Id)
