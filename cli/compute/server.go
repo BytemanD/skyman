@@ -239,93 +239,101 @@ var serverShow = &cobra.Command{
 		views.PrintServer(*server, c)
 	},
 }
+
+type ServerCreateFlags struct {
+	Flavor     *string
+	Image      *string
+	Nic        *[]string
+	VolumeBoot *bool
+	VolumeSize *uint16
+	VolumeType *string
+	AZ         *string
+	Min        *uint16
+	Max        *uint16
+	UserData   *string
+	KeyName    *string
+	AdminPass  *string
+	Wait       *bool
+}
+
+var createFlags ServerCreateFlags
+
+const nicUsage = `
+Create NICs on the server. NIC format:
+  net-id=<net-uuid>: attach NIC to network with this UUID
+  port-id=<port-uuid>: attach NIC to port with this UUID
+`
+const createExample = `
+server create demo --flavor 1g1v --image cirros
+server create demo --flavor 1g1v --image cirros --volume-boot
+server create demo --flavor 1g1v --image cirros --volume-boot --nic net-id=<network id>
+`
+
 var serverCreate = &cobra.Command{
-	Use:   "create <name>",
-	Short: "Create server",
+	Use:     "create <name>",
+	Short:   "Create server",
+	Example: strings.Trim(createExample, "\n"),
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
 			return err
 		}
-		min, _ := cmd.Flags().GetUint16("min")
-		max, _ := cmd.Flags().GetUint16("max")
-		if min > max {
-			return fmt.Errorf("invalid flags: expect min <= max, got: %d > %d", min, max)
+
+		if *createFlags.Max > *createFlags.Min {
+			return fmt.Errorf("invalid flags: expect min <= max, got: %d > %d", *createFlags.Max, *createFlags.Min)
 		}
-		volumeBoot, _ := cmd.Flags().GetBool("volume-boot")
-		volumeSize, _ := cmd.Flags().GetUint16("volume-size")
-		if volumeBoot && volumeSize == 0 {
+		if *createFlags.VolumeBoot && *createFlags.VolumeSize == 0 {
 			return fmt.Errorf("invalid flags: --volume-size is required when --volume-boot is true")
 		}
-		nics, _ := cmd.Flags().GetStringArray("nic")
 
-		if len(nics) > 0 {
-			for _, nic := range nics {
-				values := strings.Split(nic, "=")
-				if len(values) != 2 || values[1] == "" || (values[0] != "net-id" && values[0] != "port-id") {
-					return fmt.Errorf("invalid format for flag nic: %s", nic)
-				}
+		for _, nic := range *createFlags.Nic {
+			values := strings.Split(nic, "=")
+			if len(values) != 2 || values[1] == "" || (values[0] != "net-id" && values[0] != "port-id") {
+				return fmt.Errorf("invalid format for flag nic: %s", nic)
 			}
 		}
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		name := args[0]
-
-		volumeBoot, _ := cmd.Flags().GetBool("volume-boot")
-		volumeSize, _ := cmd.Flags().GetUint16("volume-size")
-		volumeType, _ := cmd.Flags().GetString("volume-type")
-		flavor, _ := cmd.Flags().GetString("flavor")
-		image, _ := cmd.Flags().GetString("image")
-		az, _ := cmd.Flags().GetString("az")
-		userDataFile, _ := cmd.Flags().GetString("user-data")
-		keyName, _ := cmd.Flags().GetString("key-name")
-		adminPass, _ := cmd.Flags().GetString("admin-pass")
-
-		min, _ := cmd.Flags().GetUint16("min")
-		max, _ := cmd.Flags().GetUint16("max")
-		nics, _ := cmd.Flags().GetStringArray("nic")
-
-		wait, _ := cmd.Flags().GetBool("wait")
-
 		createOption := nova.ServerOpt{
-			Name:             name,
-			Flavor:           flavor,
-			AvailabilityZone: az,
-			MinCount:         min,
-			MaxCount:         max,
+			Name:             args[0],
+			Flavor:           *createFlags.Flavor,
+			AvailabilityZone: *createFlags.AZ,
+			MinCount:         *createFlags.Min,
+			MaxCount:         *createFlags.Max,
 		}
 
 		client := openstack.DefaultClient()
-		if userDataFile != "" {
-			content, err := utility.LoadUserData(userDataFile)
+		if *createFlags.UserData != "" {
+			content, err := utility.LoadUserData(*createFlags.UserData)
 			utility.LogError(err, "read user data failed", true)
 			createOption.UserData = content
 		}
-		if keyName != "" {
-			createOption.KeyName = keyName
+		if *createFlags.KeyName != "" {
+			createOption.KeyName = *createFlags.KeyName
 		}
-		if adminPass != "" {
-			createOption.AdminPass = adminPass
+		if *createFlags.AdminPass != "" {
+			createOption.AdminPass = *createFlags.AdminPass
 		}
 
-		if volumeBoot {
+		if *createFlags.VolumeBoot {
 			createOption.BlockDeviceMappingV2 = []nova.BlockDeviceMappingV2{
 				{
-					BootIndex:  0,
-					UUID:       image,
-					VolumeSize: volumeSize,
-					SourceType: "image", DestinationType: "volume",
+					BootIndex:          0,
+					UUID:               *createFlags.Image,
+					VolumeSize:         *createFlags.VolumeSize,
+					SourceType:         "image",
+					DestinationType:    "volume",
 					DeleteOnTemination: true,
 				},
 			}
-			if volumeType != "" {
-				createOption.BlockDeviceMappingV2[0].VolumeType = volumeType
+			if *createFlags.VolumeType != "" {
+				createOption.BlockDeviceMappingV2[0].VolumeType = *createFlags.VolumeType
 			}
 		} else {
-			createOption.Image = image
+			createOption.Image = *createFlags.Image
 		}
-		if len(nics) > 0 {
-			createOption.Networks = nova.ParseServerOptNetworks(nics)
+		if len(*createFlags.Nic) > 0 {
+			createOption.Networks = nova.ParseServerOptNetworks(*createFlags.Nic)
 		}
 		logging.Debug("networks %v", createOption.Networks)
 		server, err := client.NovaV2().Server().Create(createOption)
@@ -340,7 +348,7 @@ var serverCreate = &cobra.Command{
 			os.Exit(1)
 		}
 		views.PrintServer(*server, nil)
-		if wait {
+		if *createFlags.Wait {
 			_, err := client.NovaV2().Server().WaitStatus(server.Id, "ACTIVE", 5)
 			if err != nil {
 				logging.Error("Server %s create failed, %v", server.Id, err)
@@ -351,12 +359,17 @@ var serverCreate = &cobra.Command{
 	},
 }
 
+type ServerDeleteFlags struct {
+	Wait *bool
+}
+
+var deleteFlags ServerDeleteFlags
+
 var serverDelete = &cobra.Command{
 	Use:   "delete <server1> [server2 ...]",
 	Short: "Delete server(s)",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		wait, _ := cmd.Flags().GetBool("wait")
 		client := openstack.DefaultClient()
 
 		for _, idOrName := range args {
@@ -373,7 +386,7 @@ var serverDelete = &cobra.Command{
 			}
 			fmt.Printf("Requested to delete server: %s\n", idOrName)
 		}
-		if wait {
+		if *deleteFlags.Wait {
 			for _, id := range args {
 				client.NovaV2().Server().WaitDeleted(id)
 			}
@@ -971,32 +984,28 @@ func init() {
 		WatchInterval: serverList.Flags().UintP("watch-interval", "i", 2, "Loop interval"),
 		Fields:        serverList.Flags().String("fields", "", "Show specified fields"),
 	}
-
-	// Server create flags
-	serverCreate.Flags().String("flavor", "", "Create server with this flavor")
-	serverCreate.Flags().StringP("image", "i", "", "Create server with this image")
-	serverCreate.Flags().StringArray("nic", []string{},
-		"Create NICs on the server. NIC format:\n"+
-			"net-id=<net-uuid>: attach NIC to network with this UUID\n"+
-			"port-id=<port-uuid>: attach NIC to port with this UUID")
-	serverCreate.Flags().Bool("volume-boot", false, "Boot with volume")
-	serverCreate.Flags().Uint16("volume-size", 0, "Volume size(GB)")
-	serverCreate.Flags().String("volume-type", "", "Volume type.")
-	serverCreate.Flags().String("az", "", "Select an availability zone for the server.")
-	serverCreate.Flags().Uint16("min", 1, "Minimum number of servers to launch.")
-	serverCreate.Flags().Uint16("max", 1, "Maximum number of servers to launch.")
-	serverCreate.Flags().String("user-data", "", "user data file to pass to be exposed by the metadata server.")
-	serverCreate.Flags().String("key-name", "", "Keypair to inject into this server.")
-	serverCreate.Flags().String("admin-pass", "", "Admin password for the instance.")
-	serverCreate.Flags().BoolP("wait", "w", false, "Wait server created")
+	createFlags = ServerCreateFlags{
+		Flavor:     serverCreate.Flags().String("flavor", "", "Create server with this flavor"),
+		Image:      serverCreate.Flags().StringP("image", "i", "", "Create server with this image"),
+		Nic:        serverCreate.Flags().StringArray("nic", []string{}, strings.Trim(nicUsage, "\n")),
+		VolumeBoot: serverCreate.Flags().Bool("volume-boot", false, "Boot with volume"),
+		VolumeType: serverCreate.Flags().String("volume-type", "", "Volume type."),
+		VolumeSize: serverCreate.Flags().Uint16("volume-size", 0, "Volume size(GB)"),
+		AZ:         serverCreate.Flags().String("az", "", "Select an availability zone for the server."),
+		Min:        serverCreate.Flags().Uint16("min", 1, "Minimum number of servers to launch."),
+		Max:        serverCreate.Flags().Uint16("max", 1, "Maximum number of servers to launch."),
+		UserData:   serverCreate.Flags().String("user-data", "", "user data file to pass to be exposed by the metadata server."),
+		KeyName:    serverCreate.Flags().String("key-name", "", "Keypair to inject into this server."),
+		AdminPass:  serverCreate.Flags().String("admin-pass", "", "Admin password for the instance."),
+		Wait:       serverCreate.Flags().BoolP("wait", "w", false, "Wait server created"),
+	}
 
 	serverCreate.MarkFlagRequired("flavor")
 	serverCreate.MarkFlagRequired("image")
 
-	// server delete flags
-	serverDelete.Flags().BoolP("wait", "w", false, "Wait server rebooted")
-
-	// server reboot flags
+	deleteFlags = ServerDeleteFlags{
+		Wait: serverDelete.Flags().BoolP("wait", "w", false, "Wait server rebooted"),
+	}
 	rebootFlags = ServerRebootFlags{
 		Hard: serverReboot.Flags().Bool("hard", false, "Perform a hard reboot"),
 		Wait: serverReboot.Flags().BoolP("wait", "w", false, "Wait server rebooted"),
