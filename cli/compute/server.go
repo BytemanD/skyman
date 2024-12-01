@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"time"
 
@@ -50,6 +49,27 @@ func refreshServers(c *openstack.Openstack, filterHosts []string, host, az strin
 	return items
 }
 
+type ServerListFlags struct {
+	Name          *string
+	Host          *string
+	Status        *[]string
+	Flavor        *string
+	Project       *string
+	All           *bool
+	AZ            *string
+	Fields        *string
+	Verbose       *bool
+	Dsc           *bool
+	Search        *string
+	Watch         *bool
+	WatchInterval *uint
+
+	// Marker *string
+	// Limit  *uint
+}
+
+var listFlags ServerListFlags
+
 var serverList = &cobra.Command{
 	Use:   "list",
 	Short: i18n.T("listServers"),
@@ -57,65 +77,51 @@ var serverList = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		c := openstack.DefaultClient()
 
-		query := url.Values{}
-		name, _ := cmd.Flags().GetString("name")
-		host, _ := cmd.Flags().GetString("host")
-		statusList, _ := cmd.Flags().GetStringArray("status")
-		flavor, _ := cmd.Flags().GetString("flavor")
-		project, _ := cmd.Flags().GetString("project")
-		az, _ := cmd.Flags().GetString("az")
-		all, _ := cmd.Flags().GetBool("all")
-		dsc, _ := cmd.Flags().GetBool("dsc")
-		search, _ := cmd.Flags().GetString("search")
-		fields, _ := cmd.Flags().GetString("fields")
-
 		long, _ := cmd.Flags().GetBool("long")
-		// verbose, _ := cmd.Flags().GetBool("verbose")
-		watch, _ := cmd.Flags().GetBool("watch")
-		watchInterval, _ := cmd.Flags().GetUint16("watch-interval")
 
-		if name != "" {
-			query.Set("name", name)
+		query := url.Values{}
+		if *listFlags.Name != "" {
+			query.Set("name", *listFlags.Name)
 		}
-		if all {
-			query.Set("all_tenants", strconv.FormatBool(all))
+		if *listFlags.All {
+			query.Set("all_tenants", "true")
 		}
-		for _, status := range statusList {
+		for _, status := range *listFlags.Status {
 			query.Add("status", status)
 		}
-		if flavor != "" {
-			flavor, err := c.NovaV2().Flavor().Found(flavor, false)
+		if *listFlags.Flavor != "" {
+			flavor, err := c.NovaV2().Flavor().Found(*listFlags.Flavor, false)
 			if err != nil {
 				logging.Fatal("%s", err)
 			}
 			query.Set("flavor", flavor.Id)
 		}
-		filterHosts := utility.Split(host, ",")
-		if project != "" {
-			p, err := c.KeystoneV3().Project().Found(project)
-			utility.LogIfError(err, true, "get project %s failed", project)
+		filterHosts := utility.Split(*listFlags.Host, ",")
+		if *listFlags.Project != "" {
+			p, err := c.KeystoneV3().Project().Found(*listFlags.Project)
+			utility.LogIfError(err, true, "get project %s failed", *listFlags.Project)
 			query.Set("tenant_id", p.Id)
-			if !all {
+			if !*listFlags.All {
 				logging.Warning("--all is not set, options --project mybe ignore")
 			}
 		}
-		if az != "" {
+		if *listFlags.AZ != "" {
 			computeService, err := c.NovaV2().Service().ListCompute()
 			utility.LogIfError(err, true, "list compute service failed")
 
 			computeService = utility.Filter[nova.Service](
 				computeService,
 				func(x nova.Service) bool {
-					return x.Zone == az
+					return x.Zone == *listFlags.AZ
 				},
 			)
 			azHosts := []string{}
 			for _, s := range computeService {
 				azHosts = append(azHosts, s.Host)
 			}
-			logging.Debug("hosts matched az %s: %s", az, azHosts)
+			logging.Debug("hosts matched az %s: %s", *listFlags.AZ, azHosts)
 			if len(azHosts) == 0 {
-				logging.Fatal("hosts matched az %s is none", az)
+				logging.Fatal("hosts matched az %s is none", *listFlags.AZ)
 			}
 			if len(filterHosts) == 0 {
 				filterHosts = azHosts
@@ -132,7 +138,7 @@ var serverList = &cobra.Command{
 		projectMap := map[string]auth.Project{}
 		imageMap := map[string]glance.Image{}
 		pt := common.PrettyTable{
-			Search: search,
+			Search: *listFlags.Search,
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name", Sort: true}, {Name: "Status", AutoColor: true},
 				{Name: "TaskState"},
@@ -188,32 +194,32 @@ var serverList = &cobra.Command{
 				}},
 			},
 		}
-		if dsc {
+		if *listFlags.Dsc {
 			pt.ShortColumns[1].SortMode = table.Dsc
 		}
 		if long {
 			pt.StyleSeparateRows = true
 		}
-		if fields != "" {
+		if *listFlags.Fields != "" {
 			pt.AddDisplayFields("Id")
-			pt.AddDisplayFields(strings.Split(fields, ",")...)
+			pt.AddDisplayFields(strings.Split(*listFlags.Fields, ",")...)
 		}
-		items := refreshServers(c, filterHosts, host, az, query)
+		items := refreshServers(c, filterHosts, *listFlags.Host, *listFlags.AZ, query)
 		for {
 			pt.AddItems(items)
 			common.PrintPrettyTable(pt, long)
-			if !watch {
+			if !*listFlags.Watch {
 				break
 			}
-			items = refreshServers(c, filterHosts, host, az, query)
+			items = refreshServers(c, filterHosts, *listFlags.Host, *listFlags.AZ, query)
 			pt.CleanItems()
-			time.Sleep(time.Second * time.Duration(watchInterval))
+			time.Sleep(time.Second * time.Duration(*listFlags.WatchInterval))
 
 			cmd := exec.Command("clear")
 			cmd.Stdout = os.Stdout
 			cmd.Run()
 			var timeNow = time.Now().Format("2006-01-02 15:04:05")
-			fmt.Printf("Every %ds\tNow: %s\n", watchInterval, timeNow)
+			fmt.Printf("Every %ds\tNow: %s\n", *listFlags.WatchInterval, timeNow)
 		}
 	},
 }
@@ -418,14 +424,19 @@ var serverStart = &cobra.Command{
 	},
 }
 
+type ServerRebootFlags struct {
+	Hard *bool
+	Wait *bool
+}
+
+var rebootFlags ServerRebootFlags
+
 var serverReboot = &cobra.Command{
 	Use:   "reboot <server> [<server> ...]",
 	Short: "Reboot server(s)",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		hard, _ := cmd.Flags().GetBool("hard")
-		wait, _ := cmd.Flags().GetBool("wait")
 
 		servers := []nova.Server{}
 		for _, idOrName := range args {
@@ -435,14 +446,14 @@ var serverReboot = &cobra.Command{
 				continue
 			}
 			servers = append(servers, *server)
-			err = client.NovaV2().Server().Reboot(server.Id, hard)
+			err = client.NovaV2().Server().Reboot(server.Id, *rebootFlags.Hard)
 			if err != nil {
 				logging.Fatal("Reqeust to reboot server failed, %v", err)
 			} else {
 				fmt.Printf("Requested to reboot server: %s\n", server.Id)
 			}
 		}
-		if !wait {
+		if !*rebootFlags.Wait {
 			return
 		}
 		for _, server := range servers {
@@ -756,6 +767,17 @@ var serverEvacuate = &cobra.Command{
 	},
 }
 
+type ServerSetFlags struct {
+	Name           *string
+	Password       *string
+	PasswordPrompt *bool
+	User           *string
+	Status         *string
+	Description    *string
+}
+
+var setFlags ServerSetFlags
+
 var serverSet = &cobra.Command{
 	Use:   "set <server> [<server> ...]",
 	Short: "Update server",
@@ -763,34 +785,28 @@ var serverSet = &cobra.Command{
 		if err := cobra.MinimumNArgs(1)(cmd, args); err != nil {
 			return err
 		}
-		serverStatus, _ := cmd.Flags().GetString("status")
+		serverStatus := *setFlags.Status
 		if serverStatus != "" && serverStatus != "active" && serverStatus != "error" {
 			return fmt.Errorf("flag --status must be active or error")
 		}
-		password, _ := cmd.Flags().GetString("password")
-		passwordPrompt, _ := cmd.Flags().GetBool("password-prompt")
-		if passwordPrompt && password != "" {
+		if *setFlags.PasswordPrompt && *setFlags.Password != "" {
 			return fmt.Errorf("flag --password and password-prompt is confict")
 		}
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		serverName, _ := cmd.Flags().GetString("name")
-		passwordPrompt, _ := cmd.Flags().GetBool("password-prompt")
-		serverPassword, _ := cmd.Flags().GetString("password")
-		user, _ := cmd.Flags().GetString("user")
-		serverStatus, _ := cmd.Flags().GetString("status")
-		description, _ := cmd.Flags().GetString("description")
+		serverPassword := *setFlags.Password
 
-		if passwordPrompt {
+		if !*setFlags.PasswordPrompt {
 			serverPassword = getPasswordInput()
 		}
+
 		params := map[string]interface{}{}
-		if serverName != "" {
-			params["name"] = serverName
+		if *setFlags.Name != "" {
+			params["name"] = *setFlags.Name
 		}
-		if description != "" {
-			params["description"] = description
+		if *setFlags.Description != "" {
+			params["description"] = *setFlags.Description
 		}
 
 		client := openstack.DefaultClient()
@@ -803,8 +819,8 @@ var serverSet = &cobra.Command{
 				utility.LogIfError(err, false, "set server name failed for %s", idOrName)
 			}
 
-			if serverStatus != "" {
-				switch serverStatus {
+			if *setFlags.Status != "" {
+				switch *setFlags.Status {
 				case "active":
 					err = client.NovaV2().Server().SetState(server.Id, true)
 				case "error":
@@ -813,7 +829,7 @@ var serverSet = &cobra.Command{
 				utility.LogIfError(err, false, "set server status failed for %s", idOrName)
 			}
 			if serverPassword != "" {
-				err = client.NovaV2().Server().SetPassword(server.Id, serverPassword, user)
+				err = client.NovaV2().Server().SetPassword(server.Id, serverPassword, *setFlags.Status)
 				utility.LogIfError(err, false, "set server password failed for %s", idOrName)
 			}
 		}
@@ -940,20 +956,21 @@ var serverMigrationList = &cobra.Command{
 }
 
 func init() {
-	// Server list flags
-	serverList.Flags().StringP("name", "n", "", "Search by server name")
-	serverList.Flags().String("host", "", "Search by hostnam, split with ','")
-	serverList.Flags().BoolP("all", "a", false, "Display servers from all tenants")
-	serverList.Flags().StringArrayP("status", "s", nil, "Search by server status")
-	serverList.Flags().String("flavor", "", "Search by flavor")
-	serverList.Flags().String("project", "", "Search by project")
-	serverList.Flags().String("az", "", "Search by availability zone (admin)")
-	serverList.Flags().BoolP("verbose", "v", false, "List verbose fields in output")
-	serverList.Flags().Bool("dsc", false, "Sort name by dsc")
-	serverList.Flags().String("search", "", i18n.T("localFuzzySearch"))
-	serverList.Flags().Bool("watch", false, "List loop")
-	serverList.Flags().Uint16P("watch-interval", "i", 2, "Loop interval")
-	serverList.Flags().String("fields", "", "Show specified fields")
+	listFlags = ServerListFlags{
+		Name:          serverList.Flags().StringP("name", "n", "", "Search by server name"),
+		Host:          serverList.Flags().String("host", "", "Search by hostnam, split with ','"),
+		Status:        serverList.Flags().StringArrayP("status", "s", nil, "Search by server status"),
+		Flavor:        serverList.Flags().String("flavor", "", "Search by flavor"),
+		Project:       serverList.Flags().String("project", "", "Search by project"),
+		AZ:            serverList.Flags().String("az", "", "Search by availability zone (admin)"),
+		All:           serverList.Flags().BoolP("all", "a", false, "Display servers from all tenants"),
+		Verbose:       serverList.Flags().BoolP("verbose", "v", false, "List verbose fields in output"),
+		Dsc:           serverList.Flags().Bool("dsc", false, "Sort name by dsc"),
+		Search:        serverList.Flags().String("search", "", i18n.T("localFuzzySearch")),
+		Watch:         serverList.Flags().Bool("watch", false, "List loop"),
+		WatchInterval: serverList.Flags().UintP("watch-interval", "i", 2, "Loop interval"),
+		Fields:        serverList.Flags().String("fields", "", "Show specified fields"),
+	}
 
 	// Server create flags
 	serverCreate.Flags().String("flavor", "", "Create server with this flavor")
@@ -980,8 +997,10 @@ func init() {
 	serverDelete.Flags().BoolP("wait", "w", false, "Wait server rebooted")
 
 	// server reboot flags
-	serverReboot.Flags().Bool("hard", false, "Perform a hard reboot")
-	serverReboot.Flags().BoolP("wait", "w", false, "Wait server rebooted")
+	rebootFlags = ServerRebootFlags{
+		Hard: serverReboot.Flags().Bool("hard", false, "Perform a hard reboot"),
+		Wait: serverReboot.Flags().BoolP("wait", "w", false, "Wait server rebooted"),
+	}
 
 	// server migrate flags
 	serverMigrate.Flags().Bool("live", false, "Migrate running server.")
@@ -1016,12 +1035,14 @@ func init() {
 
 	serverMigration.AddCommand(serverMigrationList)
 
-	serverSet.Flags().String("name", "", "Server name")
-	serverSet.Flags().String("password", "", "User password")
-	serverSet.Flags().Bool("password-prompt", false, "User password")
-	serverSet.Flags().String("user", "", "Username")
-	serverSet.Flags().String("status", "", "Server status, active or error")
-	serverSet.Flags().String("description", "", "Server description")
+	setFlags = ServerSetFlags{
+		Name:           serverSet.Flags().String("name", "", "Server name"),
+		Password:       serverSet.Flags().String("password", "", "User password"),
+		PasswordPrompt: serverSet.Flags().Bool("password-prompt", false, "User password"),
+		User:           serverSet.Flags().String("user", "", "Username"),
+		Status:         serverSet.Flags().String("status", "", "Server status, active or error"),
+		Description:    serverSet.Flags().String("description", "", "Server description"),
+	}
 
 	serverRebuild.Flags().String("image", "", "Name or ID of server.")
 	serverRebuild.Flags().String("rebuild-password", "", " Set the provided admin password on the rebuilt server.")
