@@ -14,6 +14,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/BytemanD/skyman/cli/flags"
 	"github.com/BytemanD/skyman/cli/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
@@ -49,26 +50,19 @@ func refreshServers(c *openstack.Openstack, filterHosts []string, host, az strin
 	return items
 }
 
-type ServerListFlags struct {
-	Name          *string
-	Host          *string
-	Status        *[]string
-	Flavor        *string
-	Project       *string
-	All           *bool
-	AZ            *string
-	Fields        *string
-	Verbose       *bool
-	Dsc           *bool
-	Search        *string
-	Watch         *bool
-	WatchInterval *uint
-
-	// Marker *string
-	// Limit  *uint
-}
-
-var listFlags ServerListFlags
+var (
+	listFlags                flags.ServerListFlags
+	setFlags                 flags.ServerSetFlags
+	deleteFlags              flags.ServerDeleteFlags
+	createFlags              flags.ServerCreateFlags
+	rebootFlags              flags.ServerRebootFlags
+	resizeFlags              flags.ServerResizeFlags
+	migrateFlags             flags.ServerMigrateFlags
+	rebuildFlags             flags.ServerRebuildFlags
+	evacuateFlags            flags.ServerEvacuateFlags
+	regionMigrateFlags       flags.ServerRegionMigrateFlags
+	serverMigrationListFlags flags.ServerMigrationListFlags
+)
 
 var serverList = &cobra.Command{
 	Use:   "list",
@@ -76,8 +70,6 @@ var serverList = &cobra.Command{
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 		c := openstack.DefaultClient()
-
-		long, _ := cmd.Flags().GetBool("long")
 
 		query := url.Values{}
 		if *listFlags.Name != "" {
@@ -197,7 +189,7 @@ var serverList = &cobra.Command{
 		if *listFlags.Dsc {
 			pt.ShortColumns[1].SortMode = table.Dsc
 		}
-		if long {
+		if *listFlags.Long {
 			pt.StyleSeparateRows = true
 		}
 		if *listFlags.Fields != "" {
@@ -207,7 +199,7 @@ var serverList = &cobra.Command{
 		items := refreshServers(c, filterHosts, *listFlags.Host, *listFlags.AZ, query)
 		for {
 			pt.AddItems(items)
-			common.PrintPrettyTable(pt, long)
+			common.PrintPrettyTable(pt, *listFlags.Long)
 			if !*listFlags.Watch {
 				break
 			}
@@ -239,24 +231,6 @@ var serverShow = &cobra.Command{
 		views.PrintServer(*server, c)
 	},
 }
-
-type ServerCreateFlags struct {
-	Flavor     *string
-	Image      *string
-	Nic        *[]string
-	VolumeBoot *bool
-	VolumeSize *uint16
-	VolumeType *string
-	AZ         *string
-	Min        *uint16
-	Max        *uint16
-	UserData   *string
-	KeyName    *string
-	AdminPass  *string
-	Wait       *bool
-}
-
-var createFlags ServerCreateFlags
 
 const nicUsage = `
 Create NICs on the server. NIC format:
@@ -359,12 +333,6 @@ var serverCreate = &cobra.Command{
 	},
 }
 
-type ServerDeleteFlags struct {
-	Wait *bool
-}
-
-var deleteFlags ServerDeleteFlags
-
 var serverDelete = &cobra.Command{
 	Use:   "delete <server1> [server2 ...]",
 	Short: "Delete server(s)",
@@ -436,13 +404,6 @@ var serverStart = &cobra.Command{
 		}
 	},
 }
-
-type ServerRebootFlags struct {
-	Hard *bool
-	Wait *bool
-}
-
-var rebootFlags ServerRebootFlags
 
 var serverReboot = &cobra.Command{
 	Use:   "reboot <server> [<server> ...]",
@@ -598,6 +559,7 @@ var serverResume = &cobra.Command{
 		}
 	},
 }
+
 var serverResize = &cobra.Command{
 	Use:   "resize <server1> [server2 ...]",
 	Short: "Resize server",
@@ -605,34 +567,25 @@ var serverResize = &cobra.Command{
 		if err := cobra.MinimumNArgs(1)(cmd, args); err != nil {
 			return err
 		}
-		confirm, _ := cmd.Flags().GetBool("confirm")
-		revert, _ := cmd.Flags().GetBool("revert")
-		flavorId, _ := cmd.Flags().GetString("flavor")
-
-		if confirm && revert {
+		if *resizeFlags.Confirm && *resizeFlags.Revert {
 			return fmt.Errorf("flag --confirm and --revert are confict")
 		}
-		if (!confirm && !revert) && flavorId == "" {
+		if (!*resizeFlags.Confirm && !*resizeFlags.Revert) && *resizeFlags.Flavor == "" {
 			return fmt.Errorf("flavor is required")
 		}
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		wait, _ := cmd.Flags().GetBool("wait")
-		confirm, _ := cmd.Flags().GetBool("confirm")
-		revert, _ := cmd.Flags().GetBool("revert")
 		client := openstack.DefaultClient()
-		flavorId, _ := cmd.Flags().GetString("flavor")
-		var (
-			flavor *nova.Flavor
-		)
 		servers := []nova.Server{}
+		var flavor *nova.Flavor
+
 		for _, serverId := range args {
 			server, err := client.NovaV2().Server().Found(serverId)
 			if err != nil {
 				utility.LogIfError(err, true, "get server %s failed", serverId)
 			}
-			if confirm {
+			if *resizeFlags.Confirm {
 				if err := client.NovaV2().Server().ResizeConfirm(server.Id); err != nil {
 					utility.LogError(err, "Reqeust to confirm resize for server failed", false)
 				} else {
@@ -640,7 +593,7 @@ var serverResize = &cobra.Command{
 				}
 				continue
 			}
-			if revert {
+			if *resizeFlags.Revert {
 				if err := client.NovaV2().Server().ResizeRevert(server.Id); err != nil {
 					utility.LogError(err, "Reqeust to revert resize for server failed", false)
 
@@ -649,9 +602,9 @@ var serverResize = &cobra.Command{
 				}
 				continue
 			}
-			if flavorId != "" && flavor == nil {
-				flavor, err = client.NovaV2().Flavor().Show(flavorId)
-				utility.LogError(err, fmt.Sprintf("Get flavor %s failed", flavorId), true)
+			if *resizeFlags.Flavor != "" {
+				flavor, err = client.NovaV2().Flavor().Found(*resizeFlags.Flavor, false)
+				utility.LogError(err, fmt.Sprintf("Get flavor %s failed", *resizeFlags.Flavor), true)
 			}
 			logging.Info("[%s] flavor is %s", server.Id, server.Flavor.OriginalName)
 			err = client.NovaV2().Server().Resize(server.Id, flavor.Id)
@@ -663,7 +616,7 @@ var serverResize = &cobra.Command{
 			}
 		}
 
-		if flavorId != "" && wait {
+		if flavor != nil && *resizeFlags.Wait {
 			for _, server := range servers {
 				_, err := client.NovaV2().Server().WaitResized(server.Id, flavor.Name)
 				if err != nil {
@@ -682,10 +635,10 @@ var serverMigrate = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		live, _ := cmd.Flags().GetBool("live")
-		host, _ := cmd.Flags().GetString("host")
-		blockMigrate, _ := cmd.Flags().GetBool("block-migrate")
-		wait, _ := cmd.Flags().GetBool("wait")
+		// live, _ := cmd.Flags().GetBool("live")
+		// host, _ := cmd.Flags().GetString("host")
+		// blockMigrate, _ := cmd.Flags().GetBool("block-migrate")
+		// wait, _ := cmd.Flags().GetBool("wait")
 
 		srcHostMap := map[string]string{}
 		servers := []*nova.Server{}
@@ -694,11 +647,11 @@ var serverMigrate = &cobra.Command{
 			utility.LogError(err, "get server server failed", true)
 			servers = append(servers, server)
 			logging.Info("[%s] source host is %s", server.Id, server.Host)
-			if live {
+			if *migrateFlags.Live {
 				srcHostMap[server.Id] = server.Host
-				err = client.NovaV2().Server().LiveMigrate(server.Id, blockMigrate, host)
+				err = client.NovaV2().Server().LiveMigrate(server.Id, *migrateFlags.BlockMigrate, *migrateFlags.Host)
 			} else {
-				err = client.NovaV2().Server().Migrate(server.Id, host)
+				err = client.NovaV2().Server().Migrate(server.Id, *migrateFlags.Host)
 			}
 			if err != nil {
 				utility.LogError(err, "Reqeust to migrate server failed", false)
@@ -706,7 +659,7 @@ var serverMigrate = &cobra.Command{
 				logging.Info("[%s] requested to migrate server", server.Id)
 			}
 		}
-		if wait {
+		if *migrateFlags.Wait {
 			for _, server := range servers {
 				server, err := client.NovaV2().Server().WaitTask(server.Id, "")
 				if err != nil {
@@ -732,24 +685,24 @@ var serverRebuild = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 
-		imageIdOrName, _ := cmd.Flags().GetString("image")
-		rebuildPassword, _ := cmd.Flags().GetString("rebuild-password")
-		name, _ := cmd.Flags().GetString("name")
+		// imageIdOrName, _ := cmd.Flags().GetString("image")
+		// rebuildPassword, _ := cmd.Flags().GetString("rebuild-password")
+		// name, _ := cmd.Flags().GetString("name")
 
 		server, err := client.NovaV2().Server().Found(args[0])
 		utility.LogIfError(err, true, "get server %s failed", args[0])
 
 		options := map[string]interface{}{}
-		if imageIdOrName != "" {
-			image, err := client.GlanceV2().Images().Found(imageIdOrName)
+		if *rebuildFlags.Image != "" {
+			image, err := client.GlanceV2().Images().Found(*rebuildFlags.Image)
 			utility.LogError(err, "get image failed", true)
 			options["imageRef"] = image.Id
 		}
-		if rebuildPassword != "" {
-			options["adminPass"] = rebuildPassword
+		if *rebuildFlags.Password != "" {
+			options["adminPass"] = *rebuildFlags.Password
 		}
-		if name != "" {
-			options["name"] = name
+		if *rebuildFlags.Name != "" {
+			options["name"] = *rebuildFlags.Name
 		}
 
 		err = client.NovaV2().Server().Rebuild(server.Id, options)
@@ -767,11 +720,9 @@ var serverEvacuate = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		password, _ := cmd.Flags().GetString("password")
-		host, _ := cmd.Flags().GetString("host")
-		force, _ := cmd.Flags().GetBool("force")
 
-		err := client.NovaV2().Server().Evacuate(args[0], password, host, force)
+		err := client.NovaV2().Server().Evacuate(args[0],
+			*evacuateFlags.Password, *evacuateFlags.Host, *evacuateFlags.Force)
 		if err != nil {
 			utility.LogError(err, "Reqeust to evacuate server failed", true)
 		} else {
@@ -779,17 +730,6 @@ var serverEvacuate = &cobra.Command{
 		}
 	},
 }
-
-type ServerSetFlags struct {
-	Name           *string
-	Password       *string
-	PasswordPrompt *bool
-	User           *string
-	Status         *string
-	Description    *string
-}
-
-var setFlags ServerSetFlags
 
 var serverSet = &cobra.Command{
 	Use:   "set <server> [<server> ...]",
@@ -874,14 +814,9 @@ var serverRegionLiveMigrate = &cobra.Command{
 	Short: "Migrate server to another region",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		serverId := args[0]
-		destRegion := args[1]
-		live, _ := cmd.Flags().GetBool("live")
-		host, _ := cmd.Flags().GetString("host")
+		serverId, destRegion := args[0], args[1]
 
-		dryRun, _ := cmd.Flags().GetBool("dry-run")
-
-		if !live {
+		if !*regionMigrateFlags.Live {
 			logging.Fatal("Only support live migrate now, please use option --live")
 		}
 		client := openstack.DefaultClient()
@@ -889,14 +824,14 @@ var serverRegionLiveMigrate = &cobra.Command{
 			migrateResp *nova.RegionMigrateResp
 			migrateErr  error
 		)
-		if live {
+		if *regionMigrateFlags.Live {
 			migrateResp, migrateErr = client.NovaV2().Server().RegionLiveMigrate(
-				serverId, destRegion, true, dryRun, host)
+				serverId, destRegion, true, *regionMigrateFlags.DryRun, *regionMigrateFlags.Host)
 		}
 		if migrateErr != nil {
 			logging.Fatal("Reqeust to migrate server failed, %v", migrateErr)
 		}
-		if dryRun {
+		if *regionMigrateFlags.DryRun {
 			table := common.PrettyItemTable{
 				Item: migrateResp,
 				ShortFields: []common.Column{
@@ -915,26 +850,21 @@ var serverMigrationList = &cobra.Command{
 	Short: "List server migrations",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		serverId := args[0]
-		status, _ := cmd.Flags().GetString("status")
-
-		latest, _ := cmd.Flags().GetBool("latest")
-		long, _ := cmd.Flags().GetBool("long")
-		watch, _ := cmd.Flags().GetBool("watch")
-		watchInterval, _ := cmd.Flags().GetUint16("watch-interval")
-		migrateType, _ := cmd.Flags().GetString("type")
-
 		query := url.Values{}
-		if status != "" {
-			query.Set("status", status)
+		if *migrationListFlags.Status != "" {
+			query.Set("status", *migrationListFlags.Status)
 		}
-		if latest {
+		if *serverMigrationListFlags.Latest {
 			query.Set("latest", "true")
 		}
-		if migrateType != "" {
-			query.Set("type", migrateType)
+		if *migrationListFlags.Type != "" {
+			query.Set("type", *migrationListFlags.Type)
 		}
 		client := openstack.DefaultClient()
+		server, err := client.NovaV2().Server().Found(args[0])
+		if err != nil {
+			logging.Fatal("get server %s failed: %s", args[0], err)
+		}
 		table := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Status", AutoColor: true},
@@ -946,30 +876,30 @@ var serverMigrationList = &cobra.Command{
 			},
 		}
 		for {
-			migrations, err := client.NovaV2().Server().ListMigrations(serverId, query)
+			migrations, err := client.NovaV2().Server().ListMigrations(server.Id, query)
 			if err != nil {
 				logging.Fatal("Reqeust to list server migration failed, %v", err)
 			}
 			table.CleanItems()
 			table.AddItems(migrations)
-			if watch {
+			if *serverMigrationListFlags.Watch {
 				cmd := exec.Command("clear")
 				cmd.Stdout = os.Stdout
 				cmd.Run()
 				var timeNow = time.Now().Format("2006-01-02 15:04:05")
-				fmt.Printf("Every %ds\tNow: %s\n", watchInterval, timeNow)
+				fmt.Printf("Every %ds\tNow: %s\n", *serverMigrationListFlags.WatchInterval, timeNow)
 			}
-			common.PrintPrettyTable(table, long)
-			if !watch {
+			common.PrintPrettyTable(table, *migrationListFlags.Long)
+			if !*serverMigrationListFlags.Watch {
 				break
 			}
-			time.Sleep(time.Second * time.Duration(watchInterval))
+			time.Sleep(time.Second * time.Duration(*serverMigrationListFlags.WatchInterval))
 		}
 	},
 }
 
 func init() {
-	listFlags = ServerListFlags{
+	listFlags = flags.ServerListFlags{
 		Name:          serverList.Flags().StringP("name", "n", "", "Search by server name"),
 		Host:          serverList.Flags().String("host", "", "Search by hostnam, split with ','"),
 		Status:        serverList.Flags().StringArrayP("status", "s", nil, "Search by server status"),
@@ -983,8 +913,9 @@ func init() {
 		Watch:         serverList.Flags().Bool("watch", false, "List loop"),
 		WatchInterval: serverList.Flags().UintP("watch-interval", "i", 2, "Loop interval"),
 		Fields:        serverList.Flags().String("fields", "", "Show specified fields"),
+		Long:          serverList.Flags().BoolP("long", "l", false, "List additional fields in output"),
 	}
-	createFlags = ServerCreateFlags{
+	createFlags = flags.ServerCreateFlags{
 		Flavor:     serverCreate.Flags().String("flavor", "", "Create server with this flavor"),
 		Image:      serverCreate.Flags().StringP("image", "i", "", "Create server with this image"),
 		Nic:        serverCreate.Flags().StringArray("nic", []string{}, strings.Trim(nicUsage, "\n")),
@@ -1003,48 +934,54 @@ func init() {
 	serverCreate.MarkFlagRequired("flavor")
 	serverCreate.MarkFlagRequired("image")
 
-	deleteFlags = ServerDeleteFlags{
+	deleteFlags = flags.ServerDeleteFlags{
 		Wait: serverDelete.Flags().BoolP("wait", "w", false, "Wait server rebooted"),
 	}
-	rebootFlags = ServerRebootFlags{
+	rebootFlags = flags.ServerRebootFlags{
 		Hard: serverReboot.Flags().Bool("hard", false, "Perform a hard reboot"),
 		Wait: serverReboot.Flags().BoolP("wait", "w", false, "Wait server rebooted"),
 	}
 
-	// server migrate flags
-	serverMigrate.Flags().Bool("live", false, "Migrate running server.")
-	serverMigrate.Flags().String("host", "", "Destination host name.")
-	serverMigrate.Flags().Bool("block-migrate", false, "True in case of block_migration.")
-	serverMigrate.Flags().Bool("wait", false, "Wait server migrated")
+	migrateFlags = flags.ServerMigrateFlags{
+		Live:         serverMigrate.Flags().Bool("live", false, "Migrate running server."),
+		Host:         serverMigrate.Flags().String("host", "", "Destination host name."),
+		BlockMigrate: serverMigrate.Flags().Bool("block-migrate", false, "True in case of block_migration."),
+		Wait:         serverMigrate.Flags().Bool("wait", false, "Wait server migrated"),
+	}
 
-	// server resize flags
-	serverResize.Flags().BoolP("wait", "w", false, "Wait server resize completed")
-	serverResize.Flags().String("flavor", "", "Resize server to specified flavor")
-	serverResize.Flags().Bool("confirm", false, "Confirm server resize is complete")
-	serverResize.Flags().Bool("revert", false, "Restore server state before resize")
+	resizeFlags = flags.ServerResizeFlags{
+		Flavor:  serverResize.Flags().String("flavor", "", "Resize server to specified flavor"),
+		Confirm: serverResize.Flags().Bool("confirm", false, "Confirm server resize is complete"),
+		Revert:  serverResize.Flags().Bool("revert", false, "Restore server state before resize"),
+		Wait:    serverResize.Flags().BoolP("wait", "w", false, "Wait server resize completed"),
+	}
 
-	// server evacuate flags
-	serverEvacuate.Flags().Bool("force", false, "Force to not verify the scheduler if a host is provided.")
-	serverEvacuate.Flags().String("host", "", "Destination host name.")
-	serverEvacuate.Flags().String("password", "", "Set the provided admin password on the evacuated server.")
+	evacuateFlags = flags.ServerEvacuateFlags{
+		Force:    serverEvacuate.Flags().Bool("force", false, "Force to not verify the scheduler if a host is provided."),
+		Host:     serverEvacuate.Flags().String("host", "", "Destination host name."),
+		Password: serverEvacuate.Flags().String("password", "", "Set the provided admin password on the evacuated server."),
+	}
 
-	// server region migrate flags
-	serverRegionLiveMigrate.Flags().Bool("live", false, "Migrate running server.")
-	serverRegionLiveMigrate.Flags().String("host", "", "Destination host name.")
-	// serverRegionLiveMigrate.Flags().Bool("block-migrate", false, "True in case of block_migration.")
-	serverRegionLiveMigrate.Flags().Bool("dry-run", false, "True in case of dry run.")
+	regionMigrateFlags = flags.ServerRegionMigrateFlags{
+		Live: serverRegionLiveMigrate.Flags().Bool("live", false, "Migrate running server."),
+		Host: serverRegionLiveMigrate.Flags().String("host", "", "Destination host name."),
+		// serverRegionLiveMigrate.Flags().Bool("block-migrate", false, "True in case of block_migration.")
+		DryRun: serverRegionLiveMigrate.Flags().Bool("dry-run", false, "True in case of dry run."),
+	}
 	serverRegion.AddCommand(serverRegionLiveMigrate)
 
-	// server migrations flags
-	serverMigrationList.Flags().String("status", "", "List migration matched by status")
-	serverMigrationList.Flags().String("type", "", "List migration matched by type")
-	serverMigrationList.Flags().Bool("latest", false, "List latest migrations")
-	serverMigrationList.Flags().Bool("watch", false, "List additional fields in output")
-	serverMigrationList.Flags().Uint16P("watch-interval", "i", 2, "Loop interval")
+	serverMigrationListFlags = flags.ServerMigrationListFlags{
+		Status:        serverMigrationList.Flags().String("status", "", "List migration matched by status"),
+		Type:          serverMigrationList.Flags().String("type", "", "List migration matched by type"),
+		Latest:        serverMigrationList.Flags().Bool("latest", false, "List latest migrations"),
+		Watch:         serverMigrationList.Flags().Bool("watch", false, "List additional fields in output"),
+		WatchInterval: serverMigrationList.Flags().Uint16P("watch-interval", "i", 2, "Loop interval"),
+		Long:          serverMigrationList.Flags().BoolP("long", "l", false, "List additional fields in output"),
+	}
 
 	serverMigration.AddCommand(serverMigrationList)
 
-	setFlags = ServerSetFlags{
+	setFlags = flags.ServerSetFlags{
 		Name:           serverSet.Flags().String("name", "", "Server name"),
 		Password:       serverSet.Flags().String("password", "", "User password"),
 		PasswordPrompt: serverSet.Flags().Bool("password-prompt", false, "User password"),
@@ -1052,12 +989,11 @@ func init() {
 		Status:         serverSet.Flags().String("status", "", "Server status, active or error"),
 		Description:    serverSet.Flags().String("description", "", "Server description"),
 	}
-
-	serverRebuild.Flags().String("image", "", "Name or ID of server.")
-	serverRebuild.Flags().String("rebuild-password", "", " Set the provided admin password on the rebuilt server.")
-	serverRebuild.Flags().String("name", "", "Name for the new server.")
-
-	common.RegistryLongFlag(serverList, serverMigrationList)
+	rebuildFlags = flags.ServerRebuildFlags{
+		Image:    serverRebuild.Flags().String("image", "", "Name or ID of server."),
+		Password: serverRebuild.Flags().String("rebuild-password", "", " Set the provided admin password on the rebuilt server."),
+		Name:     serverRebuild.Flags().String("name", "", "Name for the new server."),
+	}
 
 	Server.AddCommand(
 		serverList, serverShow, serverCreate, serverDelete,

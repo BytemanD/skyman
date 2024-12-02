@@ -6,11 +6,15 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/BytemanD/skyman/cli/flags"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 )
 
+var (
+	consoleLogFlags flags.ConsoleLogFlags
+)
 var Console = &cobra.Command{Use: "console"}
 
 var consoleLog = &cobra.Command{
@@ -19,16 +23,19 @@ var consoleLog = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		lines, _ := cmd.Flags().GetUint("lines")
+
 		server, err := client.NovaV2().Server().Found(args[0])
 		utility.LogError(err, "get server failed", true)
-		consoleLog, err := client.NovaV2().Server().ConsoleLog(server.Id, lines)
+		consoleLog, err := client.NovaV2().Server().ConsoleLog(server.Id, *consoleLogFlags.Lines)
 		utility.LogError(err, "get console log failed", true)
 		fmt.Println(consoleLog.Output)
 	},
 }
 
-var validType []string
+var validType = []string{
+	"novnc", "xvpvnc", "rdp-html5",
+	"spice-html5", "serial", "webmks", "ssh", "sressh",
+}
 
 var consoleUrl = &cobra.Command{
 	Use:   "url <server> <type>",
@@ -64,10 +71,9 @@ var consoleUrl = &cobra.Command{
 }
 
 func init() {
-	validType = append(validType, "novnc", "xvpvnc", "rdp-html5",
-		"spice-html5", "serial", "webmks", "ssh", "sressh")
-
-	consoleLog.Flags().UintP("lines", "l", 0, "Number of lines to display from the end of the log")
+	consoleLogFlags = flags.ConsoleLogFlags{
+		Lines: consoleLog.Flags().UintP("lines", "l", 0, "Number of lines to display from the end of the log"),
+	}
 
 	Console.AddCommand(consoleLog, consoleUrl)
 }

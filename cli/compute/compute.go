@@ -5,12 +5,17 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/BytemanD/skyman/cli/flags"
 	"github.com/BytemanD/skyman/cli/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 )
 
+var (
+	csListFlags    flags.ComputeServiceListFlags
+	csDisableFlags flags.ComputeServiceDisableFlags
+)
 var Compute = &cobra.Command{Use: "compute"}
 var computeService = &cobra.Command{Use: "service"}
 
@@ -21,16 +26,12 @@ var csList = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		query := url.Values{}
-		binary, _ := cmd.Flags().GetString("binary")
-		host, _ := cmd.Flags().GetString("host")
-		zone, _ := cmd.Flags().GetString("zone")
-		long, _ := cmd.Flags().GetBool("long")
 
-		if binary != "" {
-			query.Set("binary", binary)
+		if *csListFlags.Binary != "" {
+			query.Set("binary", *csListFlags.Binary)
 		}
-		if host != "" {
-			query.Set("host", host)
+		if *csListFlags.Host != "" {
+			query.Set("host", *csListFlags.Host)
 		}
 
 		services, _ := client.NovaV2().Service().List(query)
@@ -47,11 +48,11 @@ var csList = &cobra.Command{
 			},
 			Filters: map[string]string{},
 		}
-		if zone != "" {
-			pt.ShortColumns[3].Filters = []string{zone}
+		if *csListFlags.Zone != "" {
+			pt.ShortColumns[3].Filters = []string{*csListFlags.Zone}
 		}
 		pt.AddItems(services)
-		common.PrintPrettyTable(pt, long)
+		common.PrintPrettyTable(pt, *csListFlags.Long)
 	},
 }
 
@@ -72,8 +73,8 @@ var csDisable = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		reason, _ := cmd.Flags().GetString("reason")
-		service, err := client.NovaV2().Service().Disable(args[0], args[1], reason)
+
+		service, err := client.NovaV2().Service().Disable(args[0], args[1], *csDisableFlags.Reason)
 		if err != nil {
 			utility.LogError(err, "set service disable failed", true)
 		}
@@ -119,11 +120,13 @@ var csDelete = &cobra.Command{
 
 func init() {
 	// compute service
-	csList.Flags().String("binary", "", "Search by binary")
-	csList.Flags().String("host", "", "Search by hostname")
-	csList.Flags().String("zone", "", "Search by zone")
-	csList.Flags().StringArrayP("state", "s", nil, "Search by server status")
-	csList.Flags().BoolP("long", "l", false, "List additional fields in output")
+	csListFlags = flags.ComputeServiceListFlags{
+		Binary: csList.Flags().String("binary", "", "Search by binary"),
+		Host:   csList.Flags().String("host", "", "Search by hostname"),
+		Zone:   csList.Flags().String("zone", "", "Search by zone"),
+		State:  csList.Flags().StringArrayP("state", "s", nil, "Search by server status"),
+		Long:   csList.Flags().BoolP("long", "l", false, "List additional fields in output"),
+	}
 
 	csDisable.Flags().String("reason", "", "Disable reason")
 

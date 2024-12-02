@@ -6,10 +6,16 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/cli/flags"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
+)
+
+var (
+	aggListFlags   flags.AggregateListFlags
+	aggCreateFlags flags.AggregateCreateFlags
 )
 
 var Aggregate = &cobra.Command{Use: "aggregate"}
@@ -19,9 +25,6 @@ var aggList = &cobra.Command{
 	Short: "List aggregates",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		long, _ := cmd.Flags().GetBool("long")
-		name, _ := cmd.Flags().GetString("name")
-
 		client := openstack.DefaultClient()
 		aggregates, err := client.NovaV2().Aggregate().List(nil)
 		utility.LogError(err, "list aggregates failed", true)
@@ -43,9 +46,9 @@ var aggList = &cobra.Command{
 			},
 		}
 		filteredAggs := []nova.Aggregate{}
-		if name != "" {
+		if *aggListFlags.Name != "" {
 			for _, agg := range aggregates {
-				if !strings.Contains(agg.Name, name) {
+				if !strings.Contains(agg.Name, *aggListFlags.Name) {
 					continue
 				}
 				filteredAggs = append(filteredAggs, agg)
@@ -54,7 +57,7 @@ var aggList = &cobra.Command{
 			filteredAggs = aggregates
 		}
 		pt.AddItems(filteredAggs)
-		common.PrintPrettyTable(pt, long)
+		common.PrintPrettyTable(pt, *aggListFlags.Long)
 	},
 }
 var aggShow = &cobra.Command{
@@ -74,10 +77,10 @@ var aggCreate = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
-		az, _ := cmd.Flags().GetString("az")
+
 		agg := nova.Aggregate{Name: name}
-		if az != "" {
-			agg.AvailabilityZone = az
+		if *aggCreateFlags.AZ != "" {
+			agg.AvailabilityZone = *aggCreateFlags.AZ
 		}
 		client := openstack.DefaultClient()
 		aggregate, err := client.NovaV2().Aggregate().Create(agg)
@@ -147,10 +150,13 @@ var removeHost = &cobra.Command{
 }
 
 func init() {
-	aggList.Flags().BoolP("long", "l", false, "List additional fields in output")
-	aggList.Flags().String("name", "", "List By aggregate name")
-
-	aggCreate.Flags().String("az", "", "The availability zone of the aggregate")
+	aggListFlags = flags.AggregateListFlags{
+		Long: aggList.Flags().BoolP("long", "l", false, "List additional fields in output"),
+		Name: aggList.Flags().String("name", "", "List By aggregate name"),
+	}
+	aggCreateFlags = flags.AggregateCreateFlags{
+		AZ: aggCreate.Flags().String("az", "", "The availability zone of the aggregate"),
+	}
 
 	aggAdd.AddCommand(addHost)
 	aggRemove.AddCommand(removeHost)

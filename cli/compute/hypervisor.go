@@ -7,12 +7,16 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/BytemanD/skyman/cli/flags"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 )
 
+var (
+	hypervisorListFlags flags.HypervisorListFlags
+)
 var Hypervisor = &cobra.Command{Use: "hypervisor"}
 
 var hypervisorList = &cobra.Command{
@@ -22,16 +26,12 @@ var hypervisorList = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		client := openstack.DefaultClient()
 
-		long, _ := cmd.Flags().GetBool("long")
-		name, _ := cmd.Flags().GetString("name")
-		withServers, _ := cmd.Flags().GetBool("with-servers")
-
 		query := url.Values{}
-		if withServers {
+		if *hypervisorListFlags.WithServers {
 			query.Set("with_servers", "true")
 		}
-		if name != "" {
-			query.Set("hypervisor_hostname_pattern", name)
+		if *hypervisorListFlags.Name != "" {
+			query.Set("hypervisor_hostname_pattern", *hypervisorListFlags.Name)
 		}
 		hypervisors, err := client.NovaV2().Hypervisor().Detail(query)
 		utility.LogError(err, "list hypervisors failed", true)
@@ -47,7 +47,7 @@ var hypervisorList = &cobra.Command{
 				{Name: "MemoryMBUsed", Text: "Memory Used(MB)"},
 			},
 		}
-		if withServers {
+		if *hypervisorListFlags.WithServers {
 			pt.StyleSeparateRows = true
 			pt.ShortColumns = append(pt.ShortColumns,
 				common.Column{Name: "servers", Slot: func(item interface{}) interface{} {
@@ -62,7 +62,7 @@ var hypervisorList = &cobra.Command{
 				}})
 		}
 		pt.AddItems(hypervisors)
-		common.PrintPrettyTable(pt, long)
+		common.PrintPrettyTable(pt, *hypervisorListFlags.Long)
 	},
 }
 var hypervisorShow = &cobra.Command{
@@ -164,10 +164,11 @@ var hypervisorUptime = &cobra.Command{
 }
 
 func init() {
-	// hypervisor list flags
-	hypervisorList.Flags().StringP("name", "n", "", "Show hypervisors matched by name")
-	hypervisorList.Flags().BoolP("long", "l", false, "List additional fields in output")
-	hypervisorList.Flags().Bool("with-servers", false, "List hypervisors with servers")
+	hypervisorListFlags = flags.HypervisorListFlags{
+		Name:        hypervisorList.Flags().StringP("name", "n", "", "Show hypervisors matched by name"),
+		WithServers: hypervisorList.Flags().Bool("with-servers", false, "List hypervisors with servers"),
+		Long:        hypervisorList.Flags().BoolP("long", "l", false, "List additional fields in output"),
+	}
 
 	Hypervisor.AddCommand(hypervisorList, hypervisorShow, hypervisorUptime)
 }

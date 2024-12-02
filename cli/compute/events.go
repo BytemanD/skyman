@@ -7,10 +7,15 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/cli/flags"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
+)
+
+var (
+	serverActionFlags flags.ServerActionFlags
 )
 
 func listServerActions(serverId string, actionName string, last int, long bool) {
@@ -139,11 +144,6 @@ var serverAction = &cobra.Command{
 	Short: "Get server action(s)",
 	Args:  cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
-		long, _ := cmd.Flags().GetBool("long")
-		actionName, _ := cmd.Flags().GetString("name")
-		spend, _ := cmd.Flags().GetBool("spend")
-		last, _ := cmd.Flags().GetInt("last")
-
 		requestId := ""
 		if len(args) == 2 {
 			requestId = args[1]
@@ -156,25 +156,25 @@ var serverAction = &cobra.Command{
 		} else {
 			serverId = args[0]
 		}
-		if spend {
-			listServerActionsWithSpend(serverId, actionName, requestId, last, long)
+		if *serverActionFlags.Spend {
+			listServerActionsWithSpend(serverId, *serverActionFlags.Name, requestId,
+				*serverActionFlags.Last, *serverActionFlags.Long)
 		} else if requestId == "" {
-			listServerActions(serverId, actionName, last, long)
+			listServerActions(serverId, *serverActionFlags.Name, *serverActionFlags.Last, *serverActionFlags.Long)
 		} else {
-			showAction(serverId, requestId, long)
+			showAction(serverId, requestId, *serverActionFlags.Long)
 		}
 	},
 }
 
 func init() {
-	serverAction.Flags().BoolP("long", "l", false, "List additional fields in output")
+	serverActionFlags = flags.ServerActionFlags{
+		Name:  serverAction.Flags().StringP("name", "n", "", "Filter by action name"),
+		Spend: serverAction.Flags().Bool("spend", false, "List action events with spend"),
+		Last:  serverAction.Flags().Int("last", 0, "Get last N actions"),
 
-	serverAction.Flags().Bool("spend", false, "List action events with spend")
-	serverAction.Flags().StringP("name", "n", "", "Filter by action name")
-	serverAction.Flags().StringP("request-id", "r", "", "Filter by request id")
-	serverAction.Flags().Int("last", 0, "Get last N actions")
-
-	// serverAction.AddCommand(actionList, actionShow, actionSpend)
+		Long: serverAction.Flags().BoolP("long", "l", false, "List additional fields in output"),
+	}
 
 	Server.AddCommand(serverAction)
 }

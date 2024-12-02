@@ -561,7 +561,7 @@ func (c serverApi) ListActionsWithEvents(id string, actionName string, requestId
 
 func (c serverApi) ListMigrations(id string, query url.Values) ([]nova.Migration, error) {
 	body := struct{ Migrations []nova.Migration }{}
-	if _, err := c.AppendUrl(id).AppendUrl("os-migrations").Get(&body); err != nil {
+	if _, err := c.AppendUrl(id).AppendUrl("migrations").Get(&body); err != nil {
 		return nil, err
 	}
 	return body.Migrations, nil

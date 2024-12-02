@@ -3,12 +3,16 @@ package compute
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/BytemanD/skyman/cli/flags"
 	"github.com/BytemanD/skyman/cli/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 )
 
+var (
+	azListFlags flags.AZListFlags
+)
 var AZ = &cobra.Command{Use: "availability-zone", Aliases: []string{"az"}}
 
 var azList = &cobra.Command{
@@ -16,12 +20,12 @@ var azList = &cobra.Command{
 	Short: "List availability zone",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		tree, _ := cmd.Flags().GetBool("tree")
+
 		client := openstack.DefaultClient()
 		azInfo, err := client.NovaV2().AZ().Detail(nil)
 		utility.LogError(err, "list availability zones failed", true)
 
-		if tree {
+		if *azListFlags.Tree {
 			views.PrintAZInfoTree(azInfo)
 		} else {
 			switch common.CONF.Format {
@@ -38,7 +42,9 @@ var azList = &cobra.Command{
 
 func init() {
 	// flavor list flags
-	azList.Flags().Bool("tree", false, "Show tree view.")
+	azListFlags = flags.AZListFlags{
+		Tree: azList.Flags().Bool("tree", false, "Show tree view."),
+	}
 
 	AZ.AddCommand(azList)
 

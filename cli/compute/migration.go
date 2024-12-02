@@ -6,10 +6,14 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/skyman/cli/flags"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 )
 
+var (
+	migrationListFlags flags.MigrationListFlags
+)
 var Migration = &cobra.Command{Use: "migration"}
 
 var migrationList = &cobra.Command{
@@ -19,23 +23,18 @@ var migrationList = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		query := url.Values{}
-		status, _ := cmd.Flags().GetString("status")
-		host, _ := cmd.Flags().GetString("host")
-		instance, _ := cmd.Flags().GetString("instance")
-		migration_type, _ := cmd.Flags().GetString("type")
-		long, _ := cmd.Flags().GetBool("long")
 
-		if status != "" {
-			query.Set("status", status)
+		if *migrationListFlags.Status != "" {
+			query.Set("status", *migrationListFlags.Status)
 		}
-		if host != "" {
-			query.Set("host", host)
+		if *migrationListFlags.Host != "" {
+			query.Set("host", *migrationListFlags.Host)
 		}
-		if instance != "" {
-			query.Set("instance_uuid", instance)
+		if *migrationListFlags.Instance != "" {
+			query.Set("instance_uuid", *migrationListFlags.Instance)
 		}
-		if migration_type != "" {
-			query.Set("migration_type", migration_type)
+		if *migrationListFlags.Type != "" {
+			query.Set("migration_type", *migrationListFlags.Type)
 		}
 		migrations, err := client.NovaV2().Migration().List(query)
 		if err != nil {
@@ -58,18 +57,20 @@ var migrationList = &cobra.Command{
 			},
 		}
 		dataListTable.AddItems(migrations)
-		common.PrintPrettyTable(dataListTable, long)
+		common.PrintPrettyTable(dataListTable, *migrationListFlags.Long)
 	},
 }
 
 func init() {
 	// migration list flags
-	migrationList.Flags().String("host", "", "List migration matched by host")
-	migrationList.Flags().String("status", "", "List migration matched by status")
-	migrationList.Flags().String("instance", "", "List migration matched by instance uuid")
-	migrationList.Flags().String("type", "", "List migration matched by migration type")
+	migrationListFlags = flags.MigrationListFlags{
+		Host:     migrationList.Flags().String("host", "", "List migration matched by host"),
+		Status:   migrationList.Flags().String("status", "", "List migration matched by status"),
+		Instance: migrationList.Flags().String("instance", "", "List migration matched by instance uuid"),
+		Type:     migrationList.Flags().String("type", "", "List migration matched by migration type"),
 
-	migrationList.Flags().BoolP("long", "l", false, "List additional fields in output")
+		Long: migrationList.Flags().BoolP("long", "l", false, "List additional fields in output"),
+	}
 
 	Migration.AddCommand(migrationList)
 }

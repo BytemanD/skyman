@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/BytemanD/skyman/cli/flags"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
@@ -11,6 +12,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	groupListFlags flags.GroupListFlags
+)
 var Group = &cobra.Command{Use: "group"}
 
 var groupList = &cobra.Command{
@@ -22,7 +26,6 @@ var groupList = &cobra.Command{
 
 		query := url.Values{}
 
-		long, _ := cmd.Flags().GetBool("long")
 		serverGroups, err := client.NovaV2().ServerGroup().List(query)
 		utility.LogError(err, "Get server groups failed", true)
 
@@ -51,10 +54,10 @@ var groupList = &cobra.Command{
 		}
 
 		pt.AddItems(serverGroups)
-		if long {
+		if *groupListFlags.Long {
 			pt.StyleSeparateRows = true
 		}
-		common.PrintPrettyTable(pt, long)
+		common.PrintPrettyTable(pt, *groupListFlags.Long)
 
 	},
 }
