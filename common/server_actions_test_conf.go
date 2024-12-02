@@ -62,6 +62,25 @@ var (
 	TASK_CONF ServerActionsTestConf
 )
 
+func DefaultServerActionsTtestConf() ServerActionsTestConf {
+	return ServerActionsTestConf{
+		Total: 1,
+
+		BootVolumeSize:   50,
+		VolumeSize:       10,
+		InterfaceHotplug: InterfaceHotplug{Nums: 1},
+		VolumeHotplug:    VolumeHotplug{Nums: 1},
+		QGAChecker: QGAChecker{
+			GuestConnectTimeout: DEFAULT_GUEST_CONNECT_TIMEOUT,
+			QgaConnectTimeout:   DEFAULT_QGA_CONNECT_TIMEOUT,
+		},
+		LiveMigrate: LiveMigrateOptions{
+			PingInterval: DEFAULT_PING_INTERVAL,
+		},
+		Web: Web{Port: 80},
+	}
+}
+
 func LoadTaskConfig(taskFile string) error {
 	viper.SetConfigType("yaml")
 	if taskFile != "" {
@@ -72,37 +91,8 @@ func LoadTaskConfig(taskFile string) error {
 	if err := viper.ReadInConfig(); err != nil {
 		return err
 	}
+	TASK_CONF = DefaultServerActionsTtestConf()
 	viper.Unmarshal(&TASK_CONF)
-	if TASK_CONF.VolumeSize <= 0 {
-		TASK_CONF.VolumeSize = 10
-	}
-	if TASK_CONF.BootVolumeSize <= 0 {
-		TASK_CONF.BootVolumeSize = 50
-	}
-	if TASK_CONF.BootVolumeSize <= 0 {
-		TASK_CONF.BootVolumeSize = 50
-	}
-	if TASK_CONF.Total <= 0 {
-		TASK_CONF.Total = 1
-	}
-	if TASK_CONF.InterfaceHotplug.Nums == 0 {
-		TASK_CONF.InterfaceHotplug.Nums = 1
-	}
-	if TASK_CONF.VolumeHotplug.Nums == 0 {
-		TASK_CONF.VolumeHotplug.Nums = 1
-	}
-	if TASK_CONF.QGAChecker.GuestConnectTimeout == 0 {
-		TASK_CONF.QGAChecker.GuestConnectTimeout = DEFAULT_GUEST_CONNECT_TIMEOUT
-	}
-	if TASK_CONF.QGAChecker.QgaConnectTimeout == 0 {
-		TASK_CONF.QGAChecker.QgaConnectTimeout = DEFAULT_QGA_CONNECT_TIMEOUT
-	}
-	if TASK_CONF.LiveMigrate.PingInterval <= 0 {
-		TASK_CONF.LiveMigrate.PingInterval = DEFAULT_PING_INTERVAL
-	}
-	if TASK_CONF.Web.Port <= 0 {
-		TASK_CONF.Web.Port = 80
-	}
 
 	return nil
 }

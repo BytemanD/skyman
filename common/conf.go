@@ -56,6 +56,17 @@ type NeutronConf struct {
 	Endpoint string `yaml:"endpoint"`
 }
 
+func DefaultConfGroup() ConfGroup {
+	return ConfGroup{
+		Identity: Identity{
+			Api: Api{Version: "3"},
+		},
+		Auth: Auth{
+			TokenExpireTime: DEFAULT_TOKEN_EXPIRE_TIME,
+		},
+	}
+}
+
 func LoadConfig(configFile string) error {
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("OS")
@@ -79,19 +90,14 @@ func LoadConfig(configFile string) error {
 	if err := viper.ReadInConfig(); err != nil {
 		return err
 	}
+	CONF = DefaultConfGroup()
 	viper.Unmarshal(&CONF)
 	i18n.InitLocalizer(CONF.Language)
-	if CONF.Auth.TokenExpireTime <= 0 {
-		CONF.Auth.TokenExpireTime = DEFAULT_TOKEN_EXPIRE_TIME
-	}
 
 	// 环境变量
 	if os.Getenv("OS_IDENTITY_API_VERSION") != "" {
 		CONF.Identity.Api.Version = os.Getenv("OS_IDENTITY_API_VERSION")
 	}
-	// 默认值
-	if CONF.Identity.Api.Version == "" {
-		CONF.Identity.Api.Version = "3"
-	}
+
 	return nil
 }
