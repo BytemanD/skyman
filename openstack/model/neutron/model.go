@@ -93,7 +93,7 @@ type Port struct {
 	BindingVifType  string                 `json:"binding:vif_type,omitempty"`
 	BindingDetails  map[string]interface{} `json:"binding:vif_details,omitempty"`
 	BindingProfile  map[string]interface{} `json:"binding:profile,omitempty"`
-	QosPolicyId     string                 `json:"qos_policy_id:host_id,omitempty"`
+	QosPolicyId     string                 `json:"qos_policy_id,omitempty"`
 	FixedIps        []FixedIp              `json:"fixed_ips"`
 	DeviceOwner     string                 `json:"device_owner"`
 	DeviceId        string                 `json:"device_id"`
