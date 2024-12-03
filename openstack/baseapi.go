@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/compare"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/auth"
 	"github.com/BytemanD/skyman/openstack/model"
@@ -304,8 +303,7 @@ func FoundResource[T any](api ResourceApi, idOrName string) (*T, error) {
 		}
 		return body[api.SingularKey], nil
 	}
-
-	if !compare.IsType[httpclient.HttpError](err) {
+	if _, ok := err.(httpclient.HttpError); !ok {
 		return nil, err
 	}
 	if httpError, _ := err.(httpclient.HttpError); !httpError.IsNotFound() {
@@ -329,7 +327,15 @@ func FoundResource[T any](api ResourceApi, idOrName string) (*T, error) {
 	case 0:
 		return nil, fmt.Errorf("resource %s not found", idOrName)
 	case 1:
-		return &body2[0], nil
+		t := body2[0]
+		value := reflect.ValueOf(t)
+		valueName := value.FieldByName("Name")
+
+		if valueName.String() != idOrName {
+			return nil, fmt.Errorf("resource %s not found", idOrName)
+		} else {
+			return &t, nil
+		}
 	default:
 		fileted := []T{}
 		for _, t := range body2 {
