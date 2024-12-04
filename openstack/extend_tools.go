@@ -61,11 +61,11 @@ func (o Openstack) PruneVolumes(query url.Values, matchName string, volumeType s
 	if query == nil {
 		query = url.Values{}
 	}
-	if len(query) == 0 {
+	if query.Get("status") == "" {
 		query.Add("status", "error")
 	}
 	logging.Info("查询卷: %s", query.Encode())
-	volumes, err := c.Volume().List(query)
+	volumes, err := c.Volume().Detail(query)
 	filterdVolumes := []cinder.Volume{}
 	for _, vol := range volumes {
 		if volumeType != "" && vol.VolumeType != volumeType {
@@ -86,9 +86,10 @@ func (o Openstack) PruneVolumes(query url.Values, matchName string, volumeType s
 	if len(volumes) == 0 {
 		return
 	}
+	logging.Info("Last volume id: %s", volumes[len(volumes)-1].Id)
 	if !yes {
-		for _, server := range volumes {
-			fmt.Printf("%s (%s)\n", server.Id, server.Name)
+		for _, volume := range volumes {
+			fmt.Printf("%s 名称: %s\t创建时间: %s\n", volume.Id, volume.Name, volume.CreatedAt)
 		}
 		fmt.Printf("即将清理 %d 个卷:\n", len(volumes))
 		yes = stringutils.ScanfComfirm("是否删除?", []string{"yes", "y"}, []string{"no", "n"})
