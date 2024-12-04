@@ -155,7 +155,9 @@ func (c UserApi) Show(id string) (*auth.User, error) {
 	}
 	return body["users"], nil
 }
-
+func (c userApi) Found(idOrName string) (*auth.User, error) {
+	return FoundResource[auth.User](c.ResourceApi, idOrName)
+}
 func (c RoleAssignmentApi) List(query url.Values) ([]keystone.RoleAssigment, error) {
 	resp, err := c.KeystoneV3.Get("role_assignments", query)
 	if err != nil {

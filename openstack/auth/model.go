@@ -12,15 +12,18 @@ type Domain struct {
 }
 
 type User struct {
-	Id          string `json:"id,omitempty"`
-	Name        string `json:"name"`
-	Password    string `json:"password"`
-	Project     string `json:"project,omitempty"`
-	Description string `json:"description,omitempty"`
-	Email       string `json:"email,omitempty"`
-	Enabled     bool   `json:"enabled,omitempty"`
-	Domain      Domain `json:"domain"`
-	DomainId    string `json:"domain_id,omitempty"`
+	Id          string   `json:"id,omitempty"`
+	Name        string   `json:"name"`
+	Password    string   `json:"password"`
+	Project     string   `json:"project,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Email       string   `json:"email,omitempty"`
+	Enabled     bool     `json:"enabled,omitempty"`
+	Domain      Domain   `json:"domain"`
+	DomainId    string   `json:"domain_id,omitempty"`
+	IsDomain    bool     `json:"is_domain,omitempty"`
+	ParentId    bool     `json:"parent_id,omitempty"`
+	Tags        []string `json:"tags,omitempty"`
 }
 
 type Password struct {

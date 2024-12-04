@@ -53,9 +53,11 @@ func (c KeystoneV3) Service() serviceApi {
 func (c KeystoneV3) User() userApi {
 	return userApi{
 		ResourceApi: ResourceApi{
-			Endpoint: c.BaseUrl,
-			BaseUrl:  "users",
-			Client:   c.session,
+			Endpoint:    c.BaseUrl,
+			BaseUrl:     "users",
+			Client:      c.session,
+			SingularKey: "user",
+			PluralKey:   "users",
 		},
 	}
 }
