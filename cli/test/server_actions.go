@@ -294,8 +294,9 @@ var serverAction = &cobra.Command{
 		}
 
 		logging.Info("===== sever action tasks =====")
-		for i, act := range TestActions {
-			logging.Info("%d. %s", i+1, act)
+
+		for i, actions := range TestActions {
+			logging.Info("%d. %s", i+1, zipActions(actions))
 		}
 		logging.Info("==============================")
 
@@ -343,6 +344,26 @@ var serverAction = &cobra.Command{
 			WaitWebServer()
 		}
 	},
+}
+
+func zipActions(actions []string) []string {
+	type CountAction struct {
+		Name  string
+		Count int
+	}
+	countActions := []CountAction{}
+	for _, actionName := range actions {
+		if len(countActions) > 0 && countActions[len(countActions)-1].Name == actionName {
+			countActions[len(countActions)-1].Count += 1
+		} else {
+			countActions = append(countActions, CountAction{Name: actionName, Count: 1})
+		}
+	}
+	zippedActions := []string{}
+	for _, action := range countActions {
+		zippedActions = append(zippedActions, fmt.Sprintf("%s:%d", action.Name, action.Count))
+	}
+	return zippedActions
 }
 
 func init() {
