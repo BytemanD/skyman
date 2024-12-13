@@ -13,6 +13,7 @@ type AuthPlugin interface {
 	GetServiceEndpoint(sType string, sName string, sInterface string) (string, error)
 	TokenIssue() error
 	Region() string
+	SetRegion(region string)
 	AuthRequest(req *resty.Request) error
 	GetSafeHeader(header http.Header) http.Header
 	GetProjectId() (string, error)

@@ -45,6 +45,10 @@ func (plugin PasswordAuthPlugin) Region() string {
 	return plugin.RegionName
 }
 
+func (plugin *PasswordAuthPlugin) SetRegion(region string) {
+	plugin.RegionName = region
+}
+
 func (plugin *PasswordAuthPlugin) SetLocalTokenExpire(expireSeconds int) {
 	plugin.LocalTokenExpireSecond = expireSeconds
 }
