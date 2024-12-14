@@ -693,7 +693,7 @@ func (c serverApi) StopAndWait(id string) error {
 	}
 	return utility.RetryWithErrors(
 		utility.RetryCondition{
-			Timeout:     time.Minute * 5,
+			Timeout:     time.Minute * 30,
 			IntervalMin: time.Second * 2},
 		[]string{"ServerNotStopped"},
 		func() error {

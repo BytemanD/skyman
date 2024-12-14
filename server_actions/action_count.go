@@ -51,14 +51,14 @@ func (acl *ActionCountList) Add(name string, count ...int) {
 }
 
 func (acl ActionCountList) Actions() []string {
-	actions := []string{}
+	actions := make([]string, 0, len(acl.items))
 	for _, ac := range acl.items {
 		actions = append(actions, ac.Name)
 	}
 	return actions
 }
 func (acl ActionCountList) FormatActions() []string {
-	actions := []string{}
+	actions := make([]string, 0, len(acl.items))
 	for _, ac := range acl.items {
 		actions = append(actions, fmt.Sprintf("%s:%d", ac.Name, ac.Count))
 	}
@@ -84,7 +84,7 @@ func NewActionCountList(actions string) (*ActionCountList, error) {
 		if !internal.VALID_ACTIONS.Contains(splited[0]) {
 			return nil, fmt.Errorf("action '%s' not found", splited[0])
 		}
-		actionCountList.Add(action, count)
+		actionCountList.Add(splited[0], count)
 	}
 	return actionCountList, nil
 }

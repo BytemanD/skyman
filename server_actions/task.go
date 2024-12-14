@@ -174,10 +174,6 @@ func (t *Case) testActions(testId int, serverId string) (report *TestTask) {
 		}
 		report.ServerId = server.Id
 		defer func() {
-			logging.Info("xxxxxxxxxx %v", report.HasFailed())
-			logging.Info("xxxxxxxxxx %v", common.TASK_CONF.DeleteIfSuccess)
-			logging.Info("xxxxxxxxxx %v", common.TASK_CONF.DeleteIfError)
-
 			if (!report.HasFailed() && common.TASK_CONF.DeleteIfSuccess) ||
 				(report.HasFailed() && common.TASK_CONF.DeleteIfError) {
 				report.SetStage("deleting")
@@ -195,13 +191,12 @@ func (t *Case) testActions(testId int, serverId string) (report *TestTask) {
 
 		report.ServerId = server.Id
 		logging.Info("use server: %s(%s)", server.Id, server.Name)
-		logging.Info("[%s] ======== %s ========", report.ServerId, strings.Join(t.Actions.FormatActions(), ","))
 	}
 	logging.Info("[%s] ======== Test actions: %s", report.ServerId, strings.Join(t.Actions.FormatActions(), ","))
 	for _, actionName := range t.Actions.Actions() {
 		action := internal.VALID_ACTIONS.Get(actionName, server, t.Client)
 		if action == nil {
-			logging.Error("[%s] action '%s' not found", server.Id, action)
+			logging.Error("[%s] action '%s' not found", server.Id, actionName)
 			report.SkipActions = append(report.SkipActions, actionName)
 			continue
 		}

@@ -65,7 +65,8 @@ type ServerActionsTestConf struct {
 	QGAChecker       QGAChecker         `yaml:"qgaChecker"`
 	LiveMigrate      LiveMigrateOptions `yaml:"liveMigrate"`
 
-	Cases []Case `yaml:"cases"`
+	Cases       []Case `yaml:"cases"`
+	RevertTimes int    `yaml:"revertTimes"`
 }
 
 var (
