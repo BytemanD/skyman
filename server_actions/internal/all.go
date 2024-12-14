@@ -7,7 +7,6 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/cli/test/checkers"
-	"github.com/BytemanD/skyman/cli/test/server_actions"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model"
@@ -55,48 +54,11 @@ type ServerAction interface {
 	ServerId() string
 }
 type ServerActionTest struct {
-	TestId       int
 	Server       *nova.Server
 	Client       *openstack.Openstack
 	networkIndex int
 }
 
-func getServerBootOption(testId int) nova.ServerOpt {
-	opt := nova.ServerOpt{
-		Name:             fmt.Sprintf("skyman-server-%d-%v", testId, time.Now().Format("20060102-150405")),
-		Flavor:           server_actions.TEST_FLAVORS[0].Id,
-		Image:            common.TASK_CONF.Images[0],
-		AvailabilityZone: common.TASK_CONF.AvailabilityZone,
-	}
-	if len(common.TASK_CONF.Networks) >= 1 {
-		opt.Networks = []nova.ServerOptNetwork{
-			{UUID: common.TASK_CONF.Networks[0]},
-		}
-	} else {
-		logging.Warning("boot without network")
-	}
-	if common.TASK_CONF.BootWithSG != "" {
-		opt.SecurityGroups = append(opt.SecurityGroups,
-			neutron.SecurityGroup{
-				Resource: model.Resource{Name: common.TASK_CONF.BootWithSG},
-			})
-	}
-	if common.TASK_CONF.BootFromVolume {
-		opt.BlockDeviceMappingV2 = []nova.BlockDeviceMappingV2{
-			{
-				UUID:               common.TASK_CONF.Images[0],
-				VolumeSize:         common.TASK_CONF.BootVolumeSize,
-				SourceType:         "image",
-				DestinationType:    "volume",
-				VolumeType:         common.TASK_CONF.BootVolumeType,
-				DeleteOnTemination: true,
-			},
-		}
-	} else {
-		opt.Image = common.TASK_CONF.Images[0]
-	}
-	return opt
-}
 func (t ServerActionTest) ServerId() string {
 	return t.Server.Id
 }

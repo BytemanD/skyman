@@ -5,9 +5,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BytemanD/easygo/pkg/arrayutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/syncutils"
+
 	"github.com/BytemanD/skyman/cli/test/checkers"
-	"github.com/BytemanD/skyman/cli/test/server_actions"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model"
@@ -17,22 +19,36 @@ import (
 	"github.com/BytemanD/skyman/utility"
 )
 
-type ServerActionTest struct {
-	TestId       int
-	Worker       int
-	Server       *nova.Server
-	Client       *openstack.Openstack
-	Conf         common.ServerActionsTestConf
-	Actions      ActionCountList
-	networkIndex int
-	Report       TestTask
+func startAction(action internal.ServerAction) (bool, error) {
+	skip, reason := false, ""
+	if skip, reason = action.Skip(); skip {
+		logging.Warning("[%s] skip this task for the reason: %s", action.ServerId(), reason)
+		return true, nil
+	}
+	defer func() {
+		logging.Info("[%s] >>>> tear down ...", action.ServerId())
+		if err := action.TearDown(); err != nil {
+			logging.Error("[%s] tear down failed: %s", action.ServerId(), err)
+		}
+	}()
+	return false, action.Start()
 }
 
-func (t ServerActionTest) getServerBootOption() nova.ServerOpt {
+type Case struct {
+	Actions        ActionCountList
+	Workers        int
+	ActionInterval int
+	UseServers     []string
+	Client         *openstack.Openstack
+	Conf           common.Case
+	reports        []TestTask
+}
+
+func (t Case) getServerBootOption(testId int) nova.ServerOpt {
 	opt := nova.ServerOpt{
-		Name:             fmt.Sprintf("skyman-server-%d-%v", t.TestId, time.Now().Format("20060102-150405")),
-		Flavor:           t.Conf.Flavors[0],
-		Image:            common.TASK_CONF.Images[0],
+		Name:             fmt.Sprintf("skyman-server-%d-%v", testId, time.Now().Format("20060102-150405")),
+		Flavor:           t.firstFlavor(),
+		Image:            t.firstImage(),
 		AvailabilityZone: common.TASK_CONF.AvailabilityZone,
 	}
 	if len(common.TASK_CONF.Networks) >= 1 {
@@ -64,175 +80,196 @@ func (t ServerActionTest) getServerBootOption() nova.ServerOpt {
 	}
 	return opt
 }
-func (t ServerActionTest) createDefaultServer() (*nova.Server, error) {
-	bootOption := t.getServerBootOption()
+func (t Case) createDefaultServer(testId int) (*nova.Server, error) {
+	bootOption := t.getServerBootOption(testId)
 	return t.Client.NovaV2().Server().Create(bootOption)
 }
-func (t ServerActionTest) waitServerCreated() error {
+func (t Case) waitServerCreated(serverId string) error {
 	var err error
-	server, err = t.Client.NovaV2().Server().Show(t.Server.Id)
+	server, err := t.Client.NovaV2().Server().Show(serverId)
 	if err != nil {
 		return err
 	}
 	logging.Info("[%s] creating with name %s", server.Id, server.Resource.Name)
-	server, err = client.NovaV2().Server().WaitBooted(server.Id)
+	server, err = t.Client.NovaV2().Server().WaitBooted(server.Id)
 	if err != nil {
 		return err
 	}
 	logging.Success("[%s] create success, host is %s", server.Id, server.Host)
 	return nil
 }
-func (t *ServerActionTest) testActions(acl ActionCountList) error {
-	if t.Server == nil {
-		if len(t.Conf.Flavors) == 0 {
-			logging.Error("test flavors is empty")
-			return fmt.Errorf("test flavors is empty")
-		}
-		if len(common.TASK_CONF.Images) == 0 {
-			return fmt.Errorf("test images is empty")
-		}
-		t.Report.SetStage("creating")
-		server, err := t.createDefaultServer()
-		if err != nil {
-			t.Report.MarkFailed(fmt.Sprintf("create server failed: %s", err))
-			return t.Report.GetError()
-		}
-		t.Server = server
-		if err := t.waitServerCreated(); err != nil {
-			t.Report.MarkFailed(fmt.Sprintf("create failed: %s", err))
-			return t.Report.GetError()
-		}
+func (t Case) firstFlavor() string {
+	if len(t.Conf.Flavors) > 0 {
+		return t.Conf.Flavors[0]
 	}
-	logging.Info("[%s] ======== Test actions: %s", t.Server.Id, strings.Join(acl.FormatActions(), ","))
-	for _, actionName := range acl.Actions() {
-		logging.Info(utility.BlueString(fmt.Sprintf("[%s] ==== %s", t.Server.Id, actionName)))
-		t.Report.SetStage(actionName)
+	if len(common.TASK_CONF.Flavors[0]) > 0 {
+		return common.TASK_CONF.Flavors[0]
 	}
-
+	return ""
 }
-func (t *ServerActionTest) Start() error {
-	if len(t.Conf.ActionTasks) == 0 {
-		logging.Warning("action is empty")
-		return nil
+func (t Case) firstImage() string {
+	if len(t.Conf.Images) > 0 {
+		return t.Conf.Images[0]
 	}
-	var (
-		server *nova.Server
-		err    error
-	)
-	// success, failed := 0, 0
-	task := server_actions.TestTask{
-		Id:           testId,
-		TotalActions: TestServerActions,
+	if len(common.TASK_CONF.Images[0]) > 0 {
+		return common.TASK_CONF.Images[0]
 	}
-	if serverId != "" {
-		server, err = client.NovaV2().Server().Found(serverId)
+	return ""
+}
+func (t *Case) destroyServer(serverId string) {
+	logging.Info("[%s] deleting server", serverId)
+	t.Client.NovaV2().Server().Delete(serverId)
+	t.Client.NovaV2().Server().WaitDeleted(serverId)
+}
+func (t *Case) testActions(testId int, serverId string) (report *TestTask) {
+	// 执行一轮测试
+	report = &TestTask{
+		TotalActions: t.Actions.FormatActions(),
+	}
+	var server *nova.Server
+	// defer func() {
+	// 	if report.AllSuccess() {
+	// 		report.MarkSuccess()
+	// 		logging.Success("[%s] %s", report.ServerId, report.GetResultString())
+	// 	} else if report.HasFailed() {
+	// 		logging.Error("[%s] %s", report.ServerId, report.GetResultString())
+	// 	} else {
+	// 		report.MarkWarning()
+	// 		logging.Warning("[%s] %s", report.ServerId, report.GetResultString())
+	// 	}
+	// }()
+	logging.Info("run case with worker: %d, actions: %s", t.Workers, t.Actions.FormatActions())
+	if serverId == "" {
+		if t.firstFlavor() == "" {
+			report.MarkFailed("test flavors is empty", nil)
+			return
+		}
+		if t.firstImage() == "" {
+			report.MarkFailed("test images is empty", nil)
+			return
+		}
+		report.SetStage("creating")
+		server, err := t.createDefaultServer(testId)
 		if err != nil {
-			return fmt.Errorf("get server failed: %s", err)
+			report.MarkFailed("create server failed", err)
+			return
 		}
-		task.ServerId = serverId
-		server_actions.TestTasks = append(server_actions.TestTasks, &task)
-		logging.Info("use server: %s(%s)", server.Id, server.Name)
-		logging.Info("[%s] ======== %s ========", serverId, strings.Join(TestServerActions, ","))
-
-	} else {
-		if len(server_actions.TEST_FLAVORS) == 0 {
-			logging.Error("test flavors is empty")
-			return fmt.Errorf("test flavors is empty")
+		if err := t.waitServerCreated(server.Id); err != nil {
+			report.MarkFailed("create server failed", err)
+			return
 		}
-		if len(common.TASK_CONF.Images) == 0 {
-			return fmt.Errorf("test images is empty")
-		}
-		server, err = createDefaultServer(client, testId)
+		server, err = t.Client.NovaV2().Server().Show(server.Id)
 		if err != nil {
-			task.MarkFailed(fmt.Sprintf("create server failed: %s", err))
-			return task.GetError()
+			report.MarkFailed("get server failed", err)
+			return
 		}
-		logging.Info("[%s] ======== Test actions: %s", server.Id, strings.Join(TestServerActions, ","))
-		task.SetStage("creating")
-		task.ServerId = server.Id
-		server_actions.TestTasks = append(server_actions.TestTasks, &task)
-		if err := waitServerCreated(client, server); err != nil {
-			task.MarkFailed(fmt.Sprintf("create failed: %s", err))
-			return task.GetError()
-		}
-		server, err = client.NovaV2().Server().Show(server.Id)
+		serverCheckers, err := checkers.GetServerCheckers(t.Client, server)
 		if err != nil {
-			task.MarkFailed(fmt.Sprintf("get server failed: %s", err))
-			return task.GetError()
-		}
-		defer func() {
-			if (!task.HasFailed() && common.TASK_CONF.DeleteIfSuccess) || (task.HasFailed() && common.TASK_CONF.DeleteIfError) {
-				task.SetStage("deleting")
-				logging.Info("[%s] deleting server", server.Id)
-				client.NovaV2().Server().Delete(server.Id)
-				client.NovaV2().Server().WaitDeleted(server.Id)
-			}
-			task.SetStage("")
-		}()
-		serverCheckers, err := checkers.GetServerCheckers(client, server)
-		if err != nil {
-			task.MarkFailed(fmt.Sprintf("get server checker failed: %s", err))
-			return task.GetError()
+			report.MarkFailed("get server checker failed", err)
+			return
 		}
 		if err := serverCheckers.MakesureServerRunning(); err != nil {
-			return err
+			report.MarkFailed("get server checker failed", err)
+			return
 		}
+		report.ServerId = server.Id
+		defer func() {
+			logging.Info("xxxxxxxxxx %v", report.HasFailed())
+			logging.Info("xxxxxxxxxx %v", common.TASK_CONF.DeleteIfSuccess)
+			logging.Info("xxxxxxxxxx %v", common.TASK_CONF.DeleteIfError)
+
+			if (!report.HasFailed() && common.TASK_CONF.DeleteIfSuccess) ||
+				(report.HasFailed() && common.TASK_CONF.DeleteIfError) {
+				report.SetStage("deleting")
+				t.destroyServer(server.Id)
+			}
+			report.SetStage("")
+		}()
+	} else {
+		var err error
+		server, err = t.Client.NovaV2().Server().Found(serverId)
+		if err != nil {
+			report.MarkFailed("get server failed", err)
+			return
+		}
+
+		report.ServerId = server.Id
+		logging.Info("use server: %s(%s)", server.Id, server.Name)
+		logging.Info("[%s] ======== %s ========", report.ServerId, strings.Join(t.Actions.FormatActions(), ","))
 	}
-	for _, actionName := range TestServerActions {
-		action := server_actions.VALID_ACTIONS.Get(actionName, server, client)
+	logging.Info("[%s] ======== Test actions: %s", report.ServerId, strings.Join(t.Actions.FormatActions(), ","))
+	for _, actionName := range t.Actions.Actions() {
+		action := internal.VALID_ACTIONS.Get(actionName, server, t.Client)
 		if action == nil {
 			logging.Error("[%s] action '%s' not found", server.Id, action)
-			task.SkipActions = append(task.SkipActions, actionName)
+			report.SkipActions = append(report.SkipActions, actionName)
 			continue
 		}
 		logging.Info(utility.BlueString(fmt.Sprintf("[%s] ==== %s", server.Id, actionName)))
-		task.SetStage(actionName)
+		report.SetStage(actionName)
 		// 更新实例信息
 		if err := action.RefreshServer(); err != nil {
-			return fmt.Errorf("refresh server failed: %s", err)
+			report.MarkFailed("refresh server failed", err)
+			return
 		}
-		if actionInterval > 0 {
-			logging.Info("[%s] sleep %d seconds", server.Id, actionInterval)
-			time.Sleep(time.Second * time.Duration(actionInterval))
+		if t.ActionInterval > 0 {
+			logging.Info("[%s] sleep %d seconds", server.Id, t.ActionInterval)
+			time.Sleep(time.Second * time.Duration(t.ActionInterval))
 		}
 		// 开始测试
-		skip, err := runActionTest(action)
+		skip, err := startAction(action)
 		// 更新测试结果
-		task.IncrementCompleted()
+		report.IncrementCompleted()
 		if skip {
-			task.SkipActions = append(task.SkipActions, actionName)
+			report.SkipActions = append(report.SkipActions, actionName)
 		} else if err != nil {
-			task.FailedActions = append(task.FailedActions, actionName)
-			task.MarkFailed(fmt.Sprintf("test action '%s' failed: %s", actionName, err))
-			logging.Error("[%s] %s", server.Id, task.GetError())
+			report.FailedActions = append(report.FailedActions, actionName)
+			report.MarkFailed(fmt.Sprintf("test action '%s' failed", actionName), err)
+			logging.Error("[%s] %s", server.Id, report.GetError())
 		} else {
-			task.SuccessActions = append(task.SuccessActions, actionName)
+			report.SuccessActions = append(report.SuccessActions, actionName)
 			logging.Success("[%s] test action '%s' success", server.Id, actionName)
 		}
 	}
-
-	if task.AllSuccess() {
-		task.MarkSuccess()
-		logging.Success("[%s] %s", server.Id, task.GetResultString())
-	} else if task.HasFailed() {
-		logging.Error("[%s] %s", server.Id, task.GetResultString())
-	} else {
-		task.MarkWarning()
-		logging.Warning("[%s] %s", server.Id, task.GetResultString())
-	}
+	return
+}
+func (t *Case) PrintReport() {
+	PrintTestTasks(t.reports)
+}
+func (t *Case) PrintServerEvents() error {
 	return nil
 }
-func RunActionTest(action internal.ServerAction) (bool, error) {
-	skip, reason := false, ""
-	if skip, reason = action.Skip(); skip {
-		logging.Warning("[%s] skip this task for the reason: %s", action.ServerId(), reason)
-		return true, nil
+func (t *Case) Start() error {
+	if t.Actions.Empty() {
+		logging.Warning("action is empty")
+		return nil
 	}
-	defer func() {
-		logging.Info("[%s] >>>> tear down ...", action.ServerId())
-		if err := action.TearDown(); err != nil {
-			logging.Error("[%s] tear down failed: %s", action.ServerId(), err)
+	t.Workers = max(t.Workers, 1)
+	// success, failed := 0, 0
+	taskGroup := syncutils.TaskGroup{
+		MaxWorker: t.Workers,
+	}
+	t.reports = []TestTask{}
+	if len(t.UseServers) > 0 {
+		logging.Warning("use servers: %s", t.UseServers)
+		taskGroup.MaxWorker = len(t.UseServers)
+		taskGroup.Items = arrayutils.Range(1, len(t.UseServers)+1)
+		taskGroup.Func = func(item interface{}) error {
+			testId := item.(int)
+			report := t.testActions(testId, t.UseServers[testId-1])
+			t.reports = append(t.reports, *report)
+			return nil
 		}
-	}()
-	return false, action.Start()
+	} else {
+		taskGroup.MaxWorker = max(t.Workers, 1)
+		taskGroup.Items = arrayutils.Range(1, t.Workers+1)
+		taskGroup.Func = func(item interface{}) error {
+			testId := item.(int)
+			report := t.testActions(testId, "")
+			t.reports = append(t.reports, *report)
+			return nil
+		}
+	}
+	taskGroup.Start()
+	return nil
 }

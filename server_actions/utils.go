@@ -36,3 +36,7 @@ func ParseServerActions(actions string) ([]string, error) {
 	}
 	return serverActions, nil
 }
+
+func ValidActions() internal.Actions {
+	return internal.VALID_ACTIONS
+}

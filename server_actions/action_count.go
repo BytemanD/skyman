@@ -31,18 +31,25 @@ func (acl *ActionCountList) Last() *ActionCount {
 	return &acl.items[len(acl.items)-1]
 }
 
-func (acl *ActionCountList) Add(name string) {
+func (acl *ActionCountList) Add(name string, count ...int) {
+	addCount := 0
+	if len(count) > 0 {
+		addCount = count[0]
+	} else {
+		addCount = 1
+	}
 	if acl.Empty() {
-		acl.items = append(acl.items, ActionCount{Name: name, Count: 1})
+		acl.items = append(acl.items, ActionCount{Name: name, Count: addCount})
 	} else {
 		lastAc := acl.Last()
 		if lastAc.Name == name {
 			lastAc.Count += 1
 		} else {
-			acl.items = append(acl.items, ActionCount{Name: name, Count: 1})
+			acl.items = append(acl.items, ActionCount{Name: name, Count: addCount})
 		}
 	}
 }
+
 func (acl ActionCountList) Actions() []string {
 	actions := []string{}
 	for _, ac := range acl.items {
@@ -59,14 +66,14 @@ func (acl ActionCountList) FormatActions() []string {
 }
 func NewActionCountList(actions string) (*ActionCountList, error) {
 	actionCountList := &ActionCountList{}
-	serverActions := []string{}
-	for _, act := range strings.Split(actions, ",") {
-		action := strings.TrimSpace(act)
+
+	for _, item := range strings.Split(actions, ",") {
+		action := strings.TrimSpace(item)
 		if !strings.Contains(action, ":") {
 			if !internal.VALID_ACTIONS.Contains(action) {
 				return nil, fmt.Errorf("action '%s' not found", action)
 			}
-			serverActions = append(serverActions, action)
+			actionCountList.Add(action)
 			continue
 		}
 		splited := strings.Split(action, ":")
@@ -77,9 +84,7 @@ func NewActionCountList(actions string) (*ActionCountList, error) {
 		if !internal.VALID_ACTIONS.Contains(splited[0]) {
 			return nil, fmt.Errorf("action '%s' not found", splited[0])
 		}
-		for i := 0; i < count; i++ {
-			serverActions = append(serverActions, splited[0])
-		}
+		actionCountList.Add(action, count)
 	}
 	return actionCountList, nil
 }

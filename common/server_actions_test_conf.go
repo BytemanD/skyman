@@ -33,6 +33,14 @@ type LiveMigrateOptions struct {
 	MaxLoss      int     `yaml:"maxLoss"`
 }
 
+type Case struct {
+	Actions        string   `yaml:"actions"`
+	Flavors        []string `yaml:"flavors"`
+	Images         []string `yaml:"images"`
+	Workers        int      `yaml:"workers"`
+	ActionInterval int      `yaml:"actionInterval"`
+}
+
 type ServerActionsTestConf struct {
 	Total            int                `yaml:"total"`
 	Workers          int                `yaml:"workers"`
@@ -56,6 +64,8 @@ type ServerActionsTestConf struct {
 	ActionInterval   int                `yaml:"actionInterval"`
 	QGAChecker       QGAChecker         `yaml:"qgaChecker"`
 	LiveMigrate      LiveMigrateOptions `yaml:"liveMigrate"`
+
+	Cases []Case `yaml:"cases"`
 }
 
 var (

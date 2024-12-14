@@ -13,6 +13,10 @@ bootVolumeType: ebs_ceph_ssd_sys
 volumeType: ebs_ceph_ssd_sys
 volumeSize: 10
 
+cases:
+  - actions: stop,start,hard_reboot
+  - actions: interface_attach,interface_detach
+
 flavors:
   - <FLAVOR ID>
   - <FLAVOR ID>

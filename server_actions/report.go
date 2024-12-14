@@ -67,6 +67,7 @@ type TestTask struct {
 	Stage          string   `json:"stage"`
 	Result         string   `json:"result"`
 	Message        string   `json:"message"`
+	Error          error    `json:"error"`
 	Complated      int      `json:"completed"`
 }
 
@@ -84,9 +85,10 @@ func (t *TestTask) MarkSuccess() {
 	t.SetStage("")
 	t.setResult("success", "")
 }
-func (t *TestTask) MarkFailed(message string) {
+func (t *TestTask) MarkFailed(message string, err error) {
 	t.SetStage("")
 	t.setResult("failed", message)
+	t.Error = err
 }
 func (t *TestTask) MarkWarning() {
 	t.SetStage("")
@@ -131,7 +133,7 @@ func (t TestTask) GetResultString() string {
 
 var TestTasks = []*TestTask{}
 
-func PrintTestTasks() string {
+func PrintTestTasks(reports []TestTask) {
 	fmt.Println("result:")
 	pt := common.PrettyTable{
 		Style: common.STYLE_LIGHT,
@@ -164,6 +166,6 @@ func PrintTestTasks() string {
 			}},
 		},
 	}
-	pt.AddItems(TestTasks)
-	return common.PrintPrettyTable(pt, false)
+	pt.AddItems(reports)
+	common.PrintPrettyTable(pt, false)
 }
