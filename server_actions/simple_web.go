@@ -1,4 +1,4 @@
-package test
+package server_actions
 
 import (
 	"encoding/json"
@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli/test/server_actions"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -39,9 +38,9 @@ func IndexHandler(respWriter http.ResponseWriter, request *http.Request) {
 func TasksHandler(respWriter http.ResponseWriter, request *http.Request) {
 	logging.Info("请求地址 %s", request.URL.Path)
 	reportBody := struct {
-		Tasks []*server_actions.TestTask `json:"tasks"`
+		Tasks []*TestTask `json:"tasks"`
 	}{
-		Tasks: server_actions.TestTasks,
+		Tasks: TestTasks,
 	}
 	data, err := json.Marshal(&reportBody)
 	logging.Debug("tasks json: %s", string(data))

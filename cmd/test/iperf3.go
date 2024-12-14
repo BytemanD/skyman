@@ -68,7 +68,7 @@ func printServerQOSItems(server nova.Server) {
 	fmt.Println(result)
 }
 
-var testNetQos = &cobra.Command{
+var TestNetQos = &cobra.Command{
 	Use:     "server-iperf3 <server> --client <client>",
 	Short:   i18n.T("testServerNetworkQOS"),
 	Long:    "基于iperf3工具测试两个虚拟机的网络QOS",
@@ -130,13 +130,11 @@ var testNetQos = &cobra.Command{
 }
 
 func init() {
-	testNetQos.Flags().StringP("client", "C", "", "客户端实例")
-	testNetQos.Flags().Bool("pps", false, "测试PPS")
-	testNetQos.Flags().String("iperf3-package", "", "iperf3 安装包")
-	testNetQos.Flags().String("server-options", "", "iperf3 服务端参数")
-	testNetQos.Flags().String("client-options", "", "iperf3 客户端参数")
+	TestNetQos.Flags().StringP("client", "C", "", "客户端实例")
+	TestNetQos.Flags().Bool("pps", false, "测试PPS")
+	TestNetQos.Flags().String("iperf3-package", "", "iperf3 安装包")
+	TestNetQos.Flags().String("server-options", "", "iperf3 服务端参数")
+	TestNetQos.Flags().String("client-options", "", "iperf3 客户端参数")
 
-	testNetQos.MarkFlagRequired("client")
-
-	TestCmd.AddCommand(testNetQos)
+	TestNetQos.MarkFlagRequired("client")
 }

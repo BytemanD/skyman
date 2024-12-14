@@ -1,4 +1,4 @@
-package server_actions
+package internal
 
 import (
 	"fmt"
@@ -6,47 +6,52 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
-type ServerSuspend struct {
+type ServerPause struct {
 	ServerActionTest
 	EmptyCleanup
 }
 
-func (t ServerSuspend) Start() error {
-	t.RefreshServer()
+func (t *ServerPause) Skip() (bool, string) {
 	if !t.Server.IsActive() {
-		return fmt.Errorf("server is not active")
-	}
-	err := t.Client.NovaV2().Server().Suspend(t.Server.Id)
-	if err != nil {
-		return err
-	}
-	logging.Info("[%s] suspending", t.Server.Id)
-	if err := t.WaitServerTaskFinished(false); err != nil {
-		return err
-	}
-	if !t.Server.IsSuspended() {
-		return fmt.Errorf("server is not suspended")
-	}
-	return nil
-}
-
-type ServerResume struct {
-	ServerActionTest
-	EmptyCleanup
-}
-
-func (t *ServerResume) Skip() (bool, string) {
-	if !t.Server.IsSuspended() {
-		return true, "server is not suspended"
+		return true, "server is not active"
 	}
 	return false, ""
 }
-func (t ServerResume) Start() error {
-	err := t.Client.NovaV2().Server().Resume(t.Server.Id)
+
+func (t ServerPause) Start() error {
+
+	err := t.Client.NovaV2().Server().Pause(t.Server.Id)
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] resuming", t.Server.Id)
+	logging.Info("[%s] pausing", t.Server.Id)
+	if err := t.WaitServerTaskFinished(false); err != nil {
+		return err
+	}
+	if !t.Server.IsPaused() {
+		return fmt.Errorf("server is not active")
+	}
+	return nil
+}
+
+type ServerUnpause struct {
+	ServerActionTest
+	EmptyCleanup
+}
+
+func (t *ServerUnpause) Skip() (bool, string) {
+	if !t.Server.IsPaused() {
+		return true, "server is not paused"
+	}
+	return false, ""
+}
+
+func (t ServerUnpause) Start() error {
+	err := t.Client.NovaV2().Server().Unpause(t.Server.Id)
+	if err != nil {
+		return err
+	}
+	logging.Info("[%s] unpausing", t.Server.Id)
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
@@ -56,18 +61,16 @@ func (t ServerResume) Start() error {
 	return nil
 }
 
-type ServerToggleSuspend struct {
-	ServerActionTest
-	EmptyCleanup
-}
+type ServerTogglePause struct{ ServerActionTest }
 
-func (t ServerToggleSuspend) Start() error {
-	if t.Server.IsSuspended() {
-		err := t.Client.NovaV2().Server().Resume(t.Server.Id)
+func (t ServerTogglePause) Start() error {
+	t.RefreshServer()
+	if t.Server.IsPaused() {
+		err := t.Client.NovaV2().Server().Unpause(t.Server.Id)
 		if err != nil {
 			return err
 		}
-		logging.Info("[%s] resuming", t.Server.Id)
+		logging.Info("[%s] unpausing", t.Server.Id)
 		if err := t.WaitServerTaskFinished(false); err != nil {
 			return err
 		}
@@ -75,11 +78,11 @@ func (t ServerToggleSuspend) Start() error {
 			return fmt.Errorf("server is not active")
 		}
 	} else if t.Server.IsActive() {
-		err := t.Client.NovaV2().Server().Suspend(t.Server.Id)
+		err := t.Client.NovaV2().Server().Pause(t.Server.Id)
 		if err != nil {
 			return err
 		}
-		logging.Info("[%s] suspending", t.Server.Id)
+		logging.Info("[%s] pausing", t.Server.Id)
 		if err := t.WaitServerTaskFinished(false); err != nil {
 			return err
 		}

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/BytemanD/skyman/server_actions/internal"
 )
 
 type ActionCount struct {
@@ -41,14 +43,27 @@ func (acl *ActionCountList) Add(name string) {
 		}
 	}
 }
-
+func (acl ActionCountList) Actions() []string {
+	actions := []string{}
+	for _, ac := range acl.items {
+		actions = append(actions, ac.Name)
+	}
+	return actions
+}
+func (acl ActionCountList) FormatActions() []string {
+	actions := []string{}
+	for _, ac := range acl.items {
+		actions = append(actions, fmt.Sprintf("%s:%d", ac.Name, ac.Count))
+	}
+	return actions
+}
 func NewActionCountList(actions string) (*ActionCountList, error) {
 	actionCountList := &ActionCountList{}
 	serverActions := []string{}
 	for _, act := range strings.Split(actions, ",") {
 		action := strings.TrimSpace(act)
 		if !strings.Contains(action, ":") {
-			if !VALID_ACTIONS.Contains(action) {
+			if !internal.VALID_ACTIONS.Contains(action) {
 				return nil, fmt.Errorf("action '%s' not found", action)
 			}
 			serverActions = append(serverActions, action)
@@ -59,7 +74,7 @@ func NewActionCountList(actions string) (*ActionCountList, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid action '%s'", action)
 		}
-		if !VALID_ACTIONS.Contains(splited[0]) {
+		if !internal.VALID_ACTIONS.Contains(splited[0]) {
 			return nil, fmt.Errorf("action '%s' not found", splited[0])
 		}
 		for i := 0; i < count; i++ {

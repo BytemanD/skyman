@@ -1,4 +1,4 @@
-package server_actions
+package internal
 
 import (
 	"fmt"

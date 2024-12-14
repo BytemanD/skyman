@@ -1,4 +1,4 @@
-package server_actions
+package internal
 
 type ServerActionNop struct {
 	ServerActionTest

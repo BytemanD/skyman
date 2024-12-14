@@ -22,7 +22,7 @@ const SERVER_FIO_TEST_EXAMPLE = `
   skyman test server-fio <server> iops --disk-path /dev/vdb1
 `
 
-var testFio = &cobra.Command{
+var TestFio = &cobra.Command{
 	Use:     fmt.Sprintf("server-fio <server> <%s>", strings.Join(VALID_TEST_TYPES, "|")),
 	Short:   i18n.T("testServerDiskIO"),
 	Long:    "基于fio工具测试实例磁盘IO",
@@ -100,10 +100,8 @@ var testFio = &cobra.Command{
 }
 
 func init() {
-	testFio.Flags().String("filename", "", "Filename")
-	testFio.Flags().String("size", "1G", "Size")
-	testFio.Flags().Int("runtime", 10, "Runtime")
-	testFio.Flags().Int("numjobs", 1, "Num jobs")
-
-	TestCmd.AddCommand(testFio)
+	TestFio.Flags().String("filename", "", "Filename")
+	TestFio.Flags().String("size", "1G", "Size")
+	TestFio.Flags().Int("runtime", 10, "Runtime")
+	TestFio.Flags().Int("numjobs", 1, "Num jobs")
 }

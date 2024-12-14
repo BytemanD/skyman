@@ -20,8 +20,8 @@ import (
 	"github.com/BytemanD/skyman/cli/quota"
 	"github.com/BytemanD/skyman/cli/storage"
 	"github.com/BytemanD/skyman/cli/templates"
-	"github.com/BytemanD/skyman/cli/test"
 	"github.com/BytemanD/skyman/cli/tool"
+	"github.com/BytemanD/skyman/cmd/test"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
@@ -111,6 +111,8 @@ var versionCmd = &cobra.Command{
 	},
 }
 
+var TestCmd = &cobra.Command{Use: "test", Short: "Test tools"}
+
 func main() {
 	rootCmd := cobra.Command{
 		Use:     "skyman",
@@ -172,6 +174,10 @@ func main() {
 
 	rootCmd.PersistentFlags().String("compute-api-version", "", "Compute API version")
 
+	TestCmd.AddCommand(
+		test.TestFio, test.ServerPing, test.TestNetQos, test.TestServerAction,
+	)
+
 	rootCmd.AddCommand(
 		versionCmd, context.ContextCmd,
 		identity.Token,
@@ -188,7 +194,7 @@ func main() {
 		quota.QuotaCmd,
 		templates.DefineCmd, templates.UndefineCmd,
 		tool.ToolCmd,
-		test.TestCmd,
+		TestCmd,
 	)
 	rootCmd.Execute()
 }

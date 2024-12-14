@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var serverPing = &cobra.Command{
+var ServerPing = &cobra.Command{
 	Use:   "server-ping <SERVER> <CLIENT>",
 	Short: "Run ping from server to client",
 	Args:  cobra.ExactArgs(2),
@@ -94,7 +94,6 @@ var serverPing = &cobra.Command{
 }
 
 func init() {
-	serverPing.Flags().Float32("interval", 1.0, "Interval")
-	serverPing.Flags().Int("count", 0, "count")
-	TestCmd.AddCommand(serverPing)
+	ServerPing.Flags().Float32("interval", 1.0, "Interval")
+	ServerPing.Flags().Int("count", 0, "count")
 }
