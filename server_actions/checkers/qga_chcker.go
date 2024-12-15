@@ -23,7 +23,7 @@ type QGAChecker struct {
 
 func (c QGAChecker) makesureQGAConnected(g *guest.Guest) error {
 	logging.Info("[%s] connecting to qga ...", c.ServerId)
-	if err := g.ConnectToQGA(common.TASK_CONF.QGAChecker.QgaConnectTimeout); err != nil {
+	if err := g.ConnectToQGA(common.TASK_CONF.Default.QGAChecker.QgaConnectTimeout); err != nil {
 		return err
 	}
 	logging.Info("[%s] qga connected", g.Domain)
@@ -55,7 +55,7 @@ func (c QGAChecker) MakesureServerRunning() error {
 				break
 			}
 		}
-		if time.Since(startTime) >= time.Second*time.Duration(common.TASK_CONF.QGAChecker.GuestConnectTimeout) {
+		if time.Since(startTime) >= time.Second*time.Duration(common.TASK_CONF.Default.QGAChecker.GuestConnectTimeout) {
 			return fmt.Errorf("connect guest timeout")
 		}
 		time.Sleep(time.Second * 5)

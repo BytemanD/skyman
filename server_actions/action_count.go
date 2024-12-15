@@ -51,9 +51,11 @@ func (acl *ActionCountList) Add(name string, count ...int) {
 }
 
 func (acl ActionCountList) Actions() []string {
-	actions := make([]string, 0, len(acl.items))
+	actions := []string{}
 	for _, ac := range acl.items {
-		actions = append(actions, ac.Name)
+		for i := 0; i < ac.Count; i++ {
+			actions = append(actions, ac.Name)
+		}
 	}
 	return actions
 }

@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli/test/checkers"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/server_actions/checkers"
 )
 
 type ServerAttachVolume struct {
@@ -85,7 +85,7 @@ func (t *ServerVolumeHotPlug) Start() error {
 	if err != nil {
 		return fmt.Errorf("get server checker failed: %s", err)
 	}
-	for i := 0; i < common.TASK_CONF.VolumeHotplug.Nums; i++ {
+	for i := 0; i < common.TASK_CONF.Default.VolumeHotplug.Nums; i++ {
 		logging.Info("[%s] attach volume (%d)", t.ServerId(), i+1)
 
 		logging.Info("[%s] creating volume", t.ServerId())

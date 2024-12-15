@@ -35,6 +35,23 @@ import (
 
 var cliActions *server_actions.ActionCountList
 
+func actionCaseConfig(config common.CaseConfig, def common.CaseConfig) common.CaseConfig {
+	caseConfig := config
+	if len(config.Flavors) == 0 {
+		caseConfig.Flavors = def.Flavors
+	}
+	if len(config.Images) == 0 {
+		caseConfig.Images = def.Images
+	}
+	if config.Workers <= 0 {
+		caseConfig.Workers = max(def.Workers, 1)
+	}
+	if config.ActionInterval <= 0 {
+		caseConfig.ActionInterval = max(def.ActionInterval, 0)
+	}
+	return caseConfig
+}
+
 var TestServerAction = &cobra.Command{
 	Use:   "server-actions <TASK FILE> [server]",
 	Short: "Test server actions",
@@ -58,50 +75,43 @@ var TestServerAction = &cobra.Command{
 			os.Exit(1)
 		}
 
-		total, _ := cmd.Flags().GetInt("total")
-		worker, _ := cmd.Flags().GetInt("worker")
 		servers, _ := cmd.Flags().GetString("servers")
-		actionInterval, _ := cmd.Flags().GetInt("action-interval")
 		reportEvents, _ := cmd.Flags().GetBool("report-events")
 		web, _ := cmd.Flags().GetBool("web")
 
-		if worker > 0 {
-			common.TASK_CONF.Workers = worker
-		}
-		if total > 0 {
-			common.TASK_CONF.Total = total
-		}
-		if actionInterval >= 0 {
-			common.TASK_CONF.ActionInterval = actionInterval
-		}
+		userServers := []string{}
 		if servers != "" {
-			common.TASK_CONF.UseServers = strings.Split(servers, ",")
+			userServers = strings.Split(servers, ",")
 		}
 
 		testCases := []server_actions.Case{}
 		// 初始化用例
 		client := openstack.DefaultClient()
 		if cliActions != nil {
+			worker, _ := cmd.Flags().GetInt("worker")
+			actionInterval, _ := cmd.Flags().GetInt("action-interval")
 			testCase := server_actions.Case{
-				Actions:        *cliActions,
-				Workers:        1,
-				ActionInterval: actionInterval,
-				UseServers:     strings.Split(servers, ","),
-				Client:         client}
+				Actions:    *cliActions,
+				UseServers: userServers,
+				Client:     client,
+				Config: actionCaseConfig(common.CaseConfig{
+					Workers:        worker,
+					ActionInterval: actionInterval,
+				}, common.TASK_CONF.Default),
+			}
 			testCases = append(testCases, testCase)
 		} else {
-			for _, caseConf := range common.TASK_CONF.Cases {
-				acl, err := server_actions.NewActionCountList(caseConf.Actions)
+			for _, actionCase := range common.TASK_CONF.Cases {
+				acl, err := server_actions.NewActionCountList(actionCase.Actions)
 				if err != nil {
-					logging.Fatal("parse actions failed: %s", caseConf.Actions)
+					logging.Fatal("parse actions failed: %s", actionCase.Actions)
 				}
 				testCase := server_actions.Case{
-					Actions:        *acl,
-					Workers:        max(caseConf.Workers, 1),
-					ActionInterval: caseConf.ActionInterval,
-					Client:         client,
-					Conf:           caseConf,
+					Actions: *acl,
+					Client:  client,
+					Config:  actionCaseConfig(actionCase.Config, common.TASK_CONF.Default),
 				}
+
 				testCases = append(testCases, testCase)
 			}
 		}

@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli/test/checkers"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/openstack/model/nova"
+	"github.com/BytemanD/skyman/server_actions/checkers"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -101,14 +101,14 @@ func (t *ServerActionTest) WaitServerTaskFinished(showProgress bool) error {
 	}
 }
 func (t *ServerActionTest) nextNetwork() (string, error) {
-	if len(common.TASK_CONF.Networks) == 0 {
+	if len(common.TASK_CONF.Default.Networks) == 0 {
 		return "", fmt.Errorf("the num of networks == 0")
 	}
-	if t.networkIndex >= len(common.TASK_CONF.Networks)-1 {
+	if t.networkIndex >= len(common.TASK_CONF.Default.Networks)-1 {
 		t.networkIndex = 0
 	}
 	defer func() { t.networkIndex += 1 }()
-	return common.TASK_CONF.Networks[t.networkIndex], nil
+	return common.TASK_CONF.Default.Networks[t.networkIndex], nil
 }
 func (t *ServerActionTest) lastVolume() (*nova.VolumeAttachment, error) {
 	volumes, err := t.Client.NovaV2().Server().ListVolumes(t.Server.Id)
@@ -155,10 +155,10 @@ func (t ServerActionTest) ServerMustNotError() error {
 
 func (t ServerActionTest) CreateBlankVolume() (*cinder.Volume, error) {
 	options := map[string]interface{}{
-		"size": common.TASK_CONF.VolumeSize,
+		"size": common.TASK_CONF.Default.VolumeSize,
 	}
-	if common.TASK_CONF.VolumeType != "" {
-		options["volume_type"] = common.TASK_CONF.VolumeType
+	if common.TASK_CONF.Default.VolumeType != "" {
+		options["volume_type"] = common.TASK_CONF.Default.VolumeType
 	}
 	volume, err := t.Client.CinderV2().Volume().Create(options)
 	if err != nil {
@@ -199,35 +199,35 @@ func (t ServerActionTest) getServerBootOption(name string) nova.ServerOpt {
 	opt := nova.ServerOpt{
 		Name:             name,
 		Flavor:           TEST_FLAVORS[0].Id,
-		Image:            common.TASK_CONF.Images[0],
-		AvailabilityZone: common.TASK_CONF.AvailabilityZone,
+		Image:            common.TASK_CONF.Default.Images[0],
+		AvailabilityZone: common.TASK_CONF.Default.AvailabilityZone,
 	}
-	if len(common.TASK_CONF.Networks) >= 1 {
+	if len(common.TASK_CONF.Default.Networks) >= 1 {
 		opt.Networks = []nova.ServerOptNetwork{
-			{UUID: common.TASK_CONF.Networks[0]},
+			{UUID: common.TASK_CONF.Default.Networks[0]},
 		}
 	} else {
 		logging.Warning("boot without network")
 	}
-	if common.TASK_CONF.BootWithSG != "" {
+	if common.TASK_CONF.Default.BootWithSG != "" {
 		opt.SecurityGroups = append(opt.SecurityGroups,
 			neutron.SecurityGroup{
-				Resource: model.Resource{Name: common.TASK_CONF.BootWithSG},
+				Resource: model.Resource{Name: common.TASK_CONF.Default.BootWithSG},
 			})
 	}
-	if common.TASK_CONF.BootFromVolume {
+	if common.TASK_CONF.Default.BootFromVolume {
 		opt.BlockDeviceMappingV2 = []nova.BlockDeviceMappingV2{
 			{
-				UUID:               common.TASK_CONF.Images[0],
-				VolumeSize:         common.TASK_CONF.BootVolumeSize,
+				UUID:               common.TASK_CONF.Default.Images[0],
+				VolumeSize:         common.TASK_CONF.Default.BootVolumeSize,
 				SourceType:         "image",
 				DestinationType:    "volume",
-				VolumeType:         common.TASK_CONF.BootVolumeType,
+				VolumeType:         common.TASK_CONF.Default.BootVolumeType,
 				DeleteOnTemination: true,
 			},
 		}
 	} else {
-		opt.Image = common.TASK_CONF.Images[0]
+		opt.Image = common.TASK_CONF.Default.Images[0]
 	}
 	return opt
 }
@@ -257,7 +257,7 @@ func (t *ServerActionTest) WaitSnapshotCreated(snapshotId string) error {
 			if err != nil {
 				return err
 			}
-			logging.Info("[%s] snapshot status is %s", t.ServerId(), snapshot.Status)
+			logging.Info("[%s] snapshot %s status is %s", t.ServerId(), snapshot.Id, snapshot.Status)
 			switch snapshot.Status {
 			case "error":
 				return fmt.Errorf("snapshot is error")

@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli/test/checkers"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/server_actions/checkers"
 )
 
 type ServerRevertToSnapshot struct {
@@ -43,7 +43,7 @@ func (t *ServerRevertToSnapshot) Start() error {
 			logging.Info("[%s] stopped", t.ServerId())
 		}
 	}
-	for i := 0; i < common.TASK_CONF.RevertTimes; i++ {
+	for i := 0; i < max(common.TASK_CONF.Default.RevertTimes, 1); i++ {
 		logging.Info("[%s] revert volume to snapshot %s (%d), waiting", t.ServerId(), rootBdm.VolumeId, i+1)
 		if err := t.Client.CinderV2().Volume().Revert(rootBdm.VolumeId, snap.Id); err != nil {
 			logging.Error("revert volume %s failed: %s", rootBdm.VolumeId, err)

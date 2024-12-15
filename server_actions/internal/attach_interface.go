@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli/test/checkers"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
+	"github.com/BytemanD/skyman/server_actions/checkers"
 )
 
 type ServerAttachPort struct {
@@ -156,7 +156,7 @@ func (t *ServerAttachHotPlug) Start() error {
 	if err != nil {
 		return fmt.Errorf("get server checker failed: %s", err)
 	}
-	for i := 1; i <= common.TASK_CONF.InterfaceHotplug.Nums; i++ {
+	for i := 1; i <= common.TASK_CONF.Default.InterfaceHotplug.Nums; i++ {
 		logging.Info("[%s] attach interface %d", t.ServerId(), i)
 		nextNetwork, err := t.nextNetwork()
 		if err != nil {

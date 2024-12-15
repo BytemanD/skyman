@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli/test/checkers"
+	"github.com/BytemanD/skyman/server_actions/checkers"
 	"github.com/BytemanD/skyman/utility"
 )
 

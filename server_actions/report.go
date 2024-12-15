@@ -95,13 +95,13 @@ func (t *TestTask) MarkWarning() {
 	t.setResult("warning", t.Message)
 }
 func (t *TestTask) GetResultEmoji() string {
-	switch t.Result {
-	case "success":
+	switch {
+	case t.AllSuccess():
 		return "😄"
-	case "warning":
-		return "😥"
-	case "failed":
+	case t.HasFailed():
 		return "😭"
+	case t.HasSkip():
+		return "😥"
 	default:
 		return "😶"
 	}

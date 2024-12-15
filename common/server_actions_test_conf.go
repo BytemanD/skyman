@@ -33,40 +33,39 @@ type LiveMigrateOptions struct {
 	MaxLoss      int     `yaml:"maxLoss"`
 }
 
-type Case struct {
-	Actions        string   `yaml:"actions"`
+type CaseConfig struct {
 	Flavors        []string `yaml:"flavors"`
 	Images         []string `yaml:"images"`
 	Workers        int      `yaml:"workers"`
 	ActionInterval int      `yaml:"actionInterval"`
+
+	Web              Web    `yaml:"web"`
+	DeleteIfError    bool   `yaml:"deleteIfError"`
+	DeleteIfSuccess  bool   `yaml:"deleteIfSuccess"`
+	AvailabilityZone string `yaml:"availabilityZone"`
+	BootFromVolume   bool   `yaml:"bootFromVolume"`
+	BootVolumeSize   uint16 `yaml:"bootVolumeSize"`
+	BootVolumeType   string `yaml:"bootVolumeType"`
+	BootWithSG       string `yaml:"bootWithSG"`
+
+	Networks   []string `yaml:"networks"`
+	VolumeType string   `yaml:"volumeType"`
+	VolumeSize int      `yaml:"volumeSize"`
+
+	InterfaceHotplug InterfaceHotplug   `yaml:"interfaceHotplug"`
+	VolumeHotplug    VolumeHotplug      `yaml:"volumeHotplug"`
+	QGAChecker       QGAChecker         `yaml:"qgaChecker"`
+	LiveMigrate      LiveMigrateOptions `yaml:"liveMigrate"`
+	RevertTimes      int                `yaml:"revertTimes"`
+}
+type Case struct {
+	Actions string     `yaml:"actions"`
+	Config  CaseConfig `yaml:"config"`
 }
 
 type ServerActionsTestConf struct {
-	Total            int                `yaml:"total"`
-	Workers          int                `yaml:"workers"`
-	Web              Web                `yaml:"web"`
-	ActionTasks      []string           `yaml:"actionTasks"`
-	DeleteIfError    bool               `yaml:"deleteIfError"`
-	DeleteIfSuccess  bool               `yaml:"deleteIfSuccess"`
-	AvailabilityZone string             `yaml:"availabilityZone"`
-	BootFromVolume   bool               `yaml:"bootFromVolume"`
-	BootVolumeSize   uint16             `yaml:"bootVolumeSize"`
-	BootVolumeType   string             `yaml:"bootVolumeType"`
-	BootWithSG       string             `yaml:"bootWithSG"`
-	Flavors          []string           `yaml:"flavors"`
-	Images           []string           `yaml:"images"`
-	Networks         []string           `yaml:"networks"`
-	VolumeType       string             `yaml:"volumeType"`
-	VolumeSize       int                `yaml:"volumeSize"`
-	InterfaceHotplug InterfaceHotplug   `yaml:"interfaceHotplug"`
-	VolumeHotplug    VolumeHotplug      `yaml:"volumeHotplug"`
-	UseServers       []string           `yaml:"userServers"`
-	ActionInterval   int                `yaml:"actionInterval"`
-	QGAChecker       QGAChecker         `yaml:"qgaChecker"`
-	LiveMigrate      LiveMigrateOptions `yaml:"liveMigrate"`
-
-	Cases       []Case `yaml:"cases"`
-	RevertTimes int    `yaml:"revertTimes"`
+	Default CaseConfig `yaml:"default"`
+	Cases   []Case     `yaml:"cases"`
 }
 
 var (
@@ -75,20 +74,21 @@ var (
 
 func DefaultServerActionsTtestConf() ServerActionsTestConf {
 	return ServerActionsTestConf{
-		Total: 1,
-
-		BootVolumeSize:   50,
-		VolumeSize:       10,
-		InterfaceHotplug: InterfaceHotplug{Nums: 1},
-		VolumeHotplug:    VolumeHotplug{Nums: 1},
-		QGAChecker: QGAChecker{
-			GuestConnectTimeout: DEFAULT_GUEST_CONNECT_TIMEOUT,
-			QgaConnectTimeout:   DEFAULT_QGA_CONNECT_TIMEOUT,
+		Default: CaseConfig{
+			Workers:          1,
+			BootVolumeSize:   50,
+			VolumeSize:       10,
+			Web:              Web{Port: 80},
+			InterfaceHotplug: InterfaceHotplug{Nums: 1},
+			VolumeHotplug:    VolumeHotplug{Nums: 1},
+			QGAChecker: QGAChecker{
+				GuestConnectTimeout: DEFAULT_GUEST_CONNECT_TIMEOUT,
+				QgaConnectTimeout:   DEFAULT_QGA_CONNECT_TIMEOUT,
+			},
+			LiveMigrate: LiveMigrateOptions{
+				PingInterval: DEFAULT_PING_INTERVAL,
+			},
 		},
-		LiveMigrate: LiveMigrateOptions{
-			PingInterval: DEFAULT_PING_INTERVAL,
-		},
-		Web: Web{Port: 80},
 	}
 }
 
