@@ -8,11 +8,11 @@ require (
 	libvirt.org/go/libvirt v1.10002.0
 )
 
-require github.com/dustin/go-humanize v1.0.1 // indirect
+require github.com/dustin/go-humanize v1.0.1
 
 require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
-	github.com/go-resty/resty/v2 v2.13.1 // indirect
+	github.com/go-resty/resty/v2 v2.13.1
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/howeyc/gopass v0.0.0-20210920133722-c8aef6fb66ef
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
