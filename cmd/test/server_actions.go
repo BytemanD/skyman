@@ -60,7 +60,7 @@ var TestServerAction = &cobra.Command{
 		}
 
 		servers, _ := cmd.Flags().GetString("servers")
-		reportEvents, _ := cmd.Flags().GetBool("report-events")
+		// reportEvents, _ := cmd.Flags().GetBool("report-events")
 		web, _ := cmd.Flags().GetBool("web")
 
 		userServers := []string{}
@@ -93,7 +93,7 @@ var TestServerAction = &cobra.Command{
 				}
 				acl, err := server_actions.NewActionCountList(actionCase.Actions)
 				if err != nil {
-					logging.Fatal("parse actions failed: %s", actionCase.Actions)
+					logging.Fatal("parse actions '%s' failed, %s", actionCase.Actions, err)
 				}
 				testCase := server_actions.Case{
 					Name:    actionCase.Name,
@@ -113,15 +113,15 @@ var TestServerAction = &cobra.Command{
 			go server_actions.RunSimpleWebServer()
 		}
 
+		caseReports := []server_actions.CaseReport{}
 		for _, testCase := range testCases {
-			err := testCase.Start()
-			if err == nil {
-				testCase.PrintReport()
-				if reportEvents {
-					testCase.PrintServerEvents()
-				}
-			}
+			testCase.Start()
+			caseReports = append(caseReports, testCase.Report())
 		}
+		server_actions.PrintCaseReports(caseReports)
+		// if reportEvents {
+		// 	testCase.PrintServerEvents()
+		// }
 		if web {
 			server_actions.WaitWebServer()
 		}
@@ -143,7 +143,7 @@ func init() {
 	TestServerAction.Flags().Int("total", 0, i18n.T("theNumOfTask"))
 	TestServerAction.Flags().Int("worker", 0, i18n.T("theNumOfWorker"))
 	TestServerAction.Flags().String("servers", "", "Use existing servers")
-	TestServerAction.Flags().Bool("report-events", false, i18n.T("reportServerEvents"))
+	// TestServerAction.Flags().Bool("report-events", false, i18n.T("reportServerEvents"))
 	TestServerAction.Flags().Bool("web", false, "Start web server")
 
 	viper.BindPFlag("test.total", TestServerAction.Flags().Lookup("total"))

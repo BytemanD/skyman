@@ -38,9 +38,9 @@ func IndexHandler(respWriter http.ResponseWriter, request *http.Request) {
 func TasksHandler(respWriter http.ResponseWriter, request *http.Request) {
 	logging.Info("请求地址 %s", request.URL.Path)
 	reportBody := struct {
-		Tasks []*TestTask `json:"tasks"`
+		CaseReports []CaseReport `json:"tasks"`
 	}{
-		Tasks: TestTasks,
+		CaseReports: []CaseReport{},
 	}
 	data, err := json.Marshal(&reportBody)
 	logging.Debug("tasks json: %s", string(data))

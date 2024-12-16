@@ -105,7 +105,7 @@ func LoadTaskConfig(taskFile string) (*ServerActionsTestConf, error) {
 func NewActionCaseConfig(config CaseConfig, def CaseConfig) CaseConfig {
 	caseConfig := CaseConfig{
 		Workers:         OneOfNumber(config.Workers, def.Workers, 1),
-		ActionInterval:  OneOfNumber(config.Workers, def.Workers),
+		ActionInterval:  OneOfNumber(config.ActionInterval, def.ActionInterval),
 		DeleteIfError:   OneOfBoolean(config.DeleteIfError, def.DeleteIfError),
 		DeleteIfSuccess: OneOfBoolean(config.DeleteIfSuccess, def.DeleteIfSuccess),
 

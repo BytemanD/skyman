@@ -49,7 +49,6 @@ var (
 type ServerAction interface {
 	RefreshServer() error
 	Start() error
-	Skip() (bool, string)
 	TearDown() error
 	ServerId() string
 	SetConfig(c common.CaseConfig)
