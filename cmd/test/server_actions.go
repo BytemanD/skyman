@@ -53,7 +53,8 @@ var TestServerAction = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := common.LoadTaskConfig(args[0]); err != nil {
+		testConf, err := common.LoadTaskConfig(args[0])
+		if err != nil {
 			logging.Error("load task file %s failed: %s", args[0], err)
 			os.Exit(1)
 		}
@@ -84,7 +85,12 @@ var TestServerAction = &cobra.Command{
 			}
 			testCases = append(testCases, testCase)
 		} else {
-			for _, actionCase := range common.TASK_CONF.Cases {
+			logging.Info("Found %d case(s)", len(testConf.Cases))
+			for _, actionCase := range testConf.Cases {
+				if actionCase.Skip {
+					logging.Warning("skip case '%s'", common.OneOfString(actionCase.Name, actionCase.Actions))
+					continue
+				}
 				acl, err := server_actions.NewActionCountList(actionCase.Actions)
 				if err != nil {
 					logging.Fatal("parse actions failed: %s", actionCase.Actions)
@@ -93,13 +99,12 @@ var TestServerAction = &cobra.Command{
 					Name:    actionCase.Name,
 					Actions: *acl,
 					Client:  client,
-					Config:  common.NewActionCaseConfig(actionCase.Config, common.TASK_CONF.Default),
+					Config:  common.NewActionCaseConfig(actionCase.Config, testConf.Default),
 				}
 				testCases = append(testCases, testCase)
 			}
 		}
-
-		logging.Info("Found %d case(s)", len(testCases))
+		logging.Info("Execute %d case(s)", len(testCases))
 
 		// 测试前检查
 		// preTest(client)

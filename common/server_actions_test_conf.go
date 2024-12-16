@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
 
@@ -68,6 +66,7 @@ type CaseConfig struct {
 type Case struct {
 	Name    string     `yaml:"name"`
 	Actions string     `yaml:"actions"`
+	Skip    bool       `yaml:"skip"`
 	Config  CaseConfig `yaml:"config"`
 }
 
@@ -88,32 +87,19 @@ func DefaultServerActionsTtestConf() ServerActionsTestConf {
 	}
 }
 
-func LoadTaskConfig(taskFile string) error {
-	viper.SetConfigType("yaml")
-	if taskFile != "" {
-		viper.SetConfigFile(taskFile)
-	}
-	logging.Info("load server-actions test from file %s", taskFile)
-	viper.GetViper().ConfigFileUsed()
-	if err := viper.ReadInConfig(); err != nil {
-		return err
-	}
-	TASK_CONF = DefaultServerActionsTtestConf()
-	viper.Unmarshal(&TASK_CONF)
-
+func LoadTaskConfig(taskFile string) (*ServerActionsTestConf, error) {
 	bytes, err := os.ReadFile(taskFile)
 	if err != nil {
-		return fmt.Errorf("read file %s failed: %s", taskFile, err)
+		return nil, fmt.Errorf("read file %s failed: %s", taskFile, err)
 	}
 	testConf := ServerActionsTestConf{
 		Web:     Web{Port: 80},
 		Default: CaseConfig{},
 	}
 	if err = yaml.Unmarshal(bytes, &testConf); err != nil {
-		return fmt.Errorf("unmarshal test conf failed: %s", err)
+		return nil, fmt.Errorf("unmarshal test conf failed: %s", err)
 	}
-	TASK_CONF = testConf
-	return nil
+	return &testConf, nil
 }
 
 func NewActionCaseConfig(config CaseConfig, def CaseConfig) CaseConfig {

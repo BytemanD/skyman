@@ -35,9 +35,8 @@ func startAction(action internal.ServerAction) (bool, error) {
 }
 
 type Case struct {
-	Name    string
-	Actions ActionCountList
-
+	Name       string
+	Actions    ActionCountList
 	UseServers []string
 	Client     *openstack.Openstack
 	Config     common.CaseConfig
@@ -228,6 +227,9 @@ func (t *Case) testActions(testId int, serverId string) (report *TestTask) {
 	return
 }
 func (t *Case) PrintReport() {
+	if t.reports == nil {
+		return
+	}
 	PrintTestTasks(t.reports)
 }
 func (t *Case) PrintServerEvents() error {
