@@ -1,29 +1,38 @@
+web:
+  port: 80
+
 default:
-  workers: 1
+  # workers: 1
 
   deleteIfError: true
   # availabilityZone: <AZ>:<HOST>
   bootFromVolume: true
   bootVolumeSize: 50
-  bootVolumeType: ebs_ceph_ssd_sys
+  bootVolumeType: 
 
-  volumeType: ebs_ceph_ssd_sys
   volumeSize: 10
+  volumeType: 
 
   flavors:
-    - <FLAVOR ID>
-    - <FLAVOR ID>
+    - <FLAVOR1 ID>
+    - <FLAVOR2 ID>
   images:
-    - <IMAGE UUID>
+    - <IMAGE1 UUID>
   networks:
-    - <NETWORK UUID>
-  attachInterfaceLoop:
-    nums: 1
-  attachVolumeLoop:
-    nums: 1
-  qgaChecker:
-    # enabled: False
+    - <NETWORK1 UUID>
+  # attachInterfaceLoop:
+  #   nums: 1
+  # attachVolumeLoop:
+  #   nums: 1
+  # revertSystem:
+  #   repeatEveryTime: 1
+  # qgaChecker:
+  #   enabled: False
 
 cases:
-  - actions: stop,start,hard_reboot
-  - actions: interface_attach,interface_detach
+  - name: 关机、开机、硬重启
+    actions: stop,start,reboot
+  - name: 批量硬重启
+    actions: hard_reboot
+    config:
+      workers: 4
