@@ -80,14 +80,17 @@ func (checkers ServerCheckers) MakesureVolumeSizeIs(attachment *nova.VolumeAttac
 	return nil
 }
 
-func GetServerCheckers(client *openstack.Openstack, server *nova.Server) (ServerCheckers, error) {
-	checkers := []ServerCheckerInterface{}
-	checkers = append(checkers, ServerChecker{Client: client, ServerId: server.Id})
-	if common.TASK_CONF.Default.QGAChecker.Enabled {
+func GetServerCheckers(client *openstack.Openstack, server *nova.Server, conf common.QGAChecker) (ServerCheckers, error) {
+	checkers := []ServerCheckerInterface{
+		ServerChecker{Client: client, ServerId: server.Id},
+	}
+	if conf.Enabled {
 		qgaChecker, err := GetQgaChecker(client, server)
 		if err != nil {
 			return nil, fmt.Errorf("get qga checker failed: %s", err)
 		}
+		qgaChecker.SetGuestConnectTimeout(conf.GuestConnectTimeout)
+		qgaChecker.SetQgaConnectTimeout(conf.QgaConnectTimeout)
 		checkers = append(checkers, qgaChecker)
 	}
 	return checkers, nil

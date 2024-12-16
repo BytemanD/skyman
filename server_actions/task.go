@@ -35,6 +35,7 @@ func startAction(action internal.ServerAction) (bool, error) {
 }
 
 type Case struct {
+	Name    string
 	Actions ActionCountList
 
 	UseServers []string
@@ -48,34 +49,34 @@ func (t Case) getServerBootOption(testId int) nova.ServerOpt {
 		Name:             fmt.Sprintf("skyman-server-%d-%v", testId, time.Now().Format("20060102-150405")),
 		Flavor:           t.firstFlavor(),
 		Image:            t.firstImage(),
-		AvailabilityZone: common.TASK_CONF.Default.AvailabilityZone,
+		AvailabilityZone: t.Config.AvailabilityZone,
 	}
-	if len(common.TASK_CONF.Default.Networks) >= 1 {
+	if len(t.Config.Networks) >= 1 {
 		opt.Networks = []nova.ServerOptNetwork{
-			{UUID: common.TASK_CONF.Default.Networks[0]},
+			{UUID: t.Config.Networks[0]},
 		}
 	} else {
 		logging.Warning("boot without network")
 	}
-	if common.TASK_CONF.Default.BootWithSG != "" {
+	if t.Config.BootWithSG != "" {
 		opt.SecurityGroups = append(opt.SecurityGroups,
 			neutron.SecurityGroup{
-				Resource: model.Resource{Name: common.TASK_CONF.Default.BootWithSG},
+				Resource: model.Resource{Name: t.Config.BootWithSG},
 			})
 	}
-	if common.TASK_CONF.Default.BootFromVolume {
+	if t.Config.BootFromVolume {
 		opt.BlockDeviceMappingV2 = []nova.BlockDeviceMappingV2{
 			{
-				UUID:               common.TASK_CONF.Default.Images[0],
-				VolumeSize:         common.TASK_CONF.Default.BootVolumeSize,
+				UUID:               t.Config.Images[0],
+				VolumeSize:         t.Config.BootVolumeSize,
 				SourceType:         "image",
 				DestinationType:    "volume",
-				VolumeType:         common.TASK_CONF.Default.BootVolumeType,
+				VolumeType:         t.Config.BootVolumeType,
 				DeleteOnTemination: true,
 			},
 		}
 	} else {
-		opt.Image = common.TASK_CONF.Default.Images[0]
+		opt.Image = t.Config.Images[0]
 	}
 	return opt
 }
@@ -117,6 +118,7 @@ func (t *Case) destroyServer(serverId string) {
 func (t *Case) testActions(testId int, serverId string) (report *TestTask) {
 	// 执行一轮测试
 	report = &TestTask{
+		Name:         t.Name,
 		TotalActions: t.Actions.FormatActions(),
 	}
 	var server *nova.Server
@@ -135,11 +137,11 @@ func (t *Case) testActions(testId int, serverId string) (report *TestTask) {
 	logging.Info("run case, id=%d worker=%d actions=%s", testId, t.Config.Workers, t.Actions.FormatActions())
 	if serverId == "" {
 		if t.firstFlavor() == "" {
-			report.MarkFailed("test flavors is empty", nil)
+			report.MarkFailed("flavors is empty", nil)
 			return
 		}
 		if t.firstImage() == "" {
-			report.MarkFailed("test images is empty", nil)
+			report.MarkFailed("images is empty", nil)
 			return
 		}
 		report.SetStage("creating")
@@ -157,7 +159,7 @@ func (t *Case) testActions(testId int, serverId string) (report *TestTask) {
 			report.MarkFailed("get server failed", err)
 			return
 		}
-		serverCheckers, err := checkers.GetServerCheckers(t.Client, server)
+		serverCheckers, err := checkers.GetServerCheckers(t.Client, server, t.Config.QGAChecker)
 		if err != nil {
 			report.MarkFailed("get server checker failed", err)
 			return
@@ -168,8 +170,8 @@ func (t *Case) testActions(testId int, serverId string) (report *TestTask) {
 		}
 		report.ServerId = server.Id
 		defer func() {
-			if (!report.HasFailed() && common.TASK_CONF.Default.DeleteIfSuccess) ||
-				(report.HasFailed() && common.TASK_CONF.Default.DeleteIfError) {
+			if (!report.HasFailed() && t.Config.DeleteIfSuccess) ||
+				(report.HasFailed() && t.Config.DeleteIfError) {
 				report.SetStage("deleting")
 				t.destroyServer(server.Id)
 			}
@@ -191,6 +193,7 @@ func (t *Case) testActions(testId int, serverId string) (report *TestTask) {
 	)
 	for _, actionName := range t.Actions.Actions() {
 		action := internal.VALID_ACTIONS.Get(actionName, server, t.Client)
+		action.SetConfig(t.Config)
 		if action == nil {
 			logging.Error("[%s] action '%s' not found", server.Id, actionName)
 			report.SkipActions = append(report.SkipActions, actionName)
@@ -214,9 +217,9 @@ func (t *Case) testActions(testId int, serverId string) (report *TestTask) {
 		if skip {
 			report.SkipActions = append(report.SkipActions, actionName)
 		} else if err != nil {
+			logging.Error("[%s] test action %s failed: %s", server.Id, actionName, err)
 			report.FailedActions = append(report.FailedActions, actionName)
 			report.MarkFailed(fmt.Sprintf("test action '%s' failed", actionName), err)
-			logging.Error("[%s] %s", server.Id, report.GetError())
 		} else {
 			report.SuccessActions = append(report.SuccessActions, actionName)
 			logging.Success("[%s] test action '%s' success", server.Id, actionName)

@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/server_actions/checkers"
 )
 
 type ServerRevertToSnapshot struct {
@@ -43,7 +41,7 @@ func (t *ServerRevertToSnapshot) Start() error {
 			logging.Info("[%s] stopped", t.ServerId())
 		}
 	}
-	for i := 0; i < max(common.TASK_CONF.Default.RevertTimes, 1); i++ {
+	for i := 0; i < max(t.Config.RevertSystem.RepeatEveryTime, 1); i++ {
 		logging.Info("[%s] revert volume to snapshot %s (%d), waiting", t.ServerId(), rootBdm.VolumeId, i+1)
 		if err := t.Client.CinderV2().Volume().Revert(rootBdm.VolumeId, snap.Id); err != nil {
 			logging.Error("revert volume %s failed: %s", rootBdm.VolumeId, err)
@@ -52,7 +50,7 @@ func (t *ServerRevertToSnapshot) Start() error {
 		if err := t.WaitVolumeTaskDone(rootBdm.VolumeId); err != nil {
 			return err
 		}
-		logging.Info("[%s] revert to snapshot success", t.ServerId())
+		logging.Success("[%s] revert to snapshot %s success", t.ServerId(), snap.Id)
 	}
 	logging.Info("[%s] starting", t.ServerId())
 	if err := t.Client.NovaV2().Server().Start(t.ServerId()); err != nil {
@@ -61,7 +59,7 @@ func (t *ServerRevertToSnapshot) Start() error {
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
-	serverCheckers, err := checkers.GetServerCheckers(t.Client, t.Server)
+	serverCheckers, err := t.getCheckers()
 	if err != nil {
 		return fmt.Errorf("get server checker failed: %s", err)
 	}

@@ -59,6 +59,7 @@ func PrintServerEvents(client *openstack.Openstack) (string, error) {
 
 type TestTask struct {
 	Id             int      `json:"id"`
+	Name           string   `json:"name"`
 	ServerId       string   `json:"serverId"`
 	TotalActions   []string `json:"totalActions"`
 	SuccessActions []string `json:"successActions"`
@@ -133,8 +134,14 @@ func (t TestTask) GetResultString() string {
 
 var TestTasks = []*TestTask{}
 
+type ReportItem struct {
+	Name    string
+	Servers string
+	Results string
+}
+
 func PrintTestTasks(reports []TestTask) {
-	fmt.Println("result:")
+	fmt.Println("Report:")
 	pt := common.PrettyTable{
 		Style: common.STYLE_LIGHT,
 		ShortColumns: []common.Column{
@@ -142,11 +149,14 @@ func PrintTestTasks(reports []TestTask) {
 				p := item.(TestTask)
 				return p.GetResultEmoji()
 			}},
-			{Name: "ServerId"},
-			{Name: "Actions", Slot: func(item interface{}) interface{} {
+			{Name: "Name/Actions", Slot: func(item interface{}) interface{} {
 				p := item.(TestTask)
+				if p.Name != "" {
+					return p.Name
+				}
 				return strings.Join(p.TotalActions, ",")
 			}},
+			{Name: "ServerId"},
 			{Name: "Result", Text: "Success/Skip/Failed", Align: text.AlignCenter,
 				Slot: func(item interface{}) interface{} {
 					p, _ := item.(TestTask)

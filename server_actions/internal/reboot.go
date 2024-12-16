@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/server_actions/checkers"
 )
 
 type ServerReboot struct {
@@ -74,7 +73,7 @@ func (t ServerStop) Start() error {
 		return err
 	}
 
-	serverCheckers, err := checkers.GetServerCheckers(t.Client, t.Server)
+	serverCheckers, err := t.getCheckers()
 	if err != nil {
 		return fmt.Errorf("get server checker failed: %s", err)
 	}

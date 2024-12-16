@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/server_actions/checkers"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -51,7 +50,7 @@ func (t ServerExtendVolume) Start() error {
 		},
 	)
 
-	serverCheckers, err := checkers.GetServerCheckers(t.Client, t.Server)
+	serverCheckers, err := t.getCheckers()
 	if err != nil {
 		return fmt.Errorf("get server checker failed: %s", err)
 	}

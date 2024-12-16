@@ -7,7 +7,6 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
-	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/guest"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
@@ -16,14 +15,23 @@ import (
 )
 
 type QGAChecker struct {
-	Client   *openstack.Openstack
-	ServerId string
-	Host     string
+	Client              *openstack.Openstack
+	ServerId            string
+	Host                string
+	GuestConnectTimeout int
+	QgaConnectTimeout   int
+}
+
+func (c *QGAChecker) SetGuestConnectTimeout(timeout int) {
+	c.GuestConnectTimeout = timeout
+}
+func (c *QGAChecker) SetQgaConnectTimeout(timeout int) {
+	c.QgaConnectTimeout = timeout
 }
 
 func (c QGAChecker) makesureQGAConnected(g *guest.Guest) error {
 	logging.Info("[%s] connecting to qga ...", c.ServerId)
-	if err := g.ConnectToQGA(common.TASK_CONF.Default.QGAChecker.QgaConnectTimeout); err != nil {
+	if err := g.ConnectToQGA(c.QgaConnectTimeout); err != nil {
 		return err
 	}
 	logging.Info("[%s] qga connected", g.Domain)
@@ -55,7 +63,7 @@ func (c QGAChecker) MakesureServerRunning() error {
 				break
 			}
 		}
-		if time.Since(startTime) >= time.Second*time.Duration(common.TASK_CONF.Default.QGAChecker.GuestConnectTimeout) {
+		if time.Since(startTime) >= time.Second*time.Duration(c.GuestConnectTimeout) {
 			return fmt.Errorf("connect guest timeout")
 		}
 		time.Sleep(time.Second * 5)

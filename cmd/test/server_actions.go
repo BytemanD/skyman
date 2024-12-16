@@ -35,23 +35,6 @@ import (
 
 var cliActions *server_actions.ActionCountList
 
-func actionCaseConfig(config common.CaseConfig, def common.CaseConfig) common.CaseConfig {
-	caseConfig := config
-	if len(config.Flavors) == 0 {
-		caseConfig.Flavors = def.Flavors
-	}
-	if len(config.Images) == 0 {
-		caseConfig.Images = def.Images
-	}
-	if config.Workers <= 0 {
-		caseConfig.Workers = max(def.Workers, 1)
-	}
-	if config.ActionInterval <= 0 {
-		caseConfig.ActionInterval = max(def.ActionInterval, 0)
-	}
-	return caseConfig
-}
-
 var TestServerAction = &cobra.Command{
 	Use:   "server-actions <TASK FILE> [server]",
 	Short: "Test server actions",
@@ -94,7 +77,7 @@ var TestServerAction = &cobra.Command{
 				Actions:    *cliActions,
 				UseServers: userServers,
 				Client:     client,
-				Config: actionCaseConfig(common.CaseConfig{
+				Config: common.NewActionCaseConfig(common.CaseConfig{
 					Workers:        worker,
 					ActionInterval: actionInterval,
 				}, common.TASK_CONF.Default),
@@ -107,11 +90,11 @@ var TestServerAction = &cobra.Command{
 					logging.Fatal("parse actions failed: %s", actionCase.Actions)
 				}
 				testCase := server_actions.Case{
+					Name:    actionCase.Name,
 					Actions: *acl,
 					Client:  client,
-					Config:  actionCaseConfig(actionCase.Config, common.TASK_CONF.Default),
+					Config:  common.NewActionCaseConfig(actionCase.Config, common.TASK_CONF.Default),
 				}
-
 				testCases = append(testCases, testCase)
 			}
 		}

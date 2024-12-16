@@ -1,32 +1,29 @@
-total: 1
-workers: 1
+default:
+  workers: 1
 
-actionTasks:
-  - stop, revert_system, reboot
+  deleteIfError: true
+  # availabilityZone: <AZ>:<HOST>
+  bootFromVolume: true
+  bootVolumeSize: 50
+  bootVolumeType: ebs_ceph_ssd_sys
 
-deleteIfError: true
-# availabilityZone: <AZ>:<HOST>
-bootFromVolume: true
-bootVolumeSize: 50
-bootVolumeType: ebs_ceph_ssd_sys
+  volumeType: ebs_ceph_ssd_sys
+  volumeSize: 10
 
-volumeType: ebs_ceph_ssd_sys
-volumeSize: 10
+  flavors:
+    - <FLAVOR ID>
+    - <FLAVOR ID>
+  images:
+    - <IMAGE UUID>
+  networks:
+    - <NETWORK UUID>
+  attachInterfaceLoop:
+    nums: 1
+  attachVolumeLoop:
+    nums: 1
+  qgaChecker:
+    # enabled: False
 
 cases:
   - actions: stop,start,hard_reboot
   - actions: interface_attach,interface_detach
-
-flavors:
-  - <FLAVOR ID>
-  - <FLAVOR ID>
-images:
-  - <IMAGE UUID>
-networks:
-  - <NETWORK UUID>
-attachInterfaceLoop:
-  nums: 1
-attachVolumeLoop:
-  nums: 1
-qgaChecker:
-  # enabled: False

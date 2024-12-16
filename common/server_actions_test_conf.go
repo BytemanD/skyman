@@ -1,8 +1,12 @@
 package common
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -33,37 +37,42 @@ type LiveMigrateOptions struct {
 	MaxLoss      int     `yaml:"maxLoss"`
 }
 
+type RevertSystemConf struct {
+	RepeatEveryTime int `yaml:"repeatEveryTime"`
+}
 type CaseConfig struct {
 	Flavors        []string `yaml:"flavors"`
 	Images         []string `yaml:"images"`
 	Workers        int      `yaml:"workers"`
 	ActionInterval int      `yaml:"actionInterval"`
 
-	Web              Web    `yaml:"web"`
 	DeleteIfError    bool   `yaml:"deleteIfError"`
 	DeleteIfSuccess  bool   `yaml:"deleteIfSuccess"`
 	AvailabilityZone string `yaml:"availabilityZone"`
 	BootFromVolume   bool   `yaml:"bootFromVolume"`
 	BootVolumeSize   uint16 `yaml:"bootVolumeSize"`
 	BootVolumeType   string `yaml:"bootVolumeType"`
-	BootWithSG       string `yaml:"bootWithSG"`
 
+	BootWithSG string   `yaml:"bootWithSG"`
 	Networks   []string `yaml:"networks"`
-	VolumeType string   `yaml:"volumeType"`
-	VolumeSize int      `yaml:"volumeSize"`
+
+	VolumeType string `yaml:"volumeType"`
+	VolumeSize int    `yaml:"volumeSize"`
 
 	InterfaceHotplug InterfaceHotplug   `yaml:"interfaceHotplug"`
 	VolumeHotplug    VolumeHotplug      `yaml:"volumeHotplug"`
 	QGAChecker       QGAChecker         `yaml:"qgaChecker"`
 	LiveMigrate      LiveMigrateOptions `yaml:"liveMigrate"`
-	RevertTimes      int                `yaml:"revertTimes"`
+	RevertSystem     RevertSystemConf   `yaml:"revertSystem"`
 }
 type Case struct {
+	Name    string     `yaml:"name"`
 	Actions string     `yaml:"actions"`
 	Config  CaseConfig `yaml:"config"`
 }
 
 type ServerActionsTestConf struct {
+	Web     Web        `yaml:"web"`
 	Default CaseConfig `yaml:"default"`
 	Cases   []Case     `yaml:"cases"`
 }
@@ -74,21 +83,8 @@ var (
 
 func DefaultServerActionsTtestConf() ServerActionsTestConf {
 	return ServerActionsTestConf{
-		Default: CaseConfig{
-			Workers:          1,
-			BootVolumeSize:   50,
-			VolumeSize:       10,
-			Web:              Web{Port: 80},
-			InterfaceHotplug: InterfaceHotplug{Nums: 1},
-			VolumeHotplug:    VolumeHotplug{Nums: 1},
-			QGAChecker: QGAChecker{
-				GuestConnectTimeout: DEFAULT_GUEST_CONNECT_TIMEOUT,
-				QgaConnectTimeout:   DEFAULT_QGA_CONNECT_TIMEOUT,
-			},
-			LiveMigrate: LiveMigrateOptions{
-				PingInterval: DEFAULT_PING_INTERVAL,
-			},
-		},
+		Web:     Web{Port: 80},
+		Default: CaseConfig{},
 	}
 }
 
@@ -105,5 +101,65 @@ func LoadTaskConfig(taskFile string) error {
 	TASK_CONF = DefaultServerActionsTtestConf()
 	viper.Unmarshal(&TASK_CONF)
 
+	bytes, err := os.ReadFile(taskFile)
+	if err != nil {
+		return fmt.Errorf("read file %s failed: %s", taskFile, err)
+	}
+	testConf := ServerActionsTestConf{
+		Web:     Web{Port: 80},
+		Default: CaseConfig{},
+	}
+	if err = yaml.Unmarshal(bytes, &testConf); err != nil {
+		return fmt.Errorf("unmarshal test conf failed: %s", err)
+	}
+	TASK_CONF = testConf
 	return nil
+}
+
+func NewActionCaseConfig(config CaseConfig, def CaseConfig) CaseConfig {
+	caseConfig := CaseConfig{
+		Workers:         OneOfNumber(config.Workers, def.Workers, 1),
+		ActionInterval:  OneOfNumber(config.Workers, def.Workers),
+		DeleteIfError:   OneOfBoolean(config.DeleteIfError, def.DeleteIfError),
+		DeleteIfSuccess: OneOfBoolean(config.DeleteIfSuccess, def.DeleteIfSuccess),
+
+		Flavors:          OneOfStringArrays(config.Flavors, def.Flavors),
+		Images:           OneOfStringArrays(config.Images, def.Images),
+		AvailabilityZone: OneOfString(config.AvailabilityZone, def.AvailabilityZone),
+
+		BootFromVolume: OneOfBoolean(config.BootFromVolume, def.BootFromVolume),
+		BootVolumeSize: OneOfNumber(config.BootVolumeSize, def.BootVolumeSize, 50),
+		BootVolumeType: OneOfString(config.BootVolumeType, def.BootVolumeType),
+
+		BootWithSG: OneOfString(config.BootWithSG, def.BootWithSG),
+		Networks:   OneOfStringArrays(config.Networks, def.Networks),
+
+		VolumeType: OneOfString(config.VolumeType, def.VolumeType),
+		VolumeSize: OneOfNumber(config.VolumeSize, def.VolumeSize, 10),
+
+		InterfaceHotplug: InterfaceHotplug{
+			Nums: OneOfNumber(config.InterfaceHotplug.Nums, def.InterfaceHotplug.Nums, 1),
+		},
+		VolumeHotplug: VolumeHotplug{
+			Nums: OneOfNumber(config.VolumeHotplug.Nums, def.VolumeHotplug.Nums, 1),
+		},
+		QGAChecker: QGAChecker{
+			Enabled: OneOfBoolean(config.QGAChecker.Enabled, def.QGAChecker.Enabled),
+			GuestConnectTimeout: OneOfNumber(config.QGAChecker.GuestConnectTimeout, def.QGAChecker.GuestConnectTimeout,
+				DEFAULT_GUEST_CONNECT_TIMEOUT),
+			QgaConnectTimeout: OneOfNumber(config.QGAChecker.QgaConnectTimeout, def.QGAChecker.QgaConnectTimeout,
+				DEFAULT_QGA_CONNECT_TIMEOUT),
+		},
+		LiveMigrate: LiveMigrateOptions{
+			PingEnabled: OneOfBoolean(config.LiveMigrate.PingEnabled, def.LiveMigrate.PingEnabled),
+			PingInterval: OneOfNumber(config.LiveMigrate.PingInterval, def.LiveMigrate.PingInterval,
+				DEFAULT_PING_INTERVAL),
+			MaxLoss: OneOfNumber(config.LiveMigrate.MaxLoss, def.LiveMigrate.MaxLoss),
+		},
+		RevertSystem: RevertSystemConf{
+			RepeatEveryTime: OneOfNumber(config.RevertSystem.RepeatEveryTime, def.RevertSystem.RepeatEveryTime, 1),
+		},
+	}
+
+	return caseConfig
 }

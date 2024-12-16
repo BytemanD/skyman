@@ -52,11 +52,17 @@ type ServerAction interface {
 	Skip() (bool, string)
 	TearDown() error
 	ServerId() string
+	SetConfig(c common.CaseConfig)
 }
 type ServerActionTest struct {
 	Server       *nova.Server
 	Client       *openstack.Openstack
 	networkIndex int
+	Config       common.CaseConfig
+}
+
+func (t *ServerActionTest) SetConfig(c common.CaseConfig) {
+	t.Config = c
 }
 
 func (t ServerActionTest) ServerId() string {
@@ -101,14 +107,14 @@ func (t *ServerActionTest) WaitServerTaskFinished(showProgress bool) error {
 	}
 }
 func (t *ServerActionTest) nextNetwork() (string, error) {
-	if len(common.TASK_CONF.Default.Networks) == 0 {
+	if len(t.Config.Networks) == 0 {
 		return "", fmt.Errorf("the num of networks == 0")
 	}
-	if t.networkIndex >= len(common.TASK_CONF.Default.Networks)-1 {
+	if t.networkIndex >= len(t.Config.Networks)-1 {
 		t.networkIndex = 0
 	}
 	defer func() { t.networkIndex += 1 }()
-	return common.TASK_CONF.Default.Networks[t.networkIndex], nil
+	return t.Config.Networks[t.networkIndex], nil
 }
 func (t *ServerActionTest) lastVolume() (*nova.VolumeAttachment, error) {
 	volumes, err := t.Client.NovaV2().Server().ListVolumes(t.Server.Id)
@@ -155,10 +161,10 @@ func (t ServerActionTest) ServerMustNotError() error {
 
 func (t ServerActionTest) CreateBlankVolume() (*cinder.Volume, error) {
 	options := map[string]interface{}{
-		"size": common.TASK_CONF.Default.VolumeSize,
+		"size": t.Config.VolumeSize,
 	}
-	if common.TASK_CONF.Default.VolumeType != "" {
-		options["volume_type"] = common.TASK_CONF.Default.VolumeType
+	if t.Config.VolumeType != "" {
+		options["volume_type"] = t.Config.VolumeType
 	}
 	volume, err := t.Client.CinderV2().Volume().Create(options)
 	if err != nil {
@@ -182,11 +188,7 @@ func (t ServerActionTest) CreateBlankVolume() (*cinder.Volume, error) {
 }
 
 func (t ServerActionTest) getCheckers() (checkers.ServerCheckers, error) {
-	serverCheckers, err := checkers.GetServerCheckers(t.Client, t.Server)
-	if err != nil {
-		return nil, fmt.Errorf("get server checker failed: %s", err)
-	}
-	return serverCheckers, nil
+	return checkers.GetServerCheckers(t.Client, t.Server, t.Config.QGAChecker)
 }
 func (t ServerActionTest) MakesureServerRunning() error {
 	if serverCheckers, err := t.getCheckers(); err == nil {
@@ -199,35 +201,35 @@ func (t ServerActionTest) getServerBootOption(name string) nova.ServerOpt {
 	opt := nova.ServerOpt{
 		Name:             name,
 		Flavor:           TEST_FLAVORS[0].Id,
-		Image:            common.TASK_CONF.Default.Images[0],
-		AvailabilityZone: common.TASK_CONF.Default.AvailabilityZone,
+		Image:            t.Config.Images[0],
+		AvailabilityZone: t.Config.AvailabilityZone,
 	}
-	if len(common.TASK_CONF.Default.Networks) >= 1 {
+	if len(t.Config.Networks) >= 1 {
 		opt.Networks = []nova.ServerOptNetwork{
-			{UUID: common.TASK_CONF.Default.Networks[0]},
+			{UUID: t.Config.Networks[0]},
 		}
 	} else {
 		logging.Warning("boot without network")
 	}
-	if common.TASK_CONF.Default.BootWithSG != "" {
+	if t.Config.BootWithSG != "" {
 		opt.SecurityGroups = append(opt.SecurityGroups,
 			neutron.SecurityGroup{
-				Resource: model.Resource{Name: common.TASK_CONF.Default.BootWithSG},
+				Resource: model.Resource{Name: t.Config.BootWithSG},
 			})
 	}
-	if common.TASK_CONF.Default.BootFromVolume {
+	if t.Config.BootFromVolume {
 		opt.BlockDeviceMappingV2 = []nova.BlockDeviceMappingV2{
 			{
-				UUID:               common.TASK_CONF.Default.Images[0],
-				VolumeSize:         common.TASK_CONF.Default.BootVolumeSize,
+				UUID:               t.Config.Images[0],
+				VolumeSize:         t.Config.BootVolumeSize,
 				SourceType:         "image",
 				DestinationType:    "volume",
-				VolumeType:         common.TASK_CONF.Default.BootVolumeType,
+				VolumeType:         t.Config.BootVolumeType,
 				DeleteOnTemination: true,
 			},
 		}
 	} else {
-		opt.Image = common.TASK_CONF.Default.Images[0]
+		opt.Image = t.Config.Images[0]
 	}
 	return opt
 }

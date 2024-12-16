@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/guest"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
@@ -76,13 +75,13 @@ func (t *ServerLiveMigrate) getClientGuest() (*guest.Guest, error) {
 			return nil, fmt.Errorf("connect guest %s faield: %s", t.clientGuest, err)
 		}
 		logging.Info("[%s] connecting to qga ...", t.clientGuest.Domain)
-		t.clientGuest.ConnectToQGA(common.TASK_CONF.Default.QGAChecker.QgaConnectTimeout)
+		t.clientGuest.ConnectToQGA(t.Config.QGAChecker.QgaConnectTimeout)
 	}
 	return t.clientGuest, nil
 }
 func (t *ServerLiveMigrate) startPing(targetIp string) error {
-	if !common.TASK_CONF.Default.QGAChecker.Enabled ||
-		!common.TASK_CONF.Default.LiveMigrate.PingEnabled {
+	if !t.Config.QGAChecker.Enabled ||
+		!t.Config.LiveMigrate.PingEnabled {
 		return nil
 	}
 	clientGuest, err := t.getClientGuest()
@@ -107,7 +106,7 @@ func (t *ServerLiveMigrate) startPing(targetIp string) error {
 		return err
 	}
 	logging.Info("[%s] client ping -> %s", t.ServerId(), targetIp)
-	result := clientGuest.Ping(targetIp, common.TASK_CONF.Default.LiveMigrate.PingInterval, 0, ipaddrs[0], false)
+	result := clientGuest.Ping(targetIp, t.Config.LiveMigrate.PingInterval, 0, ipaddrs[0], false)
 	if result.ErrData != "" {
 		return fmt.Errorf("run ping to %s failed: %s", targetIp, result.ErrData)
 	}
@@ -116,8 +115,8 @@ func (t *ServerLiveMigrate) startPing(targetIp string) error {
 	return nil
 }
 func (t *ServerLiveMigrate) stopPing() error {
-	if !common.TASK_CONF.Default.QGAChecker.Enabled ||
-		!common.TASK_CONF.Default.LiveMigrate.PingEnabled {
+	if !t.Config.QGAChecker.Enabled ||
+		!t.Config.LiveMigrate.PingEnabled {
 		return nil
 	}
 	if t.clientPingPid == 0 {
@@ -202,7 +201,7 @@ func (t ServerLiveMigrate) confirmServerHasIpAddress() error {
 	logging.Info("[%s] connecting to guest ...", t.ServerId())
 	serverGuest.Connect()
 	logging.Info("[%s] connecting to qga ...", t.ServerId())
-	serverGuest.ConnectToQGA(common.TASK_CONF.Default.QGAChecker.QgaConnectTimeout)
+	serverGuest.ConnectToQGA(t.Config.QGAChecker.QgaConnectTimeout)
 	err = utility.RetryWithErrors(
 		utility.RetryCondition{Timeout: time.Second * 60, IntervalMin: time.Second * 2},
 		[]string{"GuestNoIpaddressError"},
@@ -226,9 +225,9 @@ func (t ServerLiveMigrate) Skip() (bool, string) {
 	return false, ""
 }
 func (t *ServerLiveMigrate) Start() error {
-	if common.TASK_CONF.Default.QGAChecker.Enabled && common.TASK_CONF.Default.LiveMigrate.PingEnabled {
+	if t.Config.QGAChecker.Enabled && t.Config.LiveMigrate.PingEnabled {
 		t.enablePing = true
-	} else if common.TASK_CONF.Default.LiveMigrate.PingEnabled {
+	} else if t.Config.LiveMigrate.PingEnabled {
 		logging.Warning("[%s] disable ping check because qga checker is disabled", t.ServerId())
 	}
 	if t.enablePing {
@@ -316,7 +315,7 @@ func (t *ServerLiveMigrate) confirmPingResult() error {
 		logging.Info("[%s] ping result: %s", t.ServerId(), matchedResult[0])
 		transmitted, _ := strconv.Atoi(matchedResult[1])
 		received, _ := strconv.Atoi(matchedResult[2])
-		if transmitted-received > common.TASK_CONF.Default.LiveMigrate.MaxLoss {
+		if transmitted-received > t.Config.LiveMigrate.MaxLoss {
 			return fmt.Errorf("ping loss %d package(s)", transmitted-received)
 		}
 	}
