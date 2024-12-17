@@ -584,6 +584,22 @@ func (c serverApi) RegionLiveMigrate(id string, destRegion string, blockMigrate 
 	json.Unmarshal(resp.Body(), &respBody)
 	return respBody, nil
 }
+func (c serverApi) CreateImage(id string, imagName string, metadata map[string]string) (string, error) {
+	data := map[string]interface{}{
+		"name": imagName,
+	}
+	if len(metadata) > 0 {
+		data["metadata"] = metadata
+	}
+	resp, err := c.doAction("createImage", id, data)
+	if err != nil {
+		return "", err
+	}
+	respBody := struct {
+		ImageId string `json:"image_id"`
+	}{}
+	return respBody.ImageId, json.Unmarshal(resp.Body(), &respBody)
+}
 func (c serverApi) WaitStatus(serverId string, status string, interval int) (*nova.Server, error) {
 	var (
 		server *nova.Server

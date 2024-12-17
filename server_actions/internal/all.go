@@ -345,6 +345,9 @@ func (a Actions) register(name string, creator ActionCreatorFunc) {
 var VALID_ACTIONS = Actions{}
 
 func init() {
+	VALID_ACTIONS[ACTION_REBOOT] = func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return &ServerReboot{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	}
 	VALID_ACTIONS.register(ACTION_REBOOT, func(s *nova.Server, c *openstack.Openstack) ServerAction {
 		return &ServerReboot{ServerActionTest: ServerActionTest{Server: s, Client: c}}
 	})

@@ -62,6 +62,7 @@ var (
 	evacuateFlags            flags.ServerEvacuateFlags
 	regionMigrateFlags       flags.ServerRegionMigrateFlags
 	serverMigrationListFlags flags.ServerMigrationListFlags
+	createImageFlags         flags.ServerCreateImageFlags
 )
 
 var serverList = &cobra.Command{
@@ -897,6 +898,39 @@ var serverMigrationList = &cobra.Command{
 		}
 	},
 }
+var serverImageCmd = &cobra.Command{Use: "image"}
+var createImageCmd = &cobra.Command{
+	Use:   "create <server> <image name>",
+	Short: "Create a new image by taking of a running server.",
+	Example: "server image create SERVER image-for-server\n" +
+		"server image create SERVER image-for-server --metadata image_type=instance_image",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.ExactArgs(2)(cmd, args); err != nil {
+			return err
+		}
+		for _, metadata := range *createImageFlags.Metadata {
+			if !strings.Contains(metadata, "=") {
+				return fmt.Errorf("invalid metadata %s, must be key=value", metadata)
+			}
+		}
+		return nil
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		idOrName, imageName := args[0], args[1]
+		client := openstack.DefaultClient()
+
+		server, err := client.NovaV2().Server().Found(idOrName)
+		utility.LogError(err, "get server failed", true)
+		metadata := map[string]string{}
+		for _, meta := range *createImageFlags.Metadata {
+			values := strings.Split(meta, "=")
+			metadata[values[0]] = values[1]
+		}
+		imageId, err := client.NovaV2().Server().CreateImage(server.Id, imageName, metadata)
+		utility.LogError(err, "create image failed", true)
+		logging.Info("requested to create image success, image id: %s", imageId)
+	},
+}
 
 func init() {
 	listFlags = flags.ServerListFlags{
@@ -994,6 +1028,11 @@ func init() {
 		Password: serverRebuild.Flags().String("rebuild-password", "", " Set the provided admin password on the rebuilt server."),
 		Name:     serverRebuild.Flags().String("name", "", "Name for the new server."),
 	}
+	createImageFlags = flags.ServerCreateImageFlags{
+		Metadata: createImageCmd.Flags().StringArray("metadata", []string{}, "Image metadata, format: key=value"),
+	}
+
+	serverImageCmd.AddCommand(createImageCmd)
 
 	Server.AddCommand(
 		serverList, serverShow, serverCreate, serverDelete,
@@ -1003,5 +1042,6 @@ func init() {
 		serverEvacuate, serverMigrate,
 		serverMigration,
 		serverRegion,
+		serverImageCmd,
 	)
 }

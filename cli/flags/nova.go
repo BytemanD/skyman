@@ -166,3 +166,6 @@ type MigrationListFlags struct {
 type GroupListFlags struct {
 	Long *bool
 }
+type ServerCreateImageFlags struct {
+	Metadata *[]string
+}
