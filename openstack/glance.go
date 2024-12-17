@@ -24,6 +24,9 @@ type ImageApi struct {
 }
 
 func (o *Openstack) GlanceV2() *Glance {
+	o.servieLock.Lock()
+	defer o.servieLock.Unlock()
+
 	if o.glanceClient == nil {
 		endpoint, err := o.AuthPlugin.GetServiceEndpoint("image", "glance", "public")
 		if err != nil {

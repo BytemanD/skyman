@@ -132,6 +132,8 @@ func PrintCaseReports(caseReports []CaseReport) {
 			emojis = append(emojis, workerReport.GetResultEmoji())
 			if workerReport.Error != nil {
 				details = append(details, workerReport.Error.Error())
+			} else {
+				details = append(details, "")
 			}
 		}
 		item := ReportItem{

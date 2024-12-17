@@ -32,6 +32,9 @@ func (o *Openstack) getEndpoint() (string, error) {
 }
 
 func (o *Openstack) NeutronV2() *NeutronV2 {
+	o.servieLock.Lock()
+	defer o.servieLock.Unlock()
+
 	if o.neutronClient == nil {
 		endpoint, err := o.getEndpoint()
 		if err != nil {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/BytemanD/skyman/utility/httpclient"
@@ -39,6 +40,11 @@ type PasswordAuthPlugin struct {
 	RegionName             string
 	LocalTokenExpireSecond int
 	tokenCache             TokenCache
+	tokenLock              *sync.Mutex
+}
+
+func (plugin PasswordAuthPlugin) Session() *httpclient.RESTClient {
+	return plugin.session
 }
 
 func (plugin PasswordAuthPlugin) Region() string {
@@ -53,20 +59,20 @@ func (plugin *PasswordAuthPlugin) SetLocalTokenExpire(expireSeconds int) {
 	plugin.LocalTokenExpireSecond = expireSeconds
 }
 
-func (plugin PasswordAuthPlugin) GetToken() (*Token, error) {
+func (plugin *PasswordAuthPlugin) GetToken() (*Token, error) {
+	plugin.tokenLock.Lock()
 	if plugin.tokenCache.IsTokenExpired() {
 		if err := plugin.TokenIssue(); err != nil {
 			return nil, err
 		}
 	}
+	plugin.tokenLock.Unlock()
 	return &plugin.tokenCache.token, nil
 }
 
 func (plugin *PasswordAuthPlugin) GetTokenId() (string, error) {
-	if plugin.tokenCache.IsTokenExpired() {
-		if err := plugin.TokenIssue(); err != nil {
-			return "", err
-		}
+	if _, err := plugin.GetToken(); err != nil {
+		return "", err
 	}
 	return plugin.tokenCache.TokenId, nil
 }
@@ -120,9 +126,17 @@ func (plugin *PasswordAuthPlugin) GetServiceEndpoint(
 		serviceType, serviceName, serviceInterface,
 		plugin.RegionName)
 }
-func (plugin PasswordAuthPlugin) SetHttpTimeout(timeout int) *PasswordAuthPlugin {
+func (plugin *PasswordAuthPlugin) SetHttpTimeout(timeout int) *PasswordAuthPlugin {
 	plugin.session.Timeout = time.Second * time.Duration(timeout)
-	return &plugin
+	return plugin
+}
+func (plugin *PasswordAuthPlugin) SetRetryWaitTime(waitTime int) *PasswordAuthPlugin {
+	plugin.session.RetryWaitTime = time.Second * time.Duration(waitTime)
+	return plugin
+}
+func (plugin *PasswordAuthPlugin) SetRetryCount(count int) *PasswordAuthPlugin {
+	plugin.session.RetryCount = count
+	return plugin
 }
 
 func (plugin PasswordAuthPlugin) AuthRequest(req *resty.Request) error {
@@ -169,5 +183,6 @@ func NewPasswordAuth(authUrl string, user User, project Project, regionName stri
 		ProjectName:       project.Name,
 		ProjectDomainName: project.Domain.Name,
 		RegionName:        regionName,
+		tokenLock:         &sync.Mutex{},
 	}
 }

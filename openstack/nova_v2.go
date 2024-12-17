@@ -56,6 +56,9 @@ type NovaV2 struct {
 }
 
 func (o *Openstack) NovaV2() *NovaV2 {
+	o.servieLock.Lock()
+	defer o.servieLock.Unlock()
+
 	if o.novaClient == nil {
 		endpoint, err := o.AuthPlugin.GetServiceEndpoint("compute", "nova", "public")
 		if err != nil {

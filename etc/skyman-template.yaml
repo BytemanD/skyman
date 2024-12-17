@@ -5,8 +5,12 @@ debug: false
 # 输出格式，可选值: table, table-light, json, yaml
 format: table
 language: en_US
+# http 重试
 httpTimeout: 3
 enableLogColor: false
+
+retryWaitTimeSecond: 1
+retryCount: 5
 
 # 认证信息
 auth:

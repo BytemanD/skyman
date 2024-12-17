@@ -10,7 +10,9 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/auth"
 	"github.com/BytemanD/skyman/openstack/model"
@@ -36,6 +38,9 @@ func (rest *RestClient2) mustHasBaseUrl() error {
 	return nil
 }
 func (rest *RestClient2) AddBaseHeader(key, value string) {
+	if rest.session == nil && rest.session.BaseHeaders == nil {
+		return
+	}
 	rest.session.BaseHeaders[key] = value
 }
 func (rest *RestClient2) Index() (*resty.Response, error) {
@@ -94,10 +99,11 @@ func (rest *RestClient2) GetResponseRequstId(resp *resty.Response) string {
 }
 
 func NewRestClient2(baseUrl string, authPlugin httpclient.AuthPluginInterface) RestClient2 {
-	return RestClient2{
+	client := RestClient2{
 		BaseUrl: baseUrl,
 		session: httpclient.New().SetAuthPlugin(authPlugin),
 	}
+	return client
 }
 
 type Openstack struct {
@@ -108,6 +114,7 @@ type Openstack struct {
 	novaClient        *NovaV2
 	AuthPlugin        auth.AuthPlugin
 	ComputeApiVersion string
+	servieLock        *sync.Mutex
 }
 
 func (o Openstack) Region() string {
@@ -120,8 +127,14 @@ func (o Openstack) ProjectId() (string, error) {
 func NewClient(authUrl string, user auth.User, project auth.Project, regionName string) *Openstack {
 	authUrl = utility.VersionUrl(authUrl, fmt.Sprintf("v%s", common.CONF.Identity.Api.Version))
 	passwordAuth := auth.NewPasswordAuth(authUrl, user, project, regionName)
-	passwordAuth.SetHttpTimeout(common.CONF.HttpTimeout)
-	return &Openstack{AuthPlugin: passwordAuth}
+	logging.Debug("new opensack client, HttpTimeoutSecond=%d RetryWaitTimeSecond=%d RetryCount=%d",
+		common.CONF.HttpTimeoutSecond, common.CONF.RetryWaitTimeSecond, common.CONF.RetryCount,
+	)
+	passwordAuth.SetHttpTimeout(common.CONF.HttpTimeoutSecond)
+	passwordAuth.SetRetryWaitTime(common.CONF.RetryWaitTimeSecond)
+	passwordAuth.SetRetryCount(common.CONF.RetryCount)
+
+	return &Openstack{AuthPlugin: passwordAuth, servieLock: &sync.Mutex{}}
 }
 
 func ClientWithRegion(region string) *Openstack {

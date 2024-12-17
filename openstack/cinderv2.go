@@ -34,6 +34,9 @@ func InvalidMIgrationPoicy(policy string) error {
 }
 
 func (o *Openstack) CinderV2() *CinderV2 {
+	o.servieLock.Lock()
+	defer o.servieLock.Unlock()
+
 	if o.cinderClient == nil {
 		var (
 			endpoint string
@@ -41,7 +44,7 @@ func (o *Openstack) CinderV2() *CinderV2 {
 		)
 		endpoint, err = o.AuthPlugin.GetServiceEndpoint("volumev2", "cinderv2", "public")
 		if err != nil {
-			logging.Warning("get endpoint falied: %v", err)
+			logging.Fatal("get cinder endpoint falied: %v", err)
 		}
 		o.cinderClient = &CinderV2{
 			NewRestClient2(utility.VersionUrl(endpoint, V2), o.AuthPlugin),

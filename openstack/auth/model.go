@@ -89,7 +89,7 @@ func (tc *TokenCache) IsTokenExpired() bool {
 		return true
 	}
 	if tc.expiredAt.Before(time.Now()) {
-		logging.Debug("token is exipred")
+		logging.Warning("token exipred, expired at: %s , now: %s", tc.expiredAt, time.Now())
 		return true
 	}
 	return false
@@ -104,6 +104,13 @@ func (tc *TokenCache) GetServiceEndpoints(serviceType string, serviceName string
 		return catalog.Endpoints
 	}
 	return endpoints
+}
+func NewTokenCache(token Token, tokenId string, expiredAt time.Time) TokenCache {
+	return TokenCache{
+		token:     token,
+		TokenId:   tokenId,
+		expiredAt: time.Now().Add(time.Second * 3600),
+	}
 }
 
 type Auth struct {

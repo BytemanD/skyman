@@ -16,6 +16,9 @@ type roleAssignmentApi struct {
 }
 
 func (o *Openstack) KeystoneV3() *KeystoneV3 {
+	o.servieLock.Lock()
+	defer o.servieLock.Unlock()
+
 	if o.keystoneClient == nil {
 		endpoint, err := o.AuthPlugin.GetServiceEndpoint("identity", "keystone", "public")
 		if err != nil {
