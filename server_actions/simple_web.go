@@ -54,8 +54,8 @@ func TasksHandler(respWriter http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func RunSimpleWebServer() error {
-	port := common.TASK_CONF.Web.Port
+func RunSimpleWebServer(webCnof common.Web) error {
+	port := webCnof.Port
 	//设置访问的路由
 	http.HandleFunc("/", IndexHandler)
 	http.HandleFunc("/tasks", TasksHandler)

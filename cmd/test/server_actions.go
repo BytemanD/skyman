@@ -10,6 +10,7 @@ import (
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/server_actions"
+	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -71,6 +72,7 @@ var TestServerAction = &cobra.Command{
 		testCases := []server_actions.Case{}
 		// 初始化用例
 		client := openstack.DefaultClient()
+		logging.Info("test on region: %s", utility.OneOfString(client.AuthPlugin.Region(), "RegionOne"))
 		if cliActions != nil {
 			worker, _ := cmd.Flags().GetInt("worker")
 			actionInterval, _ := cmd.Flags().GetInt("action-interval")
@@ -81,14 +83,14 @@ var TestServerAction = &cobra.Command{
 				Config: common.NewActionCaseConfig(common.CaseConfig{
 					Workers:        worker,
 					ActionInterval: actionInterval,
-				}, common.TASK_CONF.Default),
+				}, testConf.Default),
 			}
 			testCases = append(testCases, testCase)
 		} else {
 			logging.Info("Found %d case(s)", len(testConf.Cases))
 			for _, actionCase := range testConf.Cases {
 				if actionCase.Skip {
-					logging.Warning("skip case '%s'", common.OneOfString(actionCase.Name, actionCase.Actions))
+					logging.Warning("skip case '%s'", utility.OneOfString(actionCase.Name, actionCase.Actions))
 					continue
 				}
 				acl, err := server_actions.NewActionCountList(actionCase.Actions)
@@ -110,7 +112,7 @@ var TestServerAction = &cobra.Command{
 		// preTest(client)
 
 		if web {
-			go server_actions.RunSimpleWebServer()
+			go server_actions.RunSimpleWebServer(testConf.Web)
 		}
 
 		caseReports := []server_actions.CaseReport{}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/BytemanD/skyman/utility"
 	"gopkg.in/yaml.v3"
 )
 
@@ -76,17 +77,6 @@ type ServerActionsTestConf struct {
 	Cases   []Case     `yaml:"cases"`
 }
 
-var (
-	TASK_CONF ServerActionsTestConf
-)
-
-func DefaultServerActionsTtestConf() ServerActionsTestConf {
-	return ServerActionsTestConf{
-		Web:     Web{Port: 80},
-		Default: CaseConfig{},
-	}
-}
-
 func LoadTaskConfig(taskFile string) (*ServerActionsTestConf, error) {
 	bytes, err := os.ReadFile(taskFile)
 	if err != nil {
@@ -104,46 +94,46 @@ func LoadTaskConfig(taskFile string) (*ServerActionsTestConf, error) {
 
 func NewActionCaseConfig(config CaseConfig, def CaseConfig) CaseConfig {
 	caseConfig := CaseConfig{
-		Workers:         OneOfNumber(config.Workers, def.Workers, 1),
-		ActionInterval:  OneOfNumber(config.ActionInterval, def.ActionInterval),
-		DeleteIfError:   OneOfBoolean(config.DeleteIfError, def.DeleteIfError),
-		DeleteIfSuccess: OneOfBoolean(config.DeleteIfSuccess, def.DeleteIfSuccess),
+		Workers:         utility.OneOfNumber(config.Workers, def.Workers, 1),
+		ActionInterval:  utility.OneOfNumber(config.ActionInterval, def.ActionInterval),
+		DeleteIfError:   utility.OneOfBoolean(config.DeleteIfError, def.DeleteIfError),
+		DeleteIfSuccess: utility.OneOfBoolean(config.DeleteIfSuccess, def.DeleteIfSuccess),
 
-		Flavors:          OneOfStringArrays(config.Flavors, def.Flavors),
-		Images:           OneOfStringArrays(config.Images, def.Images),
-		AvailabilityZone: OneOfString(config.AvailabilityZone, def.AvailabilityZone),
+		Flavors:          utility.OneOfStringArrays(config.Flavors, def.Flavors),
+		Images:           utility.OneOfStringArrays(config.Images, def.Images),
+		AvailabilityZone: utility.OneOfString(config.AvailabilityZone, def.AvailabilityZone),
 
-		BootFromVolume: OneOfBoolean(config.BootFromVolume, def.BootFromVolume),
-		BootVolumeSize: OneOfNumber(config.BootVolumeSize, def.BootVolumeSize, 50),
-		BootVolumeType: OneOfString(config.BootVolumeType, def.BootVolumeType),
+		BootFromVolume: utility.OneOfBoolean(config.BootFromVolume, def.BootFromVolume),
+		BootVolumeSize: utility.OneOfNumber(config.BootVolumeSize, def.BootVolumeSize, 50),
+		BootVolumeType: utility.OneOfString(config.BootVolumeType, def.BootVolumeType),
 
-		BootWithSG: OneOfString(config.BootWithSG, def.BootWithSG),
-		Networks:   OneOfStringArrays(config.Networks, def.Networks),
+		BootWithSG: utility.OneOfString(config.BootWithSG, def.BootWithSG),
+		Networks:   utility.OneOfStringArrays(config.Networks, def.Networks),
 
-		VolumeType: OneOfString(config.VolumeType, def.VolumeType),
-		VolumeSize: OneOfNumber(config.VolumeSize, def.VolumeSize, 10),
+		VolumeType: utility.OneOfString(config.VolumeType, def.VolumeType),
+		VolumeSize: utility.OneOfNumber(config.VolumeSize, def.VolumeSize, 10),
 
 		InterfaceHotplug: InterfaceHotplug{
-			Nums: OneOfNumber(config.InterfaceHotplug.Nums, def.InterfaceHotplug.Nums, 1),
+			Nums: utility.OneOfNumber(config.InterfaceHotplug.Nums, def.InterfaceHotplug.Nums, 1),
 		},
 		VolumeHotplug: VolumeHotplug{
-			Nums: OneOfNumber(config.VolumeHotplug.Nums, def.VolumeHotplug.Nums, 1),
+			Nums: utility.OneOfNumber(config.VolumeHotplug.Nums, def.VolumeHotplug.Nums, 1),
 		},
 		QGAChecker: QGAChecker{
-			Enabled: OneOfBoolean(config.QGAChecker.Enabled, def.QGAChecker.Enabled),
-			GuestConnectTimeout: OneOfNumber(config.QGAChecker.GuestConnectTimeout, def.QGAChecker.GuestConnectTimeout,
+			Enabled: utility.OneOfBoolean(config.QGAChecker.Enabled, def.QGAChecker.Enabled),
+			GuestConnectTimeout: utility.OneOfNumber(config.QGAChecker.GuestConnectTimeout, def.QGAChecker.GuestConnectTimeout,
 				DEFAULT_GUEST_CONNECT_TIMEOUT),
-			QgaConnectTimeout: OneOfNumber(config.QGAChecker.QgaConnectTimeout, def.QGAChecker.QgaConnectTimeout,
+			QgaConnectTimeout: utility.OneOfNumber(config.QGAChecker.QgaConnectTimeout, def.QGAChecker.QgaConnectTimeout,
 				DEFAULT_QGA_CONNECT_TIMEOUT),
 		},
 		LiveMigrate: LiveMigrateOptions{
-			PingEnabled: OneOfBoolean(config.LiveMigrate.PingEnabled, def.LiveMigrate.PingEnabled),
-			PingInterval: OneOfNumber(config.LiveMigrate.PingInterval, def.LiveMigrate.PingInterval,
+			PingEnabled: utility.OneOfBoolean(config.LiveMigrate.PingEnabled, def.LiveMigrate.PingEnabled),
+			PingInterval: utility.OneOfNumber(config.LiveMigrate.PingInterval, def.LiveMigrate.PingInterval,
 				DEFAULT_PING_INTERVAL),
-			MaxLoss: OneOfNumber(config.LiveMigrate.MaxLoss, def.LiveMigrate.MaxLoss),
+			MaxLoss: utility.OneOfNumber(config.LiveMigrate.MaxLoss, def.LiveMigrate.MaxLoss),
 		},
 		RevertSystem: RevertSystemConf{
-			RepeatEveryTime: OneOfNumber(config.RevertSystem.RepeatEveryTime, def.RevertSystem.RepeatEveryTime, 1),
+			RepeatEveryTime: utility.OneOfNumber(config.RevertSystem.RepeatEveryTime, def.RevertSystem.RepeatEveryTime, 1),
 		},
 	}
 

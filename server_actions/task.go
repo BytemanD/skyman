@@ -123,7 +123,7 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 		server *nova.Server
 		err    error
 	)
-	actionsReport.Init(testId, serverId)
+	actionsReport.Init(testId, utility.OneOfString(serverId, "-"))
 
 	logging.Info("start worker, id=%d", testId)
 	if serverId == "" {
@@ -145,7 +145,7 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 			return
 		}
 		if err := t.waitServerCreated(server.Id); err != nil {
-			logging.Error("create server failed, %s", err)
+			logging.Error("[%s] create server failed, %s", server.Id, err)
 			actionsReport.Error = fmt.Errorf("create server failed")
 			return
 		}

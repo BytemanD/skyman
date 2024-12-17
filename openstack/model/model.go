@@ -39,6 +39,12 @@ func (resource Resource) NameOrId() string {
 		return resource.Id
 	}
 }
+func (resource Resource) IsActive() bool {
+	return strings.ToUpper(resource.Status) == "ACTIVE"
+}
+func (resource Resource) IsError() bool {
+	return strings.ToUpper(resource.Status) == "ERROR"
+}
 
 type ApiVersion struct {
 	Id         string `json:"id"`

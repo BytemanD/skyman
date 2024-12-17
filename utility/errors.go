@@ -17,6 +17,7 @@ type PingLossPackage ErrArgs
 type ServerNotStopped ErrArgs
 type SnapshotIsNotAvailable ErrArgs
 type ServerNotBooted ErrArgs
+type ImageNotActive ErrArgs
 
 func (e ActionNotFinishedError) Error() string {
 	return fmt.Sprintf("action %s is not finished", e.Args...)
@@ -39,6 +40,10 @@ func (e ServerNotStopped) Error() string {
 func (e SnapshotIsNotAvailable) Error() string {
 	return fmt.Sprintf("snapshot %s is not available", e.Args...)
 }
+func (e ImageNotActive) Error() string {
+	return fmt.Sprintf("image %s is not active", e.Args...)
+}
+
 func (e ServerNotBooted) Error() string {
 	return fmt.Sprintf("server %s is not booted", e.Args...)
 }
@@ -65,4 +70,7 @@ func NewSnapshotIsNotAvailable(snapshotId string) SnapshotIsNotAvailable {
 }
 func NewServerNotBootedError(serverId string) ServerNotBooted {
 	return ServerNotBooted{Args: []interface{}{serverId}}
+}
+func NewImageNotActiveError(imageId string) ImageNotActive {
+	return ImageNotActive{Args: []interface{}{imageId}}
 }

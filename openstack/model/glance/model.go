@@ -82,12 +82,17 @@ func (img Image) GetProperties() map[string]interface{} {
 	return proerties
 }
 func (img Image) GetPropertyList() []string {
-
 	properties := []string{}
 	for k, v := range img.GetProperties() {
 		properties = append(properties, fmt.Sprintf("%s=%s", k, v))
 	}
 	return properties
+}
+func (img Image) IsActive() bool {
+	return img.Status == "active"
+}
+func (img Image) IsError() bool {
+	return img.Status == "error"
 }
 
 type Images []Image

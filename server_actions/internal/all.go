@@ -43,6 +43,7 @@ var (
 	ACTION_VOLUME_HOTPLUG    = "volume_hotplug"
 	ACTION_VOLUME_EXTEND     = "volume_extend"
 	ACTION_REVERT_SYSTEM     = "revert_system"
+	ACTION_SYSTEM_SNAPSHOT   = "system_snapshot"
 	ACTION_NOP               = "nop"
 )
 
@@ -302,9 +303,6 @@ type EmptyCleanup struct {
 func (t EmptyCleanup) TearDown() error {
 	return nil
 }
-func (t EmptyCleanup) Skip() (bool, string) {
-	return false, ""
-}
 
 type ActionCreatorFunc func(server *nova.Server, client *openstack.Openstack) ServerAction
 
@@ -345,9 +343,6 @@ func (a Actions) register(name string, creator ActionCreatorFunc) {
 var VALID_ACTIONS = Actions{}
 
 func init() {
-	VALID_ACTIONS[ACTION_REBOOT] = func(s *nova.Server, c *openstack.Openstack) ServerAction {
-		return &ServerReboot{ServerActionTest: ServerActionTest{Server: s, Client: c}}
-	}
 	VALID_ACTIONS.register(ACTION_REBOOT, func(s *nova.Server, c *openstack.Openstack) ServerAction {
 		return &ServerReboot{ServerActionTest: ServerActionTest{Server: s, Client: c}}
 	})
@@ -425,6 +420,9 @@ func init() {
 	})
 	VALID_ACTIONS.register(ACTION_REVERT_SYSTEM, func(s *nova.Server, c *openstack.Openstack) ServerAction {
 		return &ServerRevertToSnapshot{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	VALID_ACTIONS.register(ACTION_SYSTEM_SNAPSHOT, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return &ServerSnapshot{ServerActionTest: ServerActionTest{Server: s, Client: c}}
 	})
 	VALID_ACTIONS.register(ACTION_NOP, func(s *nova.Server, c *openstack.Openstack) ServerAction {
 		return &ServerActionNop{ServerActionTest: ServerActionTest{Server: s, Client: c}}
