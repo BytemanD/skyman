@@ -15,6 +15,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/auth"
+	"github.com/BytemanD/skyman/openstack/internal"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/BytemanD/skyman/utility/httpclient"
@@ -44,6 +45,9 @@ func (rest *RestClient2) AddBaseHeader(key, value string) {
 	rest.session.BaseHeaders[key] = value
 }
 func (rest *RestClient2) Index() (*resty.Response, error) {
+	if err := rest.mustHasBaseUrl(); err != nil {
+		return nil, err
+	}
 	parsed, err := url.Parse(rest.BaseUrl)
 	if err != nil {
 		return nil, err
@@ -107,16 +111,30 @@ func NewRestClient2(baseUrl string, authPlugin httpclient.AuthPluginInterface) R
 }
 
 type Openstack struct {
-	keystoneClient    *KeystoneV3
-	glanceClient      *Glance
-	neutronClient     *NeutronV2
-	cinderClient      *CinderV2
-	novaClient        *NovaV2
 	AuthPlugin        auth.AuthPlugin
 	ComputeApiVersion string
-	servieLock        *sync.Mutex
+
+	keystoneClient *KeystoneV3
+	glanceClient   *Glance
+	neutronClient  *NeutronV2
+	cinderClient   *CinderV2
+	novaClient     *NovaV2
+
+	servieLock *sync.Mutex
 }
 
+func (o *Openstack) WithRegion(region string) *Openstack {
+	if region == o.AuthPlugin.Region() {
+		return o
+	}
+	authPlugin := o.AuthPlugin
+	authPlugin.SetRegion(region)
+	return &Openstack{
+		AuthPlugin:        authPlugin,
+		ComputeApiVersion: o.ComputeApiVersion,
+		servieLock:        &sync.Mutex{},
+	}
+}
 func (o Openstack) Region() string {
 	return o.AuthPlugin.Region()
 }
@@ -126,7 +144,8 @@ func (o Openstack) ProjectId() (string, error) {
 
 func NewClient(authUrl string, user auth.User, project auth.Project, regionName string) *Openstack {
 	authUrl = utility.VersionUrl(authUrl, fmt.Sprintf("v%s", common.CONF.Identity.Api.Version))
-	passwordAuth := auth.NewPasswordAuth(authUrl, user, project, regionName)
+	// passwordAuth := auth.NewPasswordAuth(authUrl, user, project, regionName)
+	passwordAuth := internal.NewPasswordAuth(authUrl, user, project, regionName)
 	logging.Debug("new opensack client, HttpTimeoutSecond=%d RetryWaitTimeSecond=%d RetryCount=%d",
 		common.CONF.HttpTimeoutSecond, common.CONF.RetryWaitTimeSecond, common.CONF.RetryCount,
 	)
@@ -186,6 +205,9 @@ func (api ResourceApi) makeUrl() string {
 	return result
 }
 func (api ResourceApi) mustHasBaseUrl() error {
+	if api.Endpoint == "" {
+		return fmt.Errorf("endpoint is required")
+	}
 	if api.BaseUrl == "" {
 		return fmt.Errorf("base url is required")
 	}
@@ -260,6 +282,9 @@ func (api *ResourceApi) Index() (*resty.Response, error) {
 }
 
 func (api ResourceApi) Get(res interface{}) (*resty.Response, error) {
+	if err := api.mustHasBaseUrl(); err != nil {
+		return nil, err
+	}
 	resp, err := api.Client.Get(api.makeUrl(), api.query, api.headers)
 	if err != nil || res == nil {
 		return resp, err
@@ -268,6 +293,9 @@ func (api ResourceApi) Get(res interface{}) (*resty.Response, error) {
 }
 
 func (api ResourceApi) Post(res interface{}) (*resty.Response, error) {
+	if err := api.mustHasBaseUrl(); err != nil {
+		return nil, err
+	}
 	resp, err := api.Client.Post(api.makeUrl(), api.body, api.headers)
 	if err != nil || res == nil {
 		return resp, err
@@ -283,6 +311,9 @@ func (api ResourceApi) Put(res interface{}) (*resty.Response, error) {
 	return resp, json.Unmarshal(resp.Body(), res)
 }
 func (api ResourceApi) Delete(res interface{}) (*resty.Response, error) {
+	if err := api.mustHasBaseUrl(); err != nil {
+		return nil, err
+	}
 	resp, err := api.Client.Delete(api.makeUrl(), api.headers)
 	if err != nil || res == nil {
 		return resp, err
@@ -290,6 +321,9 @@ func (api ResourceApi) Delete(res interface{}) (*resty.Response, error) {
 	return resp, json.Unmarshal(resp.Body(), res)
 }
 func (api ResourceApi) Patch(res interface{}) (*resty.Response, error) {
+	if err := api.mustHasBaseUrl(); err != nil {
+		return nil, err
+	}
 	resp, err := api.Client.Patch(api.makeUrl(), api.body, api.query, api.headers)
 	if err != nil || res == nil {
 		return resp, err

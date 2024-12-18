@@ -152,7 +152,8 @@ func main() {
 				// disable log color if use log file
 				common.CONF.EnableLogColor = false
 			}
-			logging.BasicConfig(logging.LogConfig{Level: logLevel, Output: common.CONF.LogFile, EnableColor: common.CONF.EnableLogColor})
+			logging.BasicConfig(logging.LogConfig{
+				Level: logLevel, Output: common.CONF.LogFile, EnableColor: common.CONF.EnableLogColor})
 			logging.Debug("load config file from %s", viper.ConfigFileUsed())
 			computeApiVersion, _ := cmd.Flags().GetString("compute-api-version")
 			openstack.COMPUTE_API_VERSION = computeApiVersion

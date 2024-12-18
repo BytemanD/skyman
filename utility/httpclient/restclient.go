@@ -15,6 +15,7 @@ import (
 
 const (
 	CONTENT_TYPE        = "Content-Type"
+	CONTENT_LENGTH      = "Content-Length"
 	CONTENT_TYPE_JSON   = "application/json"
 	CONTENT_TYPE_STREAM = "application/octet-stream"
 )
@@ -30,7 +31,7 @@ func encodeHeaders(headers http.Header) string {
 	for k, v := range headers {
 		headersString = append(headersString, fmt.Sprintf("'%s: %s'", k, strings.Join(v, ",")))
 	}
-	return strings.Join(headersString, " ")
+	return strings.Join(headersString, ", ")
 }
 
 type RESTClient struct {
@@ -87,8 +88,9 @@ func (c *RESTClient) logResp(resp *resty.Response) {
 		respBody = string(resp.Body())
 	}
 	logging.Debug("RESP: [%d], \n    Headers: %v\n    Body: %s",
-		resp.StatusCode(), resp.Header(), respBody)
+		resp.StatusCode(), encodeHeaders(resp.Header()), respBody)
 }
+
 func (c *RESTClient) Request(req *resty.Request) (*resty.Response, error) {
 	if c.AuthPlugin != nil {
 		if err := c.AuthPlugin.AuthRequest(req); err != nil {

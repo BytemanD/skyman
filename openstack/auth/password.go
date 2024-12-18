@@ -105,7 +105,7 @@ func (plugin *PasswordAuthPlugin) TokenIssue() error {
 	plugin.tokenCache = TokenCache{
 		token:     respToken.Token,
 		TokenId:   resp.Header().Get("X-Subject-Token"),
-		expiredAt: time.Now().Add(time.Second * time.Duration(3600)),
+		expiredAt: time.Now().Add(time.Second * time.Duration(plugin.LocalTokenExpireSecond)),
 	}
 	return nil
 }
@@ -175,14 +175,15 @@ func (plugin PasswordAuthPlugin) IsAdmin() bool {
 }
 func NewPasswordAuth(authUrl string, user User, project Project, regionName string) *PasswordAuthPlugin {
 	return &PasswordAuthPlugin{
-		session:           httpclient.New(),
-		AuthUrl:           authUrl,
-		Username:          user.Name,
-		Password:          user.Password,
-		UserDomainName:    user.Domain.Name,
-		ProjectName:       project.Name,
-		ProjectDomainName: project.Domain.Name,
-		RegionName:        regionName,
-		tokenLock:         &sync.Mutex{},
+		session:                httpclient.New(),
+		AuthUrl:                authUrl,
+		Username:               user.Name,
+		Password:               user.Password,
+		UserDomainName:         user.Domain.Name,
+		ProjectName:            project.Name,
+		ProjectDomainName:      project.Domain.Name,
+		RegionName:             regionName,
+		tokenLock:              &sync.Mutex{},
+		LocalTokenExpireSecond: 1800,
 	}
 }

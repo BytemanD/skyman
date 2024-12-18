@@ -123,6 +123,5 @@ type AuthBody struct {
 }
 
 type RespToken struct {
-	Token         Token `json:"token"`
-	XSubjectToken string
+	Token Token `json:"token"`
 }
