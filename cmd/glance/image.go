@@ -75,7 +75,7 @@ var ImageShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().Glance()
 
-		image, err := c.Images().Found(args[0])
+		image, err := c.Images().Find(args[0])
 		utility.LogIfError(err, true, "Get image %s failed", args[0])
 		printImage(*image, *imageShowFlags.Human)
 	},
@@ -140,7 +140,7 @@ var imageDelete = &cobra.Command{
 		c := openstack.DefaultClient().Glance()
 
 		for _, idOrName := range args {
-			image, err := c.Images().Found(idOrName)
+			image, err := c.Images().Find(idOrName)
 			if err != nil {
 				utility.LogError(err, fmt.Sprintf("get image %v failed", idOrName), false)
 				continue

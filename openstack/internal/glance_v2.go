@@ -5,10 +5,8 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/BytemanD/easygo/pkg/compare"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/openstack/model/glance"
-	"github.com/BytemanD/skyman/utility/httpclient"
 )
 
 type ImageApi struct{ ResourceApi }
@@ -49,15 +47,11 @@ func (c ImageApi) List(query url.Values, total int) ([]glance.Image, error) {
 			limit = min(limit, total-len(images))
 			fixQuery.Set("limit", strconv.Itoa(limit))
 		}
-
-		// req.QueryParam.Del("limit")
-		// req.QueryParam =
-		// fmt.Println("xxxxxxxxx 4444444444", q)
-		// if total > 0 && (total-len(images)) < limit {
-		// 	query.Set("limit", strconv.Itoa(total-len(images)))
-		// }
 	}
 	return images, nil
+}
+func (c ImageApi) ListAll(query url.Values) ([]glance.Image, error) {
+	return c.List(query, 0)
 }
 func (c ImageApi) ListByName(name string) ([]glance.Image, error) {
 	return c.List(url.Values{"name": []string{name}}, 0)
@@ -80,22 +74,8 @@ func (c ImageApi) FoundByName(name string) (*glance.Image, error) {
 	}
 	return c.Show(images[0].Id)
 }
-func (c ImageApi) Found(idOrName string) (*glance.Image, error) {
-	var (
-		image *glance.Image
-		err   error
-	)
-	image, err = c.Show(idOrName)
-	if err == nil {
-		return image, nil
-	}
-	if compare.IsType[httpclient.HttpError](err) {
-		httpError, _ := err.(httpclient.HttpError)
-		if httpError.IsNotFound() {
-			image, err = c.FoundByName(idOrName)
-		}
-	}
-	return image, err
+func (c ImageApi) Find(idOrName string) (*glance.Image, error) {
+	return FindResource(idOrName, c.Show, c.ListAll)
 }
 func (c ImageApi) Delete(id string) error {
 	_, err := c.ResourceApi.Delete("images/" + id)

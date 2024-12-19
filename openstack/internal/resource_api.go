@@ -1,8 +1,11 @@
 package internal
 
 import (
+	"fmt"
 	"net/url"
+	"reflect"
 
+	"github.com/BytemanD/skyman/utility/httpclient"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -40,8 +43,66 @@ func (r ResourceApi) NewDeleteRequest(u string, q url.Values, result interface{}
 	return r.NewRequest(resty.MethodDelete, u, q, nil, result)
 }
 func (r ResourceApi) Get(url string, q url.Values, result interface{}) (*resty.Response, error) {
-	return r.NewGetRequest(url, q, result).Send()
+	resp, err := r.NewGetRequest(url, q, result).Send()
+	if err == nil && resp.IsError() {
+		err = httpclient.HttpError{
+			Status:  resp.StatusCode(),
+			Reason:  resp.Status(),
+			Message: string(resp.Body()),
+		}
+	}
+	return resp, err
 }
 func (r ResourceApi) Delete(url string) (*resty.Response, error) {
 	return r.NewDeleteRequest(url, nil, nil).Send()
+}
+
+func FindResource[T any](
+	idOrName string,
+	showFunc func(id string) (*T, error),
+	listFunc func(query url.Values) ([]T, error),
+) (*T, error) {
+	t, err := showFunc(idOrName)
+	if err == nil {
+		return t, nil
+	}
+	if _, ok := err.(httpclient.HttpError); !ok {
+		return nil, err
+	}
+	if httpError, _ := err.(httpclient.HttpError); !httpError.IsNotFound() {
+		return nil, err
+	}
+	ts, err := listFunc(url.Values{"name": []string{idOrName}})
+	if err != nil {
+		return nil, err
+	}
+	switch len(ts) {
+	case 0:
+		return nil, fmt.Errorf("resource %s not found", idOrName)
+	case 1:
+		t := ts[0]
+		value := reflect.ValueOf(t)
+		valueName := value.FieldByName("Name")
+		if valueName.String() != idOrName {
+			return nil, fmt.Errorf("resource %s not found", idOrName)
+		} else {
+			return &t, nil
+		}
+	default:
+		fileted := []T{}
+		for _, t := range ts {
+			value := reflect.ValueOf(t)
+			valueName := value.FieldByName("Name")
+			if valueName.Kind() == reflect.String && valueName.String() == idOrName {
+				fileted = append(fileted, t)
+			}
+		}
+		if len(fileted) == 0 {
+			return nil, fmt.Errorf("resource %s not found", idOrName)
+		}
+		if len(fileted) == 1 {
+			return &fileted[0], nil
+		}
+		return nil, fmt.Errorf("found %d resources with name %s ", len(fileted), idOrName)
+	}
 }
