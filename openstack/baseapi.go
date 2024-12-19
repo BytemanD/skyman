@@ -120,6 +120,8 @@ type Openstack struct {
 	cinderClient   *CinderV2
 	novaClient     *NovaV2
 
+	glancev2 *internal.GlanceV2
+
 	servieLock *sync.Mutex
 }
 
@@ -146,7 +148,7 @@ func NewClient(authUrl string, user auth.User, project auth.Project, regionName 
 	authUrl = utility.VersionUrl(authUrl, fmt.Sprintf("v%s", common.CONF.Identity.Api.Version))
 	// passwordAuth := auth.NewPasswordAuth(authUrl, user, project, regionName)
 	passwordAuth := internal.NewPasswordAuth(authUrl, user, project, regionName)
-	logging.Debug("new opensack client, HttpTimeoutSecond=%d RetryWaitTimeSecond=%d RetryCount=%d",
+	logging.Debug("new openstack client, HttpTimeoutSecond=%d RetryWaitTimeSecond=%d RetryCount=%d",
 		common.CONF.HttpTimeoutSecond, common.CONF.RetryWaitTimeSecond, common.CONF.RetryCount,
 	)
 	passwordAuth.SetHttpTimeout(common.CONF.HttpTimeoutSecond)
@@ -334,8 +336,18 @@ func (api ResourceApi) IsAdmin() bool {
 	return api.Client.AuthPlugin.IsAdmin()
 }
 
-type ResourceInterface interface {
-	GetName() string
+func (o *Openstack) Glance() *internal.GlanceV2 {
+	o.servieLock.Lock()
+	defer o.servieLock.Unlock()
+
+	if o.glancev2 == nil {
+		endpoint, err := o.AuthPlugin.GetServiceEndpoint("image", "glance", "public")
+		if err != nil {
+			logging.Fatal("get glance endpoint falied: %v", err)
+		}
+		o.glancev2 = internal.NewServiceApi[internal.GlanceV2](endpoint, "v2", o.AuthPlugin)
+	}
+	return o.glancev2
 }
 
 func FoundResource[T any](api ResourceApi, idOrName string) (*T, error) {

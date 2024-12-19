@@ -26,7 +26,7 @@ func getReqContentType(req *resty.Request) string {
 func getRespContentType(resp *resty.Response) string {
 	return resp.Header().Get(CONTENT_TYPE)
 }
-func encodeHeaders(headers http.Header) string {
+func EncodeHeaders(headers http.Header) string {
 	headersString := []string{}
 	for k, v := range headers {
 		headersString = append(headersString, fmt.Sprintf("'%s: %s'", k, strings.Join(v, ",")))
@@ -66,9 +66,9 @@ func (c *RESTClient) GetRequest(method, url string) *resty.Request {
 func (c *RESTClient) logReq(req *resty.Request) {
 	encodedHeader := ""
 	if c.AuthPlugin != nil {
-		encodedHeader = encodeHeaders(c.AuthPlugin.GetSafeHeader(req.Header))
+		encodedHeader = EncodeHeaders(c.AuthPlugin.GetSafeHeader(req.Header))
 	} else {
-		encodedHeader = encodeHeaders(req.Header)
+		encodedHeader = EncodeHeaders(req.Header)
 	}
 	body := ""
 	if getReqContentType(req) == CONTENT_TYPE_STREAM {
@@ -88,7 +88,7 @@ func (c *RESTClient) logResp(resp *resty.Response) {
 		respBody = string(resp.Body())
 	}
 	logging.Debug("RESP: [%d], \n    Headers: %v\n    Body: %s",
-		resp.StatusCode(), encodeHeaders(resp.Header()), respBody)
+		resp.StatusCode(), EncodeHeaders(resp.Header()), respBody)
 }
 
 func (c *RESTClient) Request(req *resty.Request) (*resty.Response, error) {

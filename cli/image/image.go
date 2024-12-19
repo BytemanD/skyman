@@ -44,7 +44,7 @@ var ImageList = &cobra.Command{
 			query.Set("limit", fmt.Sprintf("%d", pageSize))
 		}
 
-		c := openstack.DefaultClient().GlanceV2()
+		c := openstack.DefaultClient().Glance()
 		images, err := c.Images().List(query, limit)
 		utility.LogError(err, "get imges failed", true)
 		pt := common.PrettyTable{
@@ -78,7 +78,7 @@ var ImageShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		idOrName := args[0]
 		human, _ := cmd.Flags().GetBool("human")
-		c := openstack.DefaultClient().GlanceV2()
+		c := openstack.DefaultClient().Glance()
 
 		image, err := c.Images().Found(idOrName)
 		utility.LogError(err, "Get image failed", true)

@@ -81,28 +81,29 @@ func (a AddressList) Addrs() []string {
 
 type Server struct {
 	model.Resource
-	TaskState      string                  `json:"OS-EXT-STS:task_state,omitempty"`
-	PowerState     int                     `json:"OS-EXT-STS:power_state,omitempty"`
-	VmState        string                  `json:"OS-EXT-STS:vm_state,omitempty"`
-	Host           string                  `json:"OS-EXT-SRV-ATTR:host,omitempty"`
-	AZ             string                  `json:"OS-EXT-AZ:availability_zone,omitempty"`
-	Flavor         Flavor                  `json:"flavor,omitempty"`
-	Image          interface{}             `json:"image,omitempty"`
-	Fault          Fault                   `json:"fault,omitempty"`
-	Addresses      map[string]AddressList  `json:"addresses,omitempty"`
-	InstanceName   string                  `json:"OS-EXT-SRV-ATTR:instance_name,omitempty"`
-	ConfigDriver   string                  `json:"config_drive,omitempty"`
-	Created        string                  `json:"created,omitempty"`
-	Updated        string                  `json:"updated,omitempty"`
-	TerminatedAt   string                  `json:"OS-SRV-USG:terminated_at,omitempty"`
-	LaunchedAt     string                  `json:"OS-SRV-USG:launched_at,omitempty"`
-	UserId         string                  `json:"user_id,omitempty"`
-	Description    string                  `json:"description,omitempty"`
-	RootBdmType    string                  `json:"root_bdm_type,omitempty"`
-	RootDeviceName string                  `json:"OS-EXT-SRV-ATTR:root_device_name,omitempty"`
-	KeyName        string                  `json:"key_name,omitempty"`
-	SecurityGroups []neutron.SecurityGroup `json:"security_groups,omitempty"`
-	Progress       float32                 `json:"progress"`
+	TaskState          string                  `json:"OS-EXT-STS:task_state,omitempty"`
+	PowerState         int                     `json:"OS-EXT-STS:power_state,omitempty"`
+	VmState            string                  `json:"OS-EXT-STS:vm_state,omitempty"`
+	Host               string                  `json:"OS-EXT-SRV-ATTR:host,omitempty"`
+	HypervisorHostname string                  `json:"OS-EXT-SRV-ATTR:hypervisor_hostname,omitempty"`
+	AZ                 string                  `json:"OS-EXT-AZ:availability_zone,omitempty"`
+	Flavor             Flavor                  `json:"flavor,omitempty"`
+	Image              interface{}             `json:"image,omitempty"`
+	Fault              Fault                   `json:"fault,omitempty"`
+	Addresses          map[string]AddressList  `json:"addresses,omitempty"`
+	InstanceName       string                  `json:"OS-EXT-SRV-ATTR:instance_name,omitempty"`
+	ConfigDriver       string                  `json:"config_drive,omitempty"`
+	Created            string                  `json:"created,omitempty"`
+	Updated            string                  `json:"updated,omitempty"`
+	TerminatedAt       string                  `json:"OS-SRV-USG:terminated_at,omitempty"`
+	LaunchedAt         string                  `json:"OS-SRV-USG:launched_at,omitempty"`
+	UserId             string                  `json:"user_id,omitempty"`
+	Description        string                  `json:"description,omitempty"`
+	RootBdmType        string                  `json:"root_bdm_type,omitempty"`
+	RootDeviceName     string                  `json:"OS-EXT-SRV-ATTR:root_device_name,omitempty"`
+	KeyName            string                  `json:"key_name,omitempty"`
+	SecurityGroups     []neutron.SecurityGroup `json:"security_groups,omitempty"`
+	Progress           float32                 `json:"progress"`
 }
 type Image struct {
 	Id   string `json:"id,omitempty"`

@@ -112,8 +112,6 @@ func (c ImageApi) Show(id string) (*glance.Image, error) {
 	return &body, nil
 }
 func (c ImageApi) FoundByName(name string) (*glance.Image, error) {
-	query := url.Values{}
-	query.Set("name", name)
 	images, err := c.ListByName(name)
 	if err != nil {
 		return nil, err

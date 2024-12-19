@@ -62,7 +62,7 @@ func PrintServer(server nova.Server, client *openstack.Openstack) {
 						return p.ImageId()
 					}
 				}},
-			{Name: "AZ", Text: "AZ"}, {Name: "Host"},
+			{Name: "AZ", Text: "AZ"}, {Name: "Host"}, {Name: "HypervisorHostname"},
 			{Name: "Status"}, {Name: "TaskState"}, {Name: "PowerState"},
 			{Name: "RootBdmType"}, {Name: "RootDeviceName"},
 			{Name: "SecurityGroups", Slot: func(item interface{}) interface{} {
