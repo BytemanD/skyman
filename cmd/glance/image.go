@@ -1,7 +1,8 @@
-package image
+package glance
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
@@ -22,30 +23,26 @@ var ImageList = &cobra.Command{
 		if err := cobra.ExactArgs(0)(cmd, args); err != nil {
 			return err
 		}
-		visibility, _ := cmd.Flags().GetString("visibility")
-		if visibility != "" && !stringutils.ContainsString(glance.IMAGE_VISIBILITIES, visibility) {
-			return fmt.Errorf("invalid visibility, valid: %v", glance.IMAGE_VISIBILITIES)
+		if *imageListFlags.Visibility != "" &&
+			!stringutils.ContainsString(glance.IMAGE_VISIBILITIES, *imageListFlags.Visibility) {
+			return fmt.Errorf("invalid visibility %s, valid: %v", *imageListFlags.Visibility, glance.IMAGE_VISIBILITIES)
 		}
 		return nil
 	},
 	Run: func(cmd *cobra.Command, _ []string) {
-		long, _ := cmd.Flags().GetBool("long")
-		human, _ := cmd.Flags().GetBool("human")
-		name, _ := cmd.Flags().GetString("name")
-		limit, _ := cmd.Flags().GetInt("limit")
-		pageSize, _ := cmd.Flags().GetUint("page-size")
-		visibility, _ := cmd.Flags().GetString("visibility")
-
-		query := utility.UrlValues(map[string]string{
-			"name":       name,
-			"visibility": visibility,
-		})
-		if pageSize != 0 {
-			query.Set("limit", fmt.Sprintf("%d", pageSize))
+		query := url.Values{}
+		if *imageListFlags.Name != "" {
+			query.Set("name", *imageListFlags.Name)
+		}
+		if *imageListFlags.Visibility != "" {
+			query.Set("visibility", *imageListFlags.Visibility)
+		}
+		if *imageListFlags.Limit != 0 {
+			query.Set("limit", fmt.Sprintf("%d", *imageListFlags.Limit))
 		}
 
 		c := openstack.DefaultClient().Glance()
-		images, err := c.Images().List(query, limit)
+		images, err := c.Images().List(query, int(*imageListFlags.Total))
 		utility.LogError(err, "get imges failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
@@ -54,7 +51,7 @@ var ImageList = &cobra.Command{
 				{Name: "Size", Align: text.AlignRight,
 					Slot: func(item interface{}) interface{} {
 						p, _ := item.(glance.Image)
-						if human {
+						if *imageListFlags.Human {
 							return p.HumanSize()
 						} else {
 							return p.Size
@@ -68,7 +65,7 @@ var ImageList = &cobra.Command{
 		}
 
 		pt.AddItems(images)
-		common.PrintPrettyTable(pt, long)
+		common.PrintPrettyTable(pt, *imageListFlags.Long)
 	},
 }
 var ImageShow = &cobra.Command{
@@ -76,13 +73,11 @@ var ImageShow = &cobra.Command{
 	Short: "Show image",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		idOrName := args[0]
-		human, _ := cmd.Flags().GetBool("human")
 		c := openstack.DefaultClient().Glance()
 
-		image, err := c.Images().Found(idOrName)
-		utility.LogError(err, "Get image failed", true)
-		printImage(*image, human)
+		image, err := c.Images().Found(args[0])
+		utility.LogIfError(err, true, "Get image %s failed", args[0])
+		printImage(*image, *imageShowFlags.Human)
 	},
 }
 var imageCreate = &cobra.Command{
@@ -92,32 +87,7 @@ var imageCreate = &cobra.Command{
 		if err := cobra.ExactArgs(0)(cmd, args); err != nil {
 			return err
 		}
-		name, _ := cmd.Flags().GetString("name")
-		containerFormat, _ := cmd.Flags().GetString("container-format")
-		diskFormat, _ := cmd.Flags().GetString("disk-format")
-		file, _ := cmd.Flags().GetString("file")
-		visibility, _ := cmd.Flags().GetString("visibility")
-
-		if file != "" {
-			if containerFormat == "" {
-				return fmt.Errorf("must provide --container-format when using --file")
-			}
-			if diskFormat == "" {
-				return fmt.Errorf("must provide --disk-format when using --file")
-			}
-		} else if name == "" {
-			return fmt.Errorf("must provide --name when not using --file")
-		}
-		if containerFormat != "" && !stringutils.ContainsString(glance.IMAGE_CONTAINER_FORMATS, containerFormat) {
-			return fmt.Errorf("invalid container format, valid: %v", glance.IMAGE_CONTAINER_FORMATS)
-		}
-		if diskFormat != "" && !stringutils.ContainsString(glance.IMAGE_DISK_FORMATS, diskFormat) {
-			return fmt.Errorf("invalid disk format, valid: %v", glance.IMAGE_DISK_FORMATS)
-		}
-		if visibility != "" && !stringutils.ContainsString(glance.IMAGE_VISIBILITIES, visibility) {
-			return fmt.Errorf("invalid visibility, valid: %v", glance.IMAGE_VISIBILITIES)
-		}
-		return nil
+		return imageCreateFlags.Valid()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient().GlanceV2()
@@ -167,7 +137,7 @@ var imageDelete = &cobra.Command{
 	Short: "Delete image",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().GlanceV2()
+		c := openstack.DefaultClient().Glance()
 
 		for _, idOrName := range args {
 			image, err := c.Images().Found(idOrName)
@@ -191,12 +161,15 @@ var imageSave = &cobra.Command{
 	Aliases: []string{"download"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fileName, _ := cmd.Flags().GetString("file")
 
 		c := openstack.DefaultClient().GlanceV2()
 		image, err := c.Images().Found(args[0])
 		utility.LogError(err, fmt.Sprintf("get image %v failed", args[0]), true)
-		if fileName == "" {
+
+		var fileName string
+		if *imageSaveFlags.File == "" {
+			fileName = *imageSaveFlags.File
+		} else {
 			fileName = fmt.Sprintf("%s.%s", image.Name, image.DiskFormat)
 		}
 
@@ -207,16 +180,6 @@ var imageSave = &cobra.Command{
 	},
 }
 
-var IMAGE_ATTRIBUTIES = map[string]string{
-	"name":             "name",
-	"visibility":       "visibility",
-	"container-format": "container_format",
-	"disk-format":      "disk_format",
-	"kernel-id":        "kernel_id",
-	"os-distro":        "os_distro",
-	"os-version":       "os_version",
-}
-
 var imageSet = &cobra.Command{
 	Use:   "set <id or name>",
 	Short: "Set image properties",
@@ -224,46 +187,79 @@ var imageSet = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().GlanceV2()
 
-		human, _ := cmd.Flags().GetBool("human")
 		image, err := c.Images().Found(args[0])
 		utility.LogError(err, "Get image failed", true)
 		params := map[string]interface{}{}
-		for flag, attribute := range IMAGE_ATTRIBUTIES {
-			value, _ := cmd.Flags().GetString(flag)
-			if value == "" {
-				continue
-			}
-			params[attribute] = value
+
+		if *imageSetFlags.Name != "" {
+			params["name"] = *imageSetFlags.Name
+		}
+		if *imageSetFlags.Visibility != "" {
+			params["visibility"] = *imageSetFlags.Visibility
+		}
+		if *imageSetFlags.ContainerFormat != "" {
+			params["container_format"] = *imageSetFlags.ContainerFormat
+		}
+		if *imageSetFlags.DiskFormat != "" {
+			params["disk_format"] = *imageSetFlags.DiskFormat
+		}
+		if *imageSetFlags.KernelId != "" {
+			params["kernel_id"] = *imageSetFlags.KernelId
+		}
+		if cmd.Flags().Changed("protect") {
+			params["protect"] = *imageSetFlags.Protect
+		}
+		if len(params) == 0 {
+			logging.Warning("nothing to do")
+			return
 		}
 		image, err = c.Images().Set(image.Id, params)
 		utility.LogError(err, "update image failed", true)
-		printImage(*image, human)
+		printImage(*image, false)
 	},
 }
+var (
+	imageListFlags   ImageListFlags
+	imageShowFlags   ImageShowFlags
+	imageCreateFlags ImageCreateFlags
+	imageSaveFlags   ImageSaveFlags
+	imageSetFlags    ImageSetFlags
+)
 
 func init() {
-	ImageList.Flags().BoolP("long", "l", false, "List additional fields in output")
-	ImageList.Flags().StringP("name", "n", "", "Search by image name")
-	ImageList.Flags().Uint("page-size", 0, "Number of images to request in each paginated request")
-	ImageList.Flags().Int("limit", 0, "Maximum number of images to get")
-	ImageList.Flags().String("visibility", "", "The visibility of the images to display.")
+	imageListFlags = ImageListFlags{
+		Name:       ImageList.Flags().StringP("name", "n", "", "Search by image name"),
+		Limit:      ImageList.Flags().Uint("limit", 0, "Number of images to request in each paginated request"),
+		Total:      ImageList.Flags().Uint("total", 0, "Maximum number of images to get"),
+		Visibility: ImageList.Flags().String("visibility", "", "The visibility of the images to display."),
+		Human:      ImageList.Flags().Bool("human", false, "Human size"),
+		Long:       ImageList.Flags().BoolP("long", "l", false, "List additional fields in output"),
+	}
 
-	imageCreate.Flags().StringP("name", "n", "", "The name of image, if --name is empty use the name of file")
-	imageCreate.Flags().String("file", "", "Local file that contains disk image to be uploaded during creation.")
-	imageCreate.Flags().Bool("protect", false, "Prevent image from being deleted")
-	imageCreate.Flags().String("visibility", "private", "Scope of image accessibility Valid values")
-
-	imageCreate.Flags().String("os-distro", "", "Common name of operating system distribution")
-
-	// TODO: show valid values.
-	imageCreate.Flags().String("container-format", "", fmt.Sprintf("Format of the container. Valid:\n%v", glance.IMAGE_CONTAINER_FORMATS))
-	imageCreate.Flags().String("disk-format", "", fmt.Sprintf("Format of the disk. Valid:\n%v", glance.IMAGE_DISK_FORMATS))
-
-	imageSave.Flags().String("file", "", "Downloaded image save filename.")
-	Image.PersistentFlags().Bool("human", false, "Human size")
-
-	for k, v := range IMAGE_ATTRIBUTIES {
-		imageSet.Flags().String(k, "", fmt.Sprintf("Set %s of image", v))
+	imageShowFlags = ImageShowFlags{
+		Human: imageCreate.Flags().Bool("human", false, "Human size"),
+	}
+	imageCreateFlags = ImageCreateFlags{
+		Name:            imageCreate.Flags().StringP("name", "n", "", "The name of image, if --name is empty use the name of file"),
+		File:            imageCreate.Flags().String("file", "", "Local file that contains disk image to be uploaded during creation."),
+		Protect:         imageCreate.Flags().Bool("protect", false, "Prevent image from being deleted"),
+		Visibility:      imageCreate.Flags().String("visibility", "private", "Scope of image accessibility Valid values"),
+		OSDistro:        imageCreate.Flags().String("os-distro", "", "Common name of operating system distribution"),
+		ContainerFormat: imageCreate.Flags().String("container-format", "", fmt.Sprintf("Format of the container. Valid:\n%v", glance.IMAGE_CONTAINER_FORMATS)),
+		DiskFormat:      imageCreate.Flags().String("disk-format", "", fmt.Sprintf("Format of the disk. Valid:\n%v", glance.IMAGE_DISK_FORMATS)),
+	}
+	imageSaveFlags = ImageSaveFlags{
+		File: imageSave.Flags().String("file", "", "Downloaded image save filename."),
+	}
+	imageSetFlags = ImageSetFlags{
+		Name:            imageSet.Flags().String("file", "", "Set name of image"),
+		Protect:         imageSet.Flags().Bool("protoct", false, "Set protect of image"),
+		Visibility:      imageSet.Flags().String("visibility", "", "Set visibility of image"),
+		ContainerFormat: imageSet.Flags().String("container-format", "", "Set container format of image"),
+		DiskFormat:      imageSet.Flags().String("disk-format", "", "Set disk format of image"),
+		OSDistro:        imageSet.Flags().String("os-distro", "", "Set name os distro image"),
+		OSVersion:       imageSet.Flags().String("os-version", "", "Set os version of image"),
+		KernelId:        imageSet.Flags().String("kernel-id", "", "Set os kernel id of image"),
 	}
 
 	Image.AddCommand(ImageList, ImageShow, imageCreate, imageDelete, imageSave, imageSet)

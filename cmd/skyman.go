@@ -15,12 +15,12 @@ import (
 	"github.com/BytemanD/skyman/cli/compute"
 	"github.com/BytemanD/skyman/cli/context"
 	"github.com/BytemanD/skyman/cli/identity"
-	"github.com/BytemanD/skyman/cli/image"
 	"github.com/BytemanD/skyman/cli/networking"
 	"github.com/BytemanD/skyman/cli/quota"
 	"github.com/BytemanD/skyman/cli/storage"
 	"github.com/BytemanD/skyman/cli/templates"
 	"github.com/BytemanD/skyman/cli/tool"
+	"github.com/BytemanD/skyman/cmd/glance"
 	"github.com/BytemanD/skyman/cmd/test"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
@@ -187,7 +187,7 @@ func main() {
 		compute.Server, compute.Flavor, compute.Hypervisor,
 		compute.Keypair, compute.Compute, compute.Console,
 		compute.Migration, compute.AZ, compute.Aggregate,
-		image.Image,
+		glance.Image,
 		storage.Volume, storage.Snapshot, storage.Backup,
 		networking.Router, networking.Network, networking.Subnet, networking.Port,
 		networking.Security, networking.SG,
