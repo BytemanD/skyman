@@ -18,6 +18,7 @@ import (
 	"github.com/BytemanD/skyman/cli/quota"
 	"github.com/BytemanD/skyman/cli/templates"
 	"github.com/BytemanD/skyman/cli/tool"
+	"github.com/BytemanD/skyman/cmd/benchmark"
 	"github.com/BytemanD/skyman/cmd/cinder"
 	"github.com/BytemanD/skyman/cmd/glance"
 	"github.com/BytemanD/skyman/cmd/neutron"
@@ -197,6 +198,7 @@ func main() {
 		templates.DefineCmd, templates.UndefineCmd,
 		tool.ToolCmd,
 		TestCmd,
+		benchmark.BenchmarkCmd,
 	)
 	rootCmd.Execute()
 }
