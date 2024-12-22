@@ -3,6 +3,7 @@ package cinder
 import (
 	"fmt"
 
+	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/openstack/model"
 )
 
@@ -10,7 +11,19 @@ const (
 	KB = 1024
 	MB = KB * 1024
 	GB = MB * 1024
+
+	POLICY_NEVER     = "never"
+	POLICY_ON_DEMAND = "on-demand"
 )
+
+var MIGRATION_POLICYS = []string{POLICY_NEVER, POLICY_ON_DEMAND}
+
+func InvalidMIgrationPoicy(policy string) error {
+	if !stringutils.ContainsString(MIGRATION_POLICYS, policy) {
+		return fmt.Errorf("invalid migration policy: %s, supported: %s", policy, MIGRATION_POLICYS)
+	}
+	return nil
+}
 
 type Attachment struct {
 	Id           string `json:"id,omitempty"`

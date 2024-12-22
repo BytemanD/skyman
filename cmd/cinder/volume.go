@@ -1,4 +1,4 @@
-package storage
+package cinder
 
 import (
 	"fmt"
@@ -172,7 +172,7 @@ var volumeRetype = &cobra.Command{
 			return err
 		}
 		migrationPolicy, _ := cmd.Flags().GetString("migration-policy")
-		if err := openstack.InvalidMIgrationPoicy(migrationPolicy); err != nil {
+		if err := cinder.InvalidMIgrationPoicy(migrationPolicy); err != nil {
 			return err
 		}
 		return nil
@@ -209,7 +209,7 @@ func init() {
 
 	volumeRetype.Flags().StringP("migration-policy", "p", "never",
 		fmt.Sprintf("Migration policy during retype of volume,\ninvalid values: %s",
-			openstack.MIGRATION_POLICYS))
+			cinder.MIGRATION_POLICYS))
 
 	Volume.AddCommand(
 		volumeList, volumeShow, volumeCreate, volumeExtend, volumeRetype,

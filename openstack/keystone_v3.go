@@ -9,8 +9,6 @@ import (
 	"github.com/BytemanD/skyman/utility"
 )
 
-const V3 = "v3"
-
 type roleAssignmentApi struct {
 	ResourceApi
 }

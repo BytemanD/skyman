@@ -9,6 +9,20 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
+func checkError(resp *resty.Response, err error) (*resty.Response, error) {
+	if err != nil || resp == nil {
+		return resp, err
+	}
+	if resp.IsError() {
+		return resp, httpclient.HttpError{
+			Status:  resp.StatusCode(),
+			Reason:  resp.Status(),
+			Message: string(resp.Body()),
+		}
+	}
+	return resp, nil
+}
+
 type ResourceApi struct {
 	Client  *resty.Client
 	BaseUrl string
@@ -51,28 +65,37 @@ func (r ResourceApi) NewPutRequest(u string, body interface{}, result interface{
 func (r ResourceApi) NewPatchRequest(u string, body interface{}, result interface{}) *resty.Request {
 	return r.NewRequest(resty.MethodPatch, u, nil, body, result)
 }
+
 func (r ResourceApi) Get(url string, q url.Values, result interface{}) (*resty.Response, error) {
 	resp, err := r.NewGetRequest(url, q, result).Send()
-	if err == nil && resp.IsError() {
-		err = httpclient.HttpError{
-			Status:  resp.StatusCode(),
-			Reason:  resp.Status(),
-			Message: string(resp.Body()),
-		}
-	}
-	return resp, err
+	return checkError(resp, err)
 }
-func (r ResourceApi) Delete(url string) (*resty.Response, error) {
-	return r.NewDeleteRequest(url, nil, nil).Send()
+func (r ResourceApi) Delete(u string, query ...url.Values) (*resty.Response, error) {
+	var q url.Values
+	if len(query) > 0 {
+		q = query[0]
+	} else {
+		q = nil
+	}
+	return checkError(
+		r.NewDeleteRequest(u, q, nil).Send(),
+	)
+
 }
 func (r ResourceApi) Post(url string, body interface{}, result interface{}) (*resty.Response, error) {
-	return r.NewPostRequest(url, body, result).Send()
+	return checkError(
+		r.NewPostRequest(url, body, result).Send(),
+	)
 }
 func (r ResourceApi) Put(url string, body interface{}, result interface{}) (*resty.Response, error) {
-	return r.NewPutRequest(url, body, result).Send()
+	return checkError(
+		r.NewPutRequest(url, body, result).Send(),
+	)
 }
 func (r ResourceApi) Patch(url string, body interface{}, result interface{}, headers map[string]string) (*resty.Response, error) {
-	return r.NewPatchRequest(url, body, result).SetHeaders(headers).Send()
+	return checkError(
+		r.NewPatchRequest(url, body, result).SetHeaders(headers).Send(),
+	)
 }
 func FindResource[T any](
 	idOrName string,

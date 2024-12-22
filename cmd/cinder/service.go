@@ -1,14 +1,16 @@
-package storage
+package cinder
 
 import (
 	"net/url"
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
 
 var service = &cobra.Command{Use: "service", Short: "Volume service command"}
+
 var list = &cobra.Command{
 	Use:   "list",
 	Short: "List volume services",
@@ -28,7 +30,8 @@ var list = &cobra.Command{
 			query.Set("host", host)
 		}
 
-		services, _ := client.CinderV2().Service().List(query)
+		services, err := client.CinderV2().Service().List(query)
+		utility.LogIfError(err, true, "get services failed")
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Binary"},

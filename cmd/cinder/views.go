@@ -1,4 +1,4 @@
-package storage
+package cinder
 
 import (
 	"encoding/json"

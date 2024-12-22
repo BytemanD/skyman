@@ -22,7 +22,11 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-const X_OPENSTACK_REQUEST_ID = "X-Openstack-Request-Id"
+const (
+	X_OPENSTACK_REQUEST_ID = "X-Openstack-Request-Id"
+	V2                     = "v2"
+	V3                     = "v3"
+)
 
 type RestClient2 struct {
 	BaseUrl string
@@ -115,12 +119,11 @@ type Openstack struct {
 	ComputeApiVersion string
 
 	keystoneClient *KeystoneV3
-	glanceClient   *internal.GlanceV2
 	neutronClient  *NeutronV2
-	cinderClient   *CinderV2
 	novaClient     *NovaV2
 
-	glancev2 *internal.GlanceV2
+	glanceClient *internal.GlanceV2
+	cinderClient *internal.CinderV2
 
 	servieLock *sync.Mutex
 }
@@ -340,16 +343,36 @@ func (o *Openstack) GlanceV2() *internal.GlanceV2 {
 	o.servieLock.Lock()
 	defer o.servieLock.Unlock()
 
-	if o.glancev2 == nil {
+	if o.glanceClient == nil {
 		endpoint, err := o.AuthPlugin.GetServiceEndpoint("image", "glance", "public")
 		if err != nil {
 			logging.Fatal("get glance endpoint falied: %v", err)
 		}
-		o.glancev2 = &internal.GlanceV2{
-			ServiceClient: internal.NewServiceApi[internal.ServiceClient](endpoint, "v2", o.AuthPlugin),
+		o.glanceClient = &internal.GlanceV2{
+			ServiceClient: internal.NewServiceApi[internal.ServiceClient](endpoint, V2, o.AuthPlugin),
 		}
 	}
-	return o.glancev2
+	return o.glanceClient
+}
+
+func (o *Openstack) CinderV2() *internal.CinderV2 {
+	o.servieLock.Lock()
+	defer o.servieLock.Unlock()
+
+	if o.cinderClient == nil {
+		var (
+			endpoint string
+			err      error
+		)
+		endpoint, err = o.AuthPlugin.GetServiceEndpoint("volumev2", "cinderv2", "public")
+		if err != nil {
+			logging.Fatal("get cinder endpoint falied: %v", err)
+		}
+		o.cinderClient = &internal.CinderV2{
+			ServiceClient: internal.NewServiceApi[internal.ServiceClient](endpoint, V2, o.AuthPlugin),
+		}
+	}
+	return o.cinderClient
 }
 
 func FoundResource[T any](api ResourceApi, idOrName string) (*T, error) {

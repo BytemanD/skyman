@@ -17,9 +17,9 @@ import (
 	"github.com/BytemanD/skyman/cli/identity"
 	"github.com/BytemanD/skyman/cli/networking"
 	"github.com/BytemanD/skyman/cli/quota"
-	"github.com/BytemanD/skyman/cli/storage"
 	"github.com/BytemanD/skyman/cli/templates"
 	"github.com/BytemanD/skyman/cli/tool"
+	"github.com/BytemanD/skyman/cmd/cinder"
 	"github.com/BytemanD/skyman/cmd/glance"
 	"github.com/BytemanD/skyman/cmd/test"
 	"github.com/BytemanD/skyman/common"
@@ -188,7 +188,7 @@ func main() {
 		compute.Keypair, compute.Compute, compute.Console,
 		compute.Migration, compute.AZ, compute.Aggregate,
 		glance.Image,
-		storage.Volume, storage.Snapshot, storage.Backup,
+		cinder.Volume, cinder.Snapshot, cinder.Backup,
 		networking.Router, networking.Network, networking.Subnet, networking.Port,
 		networking.Security, networking.SG,
 
