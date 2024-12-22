@@ -41,7 +41,7 @@ var ImageList = &cobra.Command{
 			query.Set("limit", fmt.Sprintf("%d", *imageListFlags.Limit))
 		}
 
-		c := openstack.DefaultClient().Glance()
+		c := openstack.DefaultClient().GlanceV2()
 		images, err := c.Images().List(query, int(*imageListFlags.Total))
 		utility.LogError(err, "get imges failed", true)
 		pt := common.PrettyTable{
@@ -73,7 +73,7 @@ var ImageShow = &cobra.Command{
 	Short: "Show image",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().Glance()
+		c := openstack.DefaultClient().GlanceV2()
 
 		image, err := c.Images().Find(args[0])
 		utility.LogIfError(err, true, "Get image %s failed", args[0])
@@ -112,10 +112,8 @@ var imageCreate = &cobra.Command{
 		}
 		reqImage.Name = name
 
-		c := openstack.DefaultClient().GlanceV2()
-
-		logging.Info("create image")
-		image, err := c.Images().Create(reqImage)
+		logging.Info("create image name=%s", name)
+		image, err := client.Images().Create(reqImage)
 		utility.LogError(err, "Create image failed", true)
 		if file != "" {
 			logging.Info("upload image")
@@ -124,7 +122,7 @@ var imageCreate = &cobra.Command{
 				client.Images().Delete(image.Id)
 				utility.LogError(err, "Upload image failed", true)
 			}
-			image, err = c.Images().Show(image.Id)
+			image, err = client.Images().Show(image.Id)
 			utility.LogError(err, "get image failed", true)
 		}
 
@@ -137,7 +135,7 @@ var imageDelete = &cobra.Command{
 	Short: "Delete image",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().Glance()
+		c := openstack.DefaultClient().GlanceV2()
 
 		for _, idOrName := range args {
 			image, err := c.Images().Find(idOrName)
@@ -161,17 +159,14 @@ var imageSave = &cobra.Command{
 	Aliases: []string{"download"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-
 		c := openstack.DefaultClient().GlanceV2()
-		image, err := c.Images().Found(args[0])
+
+		image, err := c.Images().Find(args[0])
 		utility.LogError(err, fmt.Sprintf("get image %v failed", args[0]), true)
 
-		var fileName string
-		if *imageSaveFlags.File == "" {
-			fileName = *imageSaveFlags.File
-		} else {
-			fileName = fmt.Sprintf("%s.%s", image.Name, image.DiskFormat)
-		}
+		fileName := utility.OneOfString(
+			*imageSaveFlags.File, fmt.Sprintf("%s.%s", image.Name, image.DiskFormat),
+		)
 
 		logging.Info("Saving image to %s", fileName)
 		err = c.Images().Download(image.Id, fileName, true)
@@ -187,7 +182,7 @@ var imageSet = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().GlanceV2()
 
-		image, err := c.Images().Found(args[0])
+		image, err := c.Images().Find(args[0])
 		utility.LogError(err, "Get image failed", true)
 		params := map[string]interface{}{}
 

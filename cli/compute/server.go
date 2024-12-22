@@ -695,7 +695,7 @@ var serverRebuild = &cobra.Command{
 
 		options := map[string]interface{}{}
 		if *rebuildFlags.Image != "" {
-			image, err := client.GlanceV2().Images().Found(*rebuildFlags.Image)
+			image, err := client.GlanceV2().Images().Find(*rebuildFlags.Image)
 			utility.LogError(err, "get image failed", true)
 			options["imageRef"] = image.Id
 		}

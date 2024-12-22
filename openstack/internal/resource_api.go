@@ -42,6 +42,15 @@ func (r ResourceApi) NewGetRequest(u string, q url.Values, result interface{}) *
 func (r ResourceApi) NewDeleteRequest(u string, q url.Values, result interface{}) *resty.Request {
 	return r.NewRequest(resty.MethodDelete, u, q, nil, result)
 }
+func (r ResourceApi) NewPostRequest(u string, body interface{}, result interface{}) *resty.Request {
+	return r.NewRequest(resty.MethodPost, u, nil, body, result)
+}
+func (r ResourceApi) NewPutRequest(u string, body interface{}, result interface{}) *resty.Request {
+	return r.NewRequest(resty.MethodPut, u, nil, body, result)
+}
+func (r ResourceApi) NewPatchRequest(u string, body interface{}, result interface{}) *resty.Request {
+	return r.NewRequest(resty.MethodPatch, u, nil, body, result)
+}
 func (r ResourceApi) Get(url string, q url.Values, result interface{}) (*resty.Response, error) {
 	resp, err := r.NewGetRequest(url, q, result).Send()
 	if err == nil && resp.IsError() {
@@ -56,7 +65,15 @@ func (r ResourceApi) Get(url string, q url.Values, result interface{}) (*resty.R
 func (r ResourceApi) Delete(url string) (*resty.Response, error) {
 	return r.NewDeleteRequest(url, nil, nil).Send()
 }
-
+func (r ResourceApi) Post(url string, body interface{}, result interface{}) (*resty.Response, error) {
+	return r.NewPostRequest(url, body, result).Send()
+}
+func (r ResourceApi) Put(url string, body interface{}, result interface{}) (*resty.Response, error) {
+	return r.NewPutRequest(url, body, result).Send()
+}
+func (r ResourceApi) Patch(url string, body interface{}, result interface{}, headers map[string]string) (*resty.Response, error) {
+	return r.NewPatchRequest(url, body, result).SetHeaders(headers).Send()
+}
 func FindResource[T any](
 	idOrName string,
 	showFunc func(id string) (*T, error),

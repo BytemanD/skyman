@@ -15,6 +15,9 @@ const (
 	CONTENT_TYPE_STREAM = "application/octet-stream"
 )
 
+// 默认的 Client
+//
+// 记录请求日志，设置content-type=application/json
 func DefaultRestyClient() *resty.Client {
 	return resty.New().
 		SetHeader(CONTENT_TYPE, CONTENT_TYPE_JSON).

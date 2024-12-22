@@ -16,7 +16,22 @@ type ServiceClient struct {
 	rawClient  *resty.Client
 }
 
-func NewServiceApi[T ServiceClient | GlanceV2](endpoint string, version string, authPlugin auth.AuthPlugin) *T {
+func (c *ServiceClient) Index(result interface{}) (*resty.Response, error) {
+	if c.Endpoint == "" {
+		return nil, fmt.Errorf("endpoint is required")
+	}
+
+	parsed, err := url.Parse(c.Endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("invalid endpoint: %s", c.Endpoint)
+	}
+	for k := range parsed.Query() {
+		delete(parsed.Query(), k)
+	}
+	return c.rawClient.R().SetResult(result).Get(parsed.String())
+}
+
+func NewServiceApi[T ServiceClient](endpoint string, version string, authPlugin auth.AuthPlugin) *T {
 	u, _ := url.Parse(endpoint)
 	urlPath := strings.TrimSuffix(u.Path, "/")
 	if !strings.HasPrefix(urlPath, fmt.Sprintf("/%s", version)) {

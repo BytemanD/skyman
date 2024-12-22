@@ -21,7 +21,7 @@ func getImage(client *openstack.Openstack, resource BaseResource) (*glance.Image
 		return client.GlanceV2().Images().Show(resource.Id)
 	} else if resource.Name != "" {
 		logging.Info("find image %s", resource.Name)
-		return client.GlanceV2().Images().Found(resource.Name)
+		return client.GlanceV2().Images().Find(resource.Name)
 	} else {
 		return nil, fmt.Errorf("image is empty")
 	}

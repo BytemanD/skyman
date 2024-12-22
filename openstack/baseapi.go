@@ -115,7 +115,7 @@ type Openstack struct {
 	ComputeApiVersion string
 
 	keystoneClient *KeystoneV3
-	glanceClient   *Glance
+	glanceClient   *internal.GlanceV2
 	neutronClient  *NeutronV2
 	cinderClient   *CinderV2
 	novaClient     *NovaV2
@@ -336,7 +336,7 @@ func (api ResourceApi) IsAdmin() bool {
 	return api.Client.AuthPlugin.IsAdmin()
 }
 
-func (o *Openstack) Glance() *internal.GlanceV2 {
+func (o *Openstack) GlanceV2() *internal.GlanceV2 {
 	o.servieLock.Lock()
 	defer o.servieLock.Unlock()
 
@@ -345,7 +345,9 @@ func (o *Openstack) Glance() *internal.GlanceV2 {
 		if err != nil {
 			logging.Fatal("get glance endpoint falied: %v", err)
 		}
-		o.glancev2 = internal.NewServiceApi[internal.GlanceV2](endpoint, "v2", o.AuthPlugin)
+		o.glancev2 = &internal.GlanceV2{
+			ServiceClient: internal.NewServiceApi[internal.ServiceClient](endpoint, "v2", o.AuthPlugin),
+		}
 	}
 	return o.glancev2
 }
