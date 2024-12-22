@@ -15,12 +15,12 @@ import (
 	"github.com/BytemanD/skyman/cli/compute"
 	"github.com/BytemanD/skyman/cli/context"
 	"github.com/BytemanD/skyman/cli/identity"
-	"github.com/BytemanD/skyman/cli/networking"
 	"github.com/BytemanD/skyman/cli/quota"
 	"github.com/BytemanD/skyman/cli/templates"
 	"github.com/BytemanD/skyman/cli/tool"
 	"github.com/BytemanD/skyman/cmd/cinder"
 	"github.com/BytemanD/skyman/cmd/glance"
+	"github.com/BytemanD/skyman/cmd/neutron"
 	"github.com/BytemanD/skyman/cmd/test"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
@@ -98,9 +98,9 @@ var versionCmd = &cobra.Command{
 			fmt.Printf("  %-11s: Unknown (%s)\n", "Cinder", err)
 			errors++
 		}
-		networkingVerion, err := client.NeutronV2().GetCurrentVersion()
+		neutronVerion, err := client.NeutronV2().GetCurrentVersion()
 		if err == nil {
-			fmt.Printf("  %-11s: %s\n", "Neutron", networkingVerion.VersoinInfo())
+			fmt.Printf("  %-11s: %s\n", "Neutron", neutronVerion.VersoinInfo())
 		} else {
 			fmt.Printf("  %-11s: Unknown (%s)\n", "Neutron", err)
 			errors++
@@ -189,8 +189,9 @@ func main() {
 		compute.Migration, compute.AZ, compute.Aggregate,
 		glance.Image,
 		cinder.Volume, cinder.Snapshot, cinder.Backup,
-		networking.Router, networking.Network, networking.Subnet, networking.Port,
-		networking.Security, networking.SG,
+
+		neutron.Router, neutron.Network, neutron.Subnet, neutron.Port,
+		neutron.Security, neutron.SG,
 
 		quota.QuotaCmd,
 		templates.DefineCmd, templates.UndefineCmd,

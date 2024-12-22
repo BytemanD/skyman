@@ -30,6 +30,9 @@ type ResourceApi struct {
 	EnableAllTenant bool
 	SingularKey     string
 	PluralKey       string
+
+	URL_LIST string
+	URL_SHOW string
 }
 
 func (r ResourceApi) NewRequest(method string, u string, q url.Values, body interface{}, result interface{}) *resty.Request {

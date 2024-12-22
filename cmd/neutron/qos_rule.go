@@ -1,4 +1,4 @@
-package networking
+package neutron
 
 import (
 	"github.com/BytemanD/skyman/common"

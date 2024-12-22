@@ -25,6 +25,7 @@ import (
 const (
 	X_OPENSTACK_REQUEST_ID = "X-Openstack-Request-Id"
 	V2                     = "v2"
+	V2_0                   = "v2.0"
 	V3                     = "v3"
 )
 
@@ -119,13 +120,15 @@ type Openstack struct {
 	ComputeApiVersion string
 
 	keystoneClient *KeystoneV3
-	neutronClient  *NeutronV2
 	novaClient     *NovaV2
 
-	glanceClient *internal.GlanceV2
-	cinderClient *internal.CinderV2
+	glanceClient  *internal.GlanceV2
+	cinderClient  *internal.CinderV2
+	neutronClient *internal.NeutronV2
 
 	servieLock *sync.Mutex
+
+	neutronEndpoint string
 }
 
 func (o *Openstack) WithRegion(region string) *Openstack {
@@ -137,7 +140,10 @@ func (o *Openstack) WithRegion(region string) *Openstack {
 	return &Openstack{
 		AuthPlugin:        authPlugin,
 		ComputeApiVersion: o.ComputeApiVersion,
-		servieLock:        &sync.Mutex{},
+
+		neutronEndpoint: o.neutronEndpoint,
+
+		servieLock: &sync.Mutex{},
 	}
 }
 func (o Openstack) Region() string {
@@ -181,6 +187,7 @@ func ClientWithRegion(region string) *Openstack {
 func DefaultClient() *Openstack {
 	c := ClientWithRegion(common.CONF.Auth.Region.Id)
 	c.ComputeApiVersion = "2.1"
+	c.neutronEndpoint = common.CONF.Neutron.Endpoint
 	return c
 }
 
@@ -375,6 +382,25 @@ func (o *Openstack) CinderV2() *internal.CinderV2 {
 	return o.cinderClient
 }
 
+func (o *Openstack) NeutronV2() *internal.NeutronV2 {
+	o.servieLock.Lock()
+	defer o.servieLock.Unlock()
+
+	if o.neutronClient == nil {
+		endpoint := o.neutronEndpoint
+		if endpoint == "" {
+			var err error
+			endpoint, err = o.AuthPlugin.GetServiceEndpoint("netwoking", "neutron", "public")
+			if err != nil {
+				logging.Fatal("get neutron endpoint falied: %v", err)
+			}
+		}
+		o.neutronClient = &internal.NeutronV2{
+			ServiceClient: internal.NewServiceApi[internal.ServiceClient](endpoint, V2_0, o.AuthPlugin),
+		}
+	}
+	return o.neutronClient
+}
 func FoundResource[T any](api ResourceApi, idOrName string) (*T, error) {
 	if api.SingularKey == "" || api.PluralKey == "" {
 		return nil, fmt.Errorf("resource api %v SingularKey or PluralKey is empty", api)
