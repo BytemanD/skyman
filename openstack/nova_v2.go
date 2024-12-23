@@ -924,8 +924,11 @@ func (c hypervisorApi) ListByName(hostname string) ([]nova.Hypervisor, error) {
 
 func (c hypervisorApi) Show(id string) (*nova.Hypervisor, error) {
 	body := struct{ Hypervisor nova.Hypervisor }{}
-	if _, err := c.AppendUrl(id).Get(&body); err != nil {
+	if resp, err := c.AppendUrl(id).Get(&body); err != nil {
 		return nil, err
+	} else {
+		body.Hypervisor.SetNumaNode(resp.Body())
+		fmt.Println(body.Hypervisor.NumaNodes)
 	}
 	return &body.Hypervisor, nil
 }

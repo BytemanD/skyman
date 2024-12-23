@@ -3,6 +3,7 @@ package nova
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -266,13 +267,41 @@ type Hypervisor struct {
 	NumaNode1Hugepages map[string]interface{} `json:"numa_node_1_hugepages"`
 	NumaNode2Hugepages map[string]interface{} `json:"numa_node_2_hugepages"`
 	NumaNode3Hugepages map[string]interface{} `json:"numa_node_3_hugepages"`
+	NumaNode4Hugepages map[string]interface{} `json:"numa_node_4_hugepages"`
+	NumaNode5Hugepages map[string]interface{} `json:"numa_node_5_hugepages"`
+	NumaNode6Hugepages map[string]interface{} `json:"numa_node_6_hugepages"`
+	NumaNode7Hugepages map[string]interface{} `json:"numa_node_7_hugepages"`
 
 	NumaNode0Cpuset map[string]interface{} `json:"numa_node_0_cpuset"`
 	NumaNode1Cpuset map[string]interface{} `json:"numa_node_1_cpuset"`
 	NumaNode2Cpuset map[string]interface{} `json:"numa_node_2_cpuset"`
 	NumaNode3Cpuset map[string]interface{} `json:"numa_node_3_cpuset"`
+	NumaNode4Cpuset map[string]interface{} `json:"numa_node_4_cpuset"`
+	NumaNode5Cpuset map[string]interface{} `json:"numa_node_5_cpuset"`
+	NumaNode6Cpuset map[string]interface{} `json:"numa_node_6_cpuset"`
+	NumaNode7Cpuset map[string]interface{} `json:"numa_node_7_cpuset"`
 
 	Servers []HypervisorServer
+
+	NumaNodes map[string]NumaNode
+}
+
+type NumaNode struct {
+	HugePages NumaNodeHugePages
+	CpuSet    NumaNodeCpuSet
+}
+
+type NumaNodeHugePages struct {
+	Total    float32
+	Free     float32
+	Reserved float32
+	Used     float32
+}
+type NumaNodeCpuSet struct {
+	Total    int
+	Free     int
+	Reserved int
+	Used     int
 }
 
 func (hypervisor Hypervisor) ExtraResourcesMarshal(indent bool) string {
@@ -283,6 +312,51 @@ func (hypervisor Hypervisor) ExtraResourcesMarshal(indent bool) string {
 		m, _ = json.Marshal(hypervisor.ExtraResources)
 	}
 	return string(m)
+}
+func (hypervisor *Hypervisor) SetNumaNode(data []byte) error {
+	dataMap := struct {
+		Hypervisor map[string]interface{}
+	}{}
+
+	if err := json.Unmarshal(data, &dataMap); err != nil {
+		return err
+	}
+	regCpuset, _ := regexp.Compile("numa_node_([0-9]+)_cpuset")
+	regHugePages, _ := regexp.Compile("numa_node_([0-9]+)_hugepages")
+
+	hypervisor.NumaNodes = map[string]NumaNode{}
+	for k, v := range dataMap.Hypervisor {
+		matchHygePages := regHugePages.FindStringSubmatch(k)
+		if len(matchHygePages) > 0 {
+			nodeIndex := (matchHygePages[0])
+			hugePage := NumaNodeHugePages{}
+			bytes, _ := json.Marshal(v)
+			json.Unmarshal(bytes, &hugePage)
+			if node, ok := hypervisor.NumaNodes[nodeIndex]; ok {
+				node.HugePages = hugePage
+				hypervisor.NumaNodes[nodeIndex] = node
+			} else {
+				hypervisor.NumaNodes[nodeIndex] = NumaNode{HugePages: hugePage}
+			}
+			continue
+		}
+		matchCpuSet := regCpuset.FindStringSubmatch(k)
+		if len(matchCpuSet) > 0 {
+			nodeIndex := (matchCpuSet[0])
+			fmt.Println("4444444", nodeIndex)
+			cpuset := NumaNodeCpuSet{}
+			bytes, _ := json.Marshal(v)
+			json.Unmarshal(bytes, &cpuset)
+			if node, ok := hypervisor.NumaNodes[nodeIndex]; ok {
+				node.CpuSet = cpuset
+				hypervisor.NumaNodes[nodeIndex] = node
+			} else {
+				hypervisor.NumaNodes[nodeIndex] = NumaNode{CpuSet: cpuset}
+			}
+			continue
+		}
+	}
+	return nil
 }
 
 type Hypervisors []Hypervisor

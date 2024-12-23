@@ -136,6 +136,12 @@ var hypervisorShow = &cobra.Command{
 				common.Column{Name: "NumaNode3Cpuset", Marshal: true},
 			)
 		}
+		if len(hypervisor.NumaNode4Hugepages) > 0 {
+			pt.ShortFields = append(pt.ShortFields,
+				common.Column{Name: "NumaNode4Hugepages", Marshal: true},
+				common.Column{Name: "NumaNode4Cpuset", Marshal: true},
+			)
+		}
 		common.PrintPrettyItemTable(pt)
 	},
 }
