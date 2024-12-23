@@ -927,8 +927,7 @@ func (c hypervisorApi) Show(id string) (*nova.Hypervisor, error) {
 	if resp, err := c.AppendUrl(id).Get(&body); err != nil {
 		return nil, err
 	} else {
-		body.Hypervisor.SetNumaNode(resp.Body())
-		fmt.Println(body.Hypervisor.NumaNodes)
+		body.Hypervisor.SetNumaNodes(resp.Body())
 	}
 	return &body.Hypervisor, nil
 }

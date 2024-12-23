@@ -263,27 +263,8 @@ type Hypervisor struct {
 	ExtraResources     map[string]interface{} `json:"extra_resources"`
 	CpuInfo            CpuInfo                `json:"cpu_info"`
 
-	NumaNode0Hugepages map[string]interface{} `json:"numa_node_0_hugepages"`
-	NumaNode1Hugepages map[string]interface{} `json:"numa_node_1_hugepages"`
-	NumaNode2Hugepages map[string]interface{} `json:"numa_node_2_hugepages"`
-	NumaNode3Hugepages map[string]interface{} `json:"numa_node_3_hugepages"`
-	NumaNode4Hugepages map[string]interface{} `json:"numa_node_4_hugepages"`
-	NumaNode5Hugepages map[string]interface{} `json:"numa_node_5_hugepages"`
-	NumaNode6Hugepages map[string]interface{} `json:"numa_node_6_hugepages"`
-	NumaNode7Hugepages map[string]interface{} `json:"numa_node_7_hugepages"`
-
-	NumaNode0Cpuset map[string]interface{} `json:"numa_node_0_cpuset"`
-	NumaNode1Cpuset map[string]interface{} `json:"numa_node_1_cpuset"`
-	NumaNode2Cpuset map[string]interface{} `json:"numa_node_2_cpuset"`
-	NumaNode3Cpuset map[string]interface{} `json:"numa_node_3_cpuset"`
-	NumaNode4Cpuset map[string]interface{} `json:"numa_node_4_cpuset"`
-	NumaNode5Cpuset map[string]interface{} `json:"numa_node_5_cpuset"`
-	NumaNode6Cpuset map[string]interface{} `json:"numa_node_6_cpuset"`
-	NumaNode7Cpuset map[string]interface{} `json:"numa_node_7_cpuset"`
-
-	Servers []HypervisorServer
-
 	NumaNodes map[string]NumaNode
+	Servers   []HypervisorServer
 }
 
 type NumaNode struct {
@@ -291,17 +272,36 @@ type NumaNode struct {
 	CpuSet    NumaNodeCpuSet
 }
 
-type NumaNodeHugePages struct {
-	Total    float32
-	Free     float32
-	Reserved float32
-	Used     float32
+func (hypervisor Hypervisor) NumaNodeKeys() []string {
+	keys := make([]string, 0, len(hypervisor.NumaNodes))
+	for key := range hypervisor.NumaNodes {
+		keys = append(keys, key)
+	}
+	return keys
 }
+
+type NumaNodeHugePages struct {
+	Total    int
+	Free     int
+	Reserved int
+	Used     int
+}
+
+func (hugepage NumaNodeHugePages) String() string {
+	return fmt.Sprintf("total=%d, used=%d, resreved=%d, free=%d",
+		hugepage.Total, hugepage.Used, hugepage.Reserved, hugepage.Free)
+}
+
 type NumaNodeCpuSet struct {
 	Total    int
 	Free     int
 	Reserved int
 	Used     int
+}
+
+func (cpuset NumaNodeCpuSet) String() string {
+	return fmt.Sprintf("total=%d, used=%d, resreved=%d, free=%d",
+		cpuset.Total, cpuset.Used, cpuset.Reserved, cpuset.Free)
 }
 
 func (hypervisor Hypervisor) ExtraResourcesMarshal(indent bool) string {
@@ -313,7 +313,19 @@ func (hypervisor Hypervisor) ExtraResourcesMarshal(indent bool) string {
 	}
 	return string(m)
 }
-func (hypervisor *Hypervisor) SetNumaNode(data []byte) error {
+func (hypervisor Hypervisor) FormatNumaNodes() string {
+	lines := []string{}
+	keys := hypervisor.NumaNodeKeys()
+	sort.Strings(keys)
+	for _, index := range keys {
+		node := hypervisor.NumaNodes[index]
+		lines = append(lines,
+			fmt.Sprintf("%2s: hugepages: %s\n       cpuset: %s",
+				index, node.HugePages, node.CpuSet))
+	}
+	return strings.Join(lines, "\n")
+}
+func (hypervisor *Hypervisor) SetNumaNodes(data []byte) error {
 	dataMap := struct {
 		Hypervisor map[string]interface{}
 	}{}
@@ -328,7 +340,7 @@ func (hypervisor *Hypervisor) SetNumaNode(data []byte) error {
 	for k, v := range dataMap.Hypervisor {
 		matchHygePages := regHugePages.FindStringSubmatch(k)
 		if len(matchHygePages) > 0 {
-			nodeIndex := (matchHygePages[0])
+			nodeIndex := matchHygePages[1]
 			hugePage := NumaNodeHugePages{}
 			bytes, _ := json.Marshal(v)
 			json.Unmarshal(bytes, &hugePage)
@@ -342,8 +354,7 @@ func (hypervisor *Hypervisor) SetNumaNode(data []byte) error {
 		}
 		matchCpuSet := regCpuset.FindStringSubmatch(k)
 		if len(matchCpuSet) > 0 {
-			nodeIndex := (matchCpuSet[0])
-			fmt.Println("4444444", nodeIndex)
+			nodeIndex := matchCpuSet[1]
 			cpuset := NumaNodeCpuSet{}
 			bytes, _ := json.Marshal(v)
 			json.Unmarshal(bytes, &cpuset)

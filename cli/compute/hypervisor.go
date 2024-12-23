@@ -108,39 +108,12 @@ var hypervisorShow = &cobra.Command{
 						return p.CpuInfo.Features
 					},
 				},
-				// {Name: "Servers"},
+				{Name: "NumaNodes", Slot: func(item interface{}) interface{} {
+					p, _ := item.(nova.Hypervisor)
+					return p.FormatNumaNodes()
+				}},
 			},
 			Item: *hypervisor,
-		}
-		if len(hypervisor.NumaNode0Hugepages) > 0 {
-			pt.ShortFields = append(pt.ShortFields,
-				common.Column{Name: "NumaNode0Hugepages", Marshal: true},
-				common.Column{Name: "NumaNode0Cpuset", Marshal: true},
-			)
-		}
-		if len(hypervisor.NumaNode1Hugepages) > 0 {
-			pt.ShortFields = append(pt.ShortFields,
-				common.Column{Name: "NumaNode1Hugepages", Marshal: true},
-				common.Column{Name: "NumaNode1Cpuset", Marshal: true},
-			)
-		}
-		if len(hypervisor.NumaNode2Hugepages) > 0 {
-			pt.ShortFields = append(pt.ShortFields,
-				common.Column{Name: "NumaNode2Hugepages", Marshal: true},
-				common.Column{Name: "NumaNode2Cpuset", Marshal: true},
-			)
-		}
-		if len(hypervisor.NumaNode3Hugepages) > 0 {
-			pt.ShortFields = append(pt.ShortFields,
-				common.Column{Name: "NumaNode3Hugepages", Marshal: true},
-				common.Column{Name: "NumaNode3Cpuset", Marshal: true},
-			)
-		}
-		if len(hypervisor.NumaNode4Hugepages) > 0 {
-			pt.ShortFields = append(pt.ShortFields,
-				common.Column{Name: "NumaNode4Hugepages", Marshal: true},
-				common.Column{Name: "NumaNode4Cpuset", Marshal: true},
-			)
 		}
 		common.PrintPrettyItemTable(pt)
 	},
