@@ -89,12 +89,11 @@ func (c VolumeApi) Delete(id string, force bool, cascade bool) error {
 	query := url.Values{}
 	if force {
 		query.Add("force", "false")
-		query.Add("cascade", "true")
 	}
 	if cascade {
 		query.Add("cascade", "true")
 	}
-	_, err := c.ResourceApi.Delete(id, query)
+	_, err := c.ResourceDelete(id, query)
 	return err
 }
 
@@ -175,7 +174,7 @@ func (c VolumeTypeApi) Create(params map[string]interface{}) (*cinder.VolumeType
 	return &result.VolumeType, err
 }
 func (c VolumeTypeApi) Delete(id string) error {
-	_, err := c.ResourceApi.Delete(id)
+	_, err := c.ResourceDelete(id)
 	return err
 }
 
@@ -271,7 +270,7 @@ func (c BackupApi) Show(id string) (*cinder.Backup, error) {
 	return &result.Backup, nil
 }
 func (c BackupApi) Delete(id string) error {
-	_, err := c.ResourceApi.Delete(id)
+	_, err := c.ResourceDelete(id)
 	return err
 }
 func (c BackupApi) Found(idOrName string) (*cinder.Backup, error) {
@@ -311,7 +310,8 @@ func (c CinderV2) GetCurrentVersion() (*model.ApiVersion, error) {
 
 func (c CinderV2) Volume() VolumeApi {
 	return VolumeApi{
-		ResourceApi: ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint},
+		ResourceApi: ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint,
+			ResourceUrl: "volumes"},
 	}
 }
 func (c CinderV2) Service() VolumeServiceApi {
@@ -327,6 +327,7 @@ func (c CinderV2) Snapshot() SnapshotApi {
 }
 func (c CinderV2) Backup() BackupApi {
 	return BackupApi{
-		ResourceApi: ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint},
+		ResourceApi: ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint,
+			ResourceUrl: "backups"},
 	}
 }

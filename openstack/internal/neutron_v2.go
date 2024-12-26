@@ -134,7 +134,8 @@ type NetworkApi struct{ ResourceApi }
 
 func (c NeutronV2) Network() NetworkApi {
 	return NetworkApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint},
+		ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint,
+			ResourceUrl: "networks"},
 	}
 }
 func (c NeutronV2) ListRouterPorts(routerId string) (neutron.Ports, error) {
@@ -172,7 +173,7 @@ func (c NetworkApi) Create(params map[string]interface{}) (*neutron.Network, err
 }
 
 func (c NetworkApi) Delete(id string) error {
-	_, err := c.ResourceApi.Delete(id)
+	_, err := c.ResourceDelete(id)
 	return err
 }
 
@@ -181,7 +182,7 @@ type SubnetApi struct{ ResourceApi }
 
 func (c NeutronV2) Subnet() SubnetApi {
 	return SubnetApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint},
+		ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint, ResourceUrl: "subnets"},
 	}
 }
 func (c SubnetApi) List(query url.Values) ([]neutron.Subnet, error) {
@@ -214,7 +215,7 @@ func (c SubnetApi) Create(params map[string]interface{}) (*neutron.Subnet, error
 }
 
 func (c SubnetApi) Delete(id string) error {
-	_, err := c.ResourceApi.Delete(id)
+	_, err := c.ResourceDelete(id)
 	return err
 }
 
@@ -223,7 +224,8 @@ type PortApi struct{ ResourceApi }
 
 func (c NeutronV2) Port() PortApi {
 	return PortApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint},
+		ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint,
+			ResourceUrl: "ports"},
 	}
 }
 
@@ -266,7 +268,7 @@ func (c PortApi) Create(params map[string]interface{}) (*neutron.Port, error) {
 }
 
 func (c PortApi) Delete(id string) error {
-	_, err := c.ResourceApi.Delete(id)
+	_, err := c.ResourceDelete(id)
 	return err
 }
 

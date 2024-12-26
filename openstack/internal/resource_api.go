@@ -24,8 +24,9 @@ func checkError(resp *resty.Response, err error) (*resty.Response, error) {
 }
 
 type ResourceApi struct {
-	Client  *resty.Client
-	BaseUrl string
+	Client      *resty.Client
+	BaseUrl     string
+	ResourceUrl string
 
 	EnableAllTenant bool
 	SingularKey     string
@@ -83,7 +84,12 @@ func (r ResourceApi) Delete(u string, query ...url.Values) (*resty.Response, err
 	return checkError(
 		r.NewDeleteRequest(u, q, nil).Send(),
 	)
-
+}
+func (r ResourceApi) ResourceDelete(id string, query ...url.Values) (*resty.Response, error) {
+	if r.ResourceUrl == "" {
+		return nil, fmt.Errorf("ResourceUrl is empty")
+	}
+	return r.Delete(r.ResourceUrl+"/"+id, query...)
 }
 func (r ResourceApi) Post(url string, body interface{}, result interface{}) (*resty.Response, error) {
 	return checkError(
