@@ -72,7 +72,19 @@ func Retry(condition RetryCondition, function func() bool) error {
 		time.Sleep(condition.NextInterval())
 	}
 }
-
+func RetryError(condition RetryCondition, function func() (bool, error)) error {
+	startTime := time.Now()
+	for {
+		retry, err := function()
+		if !retry {
+			return err
+		}
+		if condition.Timeout > 0 && time.Since(startTime) >= condition.Timeout {
+			return fmt.Errorf("retry timeout(%v)", condition.Timeout)
+		}
+		time.Sleep(condition.NextInterval())
+	}
+}
 func RetryWithContext(ctx context.Context, condition RetryCondition, function func() error) error {
 	startTime := time.Now()
 	for {

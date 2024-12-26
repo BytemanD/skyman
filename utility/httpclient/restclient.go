@@ -56,7 +56,7 @@ func (c *RESTClient) getSession() *resty.Client {
 	return c.session
 }
 func (c *RESTClient) getRequest(method, url string) *resty.Request {
-	req := c.getSession().SetHeaders(c.BaseHeaders).R()
+	req := c.getSession().R()
 	req.Method, req.URL = method, url
 	return req
 }
@@ -64,6 +64,9 @@ func (c *RESTClient) GetRequest(method, url string) *resty.Request {
 	return c.getRequest(method, url)
 }
 func (c *RESTClient) logReq(req *resty.Request) {
+	if req == nil {
+		return
+	}
 	encodedHeader := ""
 	if c.AuthPlugin != nil {
 		encodedHeader = EncodeHeaders(c.AuthPlugin.GetSafeHeader(req.Header))
@@ -116,36 +119,35 @@ func (c *RESTClient) Request(req *resty.Request) (*resty.Response, error) {
 }
 
 func (c *RESTClient) Get(url string, query url.Values, headers map[string]string) (*resty.Response, error) {
-	req := c.getRequest(resty.MethodGet, url).SetHeaders(c.BaseHeaders).SetQueryParamsFromValues(query)
+	req := c.getRequest(resty.MethodGet, url).SetQueryParamsFromValues(query)
 	if headers != nil {
 		req.SetHeaders(headers)
 	}
 	return c.Request(req)
 }
 func (c *RESTClient) Post(url string, body interface{}, headers map[string]string) (*resty.Response, error) {
-	req := c.getRequest(resty.MethodPost, url).SetHeaders(c.BaseHeaders).SetBody(body)
+	req := c.getRequest(resty.MethodPost, url).SetBody(body)
 	if headers != nil {
 		req.SetHeaders(headers)
 	}
 	return c.Request(req)
 }
 func (c *RESTClient) Put(url string, body interface{}, headers map[string]string) (*resty.Response, error) {
-	req := c.getRequest(resty.MethodPut, url).SetHeaders(c.BaseHeaders).SetBody(body)
+	req := c.getRequest(resty.MethodPut, url).SetBody(body)
 	if headers != nil {
 		req.SetHeaders(headers)
 	}
 	return c.Request(req)
 }
 func (c *RESTClient) Delete(url string, headers map[string]string) (*resty.Response, error) {
-	req := c.getRequest(resty.MethodDelete, url).SetHeaders(c.BaseHeaders)
+	req := c.getRequest(resty.MethodDelete, url)
 	if headers != nil {
 		req.SetHeaders(headers)
 	}
 	return c.Request(req)
 }
 func (c *RESTClient) Patch(url string, body interface{}, query url.Values, headers map[string]string) (*resty.Response, error) {
-	req := c.getRequest(resty.MethodPatch, url).SetHeaders(c.BaseHeaders).
-		SetBody(body).SetQueryParamsFromValues(query)
+	req := c.getRequest(resty.MethodPatch, url).SetBody(body).SetQueryParamsFromValues(query)
 	if headers != nil {
 		req.SetHeaders(headers)
 	}

@@ -109,12 +109,6 @@ var attachInterfaces = &cobra.Command{
 					return err
 				}
 				logging.Debug("[interface: %s] attaching", attachment.PortId)
-
-				interfaces, err := client.NovaV2().Server().ListInterfaces(server.Id)
-				if err != nil {
-					utility.LogError(err, "list server interfaces failed:", false)
-					return err
-				}
 				for {
 					port, err := client.NeutronV2().Port().Show(attachment.PortId)
 
@@ -137,14 +131,29 @@ var attachInterfaces = &cobra.Command{
 					time.Sleep(time.Second * 3)
 				}
 
-				for _, vif := range interfaces {
-					if vif.PortId == p.PortId {
-						logging.Info("[interface: %s] attach success", attachment.PortId)
-						return nil
-					}
+				err = utility.RetryError(
+					utility.RetryCondition{Timeout: time.Second * 60, IntervalMin: time.Second},
+					func() (bool, error) {
+						interfaces, err := client.NovaV2().Server().ListInterfaces(server.Id)
+						if err != nil {
+							logging.Error("list server interfaces failed: %s", err)
+							return false, err
+						}
+						for _, vif := range interfaces {
+							if vif.PortId == attachment.PortId {
+								return false, nil
+							}
+						}
+						return true, nil
+					},
+				)
+				if err != nil {
+					logging.Error("[interface: %s] attach failed", attachment.PortId)
+					attachFailed = true
+				} else {
+					logging.Info("[interface: %s] attach success", attachment.PortId)
 				}
-				logging.Error("[interface: %s] attach failed", attachment.PortId)
-				attachFailed = true
+
 				return nil
 			},
 		}
