@@ -751,7 +751,7 @@ var serverSet = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		serverPassword := *setFlags.Password
 
-		if !*setFlags.PasswordPrompt {
+		if *setFlags.PasswordPrompt {
 			serverPassword = getPasswordInput()
 		}
 
