@@ -106,6 +106,40 @@ func (r ResourceApi) Patch(url string, body interface{}, result interface{}, hea
 		r.NewPatchRequest(url, body, result).SetHeaders(headers).Send(),
 	)
 }
+func ListResource[T any](r ResourceApi, query url.Values) ([]T, error) {
+	if r.ResourceUrl == "" {
+		return nil, fmt.Errorf("ResourceUrl is empty")
+	}
+	if r.PluralKey == "" {
+		return nil, fmt.Errorf("PluralKey is empty")
+	}
+	respBody := map[string][]T{r.PluralKey: {}}
+	if _, err := r.Get(r.ResourceUrl, query, &respBody); err != nil {
+		return nil, err
+	}
+	return respBody[r.PluralKey], nil
+}
+func ShowResource[T any](r ResourceApi, id string) (*T, error) {
+	if r.ResourceUrl == "" {
+		return nil, fmt.Errorf("ResourceUrl is empty")
+	}
+	if r.SingularKey == "" {
+		return nil, fmt.Errorf("SingularKey is empty")
+	}
+	respBody := map[string]*T{}
+	// respBody[r.SingularKey] = T{}
+	if _, err := r.Get("volumes/"+id, nil, &respBody); err != nil {
+		return nil, err
+	}
+	return respBody[r.SingularKey], nil
+}
+func DeleteResource(r ResourceApi, id string, query ...url.Values) (*resty.Response, error) {
+	if r.ResourceUrl == "" {
+		return nil, fmt.Errorf("ResourceUrl is empty")
+	}
+	return r.Delete(r.ResourceUrl+"/"+id, query...)
+}
+
 func FindResource[T any](
 	idOrName string,
 	showFunc func(id string) (*T, error),
