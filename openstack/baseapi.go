@@ -23,10 +23,12 @@ import (
 )
 
 const (
+	V2   = "v2"
+	V2_0 = "v2.0"
+	V2_1 = "v2.1"
+	V3   = "v3"
+
 	X_OPENSTACK_REQUEST_ID = "X-Openstack-Request-Id"
-	V2                     = "v2"
-	V2_0                   = "v2.0"
-	V3                     = "v3"
 )
 
 type RestClient2 struct {
@@ -119,7 +121,7 @@ type Openstack struct {
 	AuthPlugin        auth.AuthPlugin
 	ComputeApiVersion string
 
-	novaClient *NovaV2
+	novaClient *internal.NovaV2
 
 	keystoneClient *internal.KeystoneV3
 	glanceClient   *internal.GlanceV2
@@ -191,6 +193,21 @@ func DefaultClient() *Openstack {
 	return c
 }
 
+type microVersion struct {
+	Version      int
+	MicroVersion int
+}
+
+func (v microVersion) LargeEqual(other string) bool {
+	otherMicroVersion := getMicroVersion(other)
+	if v.Version > otherMicroVersion.Version {
+		return true
+	} else if v.Version == otherMicroVersion.Version {
+		return v.MicroVersion >= otherMicroVersion.MicroVersion
+	} else {
+		return false
+	}
+}
 func getMicroVersion(vertionStr string) microVersion {
 	versionList := strings.Split(vertionStr, ".")
 	v, _ := strconv.Atoi(versionList[0])
@@ -415,6 +432,36 @@ func (o *Openstack) KeystoneV3() *internal.KeystoneV3 {
 		}
 	}
 	return o.keystoneClient
+}
+func (o *Openstack) NovaV2(microVersion ...string) *internal.NovaV2 {
+	o.servieLock.Lock()
+	defer o.servieLock.Unlock()
+
+	if o.novaClient == nil {
+		endpoint, err := o.AuthPlugin.GetServiceEndpoint("compute", "nova", "public")
+		if err != nil {
+			logging.Warning("get nova endpoint falied: %v", err)
+			return &internal.NovaV2{}
+		}
+		o.novaClient = &internal.NovaV2{
+			ServiceClient: internal.NewServiceApi(endpoint, V2_1, o.AuthPlugin),
+		}
+		currentVersion, err := o.novaClient.GetCurrentVersion()
+		if err != nil {
+			logging.Warning("get current version failed: %v", err)
+		} else {
+			o.novaClient.MicroVersion = currentVersion
+			if o.ComputeApiVersion != "" {
+				o.novaClient.MicroVersion.Version = o.ComputeApiVersion
+			}
+			logging.Debug("current nova version: %s", o.novaClient.MicroVersion.VersoinInfo())
+		}
+		if o.novaClient.MicroVersion != nil {
+			o.novaClient.AddBaseHeader("Openstack-Api-Version", o.novaClient.MicroVersion.Version)
+			o.novaClient.AddBaseHeader("X-Openstack-Nova-Api-Version", o.novaClient.MicroVersion.Version)
+		}
+	}
+	return o.novaClient
 }
 func FoundResource[T any](api ResourceApi, idOrName string) (*T, error) {
 	if api.SingularKey == "" || api.PluralKey == "" {

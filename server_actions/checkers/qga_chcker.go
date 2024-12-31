@@ -215,7 +215,7 @@ func (c QGAChecker) MakesureVolumeSizeIs(attachment *nova.VolumeAttachment, size
 }
 
 func GetQgaChecker(client *openstack.Openstack, server *nova.Server) (*QGAChecker, error) {
-	host, err := client.NovaV2().Hypervisor().Found(server.Host)
+	host, err := client.NovaV2().Hypervisor().Find(server.Host)
 	if err != nil {
 		return nil, fmt.Errorf("get hypervisor failed: %s", err)
 	}

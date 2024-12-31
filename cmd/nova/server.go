@@ -1,4 +1,4 @@
-package compute
+package nova
 
 import (
 	"fmt"
@@ -83,7 +83,7 @@ var serverList = &cobra.Command{
 			query.Add("status", status)
 		}
 		if *listFlags.Flavor != "" {
-			flavor, err := c.NovaV2().Flavor().Found(*listFlags.Flavor, false)
+			flavor, err := c.NovaV2().Flavor().Find(*listFlags.Flavor, false)
 			if err != nil {
 				logging.Fatal("%s", err)
 			}
@@ -99,7 +99,7 @@ var serverList = &cobra.Command{
 			}
 		}
 		if *listFlags.AZ != "" {
-			computeService, err := c.NovaV2().Service().ListCompute()
+			computeService, err := c.NovaV2().Service().List(nil)
 			utility.LogIfError(err, true, "list compute service failed")
 
 			computeService = utility.Filter[nova.Service](
@@ -222,7 +222,7 @@ var serverShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		c := openstack.DefaultClient()
-		server, err := c.NovaV2().Server().Found(args[0])
+		server, err := c.NovaV2().Server().Find(args[0])
 		if err != nil {
 			logging.Fatal("%v", err)
 		}
@@ -342,8 +342,8 @@ var serverDelete = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		for _, idOrName := range args {
-			client.NovaV2().Server().Found(idOrName)
-			s, err := client.NovaV2().Server().Found(idOrName)
+			client.NovaV2().Server().Find(idOrName)
+			s, err := client.NovaV2().Server().Find(idOrName)
 			if err != nil {
 				utility.LogError(err, fmt.Sprintf("found server %s failed", idOrName), false)
 				continue
@@ -370,7 +370,7 @@ var serverStop = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 		for _, idOrName := range args {
-			server, err := client.NovaV2().Server().Found(idOrName)
+			server, err := client.NovaV2().Server().Find(idOrName)
 			if err != nil {
 				logging.Error("get server %s failed, %v", idOrName, err)
 				continue
@@ -391,7 +391,7 @@ var serverStart = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 		for _, idOrName := range args {
-			server, err := client.NovaV2().Server().Found(idOrName)
+			server, err := client.NovaV2().Server().Find(idOrName)
 			if err != nil {
 				logging.Error("get server %s failed, %v", idOrName, err)
 				continue
@@ -415,7 +415,7 @@ var serverReboot = &cobra.Command{
 
 		servers := []nova.Server{}
 		for _, idOrName := range args {
-			server, err := client.NovaV2().Server().Found(idOrName)
+			server, err := client.NovaV2().Server().Find(idOrName)
 			if err != nil {
 				logging.Error("get server %s failed, %v", idOrName, err)
 				continue
@@ -449,7 +449,7 @@ var serverPause = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		for _, idOrName := range args {
-			server, err := client.NovaV2().Server().Found(idOrName)
+			server, err := client.NovaV2().Server().Find(idOrName)
 			if err != nil {
 				logging.Error("get server %s failed, %v", idOrName, err)
 				continue
@@ -471,7 +471,7 @@ var serverUnpause = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		for _, idOrName := range args {
-			server, err := client.NovaV2().Server().Found(idOrName)
+			server, err := client.NovaV2().Server().Find(idOrName)
 			if err != nil {
 				logging.Error("get server %s failed, %v", idOrName, err)
 				continue
@@ -493,7 +493,7 @@ var serverShelve = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		for _, id := range args {
-			server, err := client.NovaV2().Server().Found(id)
+			server, err := client.NovaV2().Server().Find(id)
 			if err != nil {
 				utility.LogError(err, fmt.Sprintf("get server %s faield", id), false)
 				continue
@@ -515,7 +515,7 @@ var serverUnshelve = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		for _, idorName := range args {
-			server, err := client.NovaV2().Server().Found(idorName)
+			server, err := client.NovaV2().Server().Find(idorName)
 			utility.LogIfError(err, true, "get server %s faield", idorName)
 			err = client.NovaV2().Server().Unshelve(server.Id)
 			if err != nil {
@@ -582,7 +582,7 @@ var serverResize = &cobra.Command{
 		var flavor *nova.Flavor
 
 		for _, serverId := range args {
-			server, err := client.NovaV2().Server().Found(serverId)
+			server, err := client.NovaV2().Server().Find(serverId)
 			if err != nil {
 				utility.LogIfError(err, true, "get server %s failed", serverId)
 			}
@@ -604,7 +604,7 @@ var serverResize = &cobra.Command{
 				continue
 			}
 			if *resizeFlags.Flavor != "" {
-				flavor, err = client.NovaV2().Flavor().Found(*resizeFlags.Flavor, false)
+				flavor, err = client.NovaV2().Flavor().Find(*resizeFlags.Flavor, false)
 				utility.LogError(err, fmt.Sprintf("Get flavor %s failed", *resizeFlags.Flavor), true)
 			}
 			logging.Info("[%s] flavor is %s", server.Id, server.Flavor.OriginalName)
@@ -644,7 +644,7 @@ var serverMigrate = &cobra.Command{
 		srcHostMap := map[string]string{}
 		servers := []*nova.Server{}
 		for _, idOrName := range args {
-			server, err := client.NovaV2().Server().Found(idOrName)
+			server, err := client.NovaV2().Server().Find(idOrName)
 			utility.LogError(err, "get server server failed", true)
 			servers = append(servers, server)
 			logging.Info("[%s] source host is %s", server.Id, server.Host)
@@ -690,7 +690,7 @@ var serverRebuild = &cobra.Command{
 		// rebuildPassword, _ := cmd.Flags().GetString("rebuild-password")
 		// name, _ := cmd.Flags().GetString("name")
 
-		server, err := client.NovaV2().Server().Found(args[0])
+		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get server %s failed", args[0])
 
 		options := map[string]interface{}{}
@@ -765,7 +765,7 @@ var serverSet = &cobra.Command{
 
 		client := openstack.DefaultClient()
 		for _, idOrName := range args {
-			server, err := client.NovaV2().Server().Found(idOrName)
+			server, err := client.NovaV2().Server().Find(idOrName)
 			utility.LogError(err, "get server failed", true)
 
 			if len(params) > 0 {
@@ -862,7 +862,7 @@ var serverMigrationList = &cobra.Command{
 			query.Set("type", *migrationListFlags.Type)
 		}
 		client := openstack.DefaultClient()
-		server, err := client.NovaV2().Server().Found(args[0])
+		server, err := client.NovaV2().Server().Find(args[0])
 		if err != nil {
 			logging.Fatal("get server %s failed: %s", args[0], err)
 		}
@@ -919,7 +919,7 @@ var createImageCmd = &cobra.Command{
 		idOrName, imageName := args[0], args[1]
 		client := openstack.DefaultClient()
 
-		server, err := client.NovaV2().Server().Found(idOrName)
+		server, err := client.NovaV2().Server().Find(idOrName)
 		utility.LogError(err, "get server failed", true)
 		metadata := map[string]string{}
 		for _, meta := range *createImageFlags.Metadata {

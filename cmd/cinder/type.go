@@ -89,7 +89,7 @@ var typeShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		volumeType, err := client.CinderV2().VolumeType().Found(args[0])
+		volumeType, err := client.CinderV2().VolumeType().Find(args[0])
 		utility.LogError(err, "get volume type failed", true)
 		printVolumeType(*volumeType)
 	},
@@ -164,7 +164,7 @@ var typeDelete = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		for _, idOrName := range args {
-			volumeType, err := client.CinderV2().VolumeType().Found(idOrName)
+			volumeType, err := client.CinderV2().VolumeType().Find(idOrName)
 			if err != nil {
 				utility.LogError(err, "get volume type failed", false)
 				continue

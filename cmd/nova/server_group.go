@@ -1,4 +1,4 @@
-package compute
+package nova
 
 import (
 	"net/url"
@@ -15,6 +15,7 @@ import (
 var (
 	groupListFlags flags.GroupListFlags
 )
+
 var Group = &cobra.Command{Use: "group"}
 
 var groupList = &cobra.Command{
@@ -63,9 +64,9 @@ var groupList = &cobra.Command{
 }
 
 func init() {
-	common.RegistryLongFlag(groupList)
-
+	groupListFlags = flags.GroupListFlags{
+		Long: groupList.Flags().BoolP("long", "l", false, "List additional fields in output"),
+	}
 	Group.AddCommand(groupList)
-
 	Server.AddCommand(Group)
 }

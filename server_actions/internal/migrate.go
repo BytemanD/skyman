@@ -66,7 +66,7 @@ func (t *ServerLiveMigrate) waitServerBooted(serverId string) error {
 
 func (t *ServerLiveMigrate) getClientGuest() (*guest.Guest, error) {
 	if t.clientGuest == nil {
-		host, err := t.Client.NovaV2().Hypervisor().Found(t.clientServer.Host)
+		host, err := t.Client.NovaV2().Hypervisor().Find(t.clientServer.Host)
 		if err != nil {
 			return nil, err
 		}
@@ -193,7 +193,7 @@ func (t *ServerLiveMigrate) startLiveMigrate() error {
 	return t.WaitServerTaskFinished(true)
 }
 func (t ServerLiveMigrate) confirmServerHasIpAddress() error {
-	serverHost, err := t.Client.NovaV2().Hypervisor().Found(t.Server.Host)
+	serverHost, err := t.Client.NovaV2().Hypervisor().Find(t.Server.Host)
 	if err != nil {
 		return err
 	}

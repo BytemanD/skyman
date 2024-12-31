@@ -1,4 +1,4 @@
-package compute
+package nova
 
 import (
 	"fmt"
@@ -128,7 +128,7 @@ var flavorDelete = &cobra.Command{
 		client := openstack.DefaultClient()
 		flavorApi := client.NovaV2().Flavor()
 		for _, flavorId := range args {
-			flavor, err := flavorApi.Found(flavorId, false)
+			flavor, err := flavorApi.Find(flavorId, false)
 			if err != nil {
 				utility.LogError(err, "Get flavor failed", false)
 				continue
@@ -216,7 +216,7 @@ var flavorSet = &cobra.Command{
 			extraSpecs[splited[0]] = splited[1]
 		}
 
-		flavor, err := client.NovaV2().Flavor().Found(idOrName, true)
+		flavor, err := client.NovaV2().Flavor().Find(idOrName, true)
 
 		utility.LogError(err, "Get flavor failed", true)
 		client.NovaV2().Flavor().SetExtraSpecs(flavor.Id, extraSpecs)

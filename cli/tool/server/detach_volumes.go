@@ -32,7 +32,7 @@ var detachVolumes = &cobra.Command{
 
 		client := openstack.DefaultClient()
 		cinderClient := client.CinderV2()
-		server, err := client.NovaV2().Server().Found(args[0])
+		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogError(err, "show server failed:", true)
 		if server.IsError() {
 			utility.LogIfError(err, true, "server %s is Error", args[0])

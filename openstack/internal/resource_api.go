@@ -6,22 +6,23 @@ import (
 	"net/url"
 	"reflect"
 
+	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/utility/httpclient"
 	"github.com/go-resty/resty/v2"
 )
 
-func checkError(resp *resty.Response, err error) (*resty.Response, error) {
+func checkError(resp *resty.Response, err error) (*Response, error) {
 	if err != nil || resp == nil {
-		return resp, err
+		return &Response{resp}, err
 	}
 	if resp.IsError() {
-		return resp, httpclient.HttpError{
+		return &Response{resp}, httpclient.HttpError{
 			Status:  resp.StatusCode(),
 			Reason:  resp.Status(),
 			Message: string(resp.Body()),
 		}
 	}
-	return resp, nil
+	return &Response{resp}, nil
 }
 
 type ResourceApi struct {
@@ -35,8 +36,21 @@ type ResourceApi struct {
 
 	URL_LIST string
 	URL_SHOW string
+
+	MicroVersion *model.ApiVersion
 }
 
+func (c *ResourceApi) MicroVersionLargeEqual(version string) bool {
+	clientVersion := getMicroVersion(c.MicroVersion.Version)
+	otherVersion := getMicroVersion(version)
+	if clientVersion.Version > otherVersion.Version {
+		return true
+	} else if clientVersion.Version == otherVersion.Version {
+		return clientVersion.MicroVersion >= otherVersion.MicroVersion
+	} else {
+		return false
+	}
+}
 func (r ResourceApi) NewRequest(method string, u string, q url.Values, body interface{}, result interface{}) *resty.Request {
 	req := r.Client.R().SetQueryParamsFromValues(q).SetResult(result)
 	if reqUrl, err := url.JoinPath(r.BaseUrl, u); err != nil {
@@ -71,11 +85,11 @@ func (r ResourceApi) NewPatchRequest(u string, body interface{}, result interfac
 	return r.NewRequest(resty.MethodPatch, u, nil, body, result)
 }
 
-func (r ResourceApi) Get(url string, q url.Values, result interface{}) (*resty.Response, error) {
+func (r ResourceApi) Get(url string, q url.Values, result interface{}) (*Response, error) {
 	resp, err := r.NewGetRequest(url, q, result).Send()
 	return checkError(resp, err)
 }
-func (r ResourceApi) Delete(u string, query ...url.Values) (*resty.Response, error) {
+func (r ResourceApi) Delete(u string, query ...url.Values) (*Response, error) {
 	var q url.Values
 	if len(query) > 0 {
 		q = query[0]
@@ -86,23 +100,23 @@ func (r ResourceApi) Delete(u string, query ...url.Values) (*resty.Response, err
 		r.NewDeleteRequest(u, q, nil).Send(),
 	)
 }
-func (r ResourceApi) ResourceDelete(id string, query ...url.Values) (*resty.Response, error) {
+func (r ResourceApi) ResourceDelete(id string, query ...url.Values) (*Response, error) {
 	if r.ResourceUrl == "" {
 		return nil, fmt.Errorf("ResourceUrl is empty")
 	}
 	return r.Delete(r.ResourceUrl+"/"+id, query...)
 }
-func (r ResourceApi) Post(url string, body interface{}, result interface{}) (*resty.Response, error) {
+func (r ResourceApi) Post(url string, body interface{}, result interface{}) (*Response, error) {
 	return checkError(
 		r.NewPostRequest(url, body, result).Send(),
 	)
 }
-func (r ResourceApi) Put(url string, body interface{}, result interface{}) (*resty.Response, error) {
+func (r ResourceApi) Put(url string, body interface{}, result interface{}) (*Response, error) {
 	return checkError(
 		r.NewPutRequest(url, body, result).Send(),
 	)
 }
-func (r ResourceApi) Patch(url string, body interface{}, result interface{}, headers map[string]string) (*resty.Response, error) {
+func (r ResourceApi) Patch(url string, body interface{}, result interface{}, headers map[string]string) (*Response, error) {
 	return checkError(
 		r.NewPatchRequest(url, body, result).SetHeaders(headers).Send(),
 	)
@@ -142,7 +156,8 @@ func ShowResource[T any](r ResourceApi, id string) (*T, error) {
 	}
 	return respBody[r.SingularKey], nil
 }
-func DeleteResource(r ResourceApi, id string, query ...url.Values) (*resty.Response, error) {
+
+func DeleteResource(r ResourceApi, id string, query ...url.Values) (*Response, error) {
 	if r.ResourceUrl == "" {
 		return nil, fmt.Errorf("ResourceUrl is empty")
 	}

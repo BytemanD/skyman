@@ -20,7 +20,7 @@ var serverFind = &cobra.Command{
 		var server *nova.Server
 		for _, region := range regions {
 			logging.Info("try to find server in region '%s'", region.Id)
-			server, err = c.WithRegion(region.Id).NovaV2().Server().Found(args[0])
+			server, err = c.WithRegion(region.Id).NovaV2().Server().Find(args[0])
 			if err != nil {
 				logging.Warning("server %s not found in region %s: %s", args[0], region.Id, err)
 				continue

@@ -47,7 +47,7 @@ func (c VolumeApi) Show(id string) (*cinder.Volume, error) {
 	return &result.Volume, nil
 }
 
-func (c VolumeApi) Found(idOrName string) (*cinder.Volume, error) {
+func (c VolumeApi) Find(idOrName string) (*cinder.Volume, error) {
 	return FindResource(idOrName, c.Show, c.Detail)
 }
 func (c VolumeApi) Create(options map[string]interface{}) (*cinder.Volume, error) {
@@ -160,7 +160,7 @@ func (c VolumeTypeApi) Show(id string) (*cinder.VolumeType, error) {
 func (c VolumeTypeApi) Default() (*cinder.VolumeType, error) {
 	return c.Show("default")
 }
-func (c VolumeTypeApi) Found(idOrName string) (*cinder.VolumeType, error) {
+func (c VolumeTypeApi) Find(idOrName string) (*cinder.VolumeType, error) {
 	return FindResource(idOrName, c.Show, c.List)
 }
 func (c VolumeTypeApi) Create(params map[string]interface{}) (*cinder.VolumeType, error) {
@@ -221,7 +221,7 @@ func (c SnapshotApi) Delete(id string) error {
 	_, err := c.ResourceApi.Delete("snapshots/" + id)
 	return err
 }
-func (c SnapshotApi) Found(idOrName string) (*cinder.Snapshot, error) {
+func (c SnapshotApi) Find(idOrName string) (*cinder.Snapshot, error) {
 	return FindResource(idOrName, c.Show, c.List)
 }
 func (c SnapshotApi) Create(volumeId string, name string, force bool) (*cinder.Snapshot, error) {
@@ -273,7 +273,7 @@ func (c BackupApi) Delete(id string) error {
 	_, err := c.ResourceDelete(id)
 	return err
 }
-func (c BackupApi) Found(idOrName string) (*cinder.Backup, error) {
+func (c BackupApi) Find(idOrName string) (*cinder.Backup, error) {
 	return FindResource(idOrName, c.Show, c.List)
 }
 func (c BackupApi) Create(volumeId string, name string, force bool) (*cinder.Backup, error) {

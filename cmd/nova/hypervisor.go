@@ -1,4 +1,4 @@
-package compute
+package nova
 
 import (
 	"fmt"
@@ -71,7 +71,7 @@ var hypervisorShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		hypervisor, err := client.NovaV2().Hypervisor().Found(args[0])
+		hypervisor, err := client.NovaV2().Hypervisor().Find(args[0])
 		utility.LogError(err, "get hypervisor failed", true)
 
 		pt := common.PrettyItemTable{
@@ -124,7 +124,7 @@ var hypervisorUptime = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		hypervisor, err := client.NovaV2().Hypervisor().Found(args[0])
+		hypervisor, err := client.NovaV2().Hypervisor().Find(args[0])
 		utility.LogError(err, "get hypervisor failed", true)
 
 		hypervisor, err = client.NovaV2().Hypervisor().Uptime(hypervisor.Id)

@@ -83,7 +83,7 @@ func (c routerApi) Delete(id string) error {
 	_, err := c.ResourceApi.Delete("routers/" + id)
 	return err
 }
-func (c routerApi) Found(idOrName string) (*neutron.Router, error) {
+func (c routerApi) Find(idOrName string) (*neutron.Router, error) {
 	return FindResource(idOrName, c.Show, c.List)
 }
 
@@ -161,7 +161,7 @@ func (c NetworkApi) Show(id string) (*neutron.Network, error) {
 	}
 	return &body.Network, nil
 }
-func (c NetworkApi) Found(idOrName string) (*neutron.Network, error) {
+func (c NetworkApi) Find(idOrName string) (*neutron.Network, error) {
 	return FindResource(idOrName, c.Show, c.List)
 }
 func (c NetworkApi) Create(params map[string]interface{}) (*neutron.Network, error) {
@@ -203,7 +203,7 @@ func (c SubnetApi) Show(id string) (*neutron.Subnet, error) {
 	}
 	return &body.Subnet, nil
 }
-func (c SubnetApi) Found(idOrName string) (*neutron.Subnet, error) {
+func (c SubnetApi) Find(idOrName string) (*neutron.Subnet, error) {
 	return FindResource(idOrName, c.Show, c.List)
 }
 func (c SubnetApi) Create(params map[string]interface{}) (*neutron.Subnet, error) {
@@ -256,7 +256,7 @@ func (c PortApi) Update(id string, options map[string]interface{}) (*neutron.Por
 	}
 	return &body.Port, nil
 }
-func (c PortApi) Found(idOrName string) (*neutron.Port, error) {
+func (c PortApi) Find(idOrName string) (*neutron.Port, error) {
 	return FindResource(idOrName, c.Show, c.List)
 }
 func (c PortApi) Create(params map[string]interface{}) (*neutron.Port, error) {
@@ -321,7 +321,7 @@ func (c sgApi) Show(id string) (*neutron.SecurityGroup, error) {
 	}
 	return &body.SecurityGroup, nil
 }
-func (c sgApi) Found(idOrName string) (*neutron.SecurityGroup, error) {
+func (c sgApi) Find(idOrName string) (*neutron.SecurityGroup, error) {
 	return FindResource(idOrName, c.Show, c.List)
 }
 
@@ -388,7 +388,7 @@ func (c qosPolicyApi) Show(id string) (*neutron.QosPolicy, error) {
 	return &body.Policy, nil
 }
 
-func (c qosPolicyApi) Found(idOrName string) (*neutron.QosPolicy, error) {
+func (c qosPolicyApi) Find(idOrName string) (*neutron.QosPolicy, error) {
 	return FindResource(idOrName, c.Show, c.List)
 }
 

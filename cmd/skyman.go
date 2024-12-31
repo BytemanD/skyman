@@ -12,7 +12,6 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
 
-	"github.com/BytemanD/skyman/cli/compute"
 	"github.com/BytemanD/skyman/cli/context"
 
 	"github.com/BytemanD/skyman/cli/templates"
@@ -22,6 +21,7 @@ import (
 	"github.com/BytemanD/skyman/cmd/glance"
 	"github.com/BytemanD/skyman/cmd/keystone"
 	"github.com/BytemanD/skyman/cmd/neutron"
+	"github.com/BytemanD/skyman/cmd/nova"
 	"github.com/BytemanD/skyman/cmd/quota"
 	"github.com/BytemanD/skyman/cmd/test"
 	"github.com/BytemanD/skyman/common"
@@ -188,9 +188,9 @@ func main() {
 		keystone.Service, keystone.Endpoint, keystone.Region,
 		keystone.User, keystone.Project,
 
-		compute.Server, compute.Flavor, compute.Hypervisor,
-		compute.Keypair, compute.Compute, compute.Console,
-		compute.Migration, compute.AZ, compute.Aggregate,
+		nova.Server, nova.Flavor, nova.Hypervisor,
+		nova.Keypair, nova.Compute, nova.Console,
+		nova.Migration, nova.AZ, nova.Aggregate,
 		glance.Image,
 		cinder.Volume, cinder.Snapshot, cinder.Backup,
 

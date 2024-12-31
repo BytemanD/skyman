@@ -64,7 +64,7 @@ var subnetCreate = &cobra.Command{
 		cidr, _ := cmd.Flags().GetString("cidr")
 		ipVersion, _ := cmd.Flags().GetInt("ip-version")
 
-		network, err := c.Network().Found(netIdOrName)
+		network, err := c.Network().Find(netIdOrName)
 		utility.LogError(err, "get network failed", true)
 
 		params := map[string]interface{}{
@@ -90,7 +90,7 @@ var subnetShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().NeutronV2()
-		subnet, err := c.Subnet().Found(args[0])
+		subnet, err := c.Subnet().Find(args[0])
 		utility.LogError(err, "show subnet failed", true)
 		table := common.PrettyItemTable{
 			Item: *subnet,

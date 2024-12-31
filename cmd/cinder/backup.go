@@ -63,7 +63,7 @@ var backupShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 		idOrName := args[0]
-		backup, err := client.CinderV2().Backup().Found(idOrName)
+		backup, err := client.CinderV2().Backup().Find(idOrName)
 		utility.LogError(err, "get backup failed", true)
 		printBackup(*backup)
 	},
@@ -76,7 +76,7 @@ var backupDelete = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		for _, idOrName := range args {
-			backup, err := client.CinderV2().Backup().Found(idOrName)
+			backup, err := client.CinderV2().Backup().Find(idOrName)
 			if err != nil {
 				utility.LogError(err, "get backup failed", false)
 				continue
@@ -101,7 +101,7 @@ var backupCreate = &cobra.Command{
 
 		client := openstack.DefaultClient()
 
-		volume, err := client.CinderV2().Volume().Found(args[0])
+		volume, err := client.CinderV2().Volume().Find(args[0])
 		utility.LogIfError(err, true, "get volume %s failed", args[0])
 
 		backup, err := client.CinderV2().Backup().Create(volume.Id, name, force)

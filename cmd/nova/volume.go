@@ -1,4 +1,4 @@
-package compute
+package nova
 
 import (
 	"fmt"
@@ -31,7 +31,7 @@ var volumeList = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		server, err := client.NovaV2().Server().Found(args[0])
+		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get server %s faield", args[0])
 		attachments, err := client.NovaV2().Server().ListVolumes(server.Id)
 		if err != nil {
@@ -49,10 +49,10 @@ var volumeAttach = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 
-		server, err := client.NovaV2().Server().Found(args[0])
+		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get server %s faield", args[0])
 
-		volume, err := client.CinderV2().Volume().Found(args[1])
+		volume, err := client.CinderV2().Volume().Find(args[1])
 		utility.LogIfError(err, true, "get volume %s faield", args[1])
 
 		attachment, err := client.NovaV2().Server().AddVolume(server.Id, volume.Id)
@@ -66,10 +66,10 @@ var volumeDetach = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		server, err := client.NovaV2().Server().Found(args[0])
+		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get server %s faield", args[0])
 
-		volume, err := client.CinderV2().Volume().Found(args[1])
+		volume, err := client.CinderV2().Volume().Find(args[1])
 		utility.LogIfError(err, true, "get volume %s faield", args[1])
 
 		err = client.NovaV2().Server().DeleteVolume(server.Id, volume.Id)

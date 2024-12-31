@@ -1,4 +1,4 @@
-package compute
+package nova
 
 import (
 	"fmt"
@@ -149,7 +149,7 @@ var serverAction = &cobra.Command{
 			requestId = args[1]
 		}
 		client := openstack.DefaultClient()
-		server, err := client.NovaV2().Server().Found(args[0])
+		server, err := client.NovaV2().Server().Find(args[0])
 		var serverId string
 		if err == nil {
 			serverId = server.Id

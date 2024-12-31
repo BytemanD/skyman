@@ -81,7 +81,7 @@ var volumeShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 		idOrName := args[0]
-		volume, err := client.CinderV2().Volume().Found(idOrName)
+		volume, err := client.CinderV2().Volume().Find(idOrName)
 		utility.LogError(err, "get volume failed", true)
 		printVolume(*volume)
 	},
@@ -96,7 +96,7 @@ var volumeDelete = &cobra.Command{
 		cascade, _ := cmd.Flags().GetBool("cascade")
 
 		for _, idOrName := range args {
-			volume, err := client.CinderV2().Volume().Found(idOrName)
+			volume, err := client.CinderV2().Volume().Find(idOrName)
 			if err != nil {
 				utility.LogError(err, "get volume failed", false)
 				continue
@@ -157,7 +157,7 @@ var volumeExtend = &cobra.Command{
 		idOrName := args[0]
 		size, _ := strconv.Atoi(args[1])
 		client := openstack.DefaultClient()
-		volume, err := client.CinderV2().Volume().Found(idOrName)
+		volume, err := client.CinderV2().Volume().Find(idOrName)
 		utility.LogError(err, "get volume falied", true)
 
 		err = client.CinderV2().Volume().Extend(volume.Id, size)
@@ -183,7 +183,7 @@ var volumeRetype = &cobra.Command{
 		migrationPolicy, _ := cmd.Flags().GetString("migration-policy")
 
 		client := openstack.DefaultClient()
-		volume, err := client.CinderV2().Volume().Found(idOrName)
+		volume, err := client.CinderV2().Volume().Find(idOrName)
 		utility.LogError(err, "get volume falied", true)
 
 		err = client.CinderV2().Volume().Retype(volume.Id, newType, migrationPolicy)

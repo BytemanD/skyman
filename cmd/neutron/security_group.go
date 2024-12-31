@@ -55,7 +55,7 @@ var sgShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient()
 
-		sg, err := c.NeutronV2().SecurityGroup().Found(args[0])
+		sg, err := c.NeutronV2().SecurityGroup().Find(args[0])
 		utility.LogError(err, "get security group failed", true)
 		pt := common.PrettyItemTable{
 			Item: *sg,

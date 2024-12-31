@@ -108,7 +108,7 @@ var portShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().NeutronV2()
-		port, err := c.Port().Found(args[0])
+		port, err := c.Port().Find(args[0])
 		if err != nil {
 			utility.LogError(err, "show port failed", true)
 		}

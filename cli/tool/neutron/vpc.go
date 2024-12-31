@@ -94,7 +94,7 @@ var vpcDelete = &cobra.Command{
 		c := openstack.DefaultClient().NeutronV2()
 		// get vpc router
 		logging.Info("get router %s", vpcRouter)
-		router, err := c.Router().Found(vpcRouter)
+		router, err := c.Router().Find(vpcRouter)
 		utility.LogIfError(err, true, "get router %s failed", vpcRouter)
 		// remove router ports
 		routerPorts, err := c.ListRouterPorts(router.Id)

@@ -30,21 +30,21 @@ var attachInterfaces = &cobra.Command{
 
 		client := openstack.DefaultClient()
 		neutronClient := client.NeutronV2()
-		server, err := client.NovaV2().Server().Found(args[0])
+		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogError(err, "show server failed:", true)
 		if server.IsError() {
 			utility.LogIfError(err, true, "server %s is Error", args[0])
 		}
 		var securityGroup *neutron.SecurityGroup
 		if sg != "" {
-			securityGroup, err = neutronClient.SecurityGroup().Found(sg)
+			securityGroup, err = neutronClient.SecurityGroup().Find(sg)
 			utility.LogIfError(err, true, "get security group %s failed:", sg)
 		}
 
 		netIds := []string{}
 		for _, idOrName := range args[1:] {
 			// tenant id
-			net, err := client.NeutronV2().Network().Found(idOrName)
+			net, err := client.NeutronV2().Network().Find(idOrName)
 			utility.LogIfError(err, true, "get net %s failed:", idOrName)
 			netIds = append(netIds, net.Id)
 		}

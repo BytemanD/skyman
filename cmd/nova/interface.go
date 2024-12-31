@@ -1,4 +1,4 @@
-package compute
+package nova
 
 import (
 	"fmt"
@@ -38,7 +38,7 @@ var interfaceList = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		server, err := client.NovaV2().Server().Found(args[0])
+		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get server %s faield", args[0])
 		attachments, err := client.NovaV2().Server().ListInterfaces(server.Id)
 		if err != nil {
@@ -56,10 +56,10 @@ var interfaceAttachPort = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 
-		server, err := client.NovaV2().Server().Found(args[0])
+		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get server %s failed", args[0])
 
-		port, err := client.NeutronV2().Port().Found(args[1])
+		port, err := client.NeutronV2().Port().Find(args[1])
 		utility.LogIfError(err, true, "get volume %s faield", args[1])
 
 		attachment, err := client.NovaV2().Server().AddInterface(server.Id, "", port.Id)
@@ -73,10 +73,10 @@ var interfaceAttachNet = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		server, err := client.NovaV2().Server().Found(args[0])
+		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get server %s failed", args[0])
 
-		network, err := client.NeutronV2().Network().Found(args[1])
+		network, err := client.NeutronV2().Network().Find(args[1])
 		utility.LogIfError(err, true, "get network %s failed", args[1])
 
 		attachment, err := client.NovaV2().Server().AddInterface(server.Id, network.Id, "")
@@ -90,10 +90,10 @@ var interfaceDetach = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		server, err := client.NovaV2().Server().Found(args[0])
+		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get server %s failed", args[0])
 
-		port, err := client.NeutronV2().Port().Found(args[1])
+		port, err := client.NeutronV2().Port().Find(args[1])
 		utility.LogIfError(err, true, "get volume %s faield", args[1])
 
 		_, err = client.NovaV2().Server().DeleteInterface(server.Id, port.Id)

@@ -63,7 +63,7 @@ var snapshotShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 		idOrName := args[0]
-		snapshot, err := client.CinderV2().Snapshot().Found(idOrName)
+		snapshot, err := client.CinderV2().Snapshot().Find(idOrName)
 		utility.LogError(err, "get snapshot failed", true)
 		printSnapshot(*snapshot)
 	},
@@ -76,7 +76,7 @@ var snapshotDelete = &cobra.Command{
 		client := openstack.DefaultClient()
 
 		for _, idOrName := range args {
-			snapshot, err := client.CinderV2().Snapshot().Found(idOrName)
+			snapshot, err := client.CinderV2().Snapshot().Find(idOrName)
 			if err != nil {
 				utility.LogError(err, "get snapshot failed", false)
 				continue
@@ -101,7 +101,7 @@ var snapshotCreate = &cobra.Command{
 
 		client := openstack.DefaultClient()
 
-		volume, err := client.CinderV2().Volume().Found(args[0])
+		volume, err := client.CinderV2().Volume().Find(args[0])
 		utility.LogIfError(err, true, "get volume %s failed", args[0])
 
 		snapshot, err := client.CinderV2().Snapshot().Create(volume.Id, name, force)
@@ -118,7 +118,7 @@ var snapshotRevert = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 
-		snapshot, err := client.CinderV2().Snapshot().Found(args[0])
+		snapshot, err := client.CinderV2().Snapshot().Find(args[0])
 		utility.LogIfError(err, true, "get snapshot %s failed", args[0])
 
 		volume, err := client.CinderV2().Volume().Show(snapshot.VolumeId)

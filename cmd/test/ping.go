@@ -26,16 +26,16 @@ var ServerPing = &cobra.Command{
 		interval, _ := cmd.Flags().GetFloat32("interval")
 		count, _ := cmd.Flags().GetInt("count")
 
-		serverInstance, err := client.NovaV2().Server().Found(args[0])
+		serverInstance, err := client.NovaV2().Server().Find(args[0])
 		utility.LogError(err, "get server failed", true)
-		clientInstance, err := client.NovaV2().Server().Found(args[1])
+		clientInstance, err := client.NovaV2().Server().Find(args[1])
 		utility.LogError(err, "get client failed", true)
 
 		logging.Debug("get server host and client host ...")
-		serverHost, err := client.NovaV2().Hypervisor().Found(serverInstance.Host)
+		serverHost, err := client.NovaV2().Hypervisor().Find(serverInstance.Host)
 		utility.LogError(err, "get server host failed", true)
 
-		clientHost, err := client.NovaV2().Hypervisor().Found(clientInstance.Host)
+		clientHost, err := client.NovaV2().Hypervisor().Find(clientInstance.Host)
 		utility.LogError(err, "get client host failed", true)
 
 		serverGuest := guest.Guest{Connection: serverHost.HostIp, Domain: serverInstance.Id}

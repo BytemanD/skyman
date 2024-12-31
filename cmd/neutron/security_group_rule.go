@@ -23,7 +23,7 @@ var sgRuleList = &cobra.Command{
 		sgIdOrName, _ := cmd.Flags().GetString("security-group")
 		query := url.Values{}
 		if sgIdOrName != "" {
-			sg, err := c.NeutronV2().SecurityGroup().Found(sgIdOrName)
+			sg, err := c.NeutronV2().SecurityGroup().Find(sgIdOrName)
 			utility.LogError(err, "get security group failed", true)
 			query.Set("security_group_id", sg.Id)
 		}

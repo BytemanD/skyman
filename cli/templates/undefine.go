@@ -20,7 +20,7 @@ func deleteFlavor(client *openstack.Openstack, flavor Flavor) error {
 			return nil
 		}
 	} else if flavor.Name != "" {
-		f, err = client.NovaV2().Flavor().Found(flavor.Name, false)
+		f, err = client.NovaV2().Flavor().Find(flavor.Name, false)
 		if err != nil {
 			logging.Warning("get flavor %s failed, %s", flavor.Name, err)
 			return nil
@@ -31,7 +31,7 @@ func deleteFlavor(client *openstack.Openstack, flavor Flavor) error {
 	// utility.LogError(err, fmt.Sprintf("delete flavor %s failed", f.Id), false)
 }
 func deleteNetwork(client *openstack.Openstack, network Network) error {
-	net, err := client.NeutronV2().Network().Found(network.Name)
+	net, err := client.NeutronV2().Network().Find(network.Name)
 	if err != nil {
 		logging.Warning("get network %s failed: %s", network.Name, err)
 		return nil
@@ -43,7 +43,7 @@ func deleteNetwork(client *openstack.Openstack, network Network) error {
 }
 
 func deleteServer(client *openstack.Openstack, server Server, watch bool) error {
-	s, err := client.NovaV2().Server().Found(server.Name)
+	s, err := client.NovaV2().Server().Find(server.Name)
 	if err != nil {
 		logging.Warning("get server %s failed, %s", server.Name, err)
 		return nil

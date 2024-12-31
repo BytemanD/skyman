@@ -169,7 +169,7 @@ func (serverInspect *ServerInspect) Print() {
 }
 
 func inspect(client *openstack.Openstack, idOrName string) (*ServerInspect, error) {
-	server, err := client.NovaV2().Server().Found(idOrName)
+	server, err := client.NovaV2().Server().Find(idOrName)
 	if err != nil {
 		return nil, err
 	}
@@ -261,10 +261,10 @@ var serverClone = &cobra.Command{
 
 		client := openstack.DefaultClient()
 
-		server, err := client.NovaV2().Server().Found(args[0])
+		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get sever %s failed", args[0])
 
-		flavor, err := client.NovaV2().Flavor().Found(server.Flavor.OriginalName, false)
+		flavor, err := client.NovaV2().Flavor().Find(server.Flavor.OriginalName, false)
 		utility.LogIfError(err, true, "get flavor %s failed", server.Flavor.OriginalName)
 
 		if serverName == "" {

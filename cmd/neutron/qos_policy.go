@@ -52,7 +52,7 @@ var qosPolicyShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient()
 
-		policy, err := c.NeutronV2().QosPolicy().Found(args[0])
+		policy, err := c.NeutronV2().QosPolicy().Find(args[0])
 		utility.LogIfError(err, true, "get qos policy %s failed", args[0])
 
 		pt := common.PrettyItemTable{

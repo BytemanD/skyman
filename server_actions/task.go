@@ -174,7 +174,7 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 		}()
 	} else {
 		var err error
-		server, err = t.Client.NovaV2().Server().Found(serverId)
+		server, err = t.Client.NovaV2().Server().Find(serverId)
 		if err != nil {
 			logging.Error("get server failed, %s", err)
 			actionsReport.Error = fmt.Errorf("get server failed")

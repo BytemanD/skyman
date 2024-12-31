@@ -137,7 +137,7 @@ func (c UserApi) Show(id string) (*auth.User, error) {
 	return ShowResource[auth.User](c.ResourceApi, id)
 }
 func (c UserApi) Find(idOrName string) (*auth.User, error) {
-	return FindResource[auth.User](idOrName, c.Show, c.List)
+	return FindResource(idOrName, c.Show, c.List)
 }
 func (c RoleAssignmentApi) List(query url.Values) ([]keystone.RoleAssigment, error) {
 	return ListResource[keystone.RoleAssigment](c.ResourceApi, query)

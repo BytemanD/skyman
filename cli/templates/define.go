@@ -50,7 +50,7 @@ func createFlavor(client *openstack.Openstack, flavor Flavor) {
 }
 func createNetwork(client *openstack.Openstack, network Network) {
 	networkClient := client.NeutronV2()
-	_, err := networkClient.Network().Found(network.Name)
+	_, err := networkClient.Network().Find(network.Name)
 	if err == nil {
 		logging.Warning("network %s exists", network.Name)
 		return
@@ -81,7 +81,7 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 	computeClient := client.NovaV2()
 	networkClient := client.NeutronV2()
 
-	s, _ := client.NovaV2().Server().Found(server.Name)
+	s, _ := client.NovaV2().Server().Find(server.Name)
 	if s != nil {
 		logging.Warning("server %s exists (%s)", s.Name, s.Status)
 		return s, nil
@@ -111,7 +111,7 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 		flavor, err = client.NovaV2().Flavor().Show(server.Flavor.Id)
 	} else if server.Flavor.Name != "" {
 		logging.Info("find flavor %s", server.Flavor.Name)
-		flavor, err = client.NovaV2().Flavor().Found(server.Flavor.Name, false)
+		flavor, err = client.NovaV2().Flavor().Find(server.Flavor.Name, false)
 	}
 	utility.LogError(err, "get flavor failed", true)
 	serverOption.Flavor = flavor.Id
@@ -146,7 +146,7 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 			} else if nic.Port != "" {
 				networks = append(networks, nova.ServerOptNetwork{Port: nic.Port})
 			} else if nic.Name != "" {
-				network, err := networkClient.Network().Found(nic.Name)
+				network, err := networkClient.Network().Find(nic.Name)
 				utility.LogError(err, "found network failed", true)
 				networks = append(networks, nova.ServerOptNetwork{UUID: network.Id})
 			}

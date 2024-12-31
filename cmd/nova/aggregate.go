@@ -1,4 +1,4 @@
-package compute
+package nova
 
 import (
 	"strings"
@@ -66,7 +66,7 @@ var aggShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-		aggregate, err := client.NovaV2().Aggregate().Found(args[0])
+		aggregate, err := client.NovaV2().Aggregate().Find(args[0])
 		utility.LogIfError(err, true, "get aggregate %s failed", args[0])
 		common.PrintAggregate(*aggregate)
 	},
@@ -95,7 +95,7 @@ var aggDelete = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
 		for _, agg := range args {
-			aggregate, err := client.NovaV2().Aggregate().Found(agg)
+			aggregate, err := client.NovaV2().Aggregate().Find(agg)
 			utility.LogIfError(err, true, "get aggregate %s failed", agg)
 			err = client.NovaV2().Aggregate().Delete(aggregate.Id)
 			utility.LogIfError(err, true, "delete aggregate %s failed", agg)
@@ -111,7 +111,7 @@ var addHost = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		idOrName, hosts := args[0], args[1:]
 		client := openstack.DefaultClient()
-		aggregate, err := client.NovaV2().Aggregate().Found(idOrName)
+		aggregate, err := client.NovaV2().Aggregate().Find(idOrName)
 		utility.LogIfError(err, true, "get aggregate %s failed", idOrName)
 		added := 0
 		for _, host := range hosts {
@@ -135,7 +135,7 @@ var removeHost = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		idOrName, hosts := args[0], args[1:]
 		client := openstack.DefaultClient()
-		aggregate, err := client.NovaV2().Aggregate().Found(idOrName)
+		aggregate, err := client.NovaV2().Aggregate().Find(idOrName)
 		utility.LogIfError(err, true, "get aggregate %s failed", idOrName)
 		for _, host := range hosts {
 			logging.Debug("remove host %s from aggregate %s", host, idOrName)

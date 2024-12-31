@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 
@@ -10,25 +11,52 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
+const (
+	HEADER_REQUEST_ID = "X-Openstack-Request-Id"
+)
+
+type Response struct{ *resty.Response }
+
+func (resp Response) RequestId() string {
+	return resp.Header().Get(HEADER_REQUEST_ID)
+}
+
 type ServiceClient struct {
 	Url        string
 	AuthPlugin auth.AuthPlugin
 	rawClient  *resty.Client
 }
 
-func (c *ServiceClient) Index(result interface{}) (*resty.Response, error) {
-	if c.Url == "" {
-		return nil, fmt.Errorf("endpoint is required")
+func (c *ServiceClient) AddBaseHeader(k, v string) {
+	if c.rawClient == nil {
+		return
 	}
-
+	c.rawClient.SetHeader(k, v)
+}
+func (c *ServiceClient) Header() http.Header {
+	return c.rawClient.Header
+}
+func (c *ServiceClient) IndexUrl() (string, error) {
+	if c.Url == "" {
+		return "", fmt.Errorf("endpoint is required")
+	}
 	parsed, err := url.Parse(c.Url)
 	if err != nil {
-		return nil, fmt.Errorf("invalid endpoint: %s", c.Url)
+		return "", fmt.Errorf("invalid endpoint: %s", c.Url)
 	}
-	for k := range parsed.Query() {
-		delete(parsed.Query(), k)
+	parsed.Path = ""
+	parsed.RawQuery = ""
+	return parsed.String(), err
+}
+
+func (c *ServiceClient) Index(result interface{}) (*Response, error) {
+	indexUrl, err := c.IndexUrl()
+	if err != nil {
+		return nil, fmt.Errorf("get index url failed: %s", err)
 	}
-	return c.rawClient.R().SetResult(result).Get(parsed.String())
+
+	resp, err := c.rawClient.R().SetResult(result).Get(indexUrl)
+	return &Response{resp}, err
 }
 
 func NewServiceApi[T ServiceClient](endpoint string, version string, authPlugin auth.AuthPlugin) *T {
