@@ -14,14 +14,15 @@ import (
 
 	"github.com/BytemanD/skyman/cli/compute"
 	"github.com/BytemanD/skyman/cli/context"
-	"github.com/BytemanD/skyman/cli/identity"
-	"github.com/BytemanD/skyman/cli/quota"
+
 	"github.com/BytemanD/skyman/cli/templates"
 	"github.com/BytemanD/skyman/cli/tool"
 	"github.com/BytemanD/skyman/cmd/benchmark"
 	"github.com/BytemanD/skyman/cmd/cinder"
 	"github.com/BytemanD/skyman/cmd/glance"
+	"github.com/BytemanD/skyman/cmd/keystone"
 	"github.com/BytemanD/skyman/cmd/neutron"
+	"github.com/BytemanD/skyman/cmd/quota"
 	"github.com/BytemanD/skyman/cmd/test"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
@@ -182,9 +183,11 @@ func main() {
 
 	rootCmd.AddCommand(
 		versionCmd, context.ContextCmd,
-		identity.Token,
-		identity.Service, identity.Endpoint, identity.Region,
-		identity.User, identity.Project,
+
+		keystone.Token,
+		keystone.Service, keystone.Endpoint, keystone.Region,
+		keystone.User, keystone.Project,
+
 		compute.Server, compute.Flavor, compute.Hypervisor,
 		compute.Keypair, compute.Compute, compute.Console,
 		compute.Migration, compute.AZ, compute.Aggregate,

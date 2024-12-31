@@ -1,4 +1,4 @@
-package identity
+package keystone
 
 import (
 	"github.com/spf13/cobra"

@@ -37,7 +37,7 @@ var show = &cobra.Command{
 			}...)
 		}
 		quotaSet, err := client.NovaV2().Quota().Show(projectId)
-		utility.LogError(err, "delete service failed, %v", true)
+		utility.LogError(err, "show quota failed, %v", true)
 		pt.Item = *quotaSet
 		common.PrintPrettyItemTable(pt)
 	},
