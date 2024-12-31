@@ -91,7 +91,7 @@ var serverList = &cobra.Command{
 		}
 		filterHosts := utility.Split(*listFlags.Host, ",")
 		if *listFlags.Project != "" {
-			p, err := c.KeystoneV3().Project().Found(*listFlags.Project)
+			p, err := c.KeystoneV3().Project().Find(*listFlags.Project)
 			utility.LogIfError(err, true, "get project %s failed", *listFlags.Project)
 			query.Set("tenant_id", p.Id)
 			if !*listFlags.All {

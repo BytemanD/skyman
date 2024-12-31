@@ -133,7 +133,7 @@ type VolumeTypeApi struct{ ResourceApi }
 
 func (c CinderV2) VolumeType() VolumeTypeApi {
 	return VolumeTypeApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint},
+		ResourceApi{Client: c.rawClient, BaseUrl: c.Url},
 	}
 }
 func (c VolumeTypeApi) List(query url.Values) ([]cinder.VolumeType, error) {
@@ -310,24 +310,24 @@ func (c CinderV2) GetCurrentVersion() (*model.ApiVersion, error) {
 
 func (c CinderV2) Volume() VolumeApi {
 	return VolumeApi{
-		ResourceApi: ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint,
+		ResourceApi: ResourceApi{Client: c.rawClient, BaseUrl: c.Url,
 			ResourceUrl: "volumes"},
 	}
 }
 func (c CinderV2) Service() VolumeServiceApi {
 	return VolumeServiceApi{
-		ResourceApi: ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint},
+		ResourceApi: ResourceApi{Client: c.rawClient, BaseUrl: c.Url},
 	}
 }
 
 func (c CinderV2) Snapshot() SnapshotApi {
 	return SnapshotApi{
-		ResourceApi: ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint},
+		ResourceApi: ResourceApi{Client: c.rawClient, BaseUrl: c.Url},
 	}
 }
 func (c CinderV2) Backup() BackupApi {
 	return BackupApi{
-		ResourceApi: ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint,
+		ResourceApi: ResourceApi{Client: c.rawClient, BaseUrl: c.Url,
 			ResourceUrl: "backups"},
 	}
 }

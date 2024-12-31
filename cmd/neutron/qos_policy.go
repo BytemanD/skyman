@@ -27,7 +27,7 @@ var qosPolicyList = &cobra.Command{
 		query := url.Values{}
 
 		if projectIdOrName != "" {
-			project, err := c.KeystoneV3().Project().Found(projectIdOrName)
+			project, err := c.KeystoneV3().Project().Find(projectIdOrName)
 			utility.LogError(err, "get project failed", true)
 			query.Set("project_id", project.Id)
 		}

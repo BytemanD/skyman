@@ -119,12 +119,12 @@ type Openstack struct {
 	AuthPlugin        auth.AuthPlugin
 	ComputeApiVersion string
 
-	keystoneClient *KeystoneV3
-	novaClient     *NovaV2
+	novaClient *NovaV2
 
-	glanceClient  *internal.GlanceV2
-	cinderClient  *internal.CinderV2
-	neutronClient *internal.NeutronV2
+	keystoneClient *internal.KeystoneV3
+	glanceClient   *internal.GlanceV2
+	cinderClient   *internal.CinderV2
+	neutronClient  *internal.NeutronV2
 
 	servieLock *sync.Mutex
 
@@ -400,6 +400,21 @@ func (o *Openstack) NeutronV2() *internal.NeutronV2 {
 		}
 	}
 	return o.neutronClient
+}
+func (o *Openstack) KeystoneV3() *internal.KeystoneV3 {
+	o.servieLock.Lock()
+	defer o.servieLock.Unlock()
+
+	if o.keystoneClient == nil {
+		endpoint, err := o.AuthPlugin.GetServiceEndpoint("identity", "keystone", "public")
+		if err != nil {
+			logging.Fatal("get keystone endpoint falied: %v", err)
+		}
+		o.keystoneClient = &internal.KeystoneV3{
+			ServiceClient: internal.NewServiceApi[internal.ServiceClient](endpoint, V3, o.AuthPlugin),
+		}
+	}
+	return o.keystoneClient
 }
 func FoundResource[T any](api ResourceApi, idOrName string) (*T, error) {
 	if api.SingularKey == "" || api.PluralKey == "" {

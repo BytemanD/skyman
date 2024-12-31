@@ -33,11 +33,11 @@ var userList = &cobra.Command{
 
 		c := openstack.DefaultClient().KeystoneV3()
 		if project == "" {
-			users, err := c.Users().List(nil)
+			users, err := c.User().List(nil)
 			utility.LogError(err, "list users failed", true)
 			pt.AddItems(users)
 		} else {
-			users, err := c.Users().ListByProjectId(project)
+			users, err := c.ListUsersByProjectId(project)
 			if err != nil {
 				logging.Fatal("get users failed, %s", err)
 			}
@@ -54,7 +54,7 @@ var userShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		client := openstack.DefaultClient().KeystoneV3()
-		user, err := client.Users().User().Found(args[0])
+		user, err := client.User().Find(args[0])
 		utility.LogIfError(err, true, "get user %s failed", args[0])
 		pt := common.PrettyItemTable{
 			Item: *user,

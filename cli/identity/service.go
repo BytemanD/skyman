@@ -61,7 +61,7 @@ var serviceCreate = &cobra.Command{
 
 		c := openstack.DefaultClient().KeystoneV3()
 
-		service, err := c.Services().Create(
+		service, err := c.Service().Create(
 			keystone.Service{
 				Type:     serviceType,
 				Enabled:  !disable,

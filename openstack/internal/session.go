@@ -11,19 +11,19 @@ import (
 )
 
 type ServiceClient struct {
-	Endpoint   string
+	Url        string
 	AuthPlugin auth.AuthPlugin
 	rawClient  *resty.Client
 }
 
 func (c *ServiceClient) Index(result interface{}) (*resty.Response, error) {
-	if c.Endpoint == "" {
+	if c.Url == "" {
 		return nil, fmt.Errorf("endpoint is required")
 	}
 
-	parsed, err := url.Parse(c.Endpoint)
+	parsed, err := url.Parse(c.Url)
 	if err != nil {
-		return nil, fmt.Errorf("invalid endpoint: %s", c.Endpoint)
+		return nil, fmt.Errorf("invalid endpoint: %s", c.Url)
 	}
 	for k := range parsed.Query() {
 		delete(parsed.Query(), k)
@@ -38,7 +38,7 @@ func NewServiceApi[T ServiceClient](endpoint string, version string, authPlugin 
 		u.Path = fmt.Sprintf("/%s", version)
 	}
 	return &T{
-		Endpoint:   u.String(),
+		Url:        u.String(),
 		AuthPlugin: authPlugin,
 		rawClient: internal.DefaultRestyClient().
 			OnBeforeRequest(func(c *resty.Client, r *resty.Request) error {

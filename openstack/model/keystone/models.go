@@ -35,7 +35,7 @@ type RoleAssigment struct {
 	User  auth.User `json:"user,omitempty"`
 }
 
-func (service Service) Display() string {
+func (service Service) NameOrId() string {
 	if service.Name != "" {
 		return service.Name
 	}

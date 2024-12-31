@@ -169,7 +169,7 @@ type GlanceV2 struct{ *ServiceClient }
 
 func (c GlanceV2) Images() ImageApi {
 	return ImageApi{
-		ResourceApi: ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint},
+		ResourceApi: ResourceApi{Client: c.rawClient, BaseUrl: c.Url},
 	}
 }
 

@@ -16,11 +16,12 @@ const (
 )
 
 func LogRequestPre(c *resty.Client, r *http.Request) error {
-	logging.Debug("REQ: %s %s    \nHeader: %v", r.Method, r.URL, httpclient.EncodeHeaders(r.Header))
+	logging.Debug("REQ: %s %s\n    Header: %v", r.Method, r.URL, httpclient.EncodeHeaders(r.Header))
 	return nil
 }
 func LogRespAfterResponse(c *resty.Client, r *resty.Response) error {
-	logging.Debug("RESP: [%d] content-length: %s", r.StatusCode(), r.Header().Get(CONTENT_LENGTH))
+	logging.Debug("RESP: [%d] content-length: %s\n    Body: %s",
+		r.StatusCode(), r.Header().Get(CONTENT_LENGTH), string(r.Body()))
 	return nil
 }
 

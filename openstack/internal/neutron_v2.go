@@ -49,7 +49,7 @@ type routerApi struct{ ResourceApi }
 
 func (c NeutronV2) Router() routerApi {
 	return routerApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint},
+		ResourceApi{Client: c.rawClient, BaseUrl: c.Url},
 	}
 }
 func (c routerApi) List(query url.Values) ([]neutron.Router, error) {
@@ -134,7 +134,7 @@ type NetworkApi struct{ ResourceApi }
 
 func (c NeutronV2) Network() NetworkApi {
 	return NetworkApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint,
+		ResourceApi{Client: c.rawClient, BaseUrl: c.Url,
 			ResourceUrl: "networks"},
 	}
 }
@@ -182,7 +182,7 @@ type SubnetApi struct{ ResourceApi }
 
 func (c NeutronV2) Subnet() SubnetApi {
 	return SubnetApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint, ResourceUrl: "subnets"},
+		ResourceApi{Client: c.rawClient, BaseUrl: c.Url, ResourceUrl: "subnets"},
 	}
 }
 func (c SubnetApi) List(query url.Values) ([]neutron.Subnet, error) {
@@ -224,7 +224,7 @@ type PortApi struct{ ResourceApi }
 
 func (c NeutronV2) Port() PortApi {
 	return PortApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint,
+		ResourceApi{Client: c.rawClient, BaseUrl: c.Url,
 			ResourceUrl: "ports"},
 	}
 }
@@ -279,7 +279,7 @@ type agentApi struct {
 
 func (c NeutronV2) Agent() agentApi {
 	return agentApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint},
+		ResourceApi{Client: c.rawClient, BaseUrl: c.Url},
 	}
 }
 
@@ -299,7 +299,7 @@ type sgApi struct {
 
 func (c NeutronV2) SecurityGroup() sgApi {
 	return sgApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint},
+		ResourceApi{Client: c.rawClient, BaseUrl: c.Url},
 	}
 }
 
@@ -332,7 +332,7 @@ type sgRuleApi struct {
 
 func (c NeutronV2) SecurityGroupRule() sgRuleApi {
 	return sgRuleApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint},
+		ResourceApi{Client: c.rawClient, BaseUrl: c.Url},
 	}
 }
 
@@ -363,7 +363,7 @@ type qosPolicyApi struct {
 
 func (c NeutronV2) QosPolicy() qosPolicyApi {
 	return qosPolicyApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint},
+		ResourceApi{Client: c.rawClient, BaseUrl: c.Url},
 		// ResourceApi: ResourceApi{
 		// 	Endpoint:    c.BaseUrl,
 		// 	BaseUrl:     "qos/policies",

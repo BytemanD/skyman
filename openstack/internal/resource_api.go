@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"reflect"
@@ -113,11 +114,19 @@ func ListResource[T any](r ResourceApi, query url.Values) ([]T, error) {
 	if r.PluralKey == "" {
 		return nil, fmt.Errorf("PluralKey is empty")
 	}
-	respBody := map[string][]T{r.PluralKey: {}}
+	items := []T{}
+	respBody := map[string]interface{}{}
 	if _, err := r.Get(r.ResourceUrl, query, &respBody); err != nil {
 		return nil, err
 	}
-	return respBody[r.PluralKey], nil
+	itemsData, err := json.Marshal(respBody[r.PluralKey])
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(itemsData, &items); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 func ShowResource[T any](r ResourceApi, id string) (*T, error) {
 	if r.ResourceUrl == "" {
@@ -128,7 +137,7 @@ func ShowResource[T any](r ResourceApi, id string) (*T, error) {
 	}
 	respBody := map[string]*T{}
 	// respBody[r.SingularKey] = T{}
-	if _, err := r.Get("volumes/"+id, nil, &respBody); err != nil {
+	if _, err := r.Get(r.ResourceUrl+"/"+id, nil, &respBody); err != nil {
 		return nil, err
 	}
 	return respBody[r.SingularKey], nil

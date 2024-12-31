@@ -50,7 +50,7 @@ var projectShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().KeystoneV3()
-		project, err := c.Project().Found(args[0])
+		project, err := c.Project().Find(args[0])
 		utility.LogError(err, "show project failed", true)
 		pt := common.PrettyItemTable{
 			Item: *project,

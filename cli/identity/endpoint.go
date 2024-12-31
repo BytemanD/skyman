@@ -66,7 +66,7 @@ var endpointList = &cobra.Command{
 		}
 		items, err := c.Endpoint().List(query)
 		if err != nil {
-			logging.Fatal("get endpoint failed, %s", err)
+			logging.Fatal("list endpoints failed, %s", err)
 		}
 
 		// TODO: 优化
@@ -95,9 +95,8 @@ var endpointList = &cobra.Command{
 				{Name: "Id"}, {Name: "RegionId", Sort: true},
 				{Name: "Service", Sort: true, Slot: func(item interface{}) interface{} {
 					p, _ := item.(keystone.Endpoint)
-					fmt.Println(p.ServiceId)
 					if service, ok := serviceMap[p.ServiceId]; ok {
-						return service.Display()
+						return service.NameOrId()
 					} else {
 						return p.ServiceId
 					}
@@ -125,7 +124,7 @@ var endpointCreate = &cobra.Command{
 
 		c := openstack.DefaultClient().KeystoneV3()
 
-		service, err := c.Service().Found(s)
+		service, err := c.Service().Find(s)
 		utility.LogError(err, "get service failed", true)
 		interfaceMap := map[string]bool{
 			"public":   public,
@@ -145,7 +144,7 @@ var endpointCreate = &cobra.Command{
 				Enabled:   !disable,
 			}
 			logging.Info("create %s endpoint", k)
-			endpoint, err := c.Endpoints().Create(e)
+			endpoint, err := c.Endpoint().Create(e)
 			if err != nil {
 				utility.LogError(err, fmt.Sprintf("create %s endpoint failed", k), false)
 				continue
@@ -156,7 +155,7 @@ var endpointCreate = &cobra.Command{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "RegionId", Sort: true},
 				{Name: "Service", Sort: true, Slot: func(item interface{}) interface{} {
-					return service.Display()
+					return service.NameOrId()
 				}},
 				{Name: "Interface"}, {Name: "Url"},
 			},
