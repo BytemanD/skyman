@@ -7,8 +7,9 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/openstack/auth"
-	"github.com/BytemanD/skyman/openstack/internal/utility"
+
+	"github.com/BytemanD/skyman/openstack/model"
+	"github.com/BytemanD/skyman/openstack/session"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -38,7 +39,7 @@ type PasswordAuthPlugin struct {
 	RegionName        string
 
 	LocalTokenExpireSecond int
-	token                  *auth.Token
+	token                  *model.Token
 	tokenId                string
 	expiredAt              time.Time
 
@@ -80,7 +81,7 @@ func (plugin *PasswordAuthPlugin) makesureTokenValid() error {
 	return nil
 }
 
-func (plugin *PasswordAuthPlugin) GetToken() (*auth.Token, error) {
+func (plugin *PasswordAuthPlugin) GetToken() (*model.Token, error) {
 	plugin.makesureTokenValid()
 	return plugin.token, nil
 }
@@ -92,21 +93,21 @@ func (plugin *PasswordAuthPlugin) GetTokenId() (string, error) {
 }
 
 type AuthBody struct {
-	Auth auth.Auth `json:"auth"`
+	Auth model.Auth `json:"auth"`
 }
 
 func (client PasswordAuthPlugin) newAuthReqBody() AuthBody {
-	authData := auth.Auth{
-		Identity: auth.Identity{
+	authData := model.Auth{
+		Identity: model.Identity{
 			Methods: []string{"password"},
-			Password: auth.Password{
-				User: auth.User{
+			Password: model.Password{
+				User: model.User{
 					Name: client.Username, Password: client.Password,
-					Domain: auth.Domain{Name: client.UserDomainName}}},
+					Domain: model.Domain{Name: client.UserDomainName}}},
 		},
-		Scope: auth.Scope{Project: auth.Project{
+		Scope: model.Scope{Project: model.Project{
 			Name:   client.ProjectName,
-			Domain: auth.Domain{Name: client.ProjectDomainName}},
+			Domain: model.Domain{Name: client.ProjectDomainName}},
 		},
 	}
 	return AuthBody{Auth: authData}
@@ -114,7 +115,7 @@ func (client PasswordAuthPlugin) newAuthReqBody() AuthBody {
 
 func (plugin *PasswordAuthPlugin) TokenIssue() error {
 	respBody := struct {
-		Token auth.Token `json:"token"`
+		Token model.Token `json:"token"`
 	}{}
 	resp, err := plugin.session.R().SetBody(plugin.newAuthReqBody()).
 		SetResult(&respBody).
@@ -127,7 +128,7 @@ func (plugin *PasswordAuthPlugin) TokenIssue() error {
 	plugin.expiredAt = time.Now().Add(time.Second * time.Duration(plugin.LocalTokenExpireSecond))
 	return nil
 }
-func (plugin *PasswordAuthPlugin) GetServiceEndpoints(sType string, sName string) ([]auth.Endpoint, error) {
+func (plugin *PasswordAuthPlugin) GetServiceEndpoints(sType string, sName string) ([]model.Endpoint, error) {
 	token, err := plugin.GetToken()
 	if err != nil {
 		return nil, err
@@ -139,7 +140,7 @@ func (plugin *PasswordAuthPlugin) GetServiceEndpoints(sType string, sName string
 		}
 		return catalog.Endpoints, nil
 	}
-	return []auth.Endpoint{}, nil
+	return []model.Endpoint{}, nil
 }
 func (plugin *PasswordAuthPlugin) GetServiceEndpoint(sType string, sName string, sInterface string) (string, error) {
 	if err := plugin.makesureTokenValid(); err != nil {
@@ -206,9 +207,9 @@ func (plugin PasswordAuthPlugin) IsAdmin() bool {
 	return false
 }
 
-func NewPasswordAuthPlugin(authUrl string, user auth.User, project auth.Project, regionName string) *PasswordAuthPlugin {
+func NewPasswordAuthPlugin(authUrl string, user model.User, project model.Project, regionName string) *PasswordAuthPlugin {
 	return &PasswordAuthPlugin{
-		session:           utility.DefaultRestyClient(),
+		session:           session.DefaultRestyClient(),
 		AuthUrl:           authUrl,
 		Username:          user.Name,
 		Password:          user.Password,

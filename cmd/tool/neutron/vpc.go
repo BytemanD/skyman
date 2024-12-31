@@ -97,7 +97,7 @@ var vpcDelete = &cobra.Command{
 		router, err := c.Router().Find(vpcRouter)
 		utility.LogIfError(err, true, "get router %s failed", vpcRouter)
 		// remove router ports
-		routerPorts, err := c.ListRouterPorts(router.Id)
+		routerPorts, err := c.Port().ListByDeviceId(router.Id)
 		utility.LogIfError(err, true, "list router ports failed")
 		subnets := []string{}
 		for _, port := range routerPorts {

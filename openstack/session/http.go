@@ -1,10 +1,11 @@
-package utility
+package session
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/utility/httpclient"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -13,10 +14,19 @@ const (
 	CONTENT_LENGTH      = "Content-Length"
 	CONTENT_TYPE_JSON   = "application/json"
 	CONTENT_TYPE_STREAM = "application/octet-stream"
+
+	HEADER_REQUEST_ID = "X-Openstack-Request-Id"
 )
 
+func EncodeHeaders(headers http.Header) string {
+	headersString := []string{}
+	for k, v := range headers {
+		headersString = append(headersString, fmt.Sprintf("'%s: %s'", k, strings.Join(v, ",")))
+	}
+	return strings.Join(headersString, ", ")
+}
 func LogRequestPre(c *resty.Client, r *http.Request) error {
-	logging.Debug("REQ: %s %s\n    Header: %v", r.Method, r.URL, httpclient.EncodeHeaders(r.Header))
+	logging.Debug("REQ: %s %s\n    Header: %v", r.Method, r.URL, EncodeHeaders(r.Header))
 	return nil
 }
 func LogRespAfterResponse(c *resty.Client, r *resty.Response) error {

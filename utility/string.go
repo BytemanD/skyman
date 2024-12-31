@@ -10,7 +10,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/compare"
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/utility/httpclient"
+	"github.com/BytemanD/skyman/openstack/session"
 	"github.com/fatih/color"
 )
 
@@ -29,8 +29,8 @@ func RaiseIfError(err error, msg string) {
 	if err == nil {
 		return
 	}
-	if compare.IsType[httpclient.HttpError](err) {
-		httpError, _ := err.(httpclient.HttpError)
+	if compare.IsType[session.HttpError](err) {
+		httpError, _ := err.(session.HttpError)
 		logging.Fatal("%s, %s: %s", msg, httpError.Reason, httpError.Message)
 	} else {
 		logging.Fatal("%s, %v", msg, err)
@@ -41,8 +41,8 @@ func LogError(err error, message string, exit bool) {
 	if err == nil {
 		return
 	}
-	if compare.IsType[httpclient.HttpError](err) {
-		httpError, _ := err.(httpclient.HttpError)
+	if compare.IsType[session.HttpError](err) {
+		httpError, _ := err.(session.HttpError)
 		logging.Error("%s, %s: %s", message, httpError.Reason, httpError.Message)
 	} else {
 		logging.Error("%s: %v", message, err)
@@ -55,8 +55,8 @@ func LogIfError(err error, exit bool, format string, args ...interface{}) {
 	if err == nil {
 		return
 	}
-	if compare.IsType[httpclient.HttpError](err) {
-		httpError, _ := err.(httpclient.HttpError)
+	if compare.IsType[session.HttpError](err) {
+		httpError, _ := err.(session.HttpError)
 		logging.Error(fmt.Sprintf(format, args...)+": [%s] %s", httpError.Reason, httpError.Message)
 	} else {
 		logging.Error(fmt.Sprintf(format, args...)+": %v", err)

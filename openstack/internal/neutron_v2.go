@@ -6,7 +6,6 @@ import (
 
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
-	"github.com/BytemanD/skyman/utility"
 )
 
 const (
@@ -44,43 +43,126 @@ func (c *NeutronV2) GetCurrentVersion() (*model.ApiVersion, error) {
 	return nil, fmt.Errorf("current version not found")
 }
 
-// router api
 type routerApi struct{ ResourceApi }
+type NetworkApi struct{ ResourceApi }
+type SubnetApi struct{ ResourceApi }
+type PortApi struct{ ResourceApi }
+type agentApi struct{ ResourceApi }
+type sgApi struct{ ResourceApi }
+type sgRuleApi struct{ ResourceApi }
+type qosPolicyApi struct{ ResourceApi }
+type qosRuleApi struct{ ResourceApi }
 
 func (c NeutronV2) Router() routerApi {
 	return routerApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Url},
+		ResourceApi{Client: c.rawClient, BaseUrl: c.Url,
+			ResourceUrl: "routers",
+			SingularKey: "router",
+			PluralKey:   "routers",
+		},
 	}
 }
-func (c routerApi) List(query url.Values) ([]neutron.Router, error) {
-	body := struct{ Routers []neutron.Router }{}
-	if _, err := c.Get(ROUTERS, query, &body); err != nil {
-		return nil, err
+func (c NeutronV2) Network() NetworkApi {
+	return NetworkApi{
+		ResourceApi{Client: c.rawClient, BaseUrl: c.Url,
+			ResourceUrl: "networks",
+			SingularKey: "network",
+			PluralKey:   "networks",
+		},
 	}
-	return body.Routers, nil
+}
+func (c NeutronV2) Subnet() SubnetApi {
+	return SubnetApi{
+		ResourceApi{
+			Client: c.rawClient, BaseUrl: c.Url,
+			ResourceUrl: "subnets",
+			SingularKey: "subnet",
+			PluralKey:   "subnets",
+		},
+	}
+}
+func (c NeutronV2) Port() PortApi {
+	return PortApi{
+		ResourceApi{Client: c.rawClient, BaseUrl: c.Url,
+			ResourceUrl: "ports",
+			SingularKey: "port",
+			PluralKey:   "ports",
+		},
+	}
+}
+func (c NeutronV2) Agent() agentApi {
+	return agentApi{
+		ResourceApi{Client: c.rawClient, BaseUrl: c.Url,
+			ResourceUrl: "agents",
+			SingularKey: "agent",
+			PluralKey:   "agents",
+		},
+	}
+}
+func (c NeutronV2) SecurityGroupRule() sgRuleApi {
+	return sgRuleApi{
+		ResourceApi{
+			Client: c.rawClient, BaseUrl: c.Url,
+			ResourceUrl: "security-group-rules",
+			SingularKey: "security_group_rule",
+			PluralKey:   "security_group_rules",
+		},
+	}
+}
+func (c NeutronV2) SecurityGroup() sgApi {
+	return sgApi{
+		ResourceApi{
+			Client: c.rawClient, BaseUrl: c.Url,
+			ResourceUrl: "security-groups",
+			SingularKey: "security_group",
+			PluralKey:   "security_groups"},
+	}
+}
+func (c NeutronV2) QosPolicy() qosPolicyApi {
+	return qosPolicyApi{
+		ResourceApi{
+			Client:      c.rawClient,
+			BaseUrl:     c.Url,
+			ResourceUrl: "qos/policies",
+			SingularKey: "policies",
+			PluralKey:   "policies",
+		},
+	}
+}
+func (c NeutronV2) QosRule() qosRuleApi {
+	return qosRuleApi{
+		ResourceApi: ResourceApi{
+			Client:      c.rawClient,
+			BaseUrl:     c.Url,
+			ResourceUrl: "qos/policies",
+			SingularKey: "policies",
+			PluralKey:   "policies",
+		},
+	}
+}
+
+// router api
+
+func (c routerApi) List(query url.Values) ([]neutron.Router, error) {
+	return ListResource[neutron.Router](c.ResourceApi, query)
 }
 func (c routerApi) ListByName(name string) ([]neutron.Router, error) {
-	return c.List(utility.UrlValues(map[string]string{"name": name}))
+	return c.List(url.Values{"name": []string{name}})
 }
 
 func (c routerApi) Show(id string) (*neutron.Router, error) {
-	body := struct{ Router neutron.Router }{}
-	if _, err := c.Get("routers/"+id, nil, &body); err != nil {
-		return nil, err
-	}
-	return &body.Router, nil
-
+	return ShowResource[neutron.Router](c.ResourceApi, id)
 }
 func (c routerApi) Create(params map[string]interface{}) (*neutron.Router, error) {
-	body := struct{ Router neutron.Router }{}
-	if _, err := c.Post(ROUTERS, map[string]interface{}{"router": params}, &body); err != nil {
+	result := struct{ Router neutron.Router }{}
+	if _, err := c.R().SetBody(ReqBody{"router": params}).SetResult(result).Post(); err != nil {
 		return nil, err
 	}
-	return &body.Router, nil
+	return &result.Router, nil
 }
 
 func (c routerApi) Delete(id string) error {
-	_, err := c.ResourceApi.Delete("routers/" + id)
+	_, err := DeleteResource(c.ResourceApi, id)
 	return err
 }
 func (c routerApi) Find(idOrName string) (*neutron.Router, error) {
@@ -90,59 +172,35 @@ func (c routerApi) Find(idOrName string) (*neutron.Router, error) {
 // Interface: subnet-id | port=port-id
 func (c routerApi) AddSubnet(routerId, subnetId string) error {
 	body := map[string]string{"subnet_id": subnetId}
-	if _, err := c.Put(
-		fmt.Sprintf("routers/%s/add_router_interface", routerId),
-		body, nil,
-	); err != nil {
+	if _, err := c.R().SetBody(body).Put(routerId, "add_router_interface"); err != nil {
 		return err
 	}
 	return nil
 }
 func (c routerApi) AddPort(routerId, portId string) error {
 	body := map[string]string{"port_id": portId}
-	if _, err := c.Put(
-		fmt.Sprintf("routers/%s/add_router_interface", routerId),
-		body, nil,
-	); err != nil {
+	if _, err := c.R().SetBody(body).Put(routerId, "add_router_interface"); err != nil {
 		return err
 	}
 	return nil
 }
 func (c routerApi) RemoveSubnet(routerId, subnetId string) error {
 	body := map[string]string{"subnet_id": subnetId}
-	if _, err := c.Put(
-		fmt.Sprintf("routers/%s/remove_router_interface", routerId),
-		body, nil,
-	); err != nil {
+	if _, err := c.R().SetBody(body).Put(routerId, "remove_router_interface"); err != nil {
 		return err
 	}
 	return nil
 }
 func (c routerApi) RemovePort(routerId, portId string) error {
 	body := map[string]string{"port_id": portId}
-	if _, err := c.Put(
-		fmt.Sprintf("routers/%s/remove_router_interface", routerId),
-		body, nil,
-	); err != nil {
+	if _, err := c.R().SetBody(body).Put(routerId, "remove_router_interface"); err != nil {
 		return err
 	}
 	return nil
 }
 
 // network api
-type NetworkApi struct{ ResourceApi }
 
-func (c NeutronV2) Network() NetworkApi {
-	return NetworkApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Url,
-			ResourceUrl: "networks"},
-	}
-}
-func (c NeutronV2) ListRouterPorts(routerId string) (neutron.Ports, error) {
-	query := url.Values{}
-	query.Set("device_id", routerId)
-	return c.Port().List(query)
-}
 func (c NetworkApi) List(query url.Values) ([]neutron.Network, error) {
 	body := struct{ Networks []neutron.Network }{}
 	if _, err := c.Get(NETWORKS, query, &body); err != nil {
@@ -151,15 +209,11 @@ func (c NetworkApi) List(query url.Values) ([]neutron.Network, error) {
 	return body.Networks, nil
 }
 func (c NetworkApi) ListByName(name string) ([]neutron.Network, error) {
-	return c.List(utility.UrlValues(map[string]string{"name": name}))
+	return c.List(url.Values{"name": []string{name}})
 }
 
 func (c NetworkApi) Show(id string) (*neutron.Network, error) {
-	body := struct{ Network neutron.Network }{}
-	if _, err := c.Get("networks/"+id, nil, &body); err != nil {
-		return nil, err
-	}
-	return &body.Network, nil
+	return ShowResource[neutron.Network](c.ResourceApi, id)
 }
 func (c NetworkApi) Find(idOrName string) (*neutron.Network, error) {
 	return FindResource(idOrName, c.Show, c.List)
@@ -178,30 +232,16 @@ func (c NetworkApi) Delete(id string) error {
 }
 
 // subnet api
-type SubnetApi struct{ ResourceApi }
 
-func (c NeutronV2) Subnet() SubnetApi {
-	return SubnetApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Url, ResourceUrl: "subnets"},
-	}
-}
 func (c SubnetApi) List(query url.Values) ([]neutron.Subnet, error) {
-	body := struct{ Subnets []neutron.Subnet }{}
-	if _, err := c.Get(SUBNETS, query, &body); err != nil {
-		return nil, err
-	}
-	return body.Subnets, nil
+	return ListResource[neutron.Subnet](c.ResourceApi, query)
 }
 func (c SubnetApi) ListByName(name string) ([]neutron.Subnet, error) {
-	return c.List(utility.UrlValues(map[string]string{"name": name}))
+	return c.List(url.Values{"name": []string{name}})
 }
 
 func (c SubnetApi) Show(id string) (*neutron.Subnet, error) {
-	body := struct{ Subnet neutron.Subnet }{}
-	if _, err := c.Get("subnets/"+id, nil, &body); err != nil {
-		return nil, err
-	}
-	return &body.Subnet, nil
+	return ShowResource[neutron.Subnet](c.ResourceApi, id)
 }
 func (c SubnetApi) Find(idOrName string) (*neutron.Subnet, error) {
 	return FindResource(idOrName, c.Show, c.List)
@@ -220,28 +260,16 @@ func (c SubnetApi) Delete(id string) error {
 }
 
 // port api
-type PortApi struct{ ResourceApi }
-
-func (c NeutronV2) Port() PortApi {
-	return PortApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Url,
-			ResourceUrl: "ports"},
-	}
-}
 
 func (c PortApi) List(query url.Values) ([]neutron.Port, error) {
-	body := struct{ Ports []neutron.Port }{}
-	if _, err := c.Get(PORTS, query, &body); err != nil {
-		return nil, err
-	}
-	return body.Ports, nil
+	return ListResource[neutron.Port](c.ResourceApi, query)
 }
 func (c PortApi) ListByName(name string) ([]neutron.Port, error) {
-	return c.List(utility.UrlValues(map[string]string{
-		"name": name,
-	}))
+	return c.List(url.Values{"name": []string{name}})
 }
-
+func (c PortApi) ListByDeviceId(deviceId string) (neutron.Ports, error) {
+	return c.List(url.Values{"device_id": []string{deviceId}})
+}
 func (c PortApi) Show(id string) (*neutron.Port, error) {
 	body := struct{ Port neutron.Port }{}
 	if _, err := c.Get("ports/"+id, nil, &body); err != nil {
@@ -256,9 +284,6 @@ func (c PortApi) Update(id string, options map[string]interface{}) (*neutron.Por
 	}
 	return &body.Port, nil
 }
-func (c PortApi) Find(idOrName string) (*neutron.Port, error) {
-	return FindResource(idOrName, c.Show, c.List)
-}
 func (c PortApi) Create(params map[string]interface{}) (*neutron.Port, error) {
 	body := struct{ Port neutron.Port }{}
 	if _, err := c.Post(PORTS, map[string]interface{}{"port": params}, &body); err != nil {
@@ -271,149 +296,45 @@ func (c PortApi) Delete(id string) error {
 	_, err := c.ResourceDelete(id)
 	return err
 }
+func (c PortApi) Find(idOrName string) (*neutron.Port, error) {
+	return FindResource(idOrName, c.Show, c.List)
+}
 
 // neutron agent api
-type agentApi struct {
-	ResourceApi
-}
-
-func (c NeutronV2) Agent() agentApi {
-	return agentApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Url},
-	}
-}
 
 func (c agentApi) List(query url.Values) ([]neutron.Agent, error) {
-	body := struct{ Agents []neutron.Agent }{}
-	if _, err := c.Get("agents", query, &body); err != nil {
-		return nil, err
-	}
-	return body.Agents, nil
+	return ListResource[neutron.Agent](c.ResourceApi, query)
 }
 
 // security group api
 
-type sgApi struct {
-	ResourceApi
-}
-
-func (c NeutronV2) SecurityGroup() sgApi {
-	return sgApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Url},
-	}
-}
-
 func (c sgApi) List(query url.Values) ([]neutron.SecurityGroup, error) {
-	body := struct {
-		SecurityGroups []neutron.SecurityGroup `json:"security_groups"`
-	}{}
-	if _, err := c.Get("security-groups", query, &body); err != nil {
-		return nil, err
-	}
-	return body.SecurityGroups, nil
+	return ListResource[neutron.SecurityGroup](c.ResourceApi, query)
 }
 func (c sgApi) Show(id string) (*neutron.SecurityGroup, error) {
-	body := struct {
-		SecurityGroup neutron.SecurityGroup `json:"security_group"`
-	}{}
-	if _, err := c.Get("security-groups/"+id, nil, &body); err != nil {
-		return nil, err
-	}
-	return &body.SecurityGroup, nil
+	return ShowResource[neutron.SecurityGroup](c.ResourceApi, id)
 }
 func (c sgApi) Find(idOrName string) (*neutron.SecurityGroup, error) {
 	return FindResource(idOrName, c.Show, c.List)
 }
 
 // security group rule api
-type sgRuleApi struct {
-	ResourceApi
-}
-
-func (c NeutronV2) SecurityGroupRule() sgRuleApi {
-	return sgRuleApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Url},
-	}
-}
 
 func (c sgRuleApi) List(query url.Values) ([]neutron.SecurityGroupRule, error) {
-	body := struct {
-		SecurityGroupRules []neutron.SecurityGroupRule `json:"security_group_rules"`
-	}{}
-	if _, err := c.Get("security-group-rules", query, &body); err != nil {
-		return nil, err
-	}
-	return body.SecurityGroupRules, nil
+	return ListResource[neutron.SecurityGroupRule](c.ResourceApi, query)
 }
-
 func (c sgRuleApi) Show(id string) (*neutron.SecurityGroupRule, error) {
-	body := struct {
-		SecurityGroupRules neutron.SecurityGroupRule `json:"security_group_rule"`
-	}{}
-	if _, err := c.Get("security-group-rules/"+id, nil, &body); err != nil {
-		return nil, err
-	}
-	return &body.SecurityGroupRules, nil
+	return ShowResource[neutron.SecurityGroupRule](c.ResourceApi, id)
 }
 
 // qos policy api
-type qosPolicyApi struct {
-	ResourceApi
-}
 
-func (c NeutronV2) QosPolicy() qosPolicyApi {
-	return qosPolicyApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Url},
-		// ResourceApi: ResourceApi{
-		// 	Endpoint:    c.BaseUrl,
-		// 	BaseUrl:     "qos/policies",
-		// 	Client:      c.session,
-		// 	SingularKey: "policies",
-		// 	PluralKey:   "policies",
-		// },
-	}
-}
 func (c qosPolicyApi) List(query url.Values) ([]neutron.QosPolicy, error) {
-	body := struct{ Policies []neutron.QosPolicy }{}
-	if _, err := c.Get("qos/policies", query, &body); err != nil {
-		return nil, err
-	}
-	return body.Policies, nil
+	return ListResource[neutron.QosPolicy](c.ResourceApi, query)
 }
 func (c qosPolicyApi) Show(id string) (*neutron.QosPolicy, error) {
-	body := struct{ Policy neutron.QosPolicy }{}
-	if _, err := c.Get("qos/policies/"+id, nil, &body); err != nil {
-		return nil, err
-	}
-	return &body.Policy, nil
+	return ShowResource[neutron.QosPolicy](c.ResourceApi, id)
 }
-
 func (c qosPolicyApi) Find(idOrName string) (*neutron.QosPolicy, error) {
 	return FindResource(idOrName, c.Show, c.List)
 }
-
-// qos rule api
-type qosRuleApi struct {
-	ResourceApi
-}
-
-func (c NeutronV2) QosRule() qosRuleApi {
-	return qosRuleApi{
-		// ResourceApi{Client: c.rawClient, BaseUrl: c.Endpoint},
-		// ResourceApi: ResourceApi{
-		// 	Endpoint:    c.BaseUrl,
-		// 	BaseUrl:     "qos/policies",
-		// 	Client:      c.session,
-		// 	SingularKey: "policies",
-		// 	PluralKey:   "policies",
-		// },
-	}
-}
-
-// func (c qosPolicyApi) List(query url.Values) ([]neutron.QosPolicy, error) {
-// 	body := struct{ Policies []neutron.QosPolicy }{}
-// 	if _, err := c.SetQuery(query).Get(&body); err != nil {
-// 		return nil, err
-// 	}
-// 	return body.Policies, nil
-// }

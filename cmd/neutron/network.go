@@ -7,7 +7,8 @@ import (
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli"
+
+	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
@@ -124,7 +125,7 @@ var networkCreate = &cobra.Command{
 		}
 		network, err := c.Network().Create(params)
 		utility.LogError(err, "create network failed", true)
-		cli.PrintNetwork(*network)
+		views.PrintNetwork(*network)
 	},
 }
 

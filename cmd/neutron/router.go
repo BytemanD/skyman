@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli"
+	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
@@ -118,7 +118,7 @@ var routerCreate = &cobra.Command{
 		}
 		router, err := c.Router().Create(params)
 		utility.LogError(err, "create router failed", true)
-		cli.PrintRouter(*router)
+		views.PrintRouter(*router)
 	},
 }
 

@@ -1,4 +1,5 @@
 cat  > /tmp/test_list.txt <<EOF
+region list
 service list
 endpoint list
 project list
@@ -36,6 +37,5 @@ do
     echo "#### $line ####"
     go run cmd/skyman.go $line || break
 done < /tmp/test_list.txt
-
 
 rm -f /tmp/test_list.txt

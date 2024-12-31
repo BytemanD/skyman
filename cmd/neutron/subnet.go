@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli"
+	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
@@ -81,7 +81,7 @@ var subnetCreate = &cobra.Command{
 		}
 		subnet, err := c.Subnet().Create(params)
 		utility.LogError(err, "create subnet failed", true)
-		cli.PrintSubnet(*subnet)
+		views.PrintSubnet(*subnet)
 	},
 }
 var subnetShow = &cobra.Command{

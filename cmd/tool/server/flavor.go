@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
-	"github.com/BytemanD/skyman/cli/views"
+	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
@@ -43,8 +43,8 @@ var flavorClone = &cobra.Command{
 		setProperties, _ := cmd.Flags().GetStringArray("set")
 		unsetProperties, _ := cmd.Flags().GetStringArray("unset")
 
-		client := openstack.DefaultClient()
-		novaClient := client.NovaV2()
+		cmdent := openstack.DefaultClient()
+		novaClient := cmdent.NovaV2()
 		logging.Info("show flavor")
 		flavor, err := novaClient.Flavor().Show(flavorId)
 		utility.LogError(err, "show flavor failed", true)

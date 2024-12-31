@@ -5,7 +5,7 @@ import (
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
-	"github.com/BytemanD/skyman/openstack/auth"
+	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -32,11 +32,11 @@ var tokenIssue = &cobra.Command{
 				}},
 				{Name: "ExpiresAt"},
 				{Name: "ProjectId", Text: "Project Id", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(auth.Token)
+					p, _ := (item).(model.Token)
 					return p.Project.Id
 				}},
 				{Name: "UserId", Text: "User Id", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(auth.Token)
+					p, _ := (item).(model.Token)
 					return p.User.Id
 				}},
 				{Name: "IsAdmin", Slot: func(item interface{}) interface{} {

@@ -7,7 +7,7 @@ import (
 	"reflect"
 
 	"github.com/BytemanD/skyman/openstack/model"
-	"github.com/BytemanD/skyman/utility/httpclient"
+	"github.com/BytemanD/skyman/openstack/session"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -16,7 +16,7 @@ func checkError(resp *resty.Response, err error) (*Response, error) {
 		return &Response{resp}, err
 	}
 	if resp.IsError() {
-		return &Response{resp}, httpclient.HttpError{
+		return &Response{resp}, session.HttpError{
 			Status:  resp.StatusCode(),
 			Reason:  resp.Status(),
 			Message: string(resp.Body()),
@@ -68,6 +68,13 @@ func (r ResourceApi) NewRequest(method string, u string, q url.Values, body inte
 		req.URL = url
 	}
 	return req
+}
+func (r *ResourceApi) R() *session.Request {
+	return &session.Request{
+		Request:     r.Client.R(),
+		Baseurl:     r.BaseUrl,
+		ResourceUrl: r.ResourceUrl,
+	}
 }
 func (r ResourceApi) NewGetRequest(u string, q url.Values, result interface{}) *resty.Request {
 	return r.NewRequest(resty.MethodGet, u, q, nil, result)
@@ -121,7 +128,7 @@ func (r ResourceApi) Patch(url string, body interface{}, result interface{}, hea
 		r.NewPatchRequest(url, body, result).SetHeaders(headers).Send(),
 	)
 }
-func ListResource[T any](r ResourceApi, query url.Values) ([]T, error) {
+func ListResource[T any](r ResourceApi, query url.Values, detail ...bool) ([]T, error) {
 	if r.ResourceUrl == "" {
 		return nil, fmt.Errorf("ResourceUrl is empty")
 	}
@@ -130,8 +137,14 @@ func ListResource[T any](r ResourceApi, query url.Values) ([]T, error) {
 	}
 	items := []T{}
 	respBody := map[string]interface{}{}
-	if _, err := r.Get(r.ResourceUrl, query, &respBody); err != nil {
-		return nil, err
+	if len(detail) > 0 && detail[0] {
+		if _, err := r.R().SetQuery(query).SetResult(&respBody).Get("detail"); err != nil {
+			return nil, err
+		}
+	} else {
+		if _, err := r.R().SetQuery(query).SetResult(&respBody).Get(); err != nil {
+			return nil, err
+		}
 	}
 	itemsData, err := json.Marshal(respBody[r.PluralKey])
 	if err != nil {
@@ -151,7 +164,7 @@ func ShowResource[T any](r ResourceApi, id string) (*T, error) {
 	}
 	respBody := map[string]*T{}
 	// respBody[r.SingularKey] = T{}
-	if _, err := r.Get(r.ResourceUrl+"/"+id, nil, &respBody); err != nil {
+	if _, err := r.R().SetResult(&respBody).Get(id); err != nil {
 		return nil, err
 	}
 	return respBody[r.SingularKey], nil
@@ -173,10 +186,12 @@ func FindResource[T any](
 	if err == nil {
 		return t, nil
 	}
-	if _, ok := err.(httpclient.HttpError); !ok {
-		return nil, err
-	}
-	if httpError, _ := err.(httpclient.HttpError); !httpError.IsNotFound() {
+	switch errType := err.(type) {
+	case session.HttpError:
+		if !errType.IsNotFound() {
+			return nil, err
+		}
+	default:
 		return nil, err
 	}
 	ts, err := listFunc(url.Values{"name": []string{idOrName}})

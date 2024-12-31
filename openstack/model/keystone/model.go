@@ -1,7 +1,6 @@
 package keystone
 
 import (
-	"github.com/BytemanD/skyman/openstack/auth"
 	"github.com/BytemanD/skyman/openstack/model"
 )
 
@@ -28,11 +27,11 @@ type Region struct {
 	Links          interface{} `json:"links,omitempty"`
 }
 type Scope struct {
-	Project auth.Project `json:"project,omitempty"`
+	Project model.Project `json:"project,omitempty"`
 }
 type RoleAssigment struct {
-	Scope Scope     `json:"scope,omitempty"`
-	User  auth.User `json:"user,omitempty"`
+	Scope Scope      `json:"scope,omitempty"`
+	User  model.User `json:"user,omitempty"`
 }
 
 func (service Service) NameOrId() string {

@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/BytemanD/skyman/openstack/auth"
-	internal "github.com/BytemanD/skyman/openstack/internal/utility"
+	"github.com/BytemanD/skyman/openstack/internal/auth_plugin"
+	"github.com/BytemanD/skyman/openstack/session"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -23,7 +23,7 @@ func (resp Response) RequestId() string {
 
 type ServiceClient struct {
 	Url        string
-	AuthPlugin auth.AuthPlugin
+	AuthPlugin auth_plugin.AuthPlugin
 	rawClient  *resty.Client
 }
 
@@ -59,7 +59,7 @@ func (c *ServiceClient) Index(result interface{}) (*Response, error) {
 	return &Response{resp}, err
 }
 
-func NewServiceApi[T ServiceClient](endpoint string, version string, authPlugin auth.AuthPlugin) *T {
+func NewServiceApi[T ServiceClient](endpoint string, version string, authPlugin auth_plugin.AuthPlugin) *T {
 	u, _ := url.Parse(endpoint)
 	urlPath := strings.TrimSuffix(u.Path, "/")
 	if !strings.HasPrefix(urlPath, fmt.Sprintf("/%s", version)) {
@@ -68,7 +68,7 @@ func NewServiceApi[T ServiceClient](endpoint string, version string, authPlugin 
 	return &T{
 		Url:        u.String(),
 		AuthPlugin: authPlugin,
-		rawClient: internal.DefaultRestyClient().
+		rawClient: session.DefaultRestyClient().
 			OnBeforeRequest(func(c *resty.Client, r *resty.Request) error {
 				return authPlugin.AuthRequest(r)
 			}),

@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/BytemanD/skyman/cli/flags"
+	"github.com/BytemanD/skyman/cmd/flags"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/spf13/cobra"

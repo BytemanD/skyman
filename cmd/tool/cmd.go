@@ -1,10 +1,10 @@
 package tool
 
 import (
-	"github.com/BytemanD/skyman/cli/tool/guest"
-	"github.com/BytemanD/skyman/cli/tool/neutron"
-	"github.com/BytemanD/skyman/cli/tool/prune"
-	"github.com/BytemanD/skyman/cli/tool/server"
+	"github.com/BytemanD/skyman/cmd/tool/guest"
+	"github.com/BytemanD/skyman/cmd/tool/neutron"
+	"github.com/BytemanD/skyman/cmd/tool/prune"
+	"github.com/BytemanD/skyman/cmd/tool/server"
 	"github.com/spf13/cobra"
 )
 

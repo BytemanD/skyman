@@ -10,8 +10,8 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/glance"
+	"github.com/BytemanD/skyman/openstack/session"
 	"github.com/BytemanD/skyman/utility"
-	"github.com/BytemanD/skyman/utility/httpclient"
 )
 
 type ImageApi struct{ ResourceApi }
@@ -30,7 +30,7 @@ func (c ImageApi) List(query url.Values, total int) ([]glance.Image, error) {
 	for {
 		respBbody := glance.ImagesResp{}
 		req := c.NewGetRequest("images", fixQuery, nil)
-		logging.Info("query params: %s", req.QueryParam.Encode())
+		logging.Debug("query params: %s", req.QueryParam.Encode())
 		_, err := req.SetResult(&respBbody).Send()
 		if err != nil {
 			return nil, err
@@ -135,7 +135,7 @@ func (c ImageApi) Upload(id string, file string) error {
 	// TODO:
 	reader := utility.NewProcessReader(fileReader, int(fileStat.Size()))
 	_, err = c.NewPutRequest(utility.UrlJoin("images", id, "file"), reader, nil).
-		SetHeader(httpclient.CONTENT_TYPE, httpclient.CONTENT_TYPE_STREAM).
+		SetHeader(session.CONTENT_TYPE, session.CONTENT_TYPE_STREAM).
 		Send()
 
 	// _, err := c.NewPutRequest(utility.UrlJoin("images", id, "file"), nil, nil).
@@ -151,7 +151,7 @@ func (c ImageApi) Download(id string, fileName string, process bool) error {
 		return err
 	}
 	req := c.NewGetRequest(utility.UrlJoin("images", id, "file"), nil, nil).
-		SetHeader(httpclient.CONTENT_TYPE, "application/octet-stream").
+		SetHeader(session.CONTENT_TYPE, session.CONTENT_TYPE_STREAM).
 		SetOutput(fileName)
 
 	if utility.IsFileExists(fileName) {

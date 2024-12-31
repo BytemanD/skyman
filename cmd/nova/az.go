@@ -3,8 +3,8 @@ package nova
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/skyman/cli/flags"
-	"github.com/BytemanD/skyman/cli/views"
+	"github.com/BytemanD/skyman/cmd/flags"
+	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"

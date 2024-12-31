@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/BytemanD/skyman/cli/flags"
+	"github.com/BytemanD/skyman/cmd/flags"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"

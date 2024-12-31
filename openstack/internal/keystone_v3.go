@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/BytemanD/skyman/openstack/auth"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/keystone"
 	"github.com/BytemanD/skyman/utility"
@@ -112,11 +111,11 @@ func (c EndpointApi) Create(endpoint keystone.Endpoint) (*keystone.Endpoint, err
 	json.Unmarshal(resp.Body(), &respBody)
 	return &respBody.Endpoint, nil
 }
-func (c ProjectApi) List(query url.Values) ([]auth.Project, error) {
-	return ListResource[auth.Project](c.ResourceApi, query)
+func (c ProjectApi) List(query url.Values) ([]model.Project, error) {
+	return ListResource[model.Project](c.ResourceApi, query)
 }
-func (c ProjectApi) Show(id string) (*auth.Project, error) {
-	return ShowResource[auth.Project](c.ResourceApi, id)
+func (c ProjectApi) Show(id string) (*model.Project, error) {
+	return ShowResource[model.Project](c.ResourceApi, id)
 }
 
 func (c ProjectApi) Delete(id string) error {
@@ -124,19 +123,19 @@ func (c ProjectApi) Delete(id string) error {
 	return err
 }
 
-func (c ProjectApi) Find(idOrName string) (*auth.Project, error) {
-	return FindResource[auth.Project](idOrName, c.Show, c.List)
+func (c ProjectApi) Find(idOrName string) (*model.Project, error) {
+	return FindResource[model.Project](idOrName, c.Show, c.List)
 }
 
 // user api
-func (c UserApi) List(query url.Values) ([]auth.User, error) {
-	return ListResource[auth.User](c.ResourceApi, query)
+func (c UserApi) List(query url.Values) ([]model.User, error) {
+	return ListResource[model.User](c.ResourceApi, query)
 }
 
-func (c UserApi) Show(id string) (*auth.User, error) {
-	return ShowResource[auth.User](c.ResourceApi, id)
+func (c UserApi) Show(id string) (*model.User, error) {
+	return ShowResource[model.User](c.ResourceApi, id)
 }
-func (c UserApi) Find(idOrName string) (*auth.User, error) {
+func (c UserApi) Find(idOrName string) (*model.User, error) {
 	return FindResource(idOrName, c.Show, c.List)
 }
 func (c RoleAssignmentApi) List(query url.Values) ([]keystone.RoleAssigment, error) {
@@ -147,13 +146,13 @@ type KeystoneV3 struct {
 	*ServiceClient
 }
 
-func (c KeystoneV3) ListUsersByProjectId(projectId string) ([]auth.User, error) {
+func (c KeystoneV3) ListUsersByProjectId(projectId string) ([]model.User, error) {
 	items, err := c.RoleAssignment().List(
 		utility.UrlValues(map[string]string{"scope.project.id": projectId}))
 	if err != nil {
 		return nil, err
 	}
-	users := []auth.User{}
+	users := []model.User{}
 	for _, roleAssignment := range items {
 		user, err := c.User().Show(roleAssignment.User.Id)
 		if err != nil {

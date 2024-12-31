@@ -14,12 +14,12 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
-	"github.com/BytemanD/skyman/cli/flags"
-	"github.com/BytemanD/skyman/cli/views"
+	"github.com/BytemanD/skyman/cmd/flags"
+	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
-	"github.com/BytemanD/skyman/openstack/auth"
+	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/glance"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
@@ -128,7 +128,7 @@ var serverList = &cobra.Command{
 			}
 		}
 
-		projectMap := map[string]auth.Project{}
+		projectMap := map[string]model.Project{}
 		imageMap := map[string]glance.Image{}
 		pt := common.PrettyTable{
 			Search: *listFlags.Search,

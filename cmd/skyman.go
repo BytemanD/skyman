@@ -12,18 +12,19 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
 
-	"github.com/BytemanD/skyman/cli/context"
+	"github.com/BytemanD/skyman/cmd/context"
+	"github.com/BytemanD/skyman/cmd/neutron"
 
-	"github.com/BytemanD/skyman/cli/templates"
-	"github.com/BytemanD/skyman/cli/tool"
 	"github.com/BytemanD/skyman/cmd/benchmark"
 	"github.com/BytemanD/skyman/cmd/cinder"
 	"github.com/BytemanD/skyman/cmd/glance"
 	"github.com/BytemanD/skyman/cmd/keystone"
-	"github.com/BytemanD/skyman/cmd/neutron"
+
 	"github.com/BytemanD/skyman/cmd/nova"
 	"github.com/BytemanD/skyman/cmd/quota"
+	"github.com/BytemanD/skyman/cmd/templates"
 	"github.com/BytemanD/skyman/cmd/test"
+	"github.com/BytemanD/skyman/cmd/tool"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"

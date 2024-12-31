@@ -15,8 +15,8 @@ import (
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/nova"
+	"github.com/BytemanD/skyman/openstack/session"
 	"github.com/BytemanD/skyman/utility"
-	"github.com/BytemanD/skyman/utility/httpclient"
 )
 
 const (
@@ -72,16 +72,16 @@ func (c *NovaV2) MicroVersionLargeEqual(version string) bool {
 }
 func (c *NovaV2) GetCurrentVersion() (*model.ApiVersion, error) {
 	if c.currentVersion == nil {
-		respBody := struct{ Versions []model.ApiVersion }{}
-		resp, err := c.Index(&respBody)
+		result := struct{ Versions []model.ApiVersion }{}
+		resp, err := c.Index(&result)
 		if err != nil {
 			return nil, err
 		}
 
-		if err := json.Unmarshal(resp.Body(), &respBody); err != nil {
+		if err := json.Unmarshal(resp.Body(), &result); err != nil {
 			return nil, err
 		}
-		for _, version := range respBody.Versions {
+		for _, version := range result.Versions {
 			if version.Status == "CURRENT" {
 				return &version, nil
 			}
@@ -249,12 +249,7 @@ func (c ServerApi) ListByName(name string) ([]nova.Server, error) {
 	return c.List(url.Values{"name": []string{name}})
 }
 func (c ServerApi) Detail(query url.Values) ([]nova.Server, error) {
-	body := struct{ Servers []nova.Server }{}
-	if _, err := c.Get("servers/detail", query, &body); err != nil {
-		return nil, err
-	}
-	return body.Servers, nil
-
+	return ListResource[nova.Server](c.ResourceApi, query, true)
 }
 func (c ServerApi) DetailByName(name string) ([]nova.Server, error) {
 	return c.Detail(url.Values{"name": []string{name}})
@@ -264,7 +259,7 @@ func (c ServerApi) Show(id string) (*nova.Server, error) {
 	return ShowResource[nova.Server](c.ResourceApi, id)
 }
 func (c ServerApi) Find(idOrName string) (*nova.Server, error) {
-	return FindResource(idOrName, c.Show, c.List)
+	return FindResource(idOrName, c.Show, c.Detail)
 }
 func (c ServerApi) Create(options nova.ServerOpt) (*nova.Server, error) {
 	if options.Name == "" {
@@ -285,14 +280,11 @@ func (c ServerApi) Create(options nova.ServerOpt) (*nova.Server, error) {
 	var err error
 	body := struct{ Server nova.Server }{}
 	if options.BlockDeviceMappingV2 != nil {
-		_, err = c.Post(
-			URL_SERVER_VOLUMES_BOOT,
-			map[string]nova.ServerOpt{"server": options},
-			&body)
+		_, err = c.R().SetBody(map[string]nova.ServerOpt{"server": options}).
+			SetResult(&body).ResetPath().Post(URL_SERVER_VOLUMES_BOOT)
 	} else {
-		_, err = c.Post(
-			"servers", map[string]nova.ServerOpt{"server": options}, &body,
-		)
+		_, err = c.R().SetBody(map[string]nova.ServerOpt{"server": options}).
+			SetResult(&body).Post()
 	}
 	if err != nil {
 		return nil, err
@@ -306,24 +298,23 @@ func (c ServerApi) Delete(id string) error {
 }
 func (c ServerApi) ListVolumes(id string) ([]nova.VolumeAttachment, error) {
 	body := struct{ VolumeAttachments []nova.VolumeAttachment }{}
-	if _, err := c.Get(fmt.Sprintf("servers/%s/os-volume_attachments", id), nil, &body); err != nil {
+	if _, err := c.R().SetResult(&body).Get(id, "os-volume_attachments"); err != nil {
 		return nil, err
 	}
 	return body.VolumeAttachments, nil
 }
 func (c ServerApi) AddVolume(id string, volumeId string) (*nova.VolumeAttachment, error) {
 	body := struct{ VolumeAttachment nova.VolumeAttachment }{}
-	_, err := c.Post(
-		fmt.Sprintf("servers/%s/os-volume_attachments", id),
-		map[string]map[string]string{"volumeAttachment": {"volumeId": volumeId}},
-		&body)
+	_, err := c.R().SetResult(&body).
+		SetBody(ReqBody{"volumeAttachment": {"volumeId": volumeId}}).
+		Post(id, "os-volume_attachments")
 	if err != nil {
 		return nil, err
 	}
 	return &body.VolumeAttachment, nil
 }
 func (c ServerApi) DeleteVolume(id string, volumeId string) error {
-	_, err := c.ResourceApi.Delete(fmt.Sprintf("servers/%s/os-volume_attachments/%s", id, volumeId))
+	_, err := c.R().Delete(id, "os-volume_attachments", volumeId)
 	return err
 }
 func (c ServerApi) DeleteVolumeAndWait(id string, volumeId string, waitSeconds int) error {
@@ -355,13 +346,13 @@ func (c ServerApi) DeleteVolumeAndWait(id string, volumeId string, waitSeconds i
 }
 func (c ServerApi) ListInterfaces(id string) ([]nova.InterfaceAttachment, error) {
 	body := struct{ InterfaceAttachments []nova.InterfaceAttachment }{}
-	if _, err := c.Get(fmt.Sprintf(URL_INTERFACE_ATTACH, id), nil, &body); err != nil {
+	if _, err := c.R().SetResult(&body).Get(id, "os-interface"); err != nil {
 		return nil, err
 	}
 	return body.InterfaceAttachments, nil
 }
 func (c ServerApi) AddInterface(id string, netId, portId string) (*nova.InterfaceAttachment, error) {
-	params := map[string]string{}
+	params := map[string]interface{}{}
 	if netId == "" && portId == "" {
 		return nil, errors.New("invalid params: portId or netId is required")
 	}
@@ -371,20 +362,17 @@ func (c ServerApi) AddInterface(id string, netId, portId string) (*nova.Interfac
 	if portId != "" {
 		params["port_id"] = portId
 	}
-	body := struct{ InterfaceAttachment nova.InterfaceAttachment }{}
-	resp, err := c.Post(
-		fmt.Sprintf(URL_INTERFACE_ATTACH, id),
-		map[string]map[string]string{"interfaceAttachment": params},
-		&body,
-	)
+	result := struct{ InterfaceAttachment nova.InterfaceAttachment }{}
+	resp, err := c.R().SetResult(&result).SetBody(ReqBody{"interfaceAttachment": params}).
+		Post(id, "os-interface")
 	if err != nil {
 		return nil, err
 	}
-	body.InterfaceAttachment.SetRequestId(resp.RequestId())
-	return &body.InterfaceAttachment, nil
+	result.InterfaceAttachment.SetRequestId(resp.RequestId())
+	return &result.InterfaceAttachment, nil
 }
-func (c ServerApi) DeleteInterface(id string, portId string) (*Response, error) {
-	return c.ResourceApi.Delete(fmt.Sprintf(URL_INTERFACE_DETACH, id, portId))
+func (c ServerApi) DeleteInterface(id string, portId string) (*session.Response, error) {
+	return c.R().Delete(id, "os-interface", portId)
 }
 func (c ServerApi) DeleteInterfaceAndWait(id string, portId string, timeout time.Duration) error {
 	resp, err := c.DeleteInterface(id, portId)
@@ -416,11 +404,12 @@ func (c ServerApi) DeleteInterfaceAndWait(id string, portId string, timeout time
 		},
 	)
 }
-func (c ServerApi) doAction(action string, id string, params interface{}) (*Response, error) {
-	return c.Post(
-		fmt.Sprintf("servers/%s/actions", id),
-		map[string]interface{}{action: params},
-		nil)
+func (c ServerApi) doAction(action string, id string, params interface{}, result ...interface{}) (*session.Response, error) {
+	req := c.R().SetBody(map[string]interface{}{action: params})
+	if len(result) > 0 {
+		req.SetResult(result[0])
+	}
+	return req.Post(id, "actions")
 }
 func (c ServerApi) Stop(id string) error {
 	_, err := c.doAction("os-stop", id, nil)
@@ -431,8 +420,12 @@ func (c ServerApi) Start(id string) error {
 	return err
 }
 func (c ServerApi) Reboot(id string, hard bool) error {
-	rebootTypes := map[bool]string{false: "soft", true: "hard"}
-	body := map[string]string{"type": rebootTypes[hard]}
+	body := map[string]string{}
+	if hard {
+		body["type"] = "hard"
+	} else {
+		body["type"] = "soft"
+	}
 	_, err := c.doAction("reboot", id, body)
 	return err
 }
@@ -503,12 +496,7 @@ func (c ServerApi) SetPassword(id string, password, user string) error {
 	return err
 }
 func (c ServerApi) Set(id string, params map[string]interface{}) error {
-	body := struct {
-		Server map[string]interface{} `json:"server"`
-	}{
-		Server: params,
-	}
-	_, err := c.Put("servers/"+id, body, nil)
+	_, err := c.R().SetBody(ReqBody{"server": params}).Put(id)
 	return err
 }
 func (c ServerApi) SetName(id string, name string) error {
@@ -529,23 +517,22 @@ func (c ServerApi) ConsoleLog(id string, length uint) (*nova.ConsoleLog, error) 
 	if length != 0 {
 		params["length"] = length
 	}
-	resp, err := c.doAction("os-getConsoleOutput", id, params)
+	result := nova.ConsoleLog{}
+	_, err := c.doAction("os-getConsoleOutput", id, params, &result)
 	if err != nil {
 		return nil, err
 	}
-	body := nova.ConsoleLog{}
-	json.Unmarshal(resp.Body(), &body)
-	return &body, nil
+	return &result, nil
 }
 func (c ServerApi) getVNCConsole(id string, consoleType string) (*nova.Console, error) {
 	params := map[string]interface{}{"type": consoleType}
-	resp, err := c.doAction("os-getVNCConsole", id, params)
+	result := map[string]*nova.Console{"console": {}}
+	_, err := c.doAction("os-getVNCConsole", id, params, &result)
 	if err != nil {
 		return nil, err
 	}
-	respBody := map[string]*nova.Console{"console": {}}
-	json.Unmarshal(resp.Body(), &respBody)
-	return respBody["console"], nil
+
+	return result["console"], nil
 }
 func (c ServerApi) getRemoteConsole(id string, protocol string, consoleType string) (*nova.Console, error) {
 	params := map[string]interface{}{
@@ -554,16 +541,14 @@ func (c ServerApi) getRemoteConsole(id string, protocol string, consoleType stri
 			"type":     consoleType,
 		},
 	}
-	respBody := struct {
+	result := struct {
 		RemoteConsole nova.Console `json:"remote_console"`
 	}{}
-	_, err := c.Post(
-		fmt.Sprintf("servrs/%s/remote-consoles", id),
-		params, &respBody)
+	_, err := c.R().SetBody(params).SetResult(&result).Post(id, "remote-consoles")
 	if err != nil {
 		return nil, err
 	}
-	return &respBody.RemoteConsole, nil
+	return &result.RemoteConsole, nil
 }
 
 func (c ServerApi) ConsoleUrl(id string, consoleType string) (*nova.Console, error) {
@@ -608,18 +593,18 @@ func (c ServerApi) LiveMigrate(id string, blockMigrate interface{}, host string)
 	return err
 }
 func (c ServerApi) ListActions(id string) ([]nova.InstanceAction, error) {
-	body := struct{ InstanceActions []nova.InstanceAction }{}
-	if _, err := c.Get(fmt.Sprintf("servers/%s/os-instance-actions", id), nil, &body); err != nil {
+	result := struct{ InstanceActions []nova.InstanceAction }{}
+	if _, err := c.R().SetResult(&result).Get(id, "os-instance-actions"); err != nil {
 		return nil, err
 	}
-	return body.InstanceActions, nil
+	return result.InstanceActions, nil
 }
 func (c ServerApi) ShowAction(id, requestId string) (*nova.InstanceAction, error) {
-	body := struct{ InstanceAction nova.InstanceAction }{}
-	if _, err := c.Get(fmt.Sprintf("servers/%s/os-instance-actions/%s", id, requestId), nil, &body); err != nil {
+	result := struct{ InstanceAction nova.InstanceAction }{}
+	if _, err := c.R().SetResult(&result).Get(id, "os-instance-actions", requestId); err != nil {
 		return nil, err
 	}
-	return &body.InstanceAction, nil
+	return &result.InstanceAction, nil
 }
 func (c ServerApi) ListActionsWithEvents(id string, actionName string, requestId string, last int) ([]nova.InstanceAction, error) {
 	serverActions, err := c.ListActions(id)
@@ -653,11 +638,11 @@ func (c ServerApi) ListActionsWithEvents(id string, actionName string, requestId
 }
 
 func (c ServerApi) ListMigrations(id string, query url.Values) ([]nova.Migration, error) {
-	body := struct{ Migrations []nova.Migration }{}
-	if _, err := c.Get(id+"/migrations", nil, &body); err != nil {
+	result := struct{ Migrations []nova.Migration }{}
+	if _, err := c.R().SetResult(&result).Get(id, "migrations"); err != nil {
 		return nil, err
 	}
-	return body.Migrations, nil
+	return result.Migrations, nil
 
 }
 func (c ServerApi) RegionLiveMigrate(id string, destRegion string, blockMigrate bool, dryRun bool, destHost string) (*nova.RegionMigrateResp, error) {
@@ -669,13 +654,12 @@ func (c ServerApi) RegionLiveMigrate(id string, destRegion string, blockMigrate 
 	if destHost != "" {
 		data["host"] = destHost
 	}
-	resp, err := c.doAction("os-migrateLive-region", id, data)
+	result := nova.RegionMigrateResp{}
+	_, err := c.doAction("os-migrateLive-region", id, data, &result)
 	if err != nil {
 		return nil, err
 	}
-	respBody := &nova.RegionMigrateResp{}
-	json.Unmarshal(resp.Body(), &respBody)
-	return respBody, nil
+	return &result, nil
 }
 func (c ServerApi) CreateImage(id string, imagName string, metadata map[string]string) (string, error) {
 	data := map[string]interface{}{
@@ -684,14 +668,14 @@ func (c ServerApi) CreateImage(id string, imagName string, metadata map[string]s
 	if len(metadata) > 0 {
 		data["metadata"] = metadata
 	}
-	resp, err := c.doAction("createImage", id, data)
+	result := struct {
+		ImageId string `json:"image_id"`
+	}{}
+	resp, err := c.doAction("createImage", id, data, &result)
 	if err != nil {
 		return "", err
 	}
-	respBody := struct {
-		ImageId string `json:"image_id"`
-	}{}
-	return respBody.ImageId, json.Unmarshal(resp.Body(), &respBody)
+	return result.ImageId, json.Unmarshal(resp.Body(), &result)
 }
 func (c ServerApi) WaitStatus(serverId string, status string, interval int) (*nova.Server, error) {
 	var (
@@ -755,8 +739,8 @@ func (c ServerApi) WaitDeleted(id string) error {
 				logging.Info("[%s] %s", id, server.AllStatus())
 				return true
 			}
-			if compare.IsType[httpclient.HttpError](err) {
-				httpError, _ := err.(httpclient.HttpError)
+			if compare.IsType[session.HttpError](err) {
+				httpError, _ := err.(session.HttpError)
 				if httpError.IsNotFound() {
 					logging.Info("[%s] deleted", id)
 					err = nil
@@ -842,18 +826,10 @@ func (c ServerApi) CreateAndWait(options nova.ServerOpt) (*nova.Server, error) {
 // flavor api
 
 func (c FlavorApi) List(query url.Values) ([]nova.Flavor, error) {
-	body := struct{ Flavors []nova.Flavor }{}
-	if _, err := c.Get("flavors", nil, &body); err != nil {
-		return nil, err
-	}
-	return body.Flavors, nil
+	return ListResource[nova.Flavor](c.ResourceApi, query)
 }
 func (c FlavorApi) Detail(query url.Values) ([]nova.Flavor, error) {
-	body := struct{ Flavors []nova.Flavor }{}
-	if _, err := c.Get("flavors/detail", nil, &body); err != nil {
-		return nil, err
-	}
-	return body.Flavors, nil
+	return ListResource[nova.Flavor](c.ResourceApi, query, true)
 }
 func (c FlavorApi) Show(id string) (*nova.Flavor, error) {
 	return ShowResource[nova.Flavor](c.ResourceApi, id)
@@ -868,19 +844,17 @@ func (c FlavorApi) Find(idOrName string, withExtraSpecs bool) (*nova.Flavor, err
 }
 
 func (c FlavorApi) Create(flavor nova.Flavor) (*nova.Flavor, error) {
-	respBody := struct{ Flavor nova.Flavor }{}
-	_, err := c.Post("flavors", map[string]nova.Flavor{"flavor": flavor}, &respBody)
-	return &respBody.Flavor, err
+	result := struct{ Flavor nova.Flavor }{}
+	_, err := c.R().SetBody(map[string]nova.Flavor{"flavor": flavor}).SetResult(&result).Post()
+	return &result.Flavor, err
 }
 
 func (c FlavorApi) ListExtraSpecs(id string) (nova.ExtraSpecs, error) {
-	respBody := struct {
+	result := struct {
 		ExtraSpecs nova.ExtraSpecs `json:"extra_specs"`
 	}{}
-	_, err := c.Get(
-		fmt.Sprintf("%s/os-extra_specs", id), nil,
-		&respBody)
-	return respBody.ExtraSpecs, err
+	_, err := c.R().SetResult(&result).Get(id, "os-extra_specs")
+	return result.ExtraSpecs, err
 }
 func (c FlavorApi) ShowWithExtraSpecs(id string) (*nova.Flavor, error) {
 	flavor, err := c.Show(id)
@@ -895,17 +869,16 @@ func (c FlavorApi) ShowWithExtraSpecs(id string) (*nova.Flavor, error) {
 	return flavor, err
 }
 func (c FlavorApi) SetExtraSpecs(id string, extraSpecs map[string]string) (nova.ExtraSpecs, error) {
-	respBody := struct {
+	result := struct {
 		ExtraSpecs nova.ExtraSpecs `json:"extra_specs"`
 	}{}
-	_, err := c.Post(
-		"flavors/"+id+"/os-extra_specs",
-		map[string]nova.ExtraSpecs{"extra_specs": extraSpecs},
-		&respBody)
-	return respBody.ExtraSpecs, err
+	_, err := c.R().SetBody(map[string]nova.ExtraSpecs{"extra_specs": extraSpecs}).
+		SetResult(&result).Post(id, "os-extra_specs")
+	return result.ExtraSpecs, err
 }
 func (c FlavorApi) DeleteExtraSpec(id string, extraSpec string) error {
-	return c.Delete(fmt.Sprintf("%s/os-extra_specs/%s", id, extraSpec))
+	_, err := c.R().Delete(id, "os-extra_specs", extraSpec)
+	return err
 }
 func (c FlavorApi) Copy(id string, newName string, newId string,
 	newVcpus int, newRam int, newDisk int, newSwap int,
@@ -970,11 +943,7 @@ func (c HypervisorApi) List(query url.Values) ([]nova.Hypervisor, error) {
 	return ListResource[nova.Hypervisor](c.ResourceApi, query)
 }
 func (c HypervisorApi) Detail(query url.Values) ([]nova.Hypervisor, error) {
-	body := struct{ Hypervisors []nova.Hypervisor }{}
-	if _, err := c.Get("os-hypervisors/detail", query, &body); err != nil {
-		return nil, err
-	}
-	return body.Hypervisors, nil
+	return ListResource[nova.Hypervisor](c.ResourceApi, query, true)
 }
 func (c HypervisorApi) ListByName(hostname string) ([]nova.Hypervisor, error) {
 	return c.List(url.Values{"hypervisor_hostname_pattern": []string{hostname}})
@@ -1007,12 +976,12 @@ func (c HypervisorApi) Delete(id string) error {
 	return err
 }
 func (c HypervisorApi) Uptime(id string) (*nova.Hypervisor, error) {
-	body := struct{ Hypervisor *nova.Hypervisor }{}
-	_, err := c.Get(fmt.Sprintf("hypervisors/%s/uptime", id), nil, &body)
+	result := struct{ Hypervisor *nova.Hypervisor }{}
+	_, err := c.R().SetResult(&result).Get("hypervisors", id, "uptime")
 	if err != nil {
 		return nil, err
 	}
-	return body.Hypervisor, nil
+	return result.Hypervisor, nil
 }
 func (c HypervisorApi) FlavorCapacities(query url.Values) (*nova.FlavorCapacities, error) {
 	body := nova.FlavorCapacities{}
@@ -1051,19 +1020,17 @@ func (c ComputeServiceApi) GetByHostBinary(host string, binary string) (*nova.Se
 }
 
 func (c ComputeServiceApi) doAction(action string, params map[string]interface{}) error {
-	respBody := struct{ Service nova.Service }{}
-	_, err := c.Put(
-		fmt.Sprintf("os-services/%s", action),
-		params, &respBody)
+	result := struct{ Service nova.Service }{}
+	_, err := c.R().SetResult(&result).SetBody(params).Put("os-services", action)
 	return err
 }
 func (c ComputeServiceApi) update(id string, update map[string]interface{}) (*nova.Service, error) {
-	respBody := struct{ Service nova.Service }{}
-	_, err := c.Put(fmt.Sprintf("os-services/%s", id), update, &respBody)
+	result := struct{ Service nova.Service }{}
+	_, err := c.R().SetBody(update).SetResult(&result).Put("os-services", id)
 	if err != nil {
 		return nil, err
 	}
-	return &respBody.Service, nil
+	return &result.Service, nil
 }
 func (c ComputeServiceApi) Up(host string, binary string) (*nova.Service, error) {
 	if c.MicroVersionLargeEqual("2.53") {
@@ -1153,18 +1120,18 @@ func (c MigrationApi) List(query url.Values) ([]nova.Migration, error) {
 
 // avaliable zone api
 func (c AZApi) List(query url.Values) ([]nova.AvailabilityZone, error) {
-	body := struct{ AvailabilityZoneInfo []nova.AvailabilityZone }{}
-	if _, err := c.Get(c.ResourceUrl, query, &body); err != nil {
+	result := struct{ AvailabilityZoneInfo []nova.AvailabilityZone }{}
+	if _, err := c.R().SetQuery(query).SetResult(&result).Get(c.ResourceUrl); err != nil {
 		return nil, err
 	}
-	return body.AvailabilityZoneInfo, nil
+	return result.AvailabilityZoneInfo, nil
 }
 func (c AZApi) Detail(query url.Values) ([]nova.AvailabilityZone, error) {
-	body := struct{ AvailabilityZoneInfo []nova.AvailabilityZone }{}
-	if _, err := c.Get(c.ResourceUrl+"/detail", query, &body); err != nil {
+	result := struct{ AvailabilityZoneInfo []nova.AvailabilityZone }{}
+	if _, err := c.Get(c.ResourceUrl+"/detail", query, &result); err != nil {
 		return nil, err
 	}
-	return body.AvailabilityZoneInfo, nil
+	return result.AvailabilityZoneInfo, nil
 }
 
 // aggregate api
@@ -1176,13 +1143,13 @@ func (c AggregateApi) Show(id string) (*nova.Aggregate, error) {
 	return ShowResource[nova.Aggregate](c.ResourceApi, id)
 }
 func (c AggregateApi) Create(agg nova.Aggregate) (*nova.Aggregate, error) {
-	respBody := struct {
+	result := struct {
 		Aggregate nova.Aggregate `json:"aggregate"`
 	}{}
-	if _, err := c.Post(c.ResourceUrl, map[string]nova.Aggregate{"aggregate": agg}, &respBody); err != nil {
+	if _, err := c.Post(c.ResourceUrl, map[string]nova.Aggregate{"aggregate": agg}, &result); err != nil {
 		return nil, err
 	} else {
-		return &respBody.Aggregate, nil
+		return &result.Aggregate, nil
 	}
 }
 
@@ -1197,10 +1164,10 @@ func (c AggregateApi) Find(idOrName string) (*nova.Aggregate, error) {
 	if err == nil {
 		return agg, nil
 	}
-	if !compare.IsType[httpclient.HttpError](err) {
+	if !compare.IsType[session.HttpError](err) {
 		return nil, err
 	}
-	httpError, _ := err.(httpclient.HttpError)
+	httpError, _ := err.(session.HttpError)
 	if !httpError.IsNotFound() {
 		return nil, err
 	}
@@ -1208,7 +1175,7 @@ func (c AggregateApi) Find(idOrName string) (*nova.Aggregate, error) {
 	if err != nil {
 		return nil, err
 	}
-	aggs = utility.Filter[nova.Aggregate](aggs, func(x nova.Aggregate) bool {
+	aggs = utility.Filter(aggs, func(x nova.Aggregate) bool {
 		return x.Name == idOrName
 	})
 	switch len(aggs) {
@@ -1226,13 +1193,12 @@ func (c AggregateApi) AddHost(id int, host string) (*nova.Aggregate, error) {
 	}{
 		AddHost: map[string]string{"host": host},
 	}
-	respBody := struct{ Aggregate nova.Aggregate }{}
-	if _, err := c.Post(
-		fmt.Sprintf("%s/%s/action", c.ResourceUrl, strconv.Itoa(id)),
-		body, &respBody); err != nil {
+	result := struct{ Aggregate nova.Aggregate }{}
+	if _, err := c.R().SetResult(&result).SetBody(body).
+		Post(c.ResourceUrl, strconv.Itoa(id), "action"); err != nil {
 		return nil, err
 	}
-	return &respBody.Aggregate, nil
+	return &result.Aggregate, nil
 }
 func (c AggregateApi) RemoveHost(id int, host string) (*nova.Aggregate, error) {
 	body := struct {
@@ -1240,13 +1206,12 @@ func (c AggregateApi) RemoveHost(id int, host string) (*nova.Aggregate, error) {
 	}{
 		RemoveHost: map[string]string{"host": host},
 	}
-	respBody := struct{ Aggregate nova.Aggregate }{}
-	if _, err := c.Post(
-		fmt.Sprintf("%s/%d/action", c.ResourceUrl, id),
-		body, &respBody); err != nil {
+	result := struct{ Aggregate nova.Aggregate }{}
+	if _, err := c.R().SetResult(&result).SetBody(body).Post(
+		c.ResourceUrl, strconv.Itoa(id), "action"); err != nil {
 		return nil, err
 	}
-	return &respBody.Aggregate, nil
+	return &result.Aggregate, nil
 }
 
 // server group api
