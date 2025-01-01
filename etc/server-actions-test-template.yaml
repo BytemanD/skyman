@@ -1,3 +1,5 @@
+# 配置模板
+# 注意：该文件在程序更新后将被覆盖
 web:
   port: 80
 
@@ -28,6 +30,14 @@ default:
   #   repeatEveryTime: 1
   # qgaChecker:
   #   enabled: False
+
+# 支持的actions:
+# hard_reboot, interface_hotplug, live_migrate, migrate, net_attach,
+# nop, pause, port_attach, port_detach, reboot,
+# rebuild, rename, resize, resume, revert_system,
+# shelve, start, stop, suspend, system_snapshot,
+# toggle_shelve, toggle_suspend, unpause, unshelve, volume_attach,
+# volume_detach, volume_extend, volume_hotplug
 
 cases:
   - name: 关机、开机、硬重启
