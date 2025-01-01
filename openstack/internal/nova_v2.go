@@ -409,7 +409,7 @@ func (c ServerApi) doAction(action string, id string, params interface{}, result
 	if len(result) > 0 {
 		req.SetResult(result[0])
 	}
-	return req.Post(id, "actions")
+	return req.Post(id, "action")
 }
 func (c ServerApi) Stop(id string) error {
 	_, err := c.doAction("os-stop", id, nil)
