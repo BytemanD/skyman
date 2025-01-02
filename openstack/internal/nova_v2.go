@@ -1030,12 +1030,12 @@ func (c ComputeServiceApi) GetByHostBinary(host string, binary string) (*nova.Se
 
 func (c ComputeServiceApi) doAction(action string, params map[string]interface{}) error {
 	result := struct{ Service nova.Service }{}
-	_, err := c.R().SetResult(&result).SetBody(params).Put("os-services", action)
+	_, err := c.R().SetResult(&result).SetBody(params).Put(action)
 	return err
 }
 func (c ComputeServiceApi) update(id string, update map[string]interface{}) (*nova.Service, error) {
 	result := struct{ Service nova.Service }{}
-	_, err := c.R().SetBody(update).SetResult(&result).Put("os-services", id)
+	_, err := c.R().SetBody(update).SetResult(&result).Put(id)
 	if err != nil {
 		return nil, err
 	}

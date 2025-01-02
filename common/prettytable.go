@@ -218,7 +218,7 @@ func (pt PrettyTable) RenderToTable(long bool) string {
 				matchedCount -= 1
 			}
 			if column.ForceColor || (column.AutoColor && pt.Style == STYLE_LIGHT) {
-				value = utility.ColorString(fmt.Sprint(value))
+				value = utility.NewColorStatus(fmt.Sprint(value))
 			}
 			row = append(row, value)
 		}
@@ -319,6 +319,9 @@ func (pt PrettyItemTable) Print(long bool) string {
 				fieldValue = string(j)
 			} else {
 				fieldValue = reflectField
+				if field.AutoColor {
+					fieldValue = utility.NewColorStatus(fmt.Sprint(fieldValue))
+				}
 			}
 		}
 		tableWriter.AppendRow(table.Row{fieldLabel, fieldValue})

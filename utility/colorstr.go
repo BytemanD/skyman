@@ -11,37 +11,39 @@ type ColorFormater struct {
 	Red    []string
 }
 
-func (cf ColorFormater) Format(text string) string {
+type ColorStatus struct {
+	status   string
+	Formater ColorFormater
+}
+
+func (s ColorStatus) String() string {
 	switch {
-	case stringutils.ContainsString(cf.Green, text):
-		return color.GreenString(text)
-	case stringutils.ContainsString(cf.Yellow, text):
-		return color.YellowString(text)
-	case stringutils.ContainsString(cf.Red, text):
-		return color.RedString(text)
+	case stringutils.ContainsString(s.Formater.Green, s.status):
+		return color.GreenString(s.status)
+	case stringutils.ContainsString(s.Formater.Yellow, s.status):
+		return color.YellowString(s.status)
+	case stringutils.ContainsString(s.Formater.Red, s.status):
+		return color.RedString(s.status)
 	default:
-		return text
+		return s.status
 	}
 }
 
-var BaseColorFormatter ColorFormater
-
-func ColorString(text string) string {
-	return BaseColorFormatter.Format(text)
-}
-
-func init() {
-	BaseColorFormatter = ColorFormater{
-		Green: []string{
-			"enabled", "up", "true", "yes", "success", "active", "ACTIVE",
-			"Running", "available", ":)", ":-)", "Success", "completed",
+func NewColorStatus(s string) ColorStatus {
+	return ColorStatus{
+		Formater: ColorFormater{
+			Green: []string{
+				"enabled", "up", "true", "yes", "success", "active", "ACTIVE",
+				"Running", "available", ":)", ":-)", "Success", "completed",
+			},
+			Yellow: []string{
+				"SHUTOFF", "ShutDown", "Unknown", "in-use",
+			},
+			Red: []string{
+				"disabled", "down", "DOWN", "false", "no", "failed", "error",
+				"ERROR", "unavailable", "XXX",
+			},
 		},
-		Yellow: []string{
-			"SHUTOFF", "ShutDown", "Unknown", "in-use",
-		},
-		Red: []string{
-			"disabled", "down", "DOWN", "false", "no", "failed", "error",
-			"ERROR", "unavailable", "XXX",
-		},
+		status: s,
 	}
 }

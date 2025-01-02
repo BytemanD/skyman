@@ -16,7 +16,6 @@ import (
 
 var (
 	hypervisorListFlags flags.HypervisorListFlags
-	hypervisorShowFlags flags.HypervisorShowFlags
 )
 var Hypervisor = &cobra.Command{Use: "hypervisor"}
 
@@ -78,7 +77,7 @@ var hypervisorShow = &cobra.Command{
 		pt := common.PrettyItemTable{
 			ShortFields: []common.Column{
 				{Name: "Id"}, {Name: "HypervisorHostname"}, {Name: "HostIp"},
-				{Name: "Status"}, {Name: "State"},
+				{Name: "Status", AutoColor: true}, {Name: "State", AutoColor: true},
 				{Name: "Type"}, {Name: "Version"},
 				{Name: "Vcpus"}, {Name: "VcpusUsed"},
 				{Name: "MemoryMB", Text: "Memory MB"},
@@ -111,7 +110,7 @@ var hypervisorShow = &cobra.Command{
 				},
 				{Name: "NumaNodes", Slot: func(item interface{}) interface{} {
 					p, _ := item.(nova.Hypervisor)
-					if *hypervisorShowFlags.Bar {
+					if common.CONF.Format == common.FORMAT_TABLE_LIGHT {
 						return p.NumaNodesBar()
 					} else {
 						return p.NumaNodesLine()
@@ -152,9 +151,6 @@ func init() {
 		Name:        hypervisorList.Flags().StringP("name", "n", "", "Show hypervisors matched by name"),
 		WithServers: hypervisorList.Flags().Bool("with-servers", false, "List hypervisors with servers"),
 		Long:        hypervisorList.Flags().BoolP("long", "l", false, "List additional fields in output"),
-	}
-	hypervisorShowFlags = flags.HypervisorShowFlags{
-		Bar: hypervisorShow.Flags().Bool("bar", false, "Show resources in the form of a status bar"),
 	}
 	Hypervisor.AddCommand(hypervisorList, hypervisorShow, hypervisorUptime)
 }

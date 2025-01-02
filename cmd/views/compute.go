@@ -199,9 +199,9 @@ func PrintAZInfoTree(azList []nova.AvailabilityZone) {
 	for _, az := range azList {
 		var zoneState string
 		if az.ZoneState.Available {
-			zoneState = utility.ColorString("available")
+			zoneState = utility.NewColorStatus("available").String()
 		} else {
-			zoneState = utility.ColorString("disabled")
+			zoneState = utility.NewColorStatus("disabled").String()
 		}
 		tw.AppendItem(fmt.Sprintf("%s %v", az.ZoneName, zoneState))
 		tw.Indent()
@@ -214,14 +214,14 @@ func PrintAZInfoTree(azList []nova.AvailabilityZone) {
 					serviceAvailable string
 				)
 				if service.Active {
-					serviceStatus = utility.ColorString("enabled")
+					serviceStatus = utility.NewColorStatus("enabled").String()
 				} else {
-					serviceStatus = utility.ColorString("disabled")
+					serviceStatus = utility.NewColorStatus("disabled").String()
 				}
 				if service.Available {
-					serviceAvailable = utility.ColorString(":)")
+					serviceAvailable = utility.NewColorStatus(":)").String()
 				} else {
-					serviceAvailable = utility.ColorString("XXX")
+					serviceAvailable = utility.NewColorStatus("XXX").String()
 				}
 				tw.AppendItem(
 					fmt.Sprintf("%-20s %-10s %s", serviceName, serviceStatus, serviceAvailable),
@@ -256,14 +256,8 @@ func PrintServiceTable(item interface{}) {
 		Item: item,
 		ShortFields: []common.Column{
 			{Name: "Id"}, {Name: "Binary"}, {Name: "Host"},
-			{Name: "Status", Slot: func(item interface{}) interface{} {
-				p, _ := (item).(nova.Service)
-				return utility.ColorString(p.Status)
-			}},
-			{Name: "State", Slot: func(item interface{}) interface{} {
-				p, _ := item.(nova.Service)
-				return utility.ColorString(p.State)
-			}},
+			{Name: "Status", AutoColor: true},
+			{Name: "State", AutoColor: true},
 			{Name: "ForcedDown", Text: "Forced Down"},
 			{Name: "DisabledReason", Text: "Disabled Reason"},
 		},
