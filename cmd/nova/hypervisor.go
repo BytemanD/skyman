@@ -16,6 +16,7 @@ import (
 
 var (
 	hypervisorListFlags flags.HypervisorListFlags
+	hypervisorShowFlags flags.HypervisorShowFlags
 )
 var Hypervisor = &cobra.Command{Use: "hypervisor"}
 
@@ -110,7 +111,11 @@ var hypervisorShow = &cobra.Command{
 				},
 				{Name: "NumaNodes", Slot: func(item interface{}) interface{} {
 					p, _ := item.(nova.Hypervisor)
-					return p.FormatNumaNodes()
+					if *hypervisorShowFlags.Bar {
+						return p.NumaNodesBar()
+					} else {
+						return p.NumaNodesLine()
+					}
 				}},
 			},
 			Item: *hypervisor,
@@ -148,6 +153,8 @@ func init() {
 		WithServers: hypervisorList.Flags().Bool("with-servers", false, "List hypervisors with servers"),
 		Long:        hypervisorList.Flags().BoolP("long", "l", false, "List additional fields in output"),
 	}
-
+	hypervisorShowFlags = flags.HypervisorShowFlags{
+		Bar: hypervisorShow.Flags().Bool("bar", false, "Show resources in the form of a status bar"),
+	}
 	Hypervisor.AddCommand(hypervisorList, hypervisorShow, hypervisorUptime)
 }

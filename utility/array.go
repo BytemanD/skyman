@@ -92,3 +92,11 @@ func OneOfStringArrays(arraysList ...[]string) []string {
 	}
 	return arraysList[len(arraysList)-1]
 }
+
+func Sum[T int | int32 | int64 | float32 | float64](numbers ...T) T {
+	var sum T
+	for _, number := range numbers {
+		sum += number
+	}
+	return sum
+}

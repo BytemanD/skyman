@@ -155,6 +155,9 @@ type HypervisorListFlags struct {
 	Long        *bool
 }
 
+type HypervisorShowFlags struct {
+	Bar *bool
+}
 type MigrationListFlags struct {
 	Host     *string
 	Status   *string

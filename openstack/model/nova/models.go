@@ -3,6 +3,8 @@ package nova
 import (
 	"encoding/json"
 	"fmt"
+	"math"
+
 	"regexp"
 	"sort"
 	"strings"
@@ -13,6 +15,7 @@ import (
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/dustin/go-humanize"
+	"github.com/fatih/color"
 )
 
 var POWER_STATE = []string{
@@ -292,6 +295,10 @@ func (hugepage NumaNodeHugePages) String() string {
 		hugepage.Total, hugepage.Used, hugepage.Reserved, hugepage.Free)
 }
 
+func (hugepage NumaNodeHugePages) Bar() string {
+	return resourceUsageBar(hugepage.Used, hugepage.Reserved, hugepage.Free)
+}
+
 type NumaNodeCpuSet struct {
 	Total    int
 	Free     int
@@ -299,11 +306,44 @@ type NumaNodeCpuSet struct {
 	Used     int
 }
 
+// const BAR_CHAR = "▄"
+// const BAR_CHAR = "#"
+const BAR_CHAR = "*"
+
+func fixNumbers(plus int, numbers ...int) []int {
+	total := utility.Sum(numbers...)
+	result := []int{}
+	for _, number := range numbers {
+		percent := float64(number) * float64(plus) / float64(total)
+		result = append(result, int(math.Round(percent)))
+	}
+	return result
+}
+
+func resourceUsageBar(used, reserved, free int) string {
+	total := utility.Sum(used, reserved, free)
+	if total == 0 {
+		return "TOTAL is 0"
+	}
+	result := fixNumbers(50, used, reserved, free)
+	blockUsed := strings.Repeat(BAR_CHAR, result[0])
+	blockReserved := strings.Repeat(BAR_CHAR, result[1])
+	blockFree := strings.Repeat(BAR_CHAR, result[2])
+	return strings.Join([]string{
+		color.YellowString(blockUsed),
+		color.BlueString(blockReserved),
+		color.GreenString(blockFree),
+		fmt.Sprintf(" %d/%d/%d", used, reserved, free),
+	}, "")
+}
+
 func (cpuset NumaNodeCpuSet) String() string {
 	return fmt.Sprintf("total=%-4d used=%-4d resreved=%-4d free=%-4d",
 		cpuset.Total, cpuset.Used, cpuset.Reserved, cpuset.Free)
 }
-
+func (cpuset NumaNodeCpuSet) Bar() string {
+	return resourceUsageBar(cpuset.Used, cpuset.Reserved, cpuset.Free)
+}
 func (hypervisor Hypervisor) ExtraResourcesMarshal(indent bool) string {
 	var m []byte
 	if indent {
@@ -313,7 +353,7 @@ func (hypervisor Hypervisor) ExtraResourcesMarshal(indent bool) string {
 	}
 	return string(m)
 }
-func (hypervisor Hypervisor) FormatNumaNodes() string {
+func (hypervisor Hypervisor) NumaNodesLine() string {
 	lines := []string{}
 	keys := hypervisor.NumaNodeKeys()
 	sort.Strings(keys)
@@ -322,6 +362,18 @@ func (hypervisor Hypervisor) FormatNumaNodes() string {
 		lines = append(lines,
 			fmt.Sprintf("[%s] hugepages: %s\n       cpuset: %s",
 				index, node.HugePages, node.CpuSet))
+	}
+	return strings.Join(lines, "\n")
+}
+func (hypervisor Hypervisor) NumaNodesBar() string {
+	lines := []string{}
+	keys := hypervisor.NumaNodeKeys()
+	sort.Strings(keys)
+	for _, index := range keys {
+		node := hypervisor.NumaNodes[index]
+		lines = append(lines,
+			fmt.Sprintf("[%s] hugepages: %s\n       cpuset: %s",
+				index, node.HugePages.Bar(), node.CpuSet.Bar()))
 	}
 	return strings.Join(lines, "\n")
 }
