@@ -1130,14 +1130,14 @@ func (c MigrationApi) List(query url.Values) ([]nova.Migration, error) {
 // avaliable zone api
 func (c AZApi) List(query url.Values) ([]nova.AvailabilityZone, error) {
 	result := struct{ AvailabilityZoneInfo []nova.AvailabilityZone }{}
-	if _, err := c.R().SetQuery(query).SetResult(&result).Get(c.ResourceUrl); err != nil {
+	if _, err := c.R().SetQuery(query).SetResult(&result).Get(); err != nil {
 		return nil, err
 	}
 	return result.AvailabilityZoneInfo, nil
 }
 func (c AZApi) Detail(query url.Values) ([]nova.AvailabilityZone, error) {
 	result := struct{ AvailabilityZoneInfo []nova.AvailabilityZone }{}
-	if _, err := c.Get(c.ResourceUrl+"/detail", query, &result); err != nil {
+	if _, err := c.R().SetQuery(query).SetResult(&result).Get("detail"); err != nil {
 		return nil, err
 	}
 	return result.AvailabilityZoneInfo, nil
@@ -1155,7 +1155,8 @@ func (c AggregateApi) Create(agg nova.Aggregate) (*nova.Aggregate, error) {
 	result := struct {
 		Aggregate nova.Aggregate `json:"aggregate"`
 	}{}
-	if _, err := c.Post(c.ResourceUrl, map[string]nova.Aggregate{"aggregate": agg}, &result); err != nil {
+	if _, err := c.R().SetBody(map[string]nova.Aggregate{"aggregate": agg}).
+		SetResult(&result).Post(); err != nil {
 		return nil, err
 	} else {
 		return &result.Aggregate, nil
@@ -1204,7 +1205,7 @@ func (c AggregateApi) AddHost(id int, host string) (*nova.Aggregate, error) {
 	}
 	result := struct{ Aggregate nova.Aggregate }{}
 	if _, err := c.R().SetResult(&result).SetBody(body).
-		Post(c.ResourceUrl, strconv.Itoa(id), "action"); err != nil {
+		Post(strconv.Itoa(id), "action"); err != nil {
 		return nil, err
 	}
 	return &result.Aggregate, nil
@@ -1216,8 +1217,8 @@ func (c AggregateApi) RemoveHost(id int, host string) (*nova.Aggregate, error) {
 		RemoveHost: map[string]string{"host": host},
 	}
 	result := struct{ Aggregate nova.Aggregate }{}
-	if _, err := c.R().SetResult(&result).SetBody(body).Post(
-		c.ResourceUrl, strconv.Itoa(id), "action"); err != nil {
+	if _, err := c.R().SetResult(&result).SetBody(body).
+		Post(strconv.Itoa(id), "action"); err != nil {
 		return nil, err
 	}
 	return &result.Aggregate, nil
@@ -1232,11 +1233,11 @@ func (c ServerGroupApi) List(query url.Values) ([]nova.ServerGroup, error) {
 // quota api
 
 func (c ComputeQuotaApi) Show(projectId string) (*nova.QuotaSet, error) {
-	body := struct {
+	result := struct {
 		QuotaSet nova.QuotaSet `json:"quota_set"`
 	}{}
-	if _, err := c.Get(c.ResourceUrl+"/"+projectId, nil, &body); err != nil {
+	if _, err := c.R().SetResult(&result).Get(projectId); err != nil {
 		return nil, err
 	}
-	return &body.QuotaSet, nil
+	return &result.QuotaSet, nil
 }
