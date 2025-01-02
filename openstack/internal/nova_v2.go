@@ -950,7 +950,16 @@ func (c HypervisorApi) ListByName(hostname string) ([]nova.Hypervisor, error) {
 }
 
 func (c HypervisorApi) Show(id string) (*nova.Hypervisor, error) {
-	return ShowResource[nova.Hypervisor](c.ResourceApi, id)
+	result := struct {
+		Hypervisor nova.Hypervisor `json:"hypervisor"`
+	}{}
+	resp, err := c.R().SetResult(&result).Get(id)
+	if err != nil {
+		return nil, err
+	}
+	result.Hypervisor.SetNumaNodes(resp.Body())
+	return &result.Hypervisor, err
+
 }
 func (c HypervisorApi) ShowByHostname(hostname string) (*nova.Hypervisor, error) {
 	hypervisors, err := c.ListByName(hostname)

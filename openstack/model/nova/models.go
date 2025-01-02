@@ -288,7 +288,7 @@ type NumaNodeHugePages struct {
 }
 
 func (hugepage NumaNodeHugePages) String() string {
-	return fmt.Sprintf("total=%d, used=%d, resreved=%d, free=%d",
+	return fmt.Sprintf("total=%-4d used=%-4d resreved=%-4d free=%-4d",
 		hugepage.Total, hugepage.Used, hugepage.Reserved, hugepage.Free)
 }
 
@@ -300,7 +300,7 @@ type NumaNodeCpuSet struct {
 }
 
 func (cpuset NumaNodeCpuSet) String() string {
-	return fmt.Sprintf("total=%d, used=%d, resreved=%d, free=%d",
+	return fmt.Sprintf("total=%-4d used=%-4d resreved=%-4d free=%-4d",
 		cpuset.Total, cpuset.Used, cpuset.Reserved, cpuset.Free)
 }
 
@@ -320,7 +320,7 @@ func (hypervisor Hypervisor) FormatNumaNodes() string {
 	for _, index := range keys {
 		node := hypervisor.NumaNodes[index]
 		lines = append(lines,
-			fmt.Sprintf("%2s: hugepages: %s\n       cpuset: %s",
+			fmt.Sprintf("[%s] hugepages: %s\n       cpuset: %s",
 				index, node.HugePages, node.CpuSet))
 	}
 	return strings.Join(lines, "\n")
