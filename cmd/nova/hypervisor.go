@@ -38,7 +38,8 @@ var hypervisorList = &cobra.Command{
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "HypervisorHostname"}, {Name: "HostIp"},
-				{Name: "Status", AutoColor: true}, {Name: "State", AutoColor: true},
+				{Name: "Status", AutoColor: true},
+				{Name: "State", AutoColor: true},
 			},
 			LongColumns: []common.Column{
 				{Name: "Type"}, {Name: "Version"},
@@ -46,6 +47,17 @@ var hypervisorList = &cobra.Command{
 				{Name: "MemoryMB", Text: "Memory(MB)"},
 				{Name: "MemoryMBUsed", Text: "Memory Used(MB)"},
 			},
+			Filters: map[string]string{},
+		}
+		if *hypervisorListFlags.Type != "" {
+			filterHypervisors := []nova.Hypervisor{}
+			for _, hypervisor := range hypervisors {
+				if hypervisor.Type != *hypervisorListFlags.Type {
+					continue
+				}
+				filterHypervisors = append(filterHypervisors, hypervisor)
+			}
+			hypervisors = filterHypervisors
 		}
 		if *hypervisorListFlags.WithServers {
 			pt.StyleSeparateRows = true
@@ -149,6 +161,7 @@ var hypervisorUptime = &cobra.Command{
 func init() {
 	hypervisorListFlags = flags.HypervisorListFlags{
 		Name:        hypervisorList.Flags().StringP("name", "n", "", "Show hypervisors matched by name"),
+		Type:        hypervisorList.Flags().StringP("type", "t", "", "Filte hypervisors by type"),
 		WithServers: hypervisorList.Flags().Bool("with-servers", false, "List hypervisors with servers"),
 		Long:        hypervisorList.Flags().BoolP("long", "l", false, "List additional fields in output"),
 	}

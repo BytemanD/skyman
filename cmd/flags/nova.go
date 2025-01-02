@@ -151,6 +151,7 @@ type FlavorSetFlags struct {
 type HypervisorListFlags struct {
 	Name *string
 
+	Type        *string
 	WithServers *bool
 	Long        *bool
 }

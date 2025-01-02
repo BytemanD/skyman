@@ -127,8 +127,9 @@ func init() {
 		State:  csList.Flags().StringArrayP("state", "s", nil, "Search by server status"),
 		Long:   csList.Flags().BoolP("long", "l", false, "List additional fields in output"),
 	}
-
-	csDisable.Flags().String("reason", "", "Disable reason")
+	csDisableFlags = flags.ComputeServiceDisableFlags{
+		Reason: csDisable.Flags().String("reason", "", "Reason"),
+	}
 
 	computeService.AddCommand(csList, csEnable, csDisable, csUp, csDown, csDelete)
 

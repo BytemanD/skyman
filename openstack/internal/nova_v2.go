@@ -1102,6 +1102,7 @@ func (c ComputeServiceApi) Disable(host string, binary string, reason string) (*
 		if reason != "" {
 			body["disabled_reason"] = reason
 		}
+		fmt.Println(body)
 		return c.update(service.Id, body)
 	}
 	err := c.doAction("disable", map[string]interface{}{
