@@ -1,6 +1,7 @@
 package session
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -18,17 +19,35 @@ const (
 	HEADER_REQUEST_ID = "X-Openstack-Request-Id"
 )
 
-func EncodeHeaders(headers http.Header) string {
-	headersString := []string{}
-	for k, v := range headers {
-		headersString = append(headersString, fmt.Sprintf("'%s: %s'", k, strings.Join(v, ",")))
+func EncodeHeaders(reqHeader, clientHeader http.Header) string {
+	// headersString := []string{}
+	allHeaders := map[string][]string{}
+	for k, v := range clientHeader {
+		allHeaders[k] = v
 	}
-	return strings.Join(headersString, ", ")
+	for k, v := range reqHeader {
+		allHeaders[k] = v
+	}
+	headerList := []string{}
+	for k, v := range allHeaders {
+		headerList = append(headerList, fmt.Sprintf("'%s: %s'", k, strings.Join(v, ",")))
+	}
+	return strings.Join(headerList, ", ")
 }
 func LogRequestPre(c *resty.Client, r *http.Request) error {
-	console.Debug("REQ: %s %s\n    Header: %v", r.Method, r.URL, EncodeHeaders(r.Header))
+	console.Debug("REQ: %s %s\n    Header: %v", r.Method, r.URL, EncodeHeaders(r.Header, c.Header))
 	return nil
 }
+func LogBeforeRequest(c *resty.Client, r *resty.Request) error {
+	body := []byte{}
+	if r.Body != nil {
+		body, _ = json.Marshal(r.Body)
+	}
+	console.Debug("REQ: %s %s\n    Header: %v\n    Body: %s",
+		r.Method, r.URL, EncodeHeaders(r.Header, c.Header), body)
+	return nil
+}
+
 func LogRespAfterResponse(c *resty.Client, r *resty.Response) error {
 	console.Debug("RESP: [%d] content-length: %s\n    Body: %s",
 		r.StatusCode(), r.Header().Get(CONTENT_LENGTH), string(r.Body()))
@@ -41,6 +60,6 @@ func LogRespAfterResponse(c *resty.Client, r *resty.Response) error {
 func DefaultRestyClient() *resty.Client {
 	return resty.New().
 		SetHeader(CONTENT_TYPE, CONTENT_TYPE_JSON).
-		SetPreRequestHook(LogRequestPre).
+		OnBeforeRequest(LogBeforeRequest).
 		OnAfterResponse(LogRespAfterResponse)
 }
