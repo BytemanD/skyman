@@ -187,6 +187,7 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 	console.Info("[%s] ======== Test actions: %s, workers: %d", server.Id,
 		strings.Join(t.Actions.FormatActions(), ","), t.Config.Workers,
 	)
+	pbr := console.NewPbr(t.Actions.Total(), fmt.Sprintf("test id: %d", testId))
 	for _, actionName := range t.Actions.Actions() {
 		action := internal.VALID_ACTIONS.Get(actionName, server, t.Client)
 		action.SetConfig(t.Config)
@@ -207,6 +208,7 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 		}
 		// 开始测试
 		err := startAction(action)
+		pbr.Ingrement()
 		// 更新测试结果
 		actionsReport.Results = append(actionsReport.Results, ActionResult{Action: actionName, Error: err})
 		if err != nil {
@@ -241,9 +243,7 @@ func (t *Case) Start() {
 		return
 	}
 	taskGroup := syncutils.TaskGroup{
-		MaxWorker:    t.Config.Workers,
-		Title:        fmt.Sprintf("Test %s", strings.Join(t.Actions.FormatActions(), ",")),
-		ShowProgress: true,
+		MaxWorker: t.Config.Workers,
 	}
 	console.Info("run case, worker=%d actions=%s", t.Config.Workers, t.Actions.FormatActions())
 	if len(t.UseServers) > 0 {
@@ -266,6 +266,7 @@ func (t *Case) Start() {
 			return nil
 		}
 	}
+	go console.WaitPbrs()
 	taskGroup.Start()
 
 }

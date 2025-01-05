@@ -59,6 +59,13 @@ func (acl ActionCountList) Actions() []string {
 	}
 	return actions
 }
+func (acl ActionCountList) Total() int {
+	count := 0
+	for _, ac := range acl.items {
+		count += ac.Count
+	}
+	return count
+}
 func (acl ActionCountList) FormatActions() []string {
 	actions := make([]string, 0, len(acl.items))
 	for _, ac := range acl.items {
