@@ -7,7 +7,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/glance"
 	"github.com/BytemanD/skyman/openstack/session"
@@ -30,7 +30,7 @@ func (c ImageApi) List(query url.Values, total int) ([]glance.Image, error) {
 	for {
 		respBbody := glance.ImagesResp{}
 		req := c.NewGetRequest("images", fixQuery, nil)
-		logging.Debug("query params: %s", req.QueryParam.Encode())
+		console.Debug("query params: %s", req.QueryParam.Encode())
 		_, err := req.SetResult(&respBbody).Send()
 		if err != nil {
 			return nil, err

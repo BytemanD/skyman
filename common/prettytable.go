@@ -7,7 +7,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
+
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -246,7 +247,8 @@ func (pt PrettyTable) RenderToJson() (string, error) {
 func (pt PrettyTable) PrintJson() string {
 	output, err := pt.RenderToJson()
 	if err != nil {
-		logging.Fatal("print json failed, %s", err)
+		console.Error("print json failed, %s", err)
+		os.Exit(1)
 	}
 	fmt.Println(output)
 	return output
@@ -257,7 +259,8 @@ func (pt PrettyTable) RenderToYaml() (string, error) {
 func (pt PrettyTable) PrintYaml() string {
 	output, err := pt.RenderToYaml()
 	if err != nil {
-		logging.Fatal("print json failed, %s", err)
+		console.Error("print json failed, %s", err)
+		os.Exit(1)
 	}
 	fmt.Println(output)
 	return output
@@ -335,7 +338,8 @@ func (pt PrettyItemTable) Print(long bool) string {
 func (dt PrettyItemTable) PrintJson() string {
 	output, err := stringutils.JsonDumpsIndent(dt.Item)
 	if err != nil {
-		logging.Fatal("print json failed, %s", err)
+		console.Error("print json failed, %s", err)
+		os.Exit(1)
 	}
 	fmt.Println(output)
 	return output
@@ -344,7 +348,8 @@ func (dt PrettyItemTable) PrintJson() string {
 func (dt PrettyItemTable) PrintYaml() string {
 	output, err := GetYaml(dt.Item)
 	if err != nil {
-		logging.Fatal("print yaml failed, %s", err)
+		console.Error("print yaml failed, %s", err)
+		os.Exit(1)
 	}
 	fmt.Println(output)
 	return output
@@ -362,8 +367,9 @@ func PrintPrettyTableFormat(table PrettyTable, long bool, format string) string 
 	case YAML:
 		return table.PrintYaml()
 	default:
-		logging.Fatal("invalid output format: %s, valid formats: %v", CONF.Format,
+		console.Error("invalid output format: %s, valid formats: %v", CONF.Format,
 			GetOutputFormats())
+		os.Exit(1)
 	}
 	return ""
 }

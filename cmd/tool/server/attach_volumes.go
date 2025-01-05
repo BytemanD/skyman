@@ -6,12 +6,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/BytemanD/go-console/console"
+	"github.com/spf13/cobra"
+
 	"github.com/BytemanD/easygo/pkg/arrayutils"
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
-	"github.com/spf13/cobra"
 )
 
 var attachVolume = &cobra.Command{
@@ -38,6 +39,7 @@ var attachVolume = &cobra.Command{
 		taskGroup := syncutils.TaskGroup{
 			Items:        arrayutils.Range(nums),
 			MaxWorker:    parallel,
+			Title:        fmt.Sprintf("create %d volume(s)", len(volumes)),
 			ShowProgress: true,
 			Func: func(item interface{}) error {
 				p := item.(int)
@@ -48,20 +50,20 @@ var attachVolume = &cobra.Command{
 				if volumeType != "" {
 					createOption["volume_type"] = volumeType
 				}
-				logging.Debug("creating volume %s", name)
+				console.Debug("creating volume %s", name)
 				volume, err := cinderClient.Volume().CreateAndWait(createOption, 600)
 				if err != nil {
-					logging.Error("create volume failed: %v", err)
+					console.Error("create volume failed: %v", err)
 					return err
 				}
-				logging.Info("created volume: %v (%v)", volume.Name, volume.Id)
+				console.Info("created volume: %v (%v)", volume.Name, volume.Id)
 				mu.Lock()
 				volumes = append(volumes, Volume{Id: volume.Id, Name: name})
 				mu.Unlock()
 				return nil
 			},
 		}
-		logging.Info("creating %d volume(s), waiting ...", nums)
+		console.Info("creating %d volume(s), waiting ...", nums)
 		taskGroup.Start()
 
 		if len(volumes) == 0 {
@@ -69,14 +71,15 @@ var attachVolume = &cobra.Command{
 		}
 		taskGroup2 := syncutils.TaskGroup{
 			Items:        volumes,
+			Title:        fmt.Sprintf("attach %d volume(s)", len(volumes)),
 			MaxWorker:    parallel,
 			ShowProgress: true,
 			Func: func(item interface{}) error {
 				p := item.(Volume)
-				logging.Debug("[volume: %s] attaching", p)
+				console.Debug("[volume: %s] attaching", p)
 				attachment, err := client.NovaV2().Server().AddVolume(server.Id, p.Id)
 				if err != nil {
-					logging.Error("[volume: %s] attach failed: %v", p, err)
+					console.Error("[volume: %s] attach failed: %v", p, err)
 					return err
 				}
 				if attachment != nil && p.Id == "" {
@@ -94,9 +97,9 @@ var attachVolume = &cobra.Command{
 							continue
 						}
 						v, err := client.CinderV2().Volume().Show(vol.VolumeId)
-						logging.Info("[volume: %s] status is %s", vol.Id, v.Status)
+						console.Info("[volume: %s] status is %s", vol.Id, v.Status)
 						if err == nil && v.IsInuse() {
-							logging.Info("[volume: %s] attach success", p.Id)
+							console.Info("[volume: %s] attach success", p.Id)
 							return nil
 						}
 					}
@@ -106,11 +109,11 @@ var attachVolume = &cobra.Command{
 					time.Sleep(time.Second * 5)
 
 				}
-				logging.Error("[volume: %s] attach failed", p)
+				console.Error("[volume: %s] attach failed", p)
 				return nil
 			},
 		}
-		logging.Info("attaching ...")
+		console.Info("attaching ...")
 		taskGroup2.Start()
 	},
 }

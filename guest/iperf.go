@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 )
@@ -109,7 +109,7 @@ func (r IperfReport) GetPpsSum() (*PPS, *PPS) {
 	matchedSenders := senderReg.FindAllStringSubmatch(r.Data, -1)
 	matchedReceivers := receiverReg.FindAllStringSubmatch(r.Data, -1)
 	if len(matchedSenders) == 0 || len(matchedReceivers) == 0 {
-		logging.Warning("sender or receiver not found")
+		console.Warn("sender or receiver not found")
 		return nil, nil
 	}
 	// NOTE: Only get the last matched item
@@ -164,11 +164,11 @@ func (reports IperfReports) PrintBps() {
 		rowConfigAutoMerge, rowConfigAutoMerge, rowConfigAutoMerge,
 	)
 
-	logging.Debug("reports %v", reports.Reports)
+	console.Debug("reports %v", reports.Reports)
 	for _, report := range reports.Reports {
 		sumSend, sumReceive := report.GetBpsSum()
 		if sumSend == nil || sumReceive == nil {
-			logging.Warning("%s -> %s sum sender or receiver is not found",
+			console.Warn("%s -> %s sum sender or receiver is not found",
 				report.Source, report.Dest)
 			continue
 		}
@@ -212,7 +212,7 @@ func (reports IperfReports) PrintPps() {
 		sTotal PPS
 		rTotal PPS
 	)
-	logging.Debug("reports %v", reports.Reports)
+	console.Debug("reports %v", reports.Reports)
 	for _, report := range reports.Reports {
 		sumSend, sumReceive := report.GetPpsSum()
 		sTotal.Sum(*sumSend)

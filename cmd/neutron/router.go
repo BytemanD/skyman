@@ -8,7 +8,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
@@ -87,13 +87,13 @@ var routerDelete = &cobra.Command{
 		for _, arg := range args {
 			router, err := c.Router().Find(arg)
 			if err != nil {
-				logging.Warning("get router %s failed", arg)
+				console.Warn("get router %s failed", arg)
 				continue
 			}
-			logging.Info("Reqeust to delete router %s\n", arg)
+			console.Info("Reqeust to delete router %s\n", arg)
 			err = c.Router().Delete(router.Id)
 			if err != nil {
-				logging.Error("Delete router %s failed, %s", arg, err)
+				console.Error("Delete router %s failed, %s", arg, err)
 			}
 		}
 	},
@@ -142,13 +142,13 @@ var interfaceAdd = &cobra.Command{
 			utility.LogIfError(err, true, "get port,  %s failed", i)
 			err = c.Router().AddPort(router.Id, port.Id)
 			utility.LogIfError(err, true, "add port,  failed")
-			logging.Info("added subnet %s to router %s", i, r)
+			console.Info("added subnet %s to router %s", i, r)
 		} else {
 			subnet, err := c.Subnet().Find(i)
 			utility.LogIfError(err, true, "get subnet %s failed", i)
 			err = c.Router().AddSubnet(router.Id, subnet.Id)
 			utility.LogIfError(err, true, "add interface failed")
-			logging.Info("added subnet %s to router %s", i, r)
+			console.Info("added subnet %s to router %s", i, r)
 
 		}
 	},
@@ -171,13 +171,13 @@ var interfaceRemove = &cobra.Command{
 			utility.LogIfError(err, true, "get port %s failed", i)
 			err = c.Router().RemovePort(router.Id, port.Id)
 			utility.LogIfError(err, true, "remove interface failed")
-			logging.Info("remoeved port %s from router %s", i, r)
+			console.Info("remoeved port %s from router %s", i, r)
 		} else {
 			subnet, err := c.Subnet().Find(i)
 			utility.LogIfError(err, true, "get subnet %s failed", i)
 			err = c.Router().RemoveSubnet(router.Id, subnet.Id)
 			utility.LogIfError(err, true, "remove interface failed")
-			logging.Info("removed subnet %s from router %s", i, r)
+			console.Info("removed subnet %s from router %s", i, r)
 		}
 	},
 }

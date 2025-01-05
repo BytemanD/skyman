@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/arrayutils"
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/easygo/pkg/syncutils"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
@@ -24,7 +24,6 @@ var attachInterfaces = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		nums, _ := cmd.Flags().GetInt("nums")
 		parallel, _ := cmd.Flags().GetInt("parallel")
-		// clean, _ := cmd.Flags().GetBool("clean")
 		useNetId, _ := cmd.Flags().GetBool("use-net-id")
 		sg, _ := cmd.Flags().GetString("sg")
 
@@ -62,11 +61,12 @@ var attachInterfaces = &cobra.Command{
 			taskGroup := syncutils.TaskGroup{
 				Items:        arrayutils.Range(len(nets)),
 				MaxWorker:    parallel,
+				Title:        fmt.Sprintf("create %d port(s)", len(nets)),
 				ShowProgress: true,
 				Func: func(item interface{}) error {
 					p := item.(int)
 					name := fmt.Sprintf("skyman-port-%d", p+1)
-					logging.Debug("creating port %s", name)
+					console.Debug("creating port %s", name)
 					options := map[string]interface{}{
 						"name": name, "network_id": nets[p],
 					}
@@ -76,17 +76,17 @@ var attachInterfaces = &cobra.Command{
 					port, err := neutronClient.Port().Create(options)
 
 					if err != nil {
-						logging.Error("create port failed: %v", err)
+						console.Error("create port failed: %v", err)
 						return err
 					}
-					logging.Info("created port: %v (%v)", port.Name, port.Id)
+					console.Info("created port: %v (%v)", port.Name, port.Id)
 					mu.Lock()
 					interfaces = append(interfaces, Interface{PortId: port.Id, Name: name})
 					mu.Unlock()
 					return nil
 				},
 			}
-			logging.Info("creating %d port(s), waiting ...", nums)
+			console.Info("creating %d port(s), waiting ...", nums)
 			taskGroup.Start()
 		} else {
 			for _, net := range nets {
@@ -100,20 +100,21 @@ var attachInterfaces = &cobra.Command{
 		taskGroup2 := syncutils.TaskGroup{
 			Items:        interfaces,
 			MaxWorker:    parallel,
+			Title:        fmt.Sprintf("attach %d port(s)", len(interfaces)),
 			ShowProgress: true,
 			Func: func(item interface{}) error {
 				p := item.(Interface)
 				attachment, err := client.NovaV2().Server().AddInterface(server.Id, p.NetId, p.PortId)
 				if err != nil {
-					logging.Error("[interface: %s] attach failed: %v", p, err)
+					console.Error("[interface: %s] attach failed: %v", p, err)
 					return err
 				}
-				logging.Debug("[interface: %s] attaching", attachment.PortId)
+				console.Debug("[interface: %s] attaching", attachment.PortId)
 				for {
 					port, err := client.NeutronV2().Port().Show(attachment.PortId)
 
 					if securityGroup != nil && !stringutils.ContainsString(port.SecurityGroups, securityGroup.Id) {
-						logging.Info("[interface: %s] update port security group to %s(%s)", port.Id, sg, securityGroup.Id)
+						console.Info("[interface: %s] update port security group to %s(%s)", port.Id, sg, securityGroup.Id)
 						_, err = client.NeutronV2().Port().Update(
 							port.Id,
 							map[string]interface{}{"security_groups": []string{securityGroup.Id}},
@@ -122,9 +123,9 @@ var attachInterfaces = &cobra.Command{
 					}
 
 					if port != nil {
-						logging.Info("[interface: %s] vif type is %s", port.Id, port.BindingVifType)
+						console.Info("[interface: %s] vif type is %s", port.Id, port.BindingVifType)
 						if err == nil && !port.IsUnbound() {
-							logging.Info("[interface: %s] attached", port.Id)
+							console.Info("[interface: %s] attached", port.Id)
 							break
 						}
 					}
@@ -136,7 +137,7 @@ var attachInterfaces = &cobra.Command{
 					func() (bool, error) {
 						interfaces, err := client.NovaV2().Server().ListInterfaces(server.Id)
 						if err != nil {
-							logging.Error("list server interfaces failed: %s", err)
+							console.Error("list server interfaces failed: %s", err)
 							return false, err
 						}
 						for _, vif := range interfaces {
@@ -148,16 +149,16 @@ var attachInterfaces = &cobra.Command{
 					},
 				)
 				if err != nil {
-					logging.Error("[interface: %s] attach failed", attachment.PortId)
+					console.Error("[interface: %s] attach failed", attachment.PortId)
 					attachFailed = true
 				} else {
-					logging.Info("[interface: %s] attach success", attachment.PortId)
+					console.Info("[interface: %s] attach success", attachment.PortId)
 				}
 
 				return nil
 			},
 		}
-		logging.Info("attaching ...")
+		console.Info("attaching ...")
 		taskGroup2.Start()
 		if attachFailed {
 			os.Exit(1)

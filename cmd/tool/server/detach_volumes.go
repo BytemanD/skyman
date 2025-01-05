@@ -5,8 +5,8 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/syncutils"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
@@ -40,11 +40,11 @@ var detachVolumes = &cobra.Command{
 		attachedVolumes, err := client.NovaV2().Server().ListVolumes(server.Id)
 		utility.LogError(err, "list server interfaces failed:", true)
 
-		logging.Info("the server has %d volume(s)", len(attachedVolumes))
+		console.Info("the server has %d volume(s)", len(attachedVolumes))
 
 		detachVolumes := []string{}
 		for i := len(attachedVolumes) - 1; i >= 0; i-- {
-			logging.Debug("found attached volumes: %s(%s)", attachedVolumes[i].VolumeId, attachedVolumes[i].Device)
+			console.Debug("found attached volumes: %s(%s)", attachedVolumes[i].VolumeId, attachedVolumes[i].Device)
 			if len(detachVolumes) >= nums {
 				break
 			}
@@ -54,11 +54,11 @@ var detachVolumes = &cobra.Command{
 			detachVolumes = append(detachVolumes, attachedVolumes[i].VolumeId)
 		}
 		if len(detachVolumes) < nums {
-			logging.Error("the server only has %d volume(s) that can be detached", len(detachVolumes))
+			console.Error("the server only has %d volume(s) that can be detached", len(detachVolumes))
 			os.Exit(1)
 		}
 		if len(detachVolumes) == 0 {
-			logging.Warning("nothing to do")
+			console.Warn("nothing to do")
 			return
 		}
 		taskGroup := syncutils.TaskGroup{
@@ -67,18 +67,18 @@ var detachVolumes = &cobra.Command{
 			ShowProgress: true,
 			Func: func(item interface{}) error {
 				p := item.(string)
-				logging.Debug("[volume: %s] detaching", p)
+				console.Debug("[volume: %s] detaching", p)
 				err := client.NovaV2().Server().DeleteVolumeAndWait(server.Id, p, 600)
 
 				if err != nil {
-					logging.Error("[volume: %s] detach failed: %v", p, err)
+					console.Error("[volume: %s] detach failed: %v", p, err)
 					return err
 				}
-				logging.Info("[volume: %s] detached", p)
+				console.Info("[volume: %s] detached", p)
 				return nil
 			},
 		}
-		logging.Info("detaching %d volume(s) ...", len(detachVolumes))
+		console.Info("detaching %d volume(s) ...", len(detachVolumes))
 		taskGroup.Start()
 		if !clean {
 			return
@@ -89,18 +89,18 @@ var detachVolumes = &cobra.Command{
 			ShowProgress: true,
 			Func: func(item interface{}) error {
 				p := item.(string)
-				logging.Debug("[volume: %s] deleting", p)
+				console.Debug("[volume: %s] deleting", p)
 				err := cinderClient.Volume().Delete(p, true, true)
 				// TODO: wait deleted
 				if err != nil {
-					logging.Error("[volume: %s] delete failed: %v", p, err)
+					console.Error("[volume: %s] delete failed: %v", p, err)
 					return err
 				}
-				logging.Info("[volume: %s] deleted", p)
+				console.Info("[volume: %s] deleted", p)
 				return nil
 			},
 		}
-		logging.Info("cleaning ...")
+		console.Info("cleaning ...")
 		taskGroup2.Start()
 	},
 }

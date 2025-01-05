@@ -3,9 +3,10 @@ package benchmark
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"strconv"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/benchmark"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
@@ -26,7 +27,7 @@ var BenchmarkCmd = &cobra.Command{
 		var results []benchmark.BenchmarkResult
 		switch args[0] {
 		case "server-show":
-			logging.Info("list servers")
+			console.Info("list servers")
 			servers, err := client.NovaV2().Server().List(query)
 			utility.LogIfError(err, true, "list server failed")
 			cases := []benchmark.ServerShow{}
@@ -36,11 +37,12 @@ var BenchmarkCmd = &cobra.Command{
 					Server: server,
 				})
 			}
-			logging.Info("start test")
+			console.Info("start test")
 			results = benchmark.RunBenchmarkTest(cases)
 
 		default:
-			logging.Fatal("invalid case: %s", args[0])
+			console.Error("invalid case: %s", args[0])
+			os.Exit(1)
 		}
 		for _, result := range results {
 			fmt.Println(

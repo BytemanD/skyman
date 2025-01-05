@@ -1,7 +1,9 @@
 package server
 
 import (
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"os"
+
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
@@ -19,19 +21,20 @@ var serverFind = &cobra.Command{
 		utility.LogError(err, "get regions failed", true)
 		var server *nova.Server
 		for _, region := range regions {
-			logging.Info("try to find server in region '%s'", region.Id)
+			console.Info("try to find server in region '%s'", region.Id)
 			server, err = c.WithRegion(region.Id).NovaV2().Server().Find(args[0])
 			if err != nil {
-				logging.Warning("server %s not found in region %s: %s", args[0], region.Id, err)
+				console.Warn("server %s not found in region %s: %s", args[0], region.Id, err)
 				continue
 			}
-			logging.Info("found server in region '%s'", region.Id)
+			console.Info("found server in region '%s'", region.Id)
 			break
 		}
 		if server != nil {
 			views.PrintServer(*server, c)
 		} else {
-			logging.Fatal("server %s not found in all regions", args[0])
+			console.Error("server %s not found in all regions", args[0])
+			os.Exit(1)
 		}
 	},
 }

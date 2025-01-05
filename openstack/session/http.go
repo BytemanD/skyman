@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -26,11 +26,11 @@ func EncodeHeaders(headers http.Header) string {
 	return strings.Join(headersString, ", ")
 }
 func LogRequestPre(c *resty.Client, r *http.Request) error {
-	logging.Debug("REQ: %s %s\n    Header: %v", r.Method, r.URL, EncodeHeaders(r.Header))
+	console.Debug("REQ: %s %s\n    Header: %v", r.Method, r.URL, EncodeHeaders(r.Header))
 	return nil
 }
 func LogRespAfterResponse(c *resty.Client, r *resty.Response) error {
-	logging.Debug("RESP: [%d] content-length: %s\n    Body: %s",
+	console.Debug("RESP: [%d] content-length: %s\n    Body: %s",
 		r.StatusCode(), r.Header().Get(CONTENT_LENGTH), string(r.Body()))
 	return nil
 }

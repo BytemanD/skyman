@@ -1,9 +1,11 @@
 package common
 
 import (
+	"os"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
+
 	"github.com/BytemanD/skyman/openstack/model/nova"
 )
 
@@ -35,8 +37,9 @@ func PrintPrettyItemTable(table PrettyItemTable) string {
 	case YAML:
 		return table.PrintYaml()
 	default:
-		logging.Fatal("invalid output format: %s, valid formats: %v", CONF.Format,
+		console.Error("invalid output format: %s, valid formats: %v", CONF.Format,
 			GetOutputFormats())
+		os.Exit(1)
 	}
 	return ""
 }

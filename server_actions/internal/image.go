@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -21,7 +21,7 @@ func (t *ServerSnapshot) Start() error {
 		return err
 	}
 	t.imageId = imageId
-	logging.Info("[%s] creating image %s", t.Server.Id, imageId)
+	console.Info("[%s] creating image %s", t.Server.Id, imageId)
 	return utility.RetryWithErrors(
 		utility.RetryCondition{
 			Timeout:     time.Minute * 10,
@@ -32,7 +32,7 @@ func (t *ServerSnapshot) Start() error {
 			if err != nil {
 				return fmt.Errorf("get image %s failed: %s", imageId, err)
 			}
-			logging.Info("[%s] image status=%s", t.Server.Id, image.Status)
+			console.Info("[%s] image status=%s", t.Server.Id, image.Status)
 			if image.IsError() {
 				return fmt.Errorf("image %s is error", imageId)
 			}
@@ -47,7 +47,7 @@ func (t ServerSnapshot) TearDown() error {
 	if t.imageId == "" {
 		return nil
 	}
-	logging.Info("[%s] request to delete image %s", t.Server.Id, t.imageId)
+	console.Info("[%s] request to delete image %s", t.Server.Id, t.imageId)
 	t.Client.GlanceV2().Images().Delete(t.imageId)
 	return nil
 }

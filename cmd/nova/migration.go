@@ -2,10 +2,11 @@ package nova
 
 import (
 	"net/url"
+	"os"
 
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/cmd/flags"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
@@ -38,7 +39,8 @@ var migrationList = &cobra.Command{
 		}
 		migrations, err := client.NovaV2().Migration().List(query)
 		if err != nil {
-			logging.Fatal("%s", err)
+			console.Error("%s", err)
+			os.Exit(1)
 		}
 		dataListTable := common.PrettyTable{
 			ShortColumns: []common.Column{

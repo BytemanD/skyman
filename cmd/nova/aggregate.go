@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/cmd/flags"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
@@ -138,7 +138,7 @@ var removeHost = &cobra.Command{
 		aggregate, err := client.NovaV2().Aggregate().Find(idOrName)
 		utility.LogIfError(err, true, "get aggregate %s failed", idOrName)
 		for _, host := range hosts {
-			logging.Debug("remove host %s from aggregate %s", host, idOrName)
+			console.Debug("remove host %s from aggregate %s", host, idOrName)
 			agg, err := client.NovaV2().Aggregate().RemoveHost(aggregate.Id, host)
 			utility.LogIfError(err, false, "remove %s to aggregate %s failed", host, idOrName)
 			if err == nil {

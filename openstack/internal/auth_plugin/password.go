@@ -6,8 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
-
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/session"
 	"github.com/go-resty/resty/v2"
@@ -65,7 +64,7 @@ func (plugin *PasswordAuthPlugin) IsTokenExpired() bool {
 		return true
 	}
 	if plugin.expiredAt.Before(time.Now()) {
-		logging.Warning("token exipred, expired at: %s , now: %s", plugin.expiredAt, time.Now())
+		console.Warn("token exipred, expired at: %s , now: %s", plugin.expiredAt, time.Now())
 		return true
 	}
 	return false

@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/guest"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
@@ -31,7 +31,7 @@ var ServerPing = &cobra.Command{
 		clientInstance, err := client.NovaV2().Server().Find(args[1])
 		utility.LogError(err, "get client failed", true)
 
-		logging.Debug("get server host and client host ...")
+		console.Debug("get server host and client host ...")
 		serverHost, err := client.NovaV2().Hypervisor().Find(serverInstance.Host)
 		utility.LogError(err, "get server host failed", true)
 
@@ -43,10 +43,11 @@ var ServerPing = &cobra.Command{
 
 		serverAddresses := serverGuest.GetIpaddrs()
 		clientAddresses := clientGuest.GetIpaddrs()
-		logging.Debug("客户端实例IP地址: %s", clientAddresses)
-		logging.Debug("服务端实例IP地址: %s", serverAddresses)
+		console.Debug("客户端实例IP地址: %s", clientAddresses)
+		console.Debug("服务端实例IP地址: %s", serverAddresses)
 		if len(clientAddresses) == 0 || len(serverAddresses) == 0 {
-			logging.Fatal("客户端和服务端实例必须至少有一张启用的网卡")
+			console.Error("客户端和服务端实例必须至少有一张启用的网卡")
+			os.Exit(1)
 		}
 
 		var stdout, stderr string
@@ -62,11 +63,11 @@ var ServerPing = &cobra.Command{
 			stdout, stderr = serverGuest.WithPing(
 				clientAddresses[0], interval, serverAddresses[0],
 				func() {
-					logging.Info("waiting, stop by ctrl+C ...")
+					console.Info("waiting, stop by ctrl+C ...")
 					sigCh := make(chan os.Signal, 1)
 					signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 					sig := <-sigCh
-					logging.Info("received signal: %s\n", sig)
+					console.Info("received signal: %s\n", sig)
 				},
 			)
 		}

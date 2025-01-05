@@ -6,8 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
-
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
@@ -73,7 +72,7 @@ var networkDelete = &cobra.Command{
 			fmt.Printf("Reqeust to delete network %s\n", net)
 			err := c.Network().Delete(net)
 			if err != nil {
-				logging.Error("Delete network %s failed, %s", net, err)
+				console.Error("Delete network %s failed, %s", net, err)
 			}
 		}
 	},

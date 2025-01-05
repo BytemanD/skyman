@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 )
 
 type Domain struct {
@@ -89,7 +89,7 @@ func (tc *TokenCache) IsTokenExpired() bool {
 		return true
 	}
 	if tc.expiredAt.Before(time.Now()) {
-		logging.Warning("token exipred, expired at: %s , now: %s", tc.expiredAt, time.Now())
+		console.Warn("token exipred, expired at: %s , now: %s", tc.expiredAt, time.Now())
 		return true
 	}
 	return false

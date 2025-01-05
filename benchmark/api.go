@@ -1,6 +1,7 @@
 package benchmark
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/syncutils"
@@ -33,8 +34,10 @@ type CaseInterface interface {
 func RunBenchmarkTest(cases []ServerShow) []BenchmarkResult {
 	results := []BenchmarkResult{}
 	task := syncutils.TaskGroup{
-		Items:     cases,
-		MaxWorker: len(cases),
+		Items:        cases,
+		Title:        fmt.Sprintf("test %d case(s)", len(cases)),
+		ShowProgress: true,
+		MaxWorker:    len(cases),
 		Func: func(item interface{}) error {
 			p, _ := item.(ServerShow)
 			result := BenchmarkResult{Start: time.Now()}

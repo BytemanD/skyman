@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -25,7 +25,7 @@ func (t ServerExtendVolume) Start() error {
 	}
 	newSize := volume.Size + 10
 	err = t.Client.CinderV2().Volume().Extend(attachment.VolumeId, int(newSize))
-	logging.Info("[%s] extending volume size %s to %dG", t.Server.Id, attachment.VolumeId, newSize)
+	console.Info("[%s] extending volume size %s to %dG", t.Server.Id, attachment.VolumeId, newSize)
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func (t ServerExtendVolume) Start() error {
 			if err != nil {
 				return err
 			}
-			logging.Info("[%s] volume %s task state is %s",
+			console.Info("[%s] volume %s task state is %s",
 				t.ServerId(), attachment.VolumeId, vol.TaskStatus)
 			if vol.TaskStatus == "" {
 				return nil

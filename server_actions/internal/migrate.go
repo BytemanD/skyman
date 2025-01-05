@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/guest"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
@@ -29,12 +29,12 @@ func (t *ServerLiveMigrate) createClientServer() error {
 	if err != nil {
 		return fmt.Errorf("create client instance failed: %s", err)
 	}
-	logging.Info("[%s] creating client server", t.ServerId())
+	console.Info("[%s] creating client server", t.ServerId())
 	t.clientServer, err = t.Client.NovaV2().Server().WaitBooted(clientServer.Id)
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] client server (%s) created, host: %s", t.ServerId(),
+	console.Info("[%s] client server (%s) created, host: %s", t.ServerId(),
 		t.clientServer.Name, t.clientServer.Host)
 	return nil
 }
@@ -55,7 +55,7 @@ func (t *ServerLiveMigrate) waitServerBooted(serverId string) error {
 			// TODO: set key world by config file.
 			reg := regexp.MustCompile(` login:`)
 			result := reg.FindStringSubmatch(consoleLog.Output)
-			logging.Debug("[%s] client console log: %s", t.ServerId(), consoleLog.Output)
+			console.Debug("[%s] client console log: %s", t.ServerId(), consoleLog.Output)
 			if len(result) > 0 {
 				return nil
 			}
@@ -74,7 +74,7 @@ func (t *ServerLiveMigrate) getClientGuest() (*guest.Guest, error) {
 		if err := t.clientGuest.Connect(); err != nil {
 			return nil, fmt.Errorf("connect guest %s faield: %s", t.clientGuest, err)
 		}
-		logging.Info("[%s] connecting to qga ...", t.clientGuest.Domain)
+		console.Info("[%s] connecting to qga ...", t.clientGuest.Domain)
 		t.clientGuest.ConnectToQGA(t.Config.QGAChecker.QgaConnectTimeout)
 	}
 	return t.clientGuest, nil
@@ -105,13 +105,13 @@ func (t *ServerLiveMigrate) startPing(targetIp string) error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] client ping -> %s", t.ServerId(), targetIp)
+	console.Info("[%s] client ping -> %s", t.ServerId(), targetIp)
 	result := clientGuest.Ping(targetIp, t.Config.LiveMigrate.PingInterval, 0, ipaddrs[0], false)
 	if result.ErrData != "" {
 		return fmt.Errorf("run ping to %s failed: %s", targetIp, result.ErrData)
 	}
 	t.clientPingPid = result.Pid
-	logging.Debug("[%s] ping process pid is: %d", t.ServerId(), t.clientPingPid)
+	console.Debug("[%s] ping process pid is: %d", t.ServerId(), t.clientPingPid)
 	return nil
 }
 func (t *ServerLiveMigrate) stopPing() error {
@@ -120,7 +120,7 @@ func (t *ServerLiveMigrate) stopPing() error {
 		return nil
 	}
 	if t.clientPingPid == 0 {
-		logging.Warning("[%s] ping pid is not exists", t.ServerId())
+		console.Warn("[%s] ping pid is not exists", t.ServerId())
 		return nil
 	}
 	clientGuest, err := t.getClientGuest()
@@ -132,7 +132,7 @@ func (t *ServerLiveMigrate) stopPing() error {
 }
 func (t *ServerLiveMigrate) getPingOutput() (string, error) {
 	if t.clientPingPid == 0 {
-		logging.Warning("[%s] ping pid is not exists", t.ServerId())
+		console.Warn("[%s] ping pid is not exists", t.ServerId())
 		return "", nil
 	}
 	clientGuest, err := t.getClientGuest()
@@ -143,14 +143,14 @@ func (t *ServerLiveMigrate) getPingOutput() (string, error) {
 	if stdout != "" {
 		return stdout, nil
 	}
-	logging.Debug("[%s] ping output:\n%s", t.ServerId(), stdout)
+	console.Debug("[%s] ping output:\n%s", t.ServerId(), stdout)
 	return "", fmt.Errorf("get ping output failed: %s", stderr)
 }
 func (t *ServerLiveMigrate) checkPingBeforeMigrate(targetIp string) error {
 	defer func() {
 		t.clientPingPid = 0
 	}()
-	logging.Info("[%s] confirm ping packages not loss ...", t.ServerId())
+	console.Info("[%s] confirm ping packages not loss ...", t.ServerId())
 	return utility.RetryWithErrors(
 		utility.RetryCondition{
 			Timeout:     time.Minute * 5,
@@ -173,7 +173,7 @@ func (t *ServerLiveMigrate) checkPingBeforeMigrate(targetIp string) error {
 			if len(matchedResult) == 0 {
 				return fmt.Errorf("ping result not matched")
 			}
-			logging.Info("[%s] ping result: %s", t.ServerId(), matchedResult[0])
+			console.Info("[%s] ping result: %s", t.ServerId(), matchedResult[0])
 			transmitted, _ := strconv.Atoi(matchedResult[1])
 			received, _ := strconv.Atoi(matchedResult[2])
 			if transmitted-received > 0 {
@@ -189,7 +189,7 @@ func (t *ServerLiveMigrate) startLiveMigrate() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] live migrating", t.Server.Id)
+	console.Info("[%s] live migrating", t.Server.Id)
 	return t.WaitServerTaskFinished(true)
 }
 func (t ServerLiveMigrate) confirmServerHasIpAddress() error {
@@ -198,9 +198,9 @@ func (t ServerLiveMigrate) confirmServerHasIpAddress() error {
 		return err
 	}
 	serverGuest := &guest.Guest{Connection: serverHost.HostIp, Domain: t.ServerId()}
-	logging.Info("[%s] connecting to guest ...", t.ServerId())
+	console.Info("[%s] connecting to guest ...", t.ServerId())
 	serverGuest.Connect()
-	logging.Info("[%s] connecting to qga ...", t.ServerId())
+	console.Info("[%s] connecting to qga ...", t.ServerId())
 	serverGuest.ConnectToQGA(t.Config.QGAChecker.QgaConnectTimeout)
 	err = utility.RetryWithErrors(
 		utility.RetryCondition{Timeout: time.Second * 60, IntervalMin: time.Second * 2},
@@ -228,7 +228,7 @@ func (t *ServerLiveMigrate) Start() error {
 	if t.Config.QGAChecker.Enabled && t.Config.LiveMigrate.PingEnabled {
 		t.enablePing = true
 	} else if t.Config.LiveMigrate.PingEnabled {
-		logging.Warning("[%s] disable ping check because qga checker is disabled", t.ServerId())
+		console.Warn("[%s] disable ping check because qga checker is disabled", t.ServerId())
 	}
 	if t.enablePing {
 		interfaces, err := t.Client.NovaV2().Server().ListInterfaces(t.ServerId())
@@ -236,7 +236,7 @@ func (t *ServerLiveMigrate) Start() error {
 			return err
 		}
 		if len(interfaces) == 0 {
-			logging.Warning("[%s] server has no interface, skip to run ping process", t.ServerId())
+			console.Warn("[%s] server has no interface, skip to run ping process", t.ServerId())
 			return nil
 		}
 		// 检查实例是否有IP
@@ -248,7 +248,7 @@ func (t *ServerLiveMigrate) Start() error {
 		if err != nil {
 			return err
 		}
-		logging.Info("[%s] waiting client booted", t.ServerId())
+		console.Info("[%s] waiting client booted", t.ServerId())
 		if err := t.waitServerBooted(t.clientServer.Id); err != nil {
 			return err
 		}
@@ -257,7 +257,7 @@ func (t *ServerLiveMigrate) Start() error {
 		if err != nil {
 			return fmt.Errorf("ping check failed: %s", err)
 		}
-		logging.Info("[%s] ping package not loss", t.ServerId())
+		console.Info("[%s] ping package not loss", t.ServerId())
 		// 开始运行ping
 		// TODO: 判断 IPv4 还是 IPv6
 		err = t.startPing(interfaces[0].GetIPAddresses()[0])
@@ -266,16 +266,16 @@ func (t *ServerLiveMigrate) Start() error {
 		}
 	}
 	sourceHost := t.Server.Host
-	logging.Info("[%s] source host is %s", t.Server.Id, sourceHost)
+	console.Info("[%s] source host is %s", t.Server.Id, sourceHost)
 	startTime := time.Now()
 	if err := t.startLiveMigrate(); err != nil {
 		return err
 	}
 	if err := t.confirmLiveMigrated(sourceHost); err != nil {
-		logging.Error("[%s] migrate failed: %s", t.ServerId(), err)
+		console.Error("[%s] migrate failed: %s", t.ServerId(), err)
 		return err
 	}
-	logging.Info("[%s] migrated, %s -> %s, used: %v",
+	console.Info("[%s] migrated, %s -> %s, used: %v",
 		t.Server.Id, sourceHost, t.Server.Host, time.Since(startTime))
 	if err := t.confirmPingResult(); err != nil {
 		return err
@@ -299,7 +299,7 @@ func (t *ServerLiveMigrate) confirmPingResult() error {
 		return nil
 	}
 	if t.clientPingPid == 0 {
-		logging.Warning("[%s] ping pid is not exists", t.ServerId())
+		console.Warn("[%s] ping pid is not exists", t.ServerId())
 		return nil
 	}
 	if err := t.stopPing(); err != nil {
@@ -312,7 +312,7 @@ func (t *ServerLiveMigrate) confirmPingResult() error {
 		if len(matchedResult) == 0 {
 			return fmt.Errorf("ping result not matched")
 		}
-		logging.Info("[%s] ping result: %s", t.ServerId(), matchedResult[0])
+		console.Info("[%s] ping result: %s", t.ServerId(), matchedResult[0])
 		transmitted, _ := strconv.Atoi(matchedResult[1])
 		received, _ := strconv.Atoi(matchedResult[2])
 		if transmitted-received > t.Config.LiveMigrate.MaxLoss {
@@ -323,7 +323,7 @@ func (t *ServerLiveMigrate) confirmPingResult() error {
 }
 func (t ServerLiveMigrate) TearDown() error {
 	if t.clientServer != nil {
-		logging.Info("[%s] deleting client server %s", t.ServerId(), t.clientServer.Id)
+		console.Info("[%s] deleting client server %s", t.ServerId(), t.clientServer.Id)
 		if err := t.Client.NovaV2().Server().Delete(t.clientServer.Id); err != nil {
 			return err
 		}
@@ -346,13 +346,13 @@ func (t ServerMigrate) Start() error {
 
 	sourceHost := t.Server.Host
 	startTime := time.Now()
-	logging.Info("[%s] source host is %s", t.Server.Id, sourceHost)
+	console.Info("[%s] source host is %s", t.Server.Id, sourceHost)
 
 	err := t.Client.NovaV2().Server().Migrate(t.Server.Id, "")
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] migrating", t.Server.Id)
+	console.Info("[%s] migrating", t.Server.Id)
 
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
@@ -363,7 +363,7 @@ func (t ServerMigrate) Start() error {
 	if t.Server.Host == sourceHost {
 		return fmt.Errorf("server host not changed")
 	}
-	logging.Info("[%s] migrated, %s -> %s, used: %v",
+	console.Info("[%s] migrated, %s -> %s, used: %v",
 		t.Server.Id, sourceHost, t.Server.Host, time.Since(startTime))
 	return nil
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
@@ -45,7 +45,7 @@ var flavorClone = &cobra.Command{
 
 		cmdent := openstack.DefaultClient()
 		novaClient := cmdent.NovaV2()
-		logging.Info("show flavor")
+		console.Info("show flavor")
 		flavor, err := novaClient.Flavor().Show(flavorId)
 		utility.LogError(err, "show flavor failed", true)
 
@@ -73,7 +73,7 @@ var flavorClone = &cobra.Command{
 		if rxtxFactor != 0 {
 			flavor.RXTXFactor = rxtxFactor
 		}
-		logging.Info("show flavor extra specs")
+		console.Info("show flavor extra specs")
 		extraSpecs, err := novaClient.Flavor().ListExtraSpecs(flavorId)
 		utility.LogError(err, "show flavor extra specs failed", true)
 
@@ -84,12 +84,12 @@ var flavorClone = &cobra.Command{
 		for _, k := range unsetProperties {
 			delete(extraSpecs, k)
 		}
-		logging.Info("create new flavor")
+		console.Info("create new flavor")
 		newFlavor, err := novaClient.Flavor().Create(*flavor)
 		utility.LogError(err, "create flavor failed", true)
 
 		if len(extraSpecs) != 0 {
-			logging.Info("set new flavor extra specs")
+			console.Info("set new flavor extra specs")
 			_, err = novaClient.Flavor().SetExtraSpecs(newFlavor.Id, extraSpecs)
 			utility.LogError(err, "set new flavor extra specs failed", true)
 		}

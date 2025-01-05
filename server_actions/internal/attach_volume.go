@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 )
 
 type ServerAttachVolume struct {
@@ -13,7 +13,7 @@ type ServerAttachVolume struct {
 }
 
 func (t ServerAttachVolume) Start() error {
-	logging.Info("[%s] creating volume", t.ServerId())
+	console.Info("[%s] creating volume", t.ServerId())
 	volume, err := t.CreateBlankVolume()
 	if err != nil {
 		return fmt.Errorf("create volume failed: %s", err)
@@ -22,7 +22,7 @@ func (t ServerAttachVolume) Start() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] attaching volume on %s", t.Server.Id, attachment.Device)
+	console.Info("[%s] attaching volume on %s", t.Server.Id, attachment.Device)
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (t ServerDetachVolume) Start() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] detaching volume %s", t.Server.Id, attachment.VolumeId)
+	console.Info("[%s] detaching volume %s", t.Server.Id, attachment.VolumeId)
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
@@ -84,9 +84,9 @@ func (t *ServerVolumeHotPlug) Start() error {
 		return fmt.Errorf("get server checker failed: %s", err)
 	}
 	for i := 0; i < t.Config.VolumeHotplug.Nums; i++ {
-		logging.Info("[%s] attach volume (%d)", t.ServerId(), i+1)
+		console.Info("[%s] attach volume (%d)", t.ServerId(), i+1)
 
-		logging.Info("[%s] creating volume", t.ServerId())
+		console.Info("[%s] creating volume", t.ServerId())
 		volume, err := t.CreateBlankVolume()
 		if err != nil {
 			return fmt.Errorf("create volume failed: %s", err)
@@ -96,7 +96,7 @@ func (t *ServerVolumeHotPlug) Start() error {
 		if err != nil {
 			return err
 		}
-		logging.Info("[%s] attaching volume %s", t.Server.Id, volume.Id)
+		console.Info("[%s] attaching volume %s", t.Server.Id, volume.Id)
 		if err := t.WaitServerTaskFinished(false); err != nil {
 			return err
 		}
@@ -114,7 +114,7 @@ func (t *ServerVolumeHotPlug) Start() error {
 		if err != nil {
 			return err
 		}
-		logging.Info("[%s] detaching volume %s", t.ServerId(), volId)
+		console.Info("[%s] detaching volume %s", t.ServerId(), volId)
 		if err := t.WaitServerTaskFinished(false); err != nil {
 			return err
 		}
@@ -130,12 +130,12 @@ func (t *ServerVolumeHotPlug) Start() error {
 
 func (t ServerVolumeHotPlug) TearDown() error {
 	deleteFailed := []string{}
-	logging.Info("[%s] cleanup %d volumes", t.ServerId(), len(t.attachments))
+	console.Info("[%s] cleanup %d volumes", t.ServerId(), len(t.attachments))
 	for _, volId := range t.attachments {
-		logging.Info("[%s] deleting volume %s", t.ServerId(), volId)
+		console.Info("[%s] deleting volume %s", t.ServerId(), volId)
 		err := t.Client.CinderV2().Volume().Delete(volId, true, true)
 		if err != nil {
-			logging.Error("[%s] delete volume %s failed: %s", t.ServerId(), volId, err)
+			console.Error("[%s] delete volume %s failed: %s", t.ServerId(), volId, err)
 			deleteFailed = append(deleteFailed, volId)
 		}
 	}

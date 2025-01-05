@@ -1,11 +1,12 @@
 package server
 
 import (
+	"fmt"
 	"runtime"
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/syncutils"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
@@ -31,38 +32,39 @@ var detachInterfaces = &cobra.Command{
 		interfaces, err := client.NovaV2().Server().ListInterfaces(server.Id)
 		utility.LogError(err, "list server interfaces failed:", true)
 
-		logging.Info("server has %d interfaces", len(interfaces))
+		console.Info("server has %d interfaces", len(interfaces))
 
 		start := max(0, len(interfaces)-nums)
 		detachInterfaces := interfaces[start:]
 		if len(detachInterfaces) == 0 {
-			logging.Warning("nothing to do")
+			console.Warn("nothing to do")
 			return
 		}
 		taskGroup2 := syncutils.TaskGroup{
 			Items:        detachInterfaces,
 			MaxWorker:    parallel,
+			Title:        fmt.Sprintf("detach %d interface(s)", len(interfaces)),
 			ShowProgress: true,
 			Func: func(item interface{}) error {
 				p := item.(nova.InterfaceAttachment)
-				logging.Info("[interface: %s] detaching", p.PortId)
+				console.Info("[interface: %s] detaching", p.PortId)
 				err := client.NovaV2().Server().DeleteInterfaceAndWait(server.Id, p.PortId, time.Minute*5)
 				if err != nil {
-					logging.Error("[interface: %s] detach failed: %v", p.PortId, err)
+					console.Error("[interface: %s] detach failed: %v", p.PortId, err)
 					return err
 				}
 				if clean {
 					err = neutronClient.Port().Delete(p.PortId)
 					if err == nil {
-						logging.Info("[interface: %s] deleted", p.PortId)
+						console.Info("[interface: %s] deleted", p.PortId)
 					} else {
-						logging.Info("[interface: %s] delete failed: %s", p.PortId, err)
+						console.Info("[interface: %s] delete failed: %s", p.PortId, err)
 					}
 				}
 				return nil
 			},
 		}
-		logging.Info("detaching ...")
+		console.Info("detaching ...")
 		taskGroup2.Start()
 	},
 }

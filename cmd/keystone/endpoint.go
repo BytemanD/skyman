@@ -3,10 +3,10 @@ package keystone
 import (
 	"fmt"
 	"net/url"
+	"os"
 
+	"github.com/BytemanD/go-console/console"
 	"github.com/spf13/cobra"
-
-	"github.com/BytemanD/easygo/pkg/global/logging"
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
@@ -54,10 +54,12 @@ var endpointList = &cobra.Command{
 		if serviceName != "" {
 			services, err := c.Service().ListByName(serviceName)
 			if err != nil {
-				logging.Fatal("get service '%s' failed, %v", serviceName, err)
+				console.Error("get service '%s' failed, %v", serviceName, err)
+				os.Exit(1)
 			}
 			if len(services) == 0 {
-				logging.Fatal("service '%s' not found", serviceName)
+				console.Error("service '%s' not found", serviceName)
+				os.Exit(1)
 			}
 			for _, service := range services {
 				serviceMap[service.Id] = service
@@ -66,7 +68,8 @@ var endpointList = &cobra.Command{
 		}
 		items, err := c.Endpoint().List(query)
 		if err != nil {
-			logging.Fatal("list endpoints failed, %s", err)
+			console.Error("list endpoints failed, %s", err)
+			os.Exit(1)
 		}
 
 		// TODO: 优化
@@ -143,7 +146,7 @@ var endpointCreate = &cobra.Command{
 				Interface: k,
 				Enabled:   !disable,
 			}
-			logging.Info("create %s endpoint", k)
+			console.Info("create %s endpoint", k)
 			endpoint, err := c.Endpoint().Create(e)
 			if err != nil {
 				utility.LogError(err, fmt.Sprintf("create %s endpoint failed", k), false)
@@ -171,7 +174,7 @@ var endpointDelete = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().KeystoneV3()
 		for _, id := range args {
-			logging.Info("request to delete endpoint %s", id)
+			console.Info("request to delete endpoint %s", id)
 			err := c.Endpoint().Delete(id)
 			utility.LogError(err, fmt.Sprintf("delete endpoint %s failed", id), false)
 		}

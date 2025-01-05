@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/compare"
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/openstack/session"
 	"github.com/fatih/color"
 )
@@ -31,9 +31,11 @@ func RaiseIfError(err error, msg string) {
 	}
 	if compare.IsType[session.HttpError](err) {
 		httpError, _ := err.(session.HttpError)
-		logging.Fatal("%s, %s: %s", msg, httpError.Reason, httpError.Message)
+		console.Error("%s, %s: %s", msg, httpError.Reason, httpError.Message)
+		os.Exit(1)
 	} else {
-		logging.Fatal("%s, %v", msg, err)
+		console.Error("%s, %v", msg, err)
+		os.Exit(1)
 	}
 }
 
@@ -43,9 +45,9 @@ func LogError(err error, message string, exit bool) {
 	}
 	if compare.IsType[session.HttpError](err) {
 		httpError, _ := err.(session.HttpError)
-		logging.Error("%s, %s: %s", message, httpError.Reason, httpError.Message)
+		console.Error("%s, %s: %s", message, httpError.Reason, httpError.Message)
 	} else {
-		logging.Error("%s: %v", message, err)
+		console.Error("%s: %v", message, err)
 	}
 	if exit {
 		os.Exit(1)
@@ -57,9 +59,9 @@ func LogIfError(err error, exit bool, format string, args ...interface{}) {
 	}
 	if compare.IsType[session.HttpError](err) {
 		httpError, _ := err.(session.HttpError)
-		logging.Error(fmt.Sprintf(format, args...)+": [%s] %s", httpError.Reason, httpError.Message)
+		console.Error(fmt.Sprintf(format, args...)+": [%s] %s", httpError.Reason, httpError.Message)
 	} else {
-		logging.Error(fmt.Sprintf(format, args...)+": %v", err)
+		console.Error(fmt.Sprintf(format, args...)+": %v", err)
 	}
 	if exit {
 		os.Exit(1)
@@ -76,14 +78,14 @@ func VersionUrl(endpoint, version string) string {
 }
 
 func GreenString(s string) string {
-	return color.New(color.FgGreen).Sprintf(s)
+	return color.GreenString(s)
 }
 
 func BlueString(s string) string {
-	return color.New(color.FgBlue).Sprintf(s)
+	return color.BlueString(s)
 }
 func RedString(s string) string {
-	return color.New(color.FgRed).Sprintf(s)
+	return color.RedString(s)
 }
 
 func MatchPingResult(text string) []string {

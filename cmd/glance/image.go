@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/glance"
@@ -112,11 +112,11 @@ var imageCreate = &cobra.Command{
 		}
 		reqImage.Name = name
 
-		logging.Info("create image name=%s", name)
+		console.Info("create image name=%s", name)
 		image, err := client.Images().Create(reqImage)
 		utility.LogError(err, "Create image failed", true)
 		if file != "" {
-			logging.Info("upload image")
+			console.Info("upload image")
 			err = client.Images().Upload(image.Id, file)
 			if err != nil {
 				client.Images().Delete(image.Id)
@@ -168,10 +168,10 @@ var imageSave = &cobra.Command{
 			*imageSaveFlags.File, fmt.Sprintf("%s.%s", image.Name, image.DiskFormat),
 		)
 
-		logging.Info("Saving image to %s", fileName)
+		console.Info("Saving image to %s", fileName)
 		err = c.Images().Download(image.Id, fileName, true)
 		utility.LogError(err, fmt.Sprintf("download image %v failed", args[0]), true)
-		logging.Info("Image saved")
+		console.Info("Image saved")
 	},
 }
 
@@ -205,7 +205,7 @@ var imageSet = &cobra.Command{
 			params["protect"] = *imageSetFlags.Protect
 		}
 		if len(params) == 0 {
-			logging.Warning("nothing to do")
+			console.Warn("nothing to do")
 			return
 		}
 		image, err = c.Images().Set(image.Id, params)

@@ -6,7 +6,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/pelletier/go-toml/v2"
 	"golang.org/x/text/language"
@@ -25,7 +25,7 @@ func T(msgId string) string {
 		DefaultMessage: getDefaultMessage(msgId),
 	})
 	if err != nil {
-		logging.Warning("localize message %s failed, %v", msgId, err)
+		console.Warn("localize message %s failed, %v", msgId, err)
 	}
 	return msg
 }

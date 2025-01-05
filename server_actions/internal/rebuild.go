@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 )
 
 type ServerRebuild struct {
@@ -16,7 +16,7 @@ func (t ServerRebuild) Start() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] rebuilding", t.Server.Id)
+	console.Info("[%s] rebuilding", t.Server.Id)
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}

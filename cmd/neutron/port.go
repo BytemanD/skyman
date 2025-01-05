@@ -9,8 +9,8 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/syncutils"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
@@ -157,16 +157,16 @@ var portDelete = &cobra.Command{
 				}
 				if !force {
 					if port.DeviceId != "" {
-						logging.Warning("port %s is bound to %s", port.Id, port.DeviceId)
+						console.Warn("port %s is bound to %s", port.Id, port.DeviceId)
 						return nil
 					}
 				}
-				logging.Info("Reqeust to delete port %s\n", port.Id)
+				console.Info("Reqeust to delete port %s\n", port.Id)
 				err = c.Port().Delete(p)
 				if err != nil {
 					utility.LogError(err, fmt.Sprintf("Delete port %s failed", p), false)
 				} else {
-					logging.Info("Delete port %s success", p)
+					console.Info("Delete port %s success", p)
 				}
 				return nil
 			},

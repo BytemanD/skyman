@@ -5,9 +5,10 @@ package openstack
 
 import (
 	"fmt"
+	"os"
 	"sync"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 
 	"github.com/BytemanD/skyman/openstack/internal"
@@ -89,7 +90,7 @@ func (o Openstack) ProjectId() (string, error) {
 func NewClient(authUrl string, user model.User, project model.Project, regionName string) *Openstack {
 	authUrl = utility.VersionUrl(authUrl, fmt.Sprintf("v%s", common.CONF.Identity.Api.Version))
 	passwordAuth := internal.NewPasswordAuth(authUrl, user, project, regionName)
-	logging.Debug("new openstack client, HttpTimeoutSecond=%d RetryWaitTimeSecond=%d RetryCount=%d",
+	console.Debug("new openstack client, HttpTimeoutSecond=%d RetryWaitTimeSecond=%d RetryCount=%d",
 		common.CONF.HttpTimeoutSecond, common.CONF.RetryWaitTimeSecond, common.CONF.RetryCount,
 	)
 	passwordAuth.SetHttpTimeout(common.CONF.HttpTimeoutSecond)
@@ -131,7 +132,8 @@ func (o *Openstack) GlanceV2() *internal.GlanceV2 {
 	if o.glanceClient == nil {
 		endpoint, err := o.AuthPlugin.GetServiceEndpoint(IMAGE, GLANCE, PUBLIC)
 		if err != nil {
-			logging.Fatal("get glance endpoint falied: %v", err)
+			console.Error("get glance endpoint falied: %v", err)
+			os.Exit(1)
 		}
 		o.glanceClient = &internal.GlanceV2{
 			ServiceClient: internal.NewServiceApi[internal.ServiceClient](endpoint, V2, o.AuthPlugin),
@@ -151,7 +153,8 @@ func (o *Openstack) CinderV2() *internal.CinderV2 {
 		)
 		endpoint, err = o.AuthPlugin.GetServiceEndpoint(VOLUME_V2, CINDER_V2, PUBLIC)
 		if err != nil {
-			logging.Fatal("get cinder endpoint falied: %v", err)
+			console.Error("get cinder endpoint falied: %v", err)
+			os.Exit(1)
 		}
 		o.cinderClient = &internal.CinderV2{
 			ServiceClient: internal.NewServiceApi[internal.ServiceClient](endpoint, V2, o.AuthPlugin),
@@ -170,7 +173,8 @@ func (o *Openstack) NeutronV2() *internal.NeutronV2 {
 			var err error
 			endpoint, err = o.AuthPlugin.GetServiceEndpoint(NETWORK, NEUTRON, PUBLIC)
 			if err != nil {
-				logging.Fatal("get neutron endpoint falied: %v", err)
+				console.Error("get neutron endpoint falied: %v", err)
+				os.Exit(1)
 			}
 		}
 		o.neutronClient = &internal.NeutronV2{
@@ -186,7 +190,8 @@ func (o *Openstack) KeystoneV3() *internal.KeystoneV3 {
 	if o.keystoneClient == nil {
 		endpoint, err := o.AuthPlugin.GetServiceEndpoint(IDENTITY, KEYSTONE, PUBLIC)
 		if err != nil {
-			logging.Fatal("get keystone endpoint falied: %v", err)
+			console.Error("get keystone endpoint falied: %v", err)
+			os.Exit(1)
 		}
 		o.keystoneClient = &internal.KeystoneV3{
 			ServiceClient: internal.NewServiceApi[internal.ServiceClient](endpoint, V3, o.AuthPlugin),
@@ -201,7 +206,8 @@ func (o *Openstack) NovaV2(microVersion ...string) *internal.NovaV2 {
 	if o.novaClient == nil {
 		endpoint, err := o.AuthPlugin.GetServiceEndpoint(COMPUTE, NOVA, PUBLIC)
 		if err != nil {
-			logging.Warning("get nova endpoint falied: %v", err)
+			console.Warn("get nova endpoint falied: %v", err)
+
 			return &internal.NovaV2{}
 		}
 		o.novaClient = &internal.NovaV2{
@@ -212,15 +218,15 @@ func (o *Openstack) NovaV2(microVersion ...string) *internal.NovaV2 {
 				Version: o.ComputeApiVersion,
 			}
 		} else {
-			logging.Debug("get current version of nova")
+			console.Debug("get current version of nova")
 			currentVersion, err := o.novaClient.GetCurrentVersion()
 			if err != nil {
-				logging.Warning("get current version failed: %v", err)
+				console.Warn("get current version failed: %v", err)
 			} else {
 				o.novaClient.MicroVersion = currentVersion
 			}
 		}
-		logging.Debug("current nova version: %s", o.novaClient.MicroVersion.VersoinInfo())
+		console.Debug("current nova version: %s", o.novaClient.MicroVersion.VersoinInfo())
 		if o.novaClient.MicroVersion != nil {
 			o.novaClient.AddBaseHeader("Openstack-Api-Version", o.novaClient.MicroVersion.Version)
 			o.novaClient.AddBaseHeader("X-Openstack-Nova-Api-Version", o.novaClient.MicroVersion.Version)

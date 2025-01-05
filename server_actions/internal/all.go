@@ -5,7 +5,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model"
@@ -96,7 +96,7 @@ func (t *ServerActionTest) WaitServerTaskFinished(showProgress bool) error {
 			if showProgress {
 				progress = fmt.Sprintf(", progress: %d", int(t.Server.Progress))
 			}
-			logging.Info("[%s] %s%s", t.Server.Id, t.Server.AllStatus(), progress)
+			console.Info("[%s] %s%s", t.Server.Id, t.Server.AllStatus(), progress)
 			return t.Server.TaskState != ""
 		},
 	)
@@ -175,7 +175,7 @@ func (t ServerActionTest) CreateBlankVolume() (*cinder.Volume, error) {
 		if err != nil {
 			return nil, err
 		}
-		logging.Info("[%s] volume status is: %s", t.ServerId(), volume.Status)
+		console.Info("[%s] volume status is: %s", t.ServerId(), volume.Status)
 		if volume.IsAvailable() {
 			return volume, nil
 		}
@@ -209,7 +209,7 @@ func (t ServerActionTest) getServerBootOption(name string) nova.ServerOpt {
 			{UUID: t.Config.Networks[0]},
 		}
 	} else {
-		logging.Warning("boot without network")
+		console.Warn("boot without network")
 	}
 	if t.Config.BootWithSG != "" {
 		opt.SecurityGroups = append(opt.SecurityGroups,
@@ -259,7 +259,7 @@ func (t *ServerActionTest) WaitSnapshotCreated(snapshotId string) error {
 			if err != nil {
 				return err
 			}
-			logging.Info("[%s] snapshot %s status is %s", t.ServerId(), snapshot.Id, snapshot.Status)
+			console.Info("[%s] snapshot %s status is %s", t.ServerId(), snapshot.Id, snapshot.Status)
 			switch snapshot.Status {
 			case "error":
 				return fmt.Errorf("snapshot is error")
@@ -284,7 +284,7 @@ func (t *ServerActionTest) WaitVolumeTaskDone(volumeId string) error {
 			if err != nil {
 				return err
 			}
-			logging.Info("[%s] volume %s state=%s, staskState=%s", t.ServerId(),
+			console.Info("[%s] volume %s state=%s, staskState=%s", t.ServerId(),
 				volumeId, vol.Status, vol.TaskStatus)
 			if vol.IsError() {
 				return fmt.Errorf("volume %s is error", volumeId)
@@ -334,7 +334,7 @@ func (a Actions) Get(name string, server *nova.Server, client *openstack.Opensta
 
 func (a Actions) register(name string, creator ActionCreatorFunc) {
 	if _, ok := a[name]; ok {
-		logging.Warning("action %s already exists", name)
+		console.Warn("action %s already exists", name)
 		return
 	}
 	a[name] = creator

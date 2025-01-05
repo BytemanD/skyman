@@ -103,8 +103,7 @@ func (c VolumeApi) Create(options map[string]interface{}) (*cinder.Volume, error
 		Volume cinder.Volume `json:"volume"`
 	}{Volume: cinder.Volume{}}
 
-	_, err := c.R().SetBody(map[string]interface{}{"volume": options}).SetResult(&result).
-		Post("volumes")
+	_, err := c.R().SetBody(map[string]interface{}{"volume": options}).SetResult(&result).Post()
 	if err != nil {
 		return nil, err
 	}

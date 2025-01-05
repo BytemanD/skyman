@@ -3,7 +3,7 @@ package templates
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
@@ -16,27 +16,27 @@ func deleteFlavor(client *openstack.Openstack, flavor Flavor) error {
 	if flavor.Id != "" {
 		f, err = client.NovaV2().Flavor().Show(flavor.Id)
 		if err != nil {
-			logging.Warning("get flavor %s failed: %s", flavor.Id, err)
+			console.Warn("get flavor %s failed: %s", flavor.Id, err)
 			return nil
 		}
 	} else if flavor.Name != "" {
 		f, err = client.NovaV2().Flavor().Find(flavor.Name, false)
 		if err != nil {
-			logging.Warning("get flavor %s failed, %s", flavor.Name, err)
+			console.Warn("get flavor %s failed, %s", flavor.Name, err)
 			return nil
 		}
 	}
-	logging.Info("deleting flavor %s", f.Id)
+	console.Info("deleting flavor %s", f.Id)
 	return client.NovaV2().Flavor().Delete(f.Id)
 	// utility.LogError(err, fmt.Sprintf("delete flavor %s failed", f.Id), false)
 }
 func deleteNetwork(client *openstack.Openstack, network Network) error {
 	net, err := client.NeutronV2().Network().Find(network.Name)
 	if err != nil {
-		logging.Warning("get network %s failed: %s", network.Name, err)
+		console.Warn("get network %s failed: %s", network.Name, err)
 		return nil
 	}
-	logging.Info("deleting network %s", network.Name)
+	console.Info("deleting network %s", network.Name)
 	return client.NeutronV2().Network().Delete(net.Id)
 
 	// utility.LogError(err, fmt.Sprintf("delete network %s failed: %s", network.Name, err), false)
@@ -45,7 +45,7 @@ func deleteNetwork(client *openstack.Openstack, network Network) error {
 func deleteServer(client *openstack.Openstack, server Server, watch bool) error {
 	s, err := client.NovaV2().Server().Find(server.Name)
 	if err != nil {
-		logging.Warning("get server %s failed, %s", server.Name, err)
+		console.Warn("get server %s failed, %s", server.Name, err)
 		return nil
 	}
 	err = client.NovaV2().Server().Delete(s.Id)
@@ -54,7 +54,7 @@ func deleteServer(client *openstack.Openstack, server Server, watch bool) error 
 		return nil
 	}
 
-	logging.Info("[%s] deleting (%s)", s.Id, s.Name)
+	console.Info("[%s] deleting (%s)", s.Id, s.Name)
 	if watch {
 		return client.NovaV2().Server().WaitDeleted(s.Id)
 	}

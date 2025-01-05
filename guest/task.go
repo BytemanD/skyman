@@ -2,11 +2,12 @@ package guest
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 )
 
 type GuestConnection struct {
@@ -50,38 +51,39 @@ type NetQosTest struct {
 }
 
 func (t *NetQosTest) Run() (float64, float64, error) {
-	logging.Info("连接客户端实例: %s", t.ClientGuest)
+	console.Info("连接客户端实例: %s", t.ClientGuest)
 	err := t.ClientGuest.Connect()
 	if t.ClientGuest.IsSame(t.ServerGuest) {
-		logging.Error("客户端和服务端实例不能相同")
+		console.Error("客户端和服务端实例不能相同")
 		return 0, 0, err
 	}
 	if err != nil {
-		logging.Error("连接客户端实例失败, %s", err)
+		console.Error("连接客户端实例失败, %s", err)
 		return 0, 0, err
 	}
-	logging.Info("连接服务端实例: %s", t.ServerGuest)
+	console.Info("连接服务端实例: %s", t.ServerGuest)
 	err = t.ServerGuest.Connect()
 	if err != nil {
-		logging.Error("连接服务端实例失败, %s", err)
+		console.Error("连接服务端实例失败, %s", err)
 		return 0, 0, err
 	}
 
-	logging.Info("获取客户端和服务端实例IP地址")
+	console.Info("获取客户端和服务端实例IP地址")
 	clientAddresses := t.ClientGuest.GetIpaddrs()
 	serverAddresses := t.ServerGuest.GetIpaddrs()
-	logging.Info("客户端实例IP地址: %s", clientAddresses)
-	logging.Info("服务端实例IP地址: %s", serverAddresses)
+	console.Info("客户端实例IP地址: %s", clientAddresses)
+	console.Info("服务端实例IP地址: %s", serverAddresses)
 
 	if len(clientAddresses) == 0 || len(serverAddresses) == 0 {
-		logging.Fatal("客户端和服务端实例必须至少有一张启用的网卡")
+		console.Error("客户端和服务端实例必须至少有一张启用的网卡")
+		os.Exit(1)
 	}
 
 	if !t.ServerGuest.HasCommand("iperf3") {
 		if t.LocalIperf3File == "" {
 			return 0, 0, fmt.Errorf("iperf3 is not installed in server guest")
 		}
-		logging.Info("拷贝安装包 -> 服务端")
+		console.Info("拷贝安装包 -> 服务端")
 		if err := installIperf(t.ServerGuest, t.LocalIperf3File); err != nil {
 			return 0, 0, fmt.Errorf("服务端端安装iperf3失败: %s", err)
 		}
@@ -90,7 +92,7 @@ func (t *NetQosTest) Run() (float64, float64, error) {
 		if t.LocalIperf3File == "" {
 			return 0, 0, fmt.Errorf("iperf3 is not installed in client guest")
 		}
-		logging.Info("拷贝安装包 -> 客户端")
+		console.Info("拷贝安装包 -> 客户端")
 		if err := installIperf(t.ClientGuest, t.LocalIperf3File); err != nil {
 			return 0, 0, fmt.Errorf("客户端安装iperf3失败: %s", err)
 		}
@@ -113,7 +115,7 @@ func (t *NetQosTest) Run() (float64, float64, error) {
 	serverPids := []int{}
 	for _, serverAddress := range serverAddresses {
 		logfile := fmt.Sprintf("/tmp/iperf3_s_%s_%s", fomatTime, serverAddress)
-		logging.Info("启动服务端: %s", serverAddress)
+		console.Info("启动服务端: %s", serverAddress)
 		execResult := t.ServerGuest.RunIperfServer(
 			serverAddress, logfile, t.ServerOptions)
 		if execResult.Failed {
@@ -128,7 +130,7 @@ func (t *NetQosTest) Run() (float64, float64, error) {
 	jobs := []Job{}
 	for i := 0; i < len(clientAddresses) && i < len(serverAddresses); i++ {
 		logfile := fmt.Sprintf("/tmp/iperf3_c_%s_%s", fomatTime, serverAddresses[i])
-		logging.Info("启动客户端: %s -> %s", clientAddresses[i], serverAddresses[i])
+		console.Info("启动客户端: %s -> %s", clientAddresses[i], serverAddresses[i])
 		var execResult ExecResult
 		if !t.PPS {
 			execResult = t.ClientGuest.RunIperfClient(
@@ -147,12 +149,12 @@ func (t *NetQosTest) Run() (float64, float64, error) {
 		})
 	}
 
-	logging.Info("等待测试结束(%ds) ...", times)
+	console.Info("等待测试结束(%ds) ...", times)
 	time.Sleep(time.Second * time.Duration(times))
 	for _, job := range jobs {
 		t.ClientGuest.GetExecStatusOutput(job.Pid)
 	}
-	logging.Info("测试结束")
+	console.Info("测试结束")
 
 	reports := NewIperfReports()
 	for _, job := range jobs {
@@ -173,7 +175,7 @@ type FioTest struct {
 }
 
 func (t *FioTest) Run() error {
-	logging.Debug("连接实例: %s", t.Guest)
+	console.Debug("连接实例: %s", t.Guest)
 	if err := t.Guest.Connect(); err != nil {
 		return fmt.Errorf("连接实例失败, %s", err)
 	}

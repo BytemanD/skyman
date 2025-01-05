@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
@@ -29,7 +29,7 @@ var portPrune = &cobra.Command{
 			query.Set("device_id", device)
 		}
 
-		logging.Info("list ports ...")
+		console.Info("list ports ...")
 		ports, err := c.NeutronV2().Port().List(query)
 		utility.LogError(err, "list ports failed", true)
 		filterPorts := []neutron.Port{}
@@ -44,7 +44,7 @@ var portPrune = &cobra.Command{
 			filterPorts = append(filterPorts, port)
 		}
 		if len(filterPorts) == 0 {
-			logging.Info("all ports is not unbound nothing to do")
+			console.Info("all ports is not unbound nothing to do")
 			return
 		}
 		c.PrunePorts(filterPorts)

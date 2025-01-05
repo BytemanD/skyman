@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 )
 
 type ServerSuspend struct {
@@ -20,7 +20,7 @@ func (t ServerSuspend) Start() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] suspending", t.Server.Id)
+	console.Info("[%s] suspending", t.Server.Id)
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func (t ServerResume) Start() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] resuming", t.Server.Id)
+	console.Info("[%s] resuming", t.Server.Id)
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func (t ServerToggleSuspend) Start() error {
 		if err != nil {
 			return err
 		}
-		logging.Info("[%s] resuming", t.Server.Id)
+		console.Info("[%s] resuming", t.Server.Id)
 		if err := t.WaitServerTaskFinished(false); err != nil {
 			return err
 		}
@@ -79,7 +79,7 @@ func (t ServerToggleSuspend) Start() error {
 		if err != nil {
 			return err
 		}
-		logging.Info("[%s] suspending", t.Server.Id)
+		console.Info("[%s] suspending", t.Server.Id)
 		if err := t.WaitServerTaskFinished(false); err != nil {
 			return err
 		}

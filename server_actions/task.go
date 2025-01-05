@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/arrayutils"
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/syncutils"
+	"github.com/BytemanD/go-console/console"
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
@@ -22,9 +22,9 @@ import (
 
 func startAction(action internal.ServerAction) error {
 	defer func() {
-		logging.Info("[%s] >>>> tear down ...", action.ServerId())
+		console.Info("[%s] >>>> tear down ...", action.ServerId())
 		if err := action.TearDown(); err != nil {
-			logging.Error("[%s] tear down failed: %s", action.ServerId(), err)
+			console.Error("[%s] tear down failed: %s", action.ServerId(), err)
 		}
 	}()
 	return action.Start()
@@ -53,7 +53,7 @@ func (t Case) getServerBootOption(testId int) nova.ServerOpt {
 			{UUID: t.Config.Networks[0]},
 		}
 	} else {
-		logging.Warning("boot without network")
+		console.Warn("boot without network")
 	}
 	if t.Config.BootWithSG != "" {
 		opt.SecurityGroups = append(opt.SecurityGroups,
@@ -87,12 +87,12 @@ func (t Case) waitServerCreated(serverId string) error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] creating with name %s", server.Id, server.Resource.Name)
+	console.Info("[%s] creating with name %s", server.Id, server.Resource.Name)
 	server, err = t.Client.NovaV2().Server().WaitBooted(server.Id)
 	if err != nil {
 		return err
 	}
-	logging.Success("[%s] create success, host is %s", server.Id, server.Host)
+	console.Success("[%s] create success, host is %s", server.Id, server.Host)
 	return nil
 }
 func (t Case) firstFlavor() string {
@@ -108,7 +108,7 @@ func (t Case) firstImage() string {
 	return ""
 }
 func (t *Case) destroyServer(serverId string) {
-	logging.Info("[%s] deleting server", serverId)
+	console.Info("[%s] deleting server", serverId)
 	t.Client.NovaV2().Server().Delete(serverId)
 	t.Client.NovaV2().Server().WaitDeleted(serverId)
 }
@@ -125,7 +125,7 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 	)
 	actionsReport.Init(testId, utility.OneOfString(serverId, "-"))
 
-	logging.Info("start worker, id=%d", testId)
+	console.Info("start worker, id=%d", testId)
 	if serverId == "" {
 		if t.firstFlavor() == "" {
 			actionsReport.Error = fmt.Errorf("flavors is empty")
@@ -140,29 +140,29 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 			actionsReport.Server = server.Id
 		}
 		if err != nil {
-			logging.Error("create server failed, %s", err)
+			console.Error("create server failed, %s", err)
 			actionsReport.Error = fmt.Errorf("create server failed")
 			return
 		}
 		if err := t.waitServerCreated(server.Id); err != nil {
-			logging.Error("[%s] create server failed, %s", server.Id, err)
+			console.Error("[%s] create server failed, %s", server.Id, err)
 			actionsReport.Error = fmt.Errorf("create server failed")
 			return
 		}
 		server, err = t.Client.NovaV2().Server().Show(server.Id)
 		if err != nil {
-			logging.Error("get server failed, %s", err)
+			console.Error("get server failed, %s", err)
 			actionsReport.Error = fmt.Errorf("get server failed")
 			return
 		}
 		serverCheckers, err := checkers.GetServerCheckers(t.Client, server, t.Config.QGAChecker)
 		if err != nil {
-			logging.Error("get server checkers failed, %s", err)
+			console.Error("get server checkers failed, %s", err)
 			actionsReport.Error = fmt.Errorf("get server checkers failed")
 			return
 		}
 		if err := serverCheckers.MakesureServerRunning(); err != nil {
-			logging.Error("server is not running, %s", err)
+			console.Error("server is not running, %s", err)
 			actionsReport.Error = fmt.Errorf("server is not running")
 			return
 		}
@@ -176,15 +176,15 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 		var err error
 		server, err = t.Client.NovaV2().Server().Find(serverId)
 		if err != nil {
-			logging.Error("get server failed, %s", err)
+			console.Error("get server failed, %s", err)
 			actionsReport.Error = fmt.Errorf("get server failed")
 			return
 		}
 		actionsReport.Server = server.Id
 
-		logging.Info("use server: %s(%s)", server.Id, server.Name)
+		console.Info("use server: %s(%s)", server.Id, server.Name)
 	}
-	logging.Info("[%s] ======== Test actions: %s, workers: %d", server.Id,
+	console.Info("[%s] ======== Test actions: %s, workers: %d", server.Id,
 		strings.Join(t.Actions.FormatActions(), ","), t.Config.Workers,
 	)
 	for _, actionName := range t.Actions.Actions() {
@@ -194,7 +194,7 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 			actionsReport.Error = fmt.Errorf("action '%s' not found", actionName)
 			return
 		}
-		logging.Info(utility.BlueString(fmt.Sprintf("[%s] ==== %s", server.Id, actionName)))
+		console.Info(utility.BlueString(fmt.Sprintf("[%s] ==== %s", server.Id, actionName)))
 
 		// 更新实例信息
 		if err := action.RefreshServer(); err != nil {
@@ -202,7 +202,7 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 			return
 		}
 		if t.Config.ActionInterval > 0 {
-			logging.Info("[%s] sleep %d seconds", server.Id, t.Config.ActionInterval)
+			console.Info("[%s] sleep %d seconds", server.Id, t.Config.ActionInterval)
 			time.Sleep(time.Second * time.Duration(t.Config.ActionInterval))
 		}
 		// 开始测试
@@ -210,7 +210,7 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 		// 更新测试结果
 		actionsReport.Results = append(actionsReport.Results, ActionResult{Action: actionName, Error: err})
 		if err != nil {
-			logging.Error("[%s] test '%s' failed: %s", server.Id, actionName, err)
+			console.Error("[%s] test '%s' failed: %s", server.Id, actionName, err)
 			actionsReport.Error = fmt.Errorf("test '%s' failed", actionName)
 			return
 		}
@@ -237,13 +237,17 @@ func (t *Case) Report() CaseReport {
 func (t *Case) Start() {
 	t.init()
 	if t.Actions.Empty() {
-		logging.Warning("action is empty")
+		console.Warn("action is empty")
 		return
 	}
-	taskGroup := syncutils.TaskGroup{MaxWorker: t.Config.Workers}
-	logging.Info("run case, worker=%d actions=%s", t.Config.Workers, t.Actions.FormatActions())
+	taskGroup := syncutils.TaskGroup{
+		MaxWorker:    t.Config.Workers,
+		Title:        fmt.Sprintf("Test %s", strings.Join(t.Actions.FormatActions(), ",")),
+		ShowProgress: true,
+	}
+	console.Info("run case, worker=%d actions=%s", t.Config.Workers, t.Actions.FormatActions())
 	if len(t.UseServers) > 0 {
-		logging.Warning("use exits servers: %s", strings.Join(t.UseServers, ","))
+		console.Warn("use exits servers: %s", strings.Join(t.UseServers, ","))
 		taskGroup.MaxWorker = len(t.UseServers)
 		taskGroup.Items = arrayutils.Range(1, len(t.UseServers)+1)
 		taskGroup.Func = func(item interface{}) error {

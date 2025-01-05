@@ -12,9 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/BytemanD/go-console/console"
 	"libvirt.org/go/libvirt"
-
-	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
 type GuestExecArguments struct {
@@ -104,18 +103,18 @@ type ExecResult struct {
 }
 
 func (guest Guest) ConnectToQGA(timeout int) error {
-	logging.Debug("%s connecting to qga ...", guest)
+	console.Debug("%s connecting to qga ...", guest)
 	startTime := time.Now()
 	for {
 		_, err := guest.HostName()
 		if err == nil {
-			logging.Debug("%s qga connected", guest)
+			console.Debug("%s qga connected", guest)
 			return nil
 		}
 		if time.Since(startTime) >= time.Second*time.Duration(timeout) {
 			return fmt.Errorf("connect qga timeout")
 		}
-		logging.Debug("%s get hostname failed: %s", guest, err)
+		console.Debug("%s get hostname failed: %s", guest, err)
 		time.Sleep(time.Second * 5)
 	}
 }
@@ -136,7 +135,7 @@ func (guest Guest) Exec(command string, wait bool) ExecResult {
 		return ExecResult{Pid: qgaExecResult.Return.Pid}
 	}
 	outData, errData := guest.GetExecStatusOutput(qgaExecResult.Return.Pid)
-	logging.Debug("OutData: %s, ErrData: %s", outData, errData)
+	console.Debug("OutData: %s, ErrData: %s", outData, errData)
 
 	return ExecResult{
 		Pid:     qgaExecResult.Return.Pid,
@@ -146,10 +145,10 @@ func (guest Guest) Exec(command string, wait bool) ExecResult {
 }
 
 func (guest Guest) runQemuAgentCommand(jsonData []byte) (string, error) {
-	logging.Debug("QGA 命令: %s", string(jsonData))
+	console.Debug("QGA 命令: %s", string(jsonData))
 	result, err := guest.getDoamin().QemuAgentCommand(
 		string(jsonData), libvirt.DOMAIN_QEMU_AGENT_COMMAND_MIN, 0)
-	logging.Debug("命令执行结果: %s", result)
+	console.Debug("命令执行结果: %s", result)
 	if err != nil {
 		return "", err
 	}
@@ -278,7 +277,7 @@ func (guest Guest) HasCommand(command string) bool {
 }
 
 func (guest Guest) RpmInstall(packagePath string) error {
-	logging.Info("[%s] 安装 %v", guest.Domain, packagePath)
+	console.Info("[%s] 安装 %v", guest.Domain, packagePath)
 	result := guest.Exec(fmt.Sprintf("rpm -ivh %s", packagePath), true)
 	if result.Failed {
 		return fmt.Errorf("%s install failed, %s", packagePath, result.ErrData)
@@ -288,7 +287,7 @@ func (guest Guest) RpmInstall(packagePath string) error {
 
 func (guest Guest) FileWrite(filePath string, content string) error {
 	// file open
-	logging.Debug("%s file open", filePath)
+	console.Debug("%s file open", filePath)
 	fileOpenCommand := QgaGFileOpen{
 		Execute:   "guest-file-open",
 		Arguments: GuestFileOpenArguments{Path: filePath, Mode: "w+"},
@@ -297,12 +296,12 @@ func (guest Guest) FileWrite(filePath string, content string) error {
 	result, _ := guest.runQemuAgentCommand(jsonData)
 	var qgaFileOpenResult QgaFileOpenReturn
 	json.Unmarshal([]byte(result), &qgaFileOpenResult)
-	logging.Debug("file %s open handle: %d", filePath, qgaFileOpenResult.Return)
+	console.Debug("file %s open handle: %d", filePath, qgaFileOpenResult.Return)
 	if qgaFileOpenResult.Return == 0 {
 		return fmt.Errorf("open file failed, return: %s", result)
 	}
 	// file write
-	logging.Debug("%s file write", filePath)
+	console.Debug("%s file write", filePath)
 	fileWriteCommand := QgaGFileWrite{
 		Execute: "guest-file-write",
 		Arguments: GuestFileWriteArguments{
@@ -313,9 +312,9 @@ func (guest Guest) FileWrite(filePath string, content string) error {
 	result, _ = guest.runQemuAgentCommand(jsonData)
 	var qgaFIleWriteResult QgaWriteOpenReturn
 	json.Unmarshal([]byte(result), &qgaFIleWriteResult)
-	logging.Debug("file %s write result %v", filePath, qgaFIleWriteResult)
+	console.Debug("file %s write result %v", filePath, qgaFIleWriteResult)
 	// file close
-	logging.Debug("%s file close", filePath)
+	console.Debug("%s file close", filePath)
 	fileCloseCommand := QgaGFileClose{
 		Execute:   "guest-file-close",
 		Arguments: GuestFileCloseArguments{Handle: qgaFileOpenResult.Return},
@@ -344,7 +343,7 @@ func (guest Guest) CopyFile(localFile string, remotePath string) (string, error)
 		return "", err
 	}
 	remoteFile := remotePath + "/" + filepath.Base(localFile)
-	logging.Debug("[%s] 拷贝文件 %s --> %s", guest.Domain, localFile, remotePath)
+	console.Debug("[%s] 拷贝文件 %s --> %s", guest.Domain, localFile, remotePath)
 	return remoteFile, guest.FileWrite(remoteFile, string(bytes))
 }
 func (guest Guest) HostName() (string, error) {
@@ -367,13 +366,13 @@ func (guest Guest) Ping(targetIp string, interval float32, count int, useInterfa
 	if useInterface != "" {
 		cmd += fmt.Sprintf(" -I %s", useInterface)
 	}
-	logging.Info("[%s] Run: %s", guest.Domain, cmd)
-	logging.Debug("ping %s -> %s", useInterface, targetIp)
+	console.Info("[%s] Run: %s", guest.Domain, cmd)
+	console.Debug("ping %s -> %s", useInterface, targetIp)
 	return guest.Exec(cmd, wait)
 }
 func (guest Guest) WithPing(targetIp string, interval float32, useInterface string, function func()) (string, string) {
 	result := guest.Ping(targetIp, interval, 0, useInterface, false)
-	logging.Debug("pid: %d", result.Pid)
+	console.Debug("pid: %d", result.Pid)
 	function()
 	guest.Kill(int(syscall.SIGINT), []int{result.Pid})
 	return guest.GetExecStatusOutput(result.Pid)

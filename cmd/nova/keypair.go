@@ -1,9 +1,11 @@
 package nova
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
@@ -18,7 +20,8 @@ var keypairList = &cobra.Command{
 		client := openstack.DefaultClient()
 		keypairs, err := client.NovaV2().Keypair().List(nil)
 		if err != nil {
-			logging.Fatal("%s", err)
+			console.Error("%s", err)
+			os.Exit(1)
 		}
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{

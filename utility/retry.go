@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/compare"
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 )
 
 type Interval interface {
@@ -95,7 +95,7 @@ func RetryWithContext(ctx context.Context, condition RetryCondition, function fu
 		if err == nil {
 			return nil
 		}
-		logging.Debug("error: %s", err)
+		console.Debug("error: %s", err)
 		if condition.Timeout > 0 && time.Since(startTime) >= condition.Timeout {
 			return fmt.Errorf("retry timeout(%v), last error: %s", condition.Timeout, err)
 		}

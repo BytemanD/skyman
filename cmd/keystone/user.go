@@ -1,9 +1,10 @@
 package keystone
 
 import (
-	"github.com/spf13/cobra"
+	"os"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
+	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
@@ -39,7 +40,8 @@ var userList = &cobra.Command{
 		} else {
 			users, err := c.ListUsersByProjectId(project)
 			if err != nil {
-				logging.Fatal("get users failed, %s", err)
+				console.Error("get users failed, %s", err)
+				os.Exit(1)
 			}
 			pt.AddItems(users)
 		}

@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
@@ -119,7 +119,7 @@ var subnetDelete = &cobra.Command{
 			fmt.Printf("Reqeust to delete subnet %s\n", subnet)
 			err := c.Subnet().Delete(subnet)
 			if err != nil {
-				logging.Error("Delete subnet %s failed, %s", subnet, err)
+				console.Error("Delete subnet %s failed, %s", subnet, err)
 			}
 		}
 	},

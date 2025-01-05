@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 )
 
 type ServerPause struct {
@@ -24,7 +24,7 @@ func (t ServerPause) Start() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] pausing", t.Server.Id)
+	console.Info("[%s] pausing", t.Server.Id)
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func (t ServerUnpause) Start() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] unpausing", t.Server.Id)
+	console.Info("[%s] unpausing", t.Server.Id)
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func (t ServerTogglePause) Start() error {
 		if err != nil {
 			return err
 		}
-		logging.Info("[%s] unpausing", t.Server.Id)
+		console.Info("[%s] unpausing", t.Server.Id)
 		if err := t.WaitServerTaskFinished(false); err != nil {
 			return err
 		}
@@ -82,7 +82,7 @@ func (t ServerTogglePause) Start() error {
 		if err != nil {
 			return err
 		}
-		logging.Info("[%s] pausing", t.Server.Id)
+		console.Info("[%s] pausing", t.Server.Id)
 		if err := t.WaitServerTaskFinished(false); err != nil {
 			return err
 		}

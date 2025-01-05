@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 )
 
@@ -22,16 +22,16 @@ func (t ServerAttachPort) Start() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] creating port", t.Server.Id)
+	console.Info("[%s] creating port", t.Server.Id)
 	port, err := t.Client.NeutronV2().Port().Create(map[string]interface{}{
 		"network_id": nextNetwork,
 	})
 	if err != nil {
-		logging.Error("[%s] create port failed: %s", t.ServerId(), err)
+		console.Error("[%s] create port failed: %s", t.ServerId(), err)
 		return err
 	}
 
-	logging.Info("[%s] attaching port: %s", t.Server.Id, port.Id)
+	console.Info("[%s] attaching port: %s", t.Server.Id, port.Id)
 	attachment, err := t.Client.NovaV2().Server().AddInterface(t.Server.Id, "", port.Id)
 	if err != nil {
 		return err
@@ -66,7 +66,7 @@ func (t ServerAttachNet) Start() error {
 		return err
 	}
 
-	logging.Info("[%s] attaching net: %s", t.Server.Id, nextNetwork)
+	console.Info("[%s] attaching net: %s", t.Server.Id, nextNetwork)
 	attachment, err := t.Client.NovaV2().Server().AddInterface(t.Server.Id, nextNetwork, "")
 	if err != nil {
 		return err
@@ -155,21 +155,21 @@ func (t *ServerAttachHotPlug) Start() error {
 		return fmt.Errorf("get server checker failed: %s", err)
 	}
 	for i := 1; i <= t.Config.InterfaceHotplug.Nums; i++ {
-		logging.Info("[%s] attach interface %d", t.ServerId(), i)
+		console.Info("[%s] attach interface %d", t.ServerId(), i)
 		nextNetwork, err := t.nextNetwork()
 		if err != nil {
 			return err
 		}
-		logging.Info("[%s] creating port", t.Server.Id)
+		console.Info("[%s] creating port", t.Server.Id)
 		port, err := t.Client.NeutronV2().Port().Create(map[string]interface{}{
 			"network_id": nextNetwork,
 		})
 		if err != nil {
-			logging.Error("[%s] create port failed: %s", t.ServerId(), err)
+			console.Error("[%s] create port failed: %s", t.ServerId(), err)
 			return err
 		}
 
-		logging.Info("[%s] attaching interface %s", t.Server.Id, port.Id)
+		console.Info("[%s] attaching interface %s", t.Server.Id, port.Id)
 		attachment, err := t.Client.NovaV2().Server().AddInterface(t.Server.Id, "", port.Id)
 		if err != nil {
 			return err
@@ -206,13 +206,13 @@ func (t *ServerAttachHotPlug) Start() error {
 }
 func (t ServerAttachHotPlug) TearDown() error {
 	deleteFailed := []string{}
-	logging.Info("[%s] cleanup %d interfaces", t.ServerId(), len(t.attachedPort))
+	console.Info("[%s] cleanup %d interfaces", t.ServerId(), len(t.attachedPort))
 	for _, port := range t.attachedPort {
-		logging.Info("[%s] deleting port %s", t.ServerId(), port.Id)
+		console.Info("[%s] deleting port %s", t.ServerId(), port.Id)
 		err := t.Client.NeutronV2().Port().Delete(port.Id)
 		if err != nil {
 			deleteFailed = append(deleteFailed, port.Id)
-			logging.Error("[%s] delete port %s failed: %s", t.ServerId(), port.Id, err)
+			console.Error("[%s] delete port %s failed: %s", t.ServerId(), port.Id, err)
 		}
 	}
 	if len(deleteFailed) > 0 {

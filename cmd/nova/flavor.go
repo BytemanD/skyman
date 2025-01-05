@@ -10,7 +10,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/cmd/flags"
 	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/common"
@@ -98,7 +98,8 @@ var flavorList = &cobra.Command{
 			for i, flavor := range filteredFlavors {
 				extraSpecs, err := client.NovaV2().Flavor().ListExtraSpecs(flavor.Id)
 				if err != nil {
-					logging.Fatal("get flavor extra specs failed %s", err)
+					console.Error("get flavor extra specs failed %s", err)
+					os.Exit(1)
 				}
 				filteredFlavors[i].ExtraSpecs = extraSpecs
 			}
@@ -211,7 +212,8 @@ var flavorSet = &cobra.Command{
 		for _, property := range *flavorSetFlags.Properties {
 			splited := strings.Split(property, "=")
 			if len(splited) != 2 {
-				logging.Fatal("Invalid property %s, must be: key=value", property)
+				console.Error("Invalid property %s, must be: key=value", property)
+				os.Exit(1)
 			}
 			extraSpecs[splited[0]] = splited[1]
 		}

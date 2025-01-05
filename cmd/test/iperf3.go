@@ -2,10 +2,11 @@ package test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/table"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/guest"
 	"github.com/BytemanD/skyman/openstack"
@@ -84,20 +85,22 @@ var TestNetQos = &cobra.Command{
 		cilentOptions, _ := cmd.Flags().GetString("client-options")
 
 		openstackClient := openstack.DefaultClient()
-		logging.Info("get server and client")
+		console.Info("get server and client")
 		serverInstance, err := openstackClient.NovaV2().Server().Find(server)
 		utility.LogError(err, "get server failed", true)
 		clientInstance, err := openstackClient.NovaV2().Server().Find(client)
 		utility.LogError(err, "get client failed", true)
 
 		if !serverInstance.IsActive() {
-			logging.Fatal("instance %s is not active", serverInstance.Id)
+			console.Error("instance %s is not active", serverInstance.Id)
+			os.Exit(1)
 		}
 		if !clientInstance.IsActive() {
-			logging.Fatal("instance %s is not active", clientInstance.Id)
+			console.Error("instance %s is not active", clientInstance.Id)
+			os.Exit(1)
 		}
 
-		logging.Info("get server host and client host")
+		console.Info("get server host and client host")
 		serverHost, err := openstackClient.NovaV2().Hypervisor().Find(serverInstance.Host)
 		utility.LogError(err, "get server host failed", true)
 
@@ -112,7 +115,7 @@ var TestNetQos = &cobra.Command{
 		fmt.Println("客户端QOS配置:")
 		printServerQOSItems(*clientInstance)
 
-		logging.Info("start test with QGA")
+		console.Info("start test with QGA")
 
 		job := guest.NetQosTest{
 			ClientGuest:     clientConn,
@@ -124,7 +127,8 @@ var TestNetQos = &cobra.Command{
 		}
 		_, _, err = job.Run()
 		if err != nil {
-			logging.Fatal("test failed, %s", err)
+			console.Error("test failed, %s", err)
+			os.Exit(1)
 		}
 	},
 }

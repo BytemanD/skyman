@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model"
@@ -89,7 +89,7 @@ var serviceDelete = &cobra.Command{
 		c := openstack.DefaultClient().KeystoneV3()
 
 		for _, id := range args {
-			logging.Info("request to delete service %s", id)
+			console.Info("request to delete service %s", id)
 			err := c.Service().Delete(id)
 			utility.LogError(err, fmt.Sprintf("delete service %s failed", id), false)
 		}

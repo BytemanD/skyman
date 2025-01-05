@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 )
 
 type ServerRevertToSnapshot struct {
@@ -15,7 +15,7 @@ type ServerRevertToSnapshot struct {
 func (t *ServerRevertToSnapshot) Start() error {
 	t.srcStatus = t.Server.Status
 	if t.Server.IsStopped() {
-		logging.Info("[%s] starting", t.ServerId())
+		console.Info("[%s] starting", t.ServerId())
 		t.Client.NovaV2().Server().Start(t.ServerId())
 		if _, err := t.Client.NovaV2().Server().WaitStatus(t.ServerId(), "ACTIVE", 2); err != nil {
 			return fmt.Errorf("start server %s failed", t.ServerId())
@@ -29,30 +29,30 @@ func (t *ServerRevertToSnapshot) Start() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] creating snapshot %s, waiting", t.ServerId(), snap.Id)
+	console.Info("[%s] creating snapshot %s, waiting", t.ServerId(), snap.Id)
 	if err := t.WaitSnapshotCreated(snap.Id); err != nil {
 		return err
 	}
-	logging.Info("[%s] snapshot %s created", t.ServerId(), snap.Id)
+	console.Info("[%s] snapshot %s created", t.ServerId(), snap.Id)
 	t.RefreshServer()
 	if t.Server.IsActive() {
-		logging.Info("[%s] server is active, stop before reversing", t.ServerId())
+		console.Info("[%s] server is active, stop before reversing", t.ServerId())
 		if err := t.Client.NovaV2().Server().StopAndWait(t.ServerId()); err != nil {
-			logging.Info("[%s] stopped", t.ServerId())
+			console.Info("[%s] stopped", t.ServerId())
 		}
 	}
 	for i := 0; i < max(t.Config.RevertSystem.RepeatEveryTime, 1); i++ {
-		logging.Info("[%s] revert volume to snapshot %s (%d), waiting", t.ServerId(), rootBdm.VolumeId, i+1)
+		console.Info("[%s] revert volume to snapshot %s (%d), waiting", t.ServerId(), rootBdm.VolumeId, i+1)
 		if err := t.Client.CinderV2().Volume().Revert(rootBdm.VolumeId, snap.Id); err != nil {
-			logging.Error("revert volume %s failed: %s", rootBdm.VolumeId, err)
+			console.Error("revert volume %s failed: %s", rootBdm.VolumeId, err)
 			return err
 		}
 		if err := t.WaitVolumeTaskDone(rootBdm.VolumeId); err != nil {
 			return err
 		}
-		logging.Success("[%s] revert to snapshot %s success", t.ServerId(), snap.Id)
+		console.Success("[%s] revert to snapshot %s success", t.ServerId(), snap.Id)
 	}
-	logging.Info("[%s] starting", t.ServerId())
+	console.Info("[%s] starting", t.ServerId())
 	if err := t.Client.NovaV2().Server().Start(t.ServerId()); err != nil {
 		return err
 	}

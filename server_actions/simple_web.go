@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -16,7 +16,7 @@ import (
 var indexData []byte
 
 func IndexHandler(respWriter http.ResponseWriter, request *http.Request) {
-	logging.Debug("请求地址 %s", request.URL.Path)
+	console.Debug("请求地址 %s", request.URL.Path)
 	var err error
 	if indexData == nil {
 		for _, indexPath := range []string{"static/index.html", "/usr/share/skyman/static/index.html"} {
@@ -36,14 +36,14 @@ func IndexHandler(respWriter http.ResponseWriter, request *http.Request) {
 }
 
 func TasksHandler(respWriter http.ResponseWriter, request *http.Request) {
-	logging.Info("请求地址 %s", request.URL.Path)
+	console.Info("请求地址 %s", request.URL.Path)
 	reportBody := struct {
 		CaseReports []CaseReport `json:"tasks"`
 	}{
 		CaseReports: []CaseReport{},
 	}
 	data, err := json.Marshal(&reportBody)
-	logging.Debug("tasks json: %s", string(data))
+	console.Debug("tasks json: %s", string(data))
 	respWriter.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		respWriter.WriteHeader(http.StatusBadRequest)
@@ -68,7 +68,7 @@ func RunSimpleWebServer(webCnof common.Web) error {
 			webAddr = append(webAddr, fmt.Sprintf("http://%s:%d", ip, port))
 		}
 	}
-	logging.Info("启动web服务:\n----\n%s\n----", strings.Join(webAddr, "\n"))
+	console.Info("启动web服务:\n----\n%s\n----", strings.Join(webAddr, "\n"))
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 }
 func WaitWebServer() error {

@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/BytemanD/easygo/pkg/global/gitutils"
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/BytemanD/go-console/console"
 
 	"github.com/BytemanD/skyman/cmd/context"
 	"github.com/BytemanD/skyman/cmd/neutron"
@@ -131,10 +131,10 @@ func main() {
 			if conf == "" {
 				ctxConf, err := context.LoadContextConf()
 				if err != nil {
-					logging.Debug("load context failed: %s", err)
+					console.Debug("load context failed: %s", err)
 				} else {
 					if ctx := ctxConf.GetCurrent(); ctx != nil {
-						logging.Debug("use conf from context")
+						console.Debug("use conf from context")
 						conf = ctx.Conf
 					}
 				}
@@ -144,20 +144,13 @@ func main() {
 				fmt.Printf("load config failed: %v\n", err)
 				os.Exit(1)
 			}
-			logLevel := logging.INFO
 			if common.CONF.Debug {
-				logLevel = logging.DEBUG
-			}
-			if common.CONF.Debug {
-				logLevel = logging.DEBUG
+				console.EnableLogDebug()
 			}
 			if common.CONF.LogFile != "" {
-				// disable log color if use log file
-				common.CONF.EnableLogColor = false
+				console.SetLogFile(common.CONF.LogFile)
 			}
-			logging.BasicConfig(logging.LogConfig{
-				Level: logLevel, Output: common.CONF.LogFile, EnableColor: common.CONF.EnableLogColor})
-			logging.Debug("load config file from %s", viper.ConfigFileUsed())
+			console.Debug("load config file from %s", viper.ConfigFileUsed())
 			computeApiVersion, _ := cmd.Flags().GetString("compute-api-version")
 			openstack.COMPUTE_API_VERSION = computeApiVersion
 		},

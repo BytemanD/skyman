@@ -7,8 +7,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
@@ -94,7 +94,7 @@ func PrintServer(server nova.Server, client *openstack.Openstack) {
 				if client != nil {
 					project, err := client.KeystoneV3().Project().Show(p.TenantId)
 					if err != nil {
-						logging.Warning("get project %s failed: %s", p.TenantId, err)
+						console.Warn("get project %s failed: %s", p.TenantId, err)
 					} else {
 						return fmt.Sprintf("%s (%s)", project.Id, project.Name)
 					}
@@ -238,7 +238,8 @@ func PrintAZInfoTree(azList []nova.AvailabilityZone) {
 func PrintAzInfoJson(azInfo []nova.AvailabilityZone) {
 	jsonString, err := stringutils.JsonDumpsIndent(azInfo)
 	if err != nil {
-		logging.Fatal("get json string failed, %v", err)
+		console.Error("get json string failed, %v", err)
+		os.Exit(1)
 	}
 	fmt.Println(jsonString)
 }
@@ -246,7 +247,8 @@ func PrintAzInfoJson(azInfo []nova.AvailabilityZone) {
 func PrintAzInfoYaml(azInfo []nova.AvailabilityZone) {
 	yamlString, err := common.GetYaml(azInfo)
 	if err != nil {
-		logging.Fatal("get yaml string failed, %v", err)
+		console.Error("get yaml string failed, %v", err)
+		os.Exit(1)
 	}
 	fmt.Println(yamlString)
 }

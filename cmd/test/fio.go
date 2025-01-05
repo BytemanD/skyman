@@ -2,10 +2,11 @@ package test
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/guest"
 	"github.com/BytemanD/skyman/openstack"
@@ -49,15 +50,16 @@ var TestFio = &cobra.Command{
 		utility.LogError(err, "get server failed", true)
 
 		if !server.IsActive() {
-			logging.Fatal("instance %s is not active", server.Id)
+			console.Error("instance %s is not active", server.Id)
+			os.Exit(1)
 		}
 
-		logging.Info("get server host and client host")
+		console.Info("get server host and client host")
 		serverHost, err := openstackClient.NovaV2().Hypervisor().Find(server.Host)
 		utility.LogError(err, "get server host failed", true)
 
 		serverConn := guest.Guest{Connection: serverHost.HostIp, Domain: server.Id}
-		logging.Info("start test with QGA")
+		console.Info("start test with QGA")
 		testOptsList := []guest.FioOptions{}
 
 		switch testType {
@@ -89,7 +91,7 @@ var TestFio = &cobra.Command{
 			)
 		}
 		for _, opts := range testOptsList {
-			logging.Info("============= Test %s %s =================", testType, opts.RW)
+			console.Info("============= Test %s %s =================", testType, opts.RW)
 			job := guest.FioTest{
 				Guest: serverConn, Options: opts,
 			}

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"libvirt.org/go/libvirt"
 )
 
@@ -30,7 +30,7 @@ type FioOptions struct {
 }
 
 func (guest *Guest) Connect() error {
-	logging.Debug("connecting to %s ...", guest)
+	console.Debug("connecting to %s ...", guest)
 	conn, err := libvirt.NewConnect(fmt.Sprintf("qemu+tcp://%s/system", guest.Connection))
 	if err != nil {
 		return err
@@ -92,7 +92,7 @@ func (g Guest) RunFio(opts FioOptions) (string, error) {
 	}
 	rmFile := false
 	if opts.FileName == "" {
-		logging.Warning("disk path is none, use root path")
+		console.Warn("disk path is none, use root path")
 		opts.FileName = fmt.Sprintf("/iotest_%s", time.Now().Format("2006-01-02_150405"))
 		rmFile = true
 	}
@@ -110,7 +110,7 @@ func (g Guest) RunFio(opts FioOptions) (string, error) {
 	fmt.Printf(">> %s\n", strings.Join(fioCmd, " "))
 	execResult := g.Exec(strings.Join(fioCmd, " "), true)
 	if execResult.Failed {
-		logging.Error("test failed: %s\n%s", execResult.OutData, execResult.ErrData)
+		console.Error("test failed: %s\n%s", execResult.OutData, execResult.ErrData)
 		return "", fmt.Errorf("run fio failed")
 	}
 	if rmFile {

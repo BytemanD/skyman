@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 )
 
 type ServerReboot struct {
@@ -22,7 +22,7 @@ func (t ServerReboot) Start() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] rebooting", t.Server.Id)
+	console.Info("[%s] rebooting", t.Server.Id)
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func (t ServerHardReboot) Start() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] hard rebooting", t.Server.Id)
+	console.Info("[%s] hard rebooting", t.Server.Id)
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func (t ServerStop) Start() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] stopping", t.Server.Id)
+	console.Info("[%s] stopping", t.Server.Id)
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func (t ServerStart) Start() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] starting", t.Server.Id)
+	console.Info("[%s] starting", t.Server.Id)
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}

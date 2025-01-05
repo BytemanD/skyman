@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/compare"
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/openstack/session"
@@ -380,7 +380,7 @@ func (c ServerApi) DeleteInterfaceAndWait(id string, portId string, timeout time
 		return err
 	}
 	reqId := resp.RequestId()
-	logging.Info("[%s] detaching interface %s, request id: %s", id, portId, reqId)
+	console.Info("[%s] detaching interface %s, request id: %s", id, portId, reqId)
 
 	return utility.RetryWithErrors(
 		utility.RetryCondition{
@@ -395,7 +395,7 @@ func (c ServerApi) DeleteInterfaceAndWait(id string, portId string, timeout time
 			if len(action.Events) == 0 || action.Events[0].FinishTime == "" {
 				return utility.NewActionNotFinishedError(reqId)
 			}
-			logging.Info("[%s] action result: %s", id, action.Events[0].Result)
+			console.Info("[%s] action result: %s", id, action.Events[0].Result)
 			if action.Events[0].Result == "Error" {
 				return fmt.Errorf("request %s is error", reqId)
 			} else {
@@ -630,7 +630,7 @@ func (c ServerApi) ListActionsWithEvents(id string, actionName string, requestId
 	for _, action := range filterActions[start:] {
 		serverAction, err := c.ShowAction(id, action.RequestId)
 		if err != nil {
-			logging.Error("get server action %s failed: %s", action.RequestId, err)
+			console.Error("get server action %s failed: %s", action.RequestId, err)
 		}
 		actionWithEvents = append(actionWithEvents, *serverAction)
 	}
@@ -691,7 +691,7 @@ func (c ServerApi) WaitStatus(serverId string, status string, interval int) (*no
 			if err != nil {
 				return false
 			}
-			logging.Info("[server: %s] status: %s, taskState: %s", server.Id, server.Status, server.TaskState)
+			console.Info("[server: %s] status: %s, taskState: %s", server.Id, server.Status, server.TaskState)
 			switch strings.ToUpper(server.Status) {
 			case "ERROR":
 				err = fmt.Errorf("server status is error, message: %s", server.Fault.Message)
@@ -711,7 +711,7 @@ func (c ServerApi) WaitBooted(id string) (*nova.Server, error) {
 		if err != nil {
 			return server, err
 		}
-		logging.Info("[%s] %s", id, server.AllStatus())
+		console.Info("[%s] %s", id, server.AllStatus())
 		if server.IsError() {
 			return server, fmt.Errorf("server %s is error", server.Id)
 		}
@@ -736,13 +736,13 @@ func (c ServerApi) WaitDeleted(id string) error {
 		func() bool {
 			server, err = c.Show(id)
 			if err == nil {
-				logging.Info("[%s] %s", id, server.AllStatus())
+				console.Info("[%s] %s", id, server.AllStatus())
 				return true
 			}
 			if compare.IsType[session.HttpError](err) {
 				httpError, _ := err.(session.HttpError)
 				if httpError.IsNotFound() {
-					logging.Info("[%s] deleted", id)
+					console.Info("[%s] deleted", id)
 					err = nil
 					return false
 				}
@@ -758,7 +758,7 @@ func (c ServerApi) WaitTask(id string, taskState string) (*nova.Server, error) {
 		if err != nil {
 			return nil, err
 		}
-		logging.Info("[%s] %s progress: %d", id, server.AllStatus(), int(server.Progress))
+		console.Info("[%s] %s progress: %d", id, server.AllStatus(), int(server.Progress))
 
 		if strings.ToUpper(server.Status) == "ERROR" {
 			return nil, fmt.Errorf("server %s status is ERROR", id)
@@ -885,7 +885,7 @@ func (c FlavorApi) Copy(id string, newName string, newId string,
 	newEphemeral int, newRxtxFactor float32, setProperties map[string]string,
 	unsetProperties []string,
 ) (*nova.Flavor, error) {
-	logging.Info("Show flavor")
+	console.Info("Show flavor")
 	flavor, err := c.Show(id)
 	if err != nil {
 		return nil, err
@@ -910,7 +910,7 @@ func (c FlavorApi) Copy(id string, newName string, newId string,
 	if newRxtxFactor != 0 {
 		flavor.RXTXFactor = newRxtxFactor
 	}
-	logging.Info("Show flavor extra specs")
+	console.Info("Show flavor extra specs")
 	extraSpecs, err := c.ListExtraSpecs(id)
 	if err != nil {
 		return nil, err
@@ -921,13 +921,13 @@ func (c FlavorApi) Copy(id string, newName string, newId string,
 	for _, k := range unsetProperties {
 		delete(extraSpecs, k)
 	}
-	logging.Info("Create new flavor")
+	console.Info("Create new flavor")
 	newFlavor, err := c.Create(*flavor)
 	if err != nil {
 		return nil, fmt.Errorf("create flavor failed, %v", err)
 	}
 	if len(extraSpecs) != 0 {
-		logging.Info("Set new flavor extra specs")
+		console.Info("Set new flavor extra specs")
 		_, err = c.SetExtraSpecs(newFlavor.Id, extraSpecs)
 		if err != nil {
 			return nil, fmt.Errorf("set flavor extra specs failed, %v", err)

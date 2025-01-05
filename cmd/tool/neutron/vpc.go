@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/BytemanD/go-console/console"
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
@@ -51,12 +51,12 @@ var vpcCreate = &cobra.Command{
 
 		// create router
 		routerParams := map[string]interface{}{"name": routerName}
-		logging.Info("create router %s", routerName)
+		console.Info("create router %s", routerName)
 		router, err := c.Router().Create(routerParams)
 		utility.LogIfError(err, true, "create router %s failed", routerName)
 		// create network
 		networkParams := map[string]interface{}{"name": networkName}
-		logging.Info("create network %s", networkName)
+		console.Info("create network %s", networkName)
 		network, err := c.Network().Create(networkParams)
 		utility.LogIfError(err, true, "create network %s failed", networkParams)
 		// create router
@@ -68,14 +68,14 @@ var vpcCreate = &cobra.Command{
 				"ip_version": v,
 				"cidr":       cidr,
 			}
-			logging.Info("create subnet %s", subneVerionName)
+			console.Info("create subnet %s", subneVerionName)
 			subnet, err := c.Subnet().Create(subnetParams)
 			utility.LogIfError(err, true, "create subnet %s failed", subnetName)
 			// add router interface
-			logging.Info("add subnet %s to router %s", subneVerionName, routerName)
+			console.Info("add subnet %s to router %s", subneVerionName, routerName)
 			err = c.Router().AddSubnet(router.Id, subnet.Id)
 			utility.LogIfError(err, true, "add subnet %s to router %s failed", subnetName, routerName)
-			logging.Info("create VPC %s success", vpc)
+			console.Info("create VPC %s success", vpc)
 		}
 	},
 }
@@ -93,7 +93,7 @@ var vpcDelete = &cobra.Command{
 
 		c := openstack.DefaultClient().NeutronV2()
 		// get vpc router
-		logging.Info("get router %s", vpcRouter)
+		console.Info("get router %s", vpcRouter)
 		router, err := c.Router().Find(vpcRouter)
 		utility.LogIfError(err, true, "get router %s failed", vpcRouter)
 		// remove router ports
@@ -102,7 +102,7 @@ var vpcDelete = &cobra.Command{
 		subnets := []string{}
 		for _, port := range routerPorts {
 			for _, fixedIp := range port.FixedIps {
-				logging.Info("remove subnet %s from router %s", fixedIp.SubnetId, router.Id)
+				console.Info("remove subnet %s from router %s", fixedIp.SubnetId, router.Id)
 				c.Router().RemoveSubnet(router.Id, fixedIp.SubnetId)
 				if !stringutils.ContainsString(subnets, fixedIp.SubnetId) {
 					subnets = append(subnets, fixedIp.SubnetId)
@@ -113,16 +113,16 @@ var vpcDelete = &cobra.Command{
 		for _, subnetId := range subnets {
 			subnet, err := c.Subnet().Show(subnetId)
 			utility.LogIfError(err, true, "get subnet %s failed", subnetId)
-			logging.Info("delete vpc network %s", subnet.NetworkId)
+			console.Info("delete vpc network %s", subnet.NetworkId)
 			err = c.Network().Delete(subnet.NetworkId)
 			utility.LogIfError(err, true, "delete network %s failed", subnet.NetworkId)
 		}
 
 		// delete vpc router
-		logging.Info("delete vpc router %s", vpcRouter)
+		console.Info("delete vpc router %s", vpcRouter)
 		err = c.Router().Delete(router.Id)
 		utility.LogIfError(err, true, "dele router %s failed", vpcRouter)
-		logging.Info("VPC %s delete success", vpc)
+		console.Info("VPC %s delete success", vpc)
 	},
 }
 

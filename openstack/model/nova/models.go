@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
@@ -464,7 +464,7 @@ func (event InstanceActionEvent) GetSpendTime() (float64, error) {
 	if event.FinishTime == "" {
 		return 0, fmt.Errorf("No finish time")
 	}
-	logging.Debug("%s spend time: %s ~ %s", event.Event, event.StartTime, event.FinishTime)
+	console.Debug("%s spend time: %s ~ %s", event.Event, event.StartTime, event.FinishTime)
 	startTime, _ := time.Parse("2006-01-02T15:04:05", event.StartTime)
 	finishTime, _ := time.Parse("2006-01-02T15:04:05", event.FinishTime)
 	return float64(finishTime.Sub(startTime).Milliseconds()) / 1000, nil
@@ -485,7 +485,7 @@ func (actionWithEvents InstanceAction) GetSpendTime() (float64, error) {
 		return 0, fmt.Errorf("no finish time")
 	}
 
-	logging.Debug("%s spend time: %s ~ %s", actionWithEvents.Action,
+	console.Debug("%s spend time: %s ~ %s", actionWithEvents.Action,
 		actionWithEvents.StartTime, lastEventFinishTime)
 	startTime, _ := time.Parse("2006-01-02T15:04:05", actionWithEvents.StartTime)
 	finishTime, _ := time.Parse("2006-01-02T15:04:05", lastEventFinishTime)
@@ -598,7 +598,7 @@ func (agg Aggregate) GetMetadataList() []string {
 func (agg Aggregate) MarshalMetadata() string {
 	data, err := json.Marshal(agg.Metadata)
 	if err != nil {
-		logging.Warning("marshal metadata failed, %s", err)
+		console.Warn("marshal metadata failed, %s", err)
 		return ""
 	}
 	return string(data)

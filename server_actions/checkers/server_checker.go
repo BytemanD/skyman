@@ -3,7 +3,7 @@ package checkers
 import (
 	"fmt"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/openstack/model/nova"
@@ -41,7 +41,7 @@ func (c ServerChecker) MakesureInterfaceExist(attachment *nova.InterfaceAttachme
 	}
 	for _, vif := range interfaces {
 		if vif.PortId == attachment.PortId {
-			logging.Info("[%s] server has interface: %s", c.ServerId, attachment.PortId)
+			console.Info("[%s] server has interface: %s", c.ServerId, attachment.PortId)
 			return nil
 		}
 	}
@@ -57,7 +57,7 @@ func (c ServerChecker) MakesureInterfaceNotExists(port *neutron.Port) error {
 			return fmt.Errorf("server has interface: %s", port.Id)
 		}
 	}
-	logging.Info("[%s] has no interface: %s", c.ServerId, port.Id)
+	console.Info("[%s] has no interface: %s", c.ServerId, port.Id)
 	return nil
 }
 
@@ -83,7 +83,7 @@ func (c ServerChecker) MakesureVolumeNotExists(attachment *nova.VolumeAttachment
 			return fmt.Errorf("server has volume: %s", attachment.VolumeId)
 		}
 	}
-	logging.Info("[%s] server has not volume: %s", c.ServerId, attachment.VolumeId)
+	console.Info("[%s] server has not volume: %s", c.ServerId, attachment.VolumeId)
 	return nil
 }
 

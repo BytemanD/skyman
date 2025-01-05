@@ -2,10 +2,11 @@ package templates
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model"
@@ -17,10 +18,10 @@ import (
 
 func getImage(client *openstack.Openstack, resource BaseResource) (*glance.Image, error) {
 	if resource.Id != "" {
-		logging.Info("find image %s", resource.Id)
+		console.Info("find image %s", resource.Id)
 		return client.GlanceV2().Images().Show(resource.Id)
 	} else if resource.Name != "" {
-		logging.Info("find image %s", resource.Name)
+		console.Info("find image %s", resource.Name)
 		return client.GlanceV2().Images().Find(resource.Name)
 	} else {
 		return nil, fmt.Errorf("image is empty")
@@ -30,7 +31,7 @@ func createFlavor(client *openstack.Openstack, flavor Flavor) {
 	computeClient := client.NovaV2()
 	f, _ := computeClient.Flavor().Show(flavor.Id)
 	if f != nil {
-		logging.Warning("network %s exists", flavor.Id)
+		console.Warn("network %s exists", flavor.Id)
 		return
 	}
 	newFlavor := nova.Flavor{
@@ -39,11 +40,11 @@ func createFlavor(client *openstack.Openstack, flavor Flavor) {
 		Vcpus: flavor.Vcpus,
 		Ram:   flavor.Ram,
 	}
-	logging.Info("creating flavor %s", newFlavor.Id)
+	console.Info("creating flavor %s", newFlavor.Id)
 	f, err := computeClient.Flavor().Create(newFlavor)
 	utility.LogError(err, "create flavor failed", true)
 	if flavor.ExtraSpecs != nil {
-		logging.Info("creating flavor extra specs")
+		console.Info("creating flavor extra specs")
 		_, err = computeClient.Flavor().SetExtraSpecs(f.Id, flavor.ExtraSpecs)
 		utility.LogError(err, "create flavor extra specs failed", true)
 	}
@@ -52,13 +53,13 @@ func createNetwork(client *openstack.Openstack, network Network) {
 	networkClient := client.NeutronV2()
 	_, err := networkClient.Network().Find(network.Name)
 	if err == nil {
-		logging.Warning("network %s exists", network.Name)
+		console.Warn("network %s exists", network.Name)
 		return
 	}
 	netParams := map[string]interface{}{
 		"name": network.Name,
 	}
-	logging.Info("creating network %s", network.Name)
+	console.Info("creating network %s", network.Name)
 	net, err := networkClient.Network().Create(netParams)
 	utility.LogError(err, fmt.Sprintf("create network %s failed", network.Name), true)
 	for _, subnet := range network.Subnets {
@@ -71,7 +72,7 @@ func createNetwork(client *openstack.Openstack, network Network) {
 			"cidr":       subnet.Cidr,
 			"ip_version": subnet.IpVersion,
 		}
-		logging.Info("creating subnet %s (cidr: %s)", subnet.Name, subnet.Cidr)
+		console.Info("creating subnet %s (cidr: %s)", subnet.Name, subnet.Cidr)
 		_, err2 := networkClient.Subnet().Create(subnetParams)
 		utility.LogError(err2, fmt.Sprintf("create subnet %s failed", subnet.Name), true)
 	}
@@ -83,7 +84,7 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 
 	s, _ := client.NovaV2().Server().Find(server.Name)
 	if s != nil {
-		logging.Warning("server %s exists (%s)", s.Name, s.Status)
+		console.Warn("server %s exists (%s)", s.Name, s.Status)
 		return s, nil
 	}
 	serverOption := nova.ServerOpt{
@@ -107,10 +108,10 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 	}
 
 	if server.Flavor.Id != "" {
-		logging.Info("find flavor %s", server.Flavor.Id)
+		console.Info("find flavor %s", server.Flavor.Id)
 		flavor, err = client.NovaV2().Flavor().Show(server.Flavor.Id)
 	} else if server.Flavor.Name != "" {
-		logging.Info("find flavor %s", server.Flavor.Name)
+		console.Info("find flavor %s", server.Flavor.Name)
 		flavor, err = client.NovaV2().Flavor().Find(server.Flavor.Name, false)
 	}
 	utility.LogError(err, "get flavor failed", true)
@@ -158,7 +159,7 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 	}
 	s, err = computeClient.Server().Create(serverOption)
 	utility.LogError(err, "create server failed", true)
-	logging.Info("creating server %s", serverOption.Name)
+	console.Info("creating server %s", serverOption.Name)
 	if watch {
 		computeClient.Server().WaitStatus(s.Id, "ACTIVE", 2)
 	}
@@ -178,18 +179,22 @@ var DefineCmd = &cobra.Command{
 		replace, _ := cmd.Flags().GetBool("replace")
 		for _, server := range createTemplate.Servers {
 			if server.Name == "" {
-				logging.Fatal("invalid config, server name is empty")
+				console.Error("invalid config, server name is empty")
+
+				os.Exit(1)
 			}
 			if server.Flavor.Id == "" && server.Flavor.Name == "" {
-				logging.Fatal("invalid config, server flavor is empty")
+				console.Error("invalid config, server flavor is empty")
+				os.Exit(1)
 			}
 			if server.Image.Id == "" && server.Image.Name == "" && len(server.BlockDeviceMappingV2) == 0 {
-				logging.Fatal("invalid config, server image is empty")
+				console.Error("invalid config, server image is empty")
+				os.Exit(1)
 			}
 		}
 		client := openstack.DefaultClient()
 		if replace {
-			logging.Info("destroy resources")
+			console.Info("destroy resources")
 			if err := destroyFromTemplate(client, createTemplate); err != nil {
 				utility.LogError(err, "destroy resource failed", true)
 			}

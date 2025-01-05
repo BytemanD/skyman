@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/guest"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -54,7 +54,7 @@ var qgaExec = &cobra.Command{
 		if uuid {
 			domainGuest.ByUUID = uuid
 		}
-		logging.Debug("connect to guest: %s", domainGuest)
+		console.Debug("connect to guest: %s", domainGuest)
 		err = domainGuest.Connect()
 		utility.LogError(err, "连接domain失败", true)
 
@@ -95,15 +95,16 @@ var qgaCopy = &cobra.Command{
 		domainGuest, err := getGuest(guestConnector)
 		utility.LogError(err, "parse guest failed", true)
 
-		logging.Debug("connect to guest: %s", domainGuest)
+		console.Debug("connect to guest: %s", domainGuest)
 		err = domainGuest.Connect()
 		utility.LogError(err, "连接domain失败", true)
 
 		guestFile, err := domainGuest.CopyFile(localFile, guestPath)
 		if err != nil {
-			logging.Fatal("copy file failed: %s", err)
+			console.Error("copy file failed: %s", err)
+			os.Exit(1)
 		} else {
-			logging.Info("the path of file is %s", guestFile)
+			console.Info("the path of file is %s", guestFile)
 		}
 	},
 }
@@ -119,7 +120,7 @@ var qgaPasswd = &cobra.Command{
 
 		domainGuest, err := getGuest(connection)
 		utility.LogError(err, "parse guest connection failed", true)
-		logging.Info("连接 guest domain")
+		console.Info("连接 guest domain")
 		err = domainGuest.Connect()
 		utility.LogError(err, "连接domain失败", true)
 
@@ -140,9 +141,9 @@ var qgaPasswd = &cobra.Command{
 		utility.LogError(err, "copy to guest failed", true)
 		execResult := domainGuest.Exec(fmt.Sprintf("sh %s", guestFile), true)
 		if execResult.Failed || execResult.ErrData != "" {
-			logging.Error("execute failed: %s", execResult.ErrData)
+			console.Error("execute failed: %s", execResult.ErrData)
 		} else {
-			logging.Success("设置成功")
+			console.Success("设置成功")
 		}
 	},
 }

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/guest"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
@@ -30,11 +30,11 @@ func (c *QGAChecker) SetQgaConnectTimeout(timeout int) {
 }
 
 func (c QGAChecker) makesureQGAConnected(g *guest.Guest) error {
-	logging.Info("[%s] connecting to qga ...", c.ServerId)
+	console.Info("[%s] connecting to qga ...", c.ServerId)
 	if err := g.ConnectToQGA(c.QgaConnectTimeout); err != nil {
 		return err
 	}
-	logging.Info("[%s] qga connected", g.Domain)
+	console.Info("[%s] qga connected", g.Domain)
 	return nil
 }
 
@@ -46,7 +46,7 @@ func (c QGAChecker) MakesureHostname(hostname string) error {
 		return fmt.Errorf("run qga command failed")
 	}
 	guestHostname := strings.TrimSpace(result.OutData)
-	logging.Info("[%s] guest hostname is %s", c.ServerId, guestHostname)
+	console.Info("[%s] guest hostname is %s", c.ServerId, guestHostname)
 	if guestHostname != hostname {
 		return fmt.Errorf("hostname is %s, not %s", guestHostname, hostname)
 	}
@@ -55,11 +55,11 @@ func (c QGAChecker) MakesureHostname(hostname string) error {
 func (c QGAChecker) MakesureServerRunning() error {
 	startTime := time.Now()
 	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
-	logging.Info("[%s] connecting to guest ...", c.ServerId)
+	console.Info("[%s] connecting to guest ...", c.ServerId)
 	for {
 		if err := serverGuest.Connect(); err == nil {
 			if serverGuest.IsRunning() {
-				logging.Info("[%s] guest is running ...", c.ServerId)
+				console.Info("[%s] guest is running ...", c.ServerId)
 				break
 			}
 		}
@@ -71,7 +71,7 @@ func (c QGAChecker) MakesureServerRunning() error {
 	return c.makesureQGAConnected(&serverGuest)
 }
 func (c QGAChecker) MakesureServerStopped() error {
-	logging.Info("[%s] connecting to guest ...", c.ServerId)
+	console.Info("[%s] connecting to guest ...", c.ServerId)
 	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
 	if err := serverGuest.Connect(); err != nil {
 		return err
@@ -85,7 +85,7 @@ func (c QGAChecker) MakesureInterfaceExist(attachment *nova.InterfaceAttachment)
 	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
 	serverGuest.Connect()
 	if serverGuest.IsShutoff() {
-		logging.Warning("[%s] guest is shutoff, skip to check interfaces", c.ServerId)
+		console.Warn("[%s] guest is shutoff, skip to check interfaces", c.ServerId)
 		return nil
 	}
 
@@ -99,11 +99,11 @@ func (c QGAChecker) MakesureInterfaceExist(attachment *nova.InterfaceAttachment)
 		[]string{"GuestHasNoIpaddressError"},
 		func() error {
 			ipaddrs := serverGuest.GetIpaddrs()
-			logging.Debug("[%s] found ip address on guest: %v", c.ServerId, ipaddrs)
+			console.Debug("[%s] found ip address on guest: %v", c.ServerId, ipaddrs)
 			notFoundIpaddress := []string{}
 			for _, fixedIpaddr := range attachment.FixedIps {
 				if stringutils.ContainsString(ipaddrs, fixedIpaddr.IpAddress) {
-					logging.Info("[%s] ip address %s exists on guest", c.ServerId, fixedIpaddr.IpAddress)
+					console.Info("[%s] ip address %s exists on guest", c.ServerId, fixedIpaddr.IpAddress)
 				} else {
 					notFoundIpaddress = append(notFoundIpaddress, fixedIpaddr.IpAddress)
 				}
@@ -119,11 +119,11 @@ func (c QGAChecker) MakesureInterfaceNotExists(port *neutron.Port) error {
 	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
 	serverGuest.Connect()
 	if serverGuest.IsShutoff() {
-		logging.Warning("[%s] guest is shutoff, skip to check interfaces", c.ServerId)
+		console.Warn("[%s] guest is shutoff, skip to check interfaces", c.ServerId)
 		return nil
 	}
 	ipaddrs := serverGuest.GetIpaddrs()
-	logging.Debug("[%s] found ip addresses: %s", c.ServerId, ipaddrs)
+	console.Debug("[%s] found ip addresses: %s", c.ServerId, ipaddrs)
 
 	for _, fixedIp := range port.FixedIps {
 		for _, ipaddr := range ipaddrs {
@@ -132,24 +132,24 @@ func (c QGAChecker) MakesureInterfaceNotExists(port *neutron.Port) error {
 			}
 		}
 	}
-	logging.Info("[%s] ip address: %s not exists on guest", c.ServerId, port.GetFixedIpaddress())
+	console.Info("[%s] ip address: %s not exists on guest", c.ServerId, port.GetFixedIpaddress())
 	return nil
 }
 func (c QGAChecker) MakesureVolumeExist(attachment *nova.VolumeAttachment) error {
 	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
 	serverGuest.Connect()
 	if serverGuest.IsShutoff() {
-		logging.Warning("[%s] guest is shutoff, skip to check block devices", c.ServerId)
+		console.Warn("[%s] guest is shutoff, skip to check block devices", c.ServerId)
 		return nil
 	}
 	guestBlockDevices, err := serverGuest.GetBlockDevices()
 	if err != nil {
 		return fmt.Errorf("get block devices failed: %s", err)
 	}
-	logging.Debug("[%s] found block devices: %s", c.ServerId, guestBlockDevices.GetAllNames())
+	console.Debug("[%s] found block devices: %s", c.ServerId, guestBlockDevices.GetAllNames())
 	for _, blockDevice := range guestBlockDevices {
 		if blockDevice.Name == attachment.Device {
-			logging.Info("[%s] guest block device %s exists", c.ServerId, attachment.Device)
+			console.Info("[%s] guest block device %s exists", c.ServerId, attachment.Device)
 			return nil
 		}
 	}
@@ -160,25 +160,25 @@ func (c QGAChecker) MakesureVolumeNotExists(attachment *nova.VolumeAttachment) e
 	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
 	serverGuest.Connect()
 	if serverGuest.IsShutoff() {
-		logging.Warning("[%s] guest is shutoff, skip to check block devices", c.ServerId)
+		console.Warn("[%s] guest is shutoff, skip to check block devices", c.ServerId)
 		return nil
 	}
 	if serverGuest.IsShutoff() {
-		logging.Warning("[%s] guest is shutoff, skip to check block devices", c.ServerId)
+		console.Warn("[%s] guest is shutoff, skip to check block devices", c.ServerId)
 		return nil
 	}
 	guestBlockDevices, err := serverGuest.GetBlockDevices()
 	if err != nil {
 		return fmt.Errorf("get block devices failed: %s", err)
 	}
-	logging.Debug("[%s] found block devices: %s", c.ServerId, guestBlockDevices.GetAllNames())
+	console.Debug("[%s] found block devices: %s", c.ServerId, guestBlockDevices.GetAllNames())
 	for _, blockDevice := range guestBlockDevices {
 		if blockDevice.Name == attachment.Device {
 			return fmt.Errorf("block device %s not found in guest, found %v",
 				attachment.Device, guestBlockDevices.GetAllNames())
 		}
 	}
-	logging.Info("[%s] block device %s not exists on guest", c.ServerId, attachment.Device)
+	console.Info("[%s] block device %s not exists on guest", c.ServerId, attachment.Device)
 	return nil
 }
 
@@ -188,13 +188,13 @@ func (c QGAChecker) MakesureVolumeSizeIs(attachment *nova.VolumeAttachment, size
 		return err
 	}
 	if server.IsShelved() {
-		logging.Warning("[%s] status is %s, skip to check volume size on guest", c.ServerId, server.Status)
+		console.Warn("[%s] status is %s, skip to check volume size on guest", c.ServerId, server.Status)
 		return nil
 	}
 	serverGuest := guest.Guest{Connection: c.Host, Domain: c.ServerId}
 	serverGuest.Connect()
 	if serverGuest.IsShutoff() {
-		logging.Warning("[%s] guest is shutoff, skip to check block devices", c.ServerId)
+		console.Warn("[%s] guest is shutoff, skip to check block devices", c.ServerId)
 		return nil
 	}
 	guestBlockDevices, err := serverGuest.GetBlockDevices()
@@ -203,7 +203,7 @@ func (c QGAChecker) MakesureVolumeSizeIs(attachment *nova.VolumeAttachment, size
 	}
 	for _, blockDevice := range guestBlockDevices {
 		if blockDevice.Name == attachment.Device {
-			logging.Info("[%s] size of block %s is: %s", c.ServerId, attachment.Device, blockDevice.Size)
+			console.Info("[%s] size of block %s is: %s", c.ServerId, attachment.Device, blockDevice.Size)
 			if blockDevice.Size == fmt.Sprintf("%dG", size) {
 				return nil
 			} else {
@@ -219,6 +219,6 @@ func GetQgaChecker(client *openstack.Openstack, server *nova.Server) (*QGAChecke
 	if err != nil {
 		return nil, fmt.Errorf("get hypervisor failed: %s", err)
 	}
-	logging.Info("[%s] server host ip is %s", server.Id, host.HostIp)
+	console.Info("[%s] server host ip is %s", server.Id, host.HostIp)
 	return &QGAChecker{Client: client, ServerId: server.Id, Host: host.HostIp}, nil
 }

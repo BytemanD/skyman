@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/cmd/flags"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
@@ -134,7 +134,7 @@ func showAction(serverId string, requestId string, long bool) {
 			fmt.Printf("Event %s tracback:\n", item.Event)
 			fmt.Println(item.Traceback)
 		} else {
-			logging.Warning("use --long flags to show tracebacks")
+			console.Warn("use --long flags to show tracebacks")
 		}
 	}
 }

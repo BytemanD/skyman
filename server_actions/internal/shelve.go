@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 )
 
 type ServerShelve struct {
@@ -22,7 +22,7 @@ func (t ServerShelve) Start() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] shelving", t.Server.Id)
+	console.Info("[%s] shelving", t.Server.Id)
 
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
@@ -52,7 +52,7 @@ func (t ServerUnshelve) Start() error {
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] unshelving", t.Server.Id)
+	console.Info("[%s] unshelving", t.Server.Id)
 
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
@@ -78,7 +78,7 @@ func (t ServerToggleShelve) Start() error {
 		if err != nil {
 			return err
 		}
-		logging.Info("[%s] unshelving", t.Server.Id)
+		console.Info("[%s] unshelving", t.Server.Id)
 		if err := t.WaitServerTaskFinished(false); err != nil {
 			return err
 		}
@@ -91,7 +91,7 @@ func (t ServerToggleShelve) Start() error {
 		if err != nil {
 			return err
 		}
-		logging.Info("[%s] shelving", t.Server.Id)
+		console.Info("[%s] shelving", t.Server.Id)
 		if err := t.WaitServerTaskFinished(false); err != nil {
 			return err
 		}

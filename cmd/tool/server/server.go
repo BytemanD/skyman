@@ -6,11 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
 	"text/template"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/easygo/pkg/terminal"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
@@ -173,7 +174,7 @@ func inspect(client *openstack.Openstack, idOrName string) (*ServerInspect, erro
 	if err != nil {
 		return nil, err
 	}
-	logging.Info("get server image")
+	console.Info("get server image")
 	image, err := client.GlanceV2().Images().Show(server.ImageId())
 	if err != nil {
 		return nil, err
@@ -183,12 +184,12 @@ func inspect(client *openstack.Openstack, idOrName string) (*ServerInspect, erro
 	if err != nil {
 		return nil, err
 	}
-	logging.Info("list server volumes")
+	console.Info("list server volumes")
 	volumeAttachments, err := client.NovaV2().Server().ListVolumes(server.Id)
 	if err != nil {
 		return nil, err
 	}
-	logging.Info("list server ations")
+	console.Info("list server ations")
 	actions, err := client.NovaV2().Server().ListActions(server.Id)
 	if err != nil {
 		return nil, err
@@ -204,7 +205,7 @@ func inspect(client *openstack.Openstack, idOrName string) (*ServerInspect, erro
 
 	portQuery := url.Values{}
 	portQuery.Set("device_id", server.Id)
-	logging.Info("list server ports details")
+	console.Info("list server ports details")
 	ports, err := client.NeutronV2().Port().List(portQuery)
 	if err != nil {
 		return nil, err
@@ -236,13 +237,14 @@ var serverInspect = &cobra.Command{
 		case "json":
 			output, err := stringutils.JsonDumpsIndent(serverInspect)
 			if err != nil {
-				logging.Fatal("print json failed, %s", err)
+				console.Error("print json failed, %s", err)
 			}
 			fmt.Println(output)
 		case "yaml":
 			output, err := common.GetYaml(serverInspect)
 			if err != nil {
-				logging.Fatal("print json failed, %s", err)
+				console.Error("print json failed, %s", err)
+				os.Exit(1)
 			}
 			fmt.Println(output)
 		default:
@@ -281,8 +283,8 @@ var serverClone = &cobra.Command{
 			//TODO: parse userData
 			// UserData:         server.UserData,
 		}
-		logging.Info("boot bdm type: %s", server.RootBdmType)
-		logging.Info("root device name: %s", server.RootDeviceName)
+		console.Info("boot bdm type: %s", server.RootBdmType)
+		console.Info("root device name: %s", server.RootDeviceName)
 		if server.RootBdmType == "volume" {
 			attachments, err := client.NovaV2().Server().ListVolumes(server.Id)
 			utility.LogIfError(err, true, "get volume attachments failed")
@@ -293,7 +295,7 @@ var serverClone = &cobra.Command{
 				systemVolume, err := client.CinderV2().Volume().Show(attachment.VolumeId)
 				utility.LogIfError(err, true, "get volume %s failed", attachment.VolumeId)
 
-				logging.Info("use image: %s", systemVolume.VolumeImageMetadata["image_id"])
+				console.Info("use image: %s", systemVolume.VolumeImageMetadata["image_id"])
 				createOpt.BlockDeviceMappingV2 = []nova.BlockDeviceMappingV2{
 					{
 						BootIndex:          0,
@@ -310,7 +312,7 @@ var serverClone = &cobra.Command{
 
 		} else {
 			if image, ok := server.Image.(map[string]interface{}); !ok {
-				logging.Fatal("parse server image failed, image: %v", image)
+				console.Error("parse server image failed, image: %v", image)
 				createOpt.Image = fmt.Sprintf("%s", image["id"])
 			}
 		}

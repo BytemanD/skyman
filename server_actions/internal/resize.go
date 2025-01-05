@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 )
 
@@ -39,13 +39,13 @@ func (t ServerResize) Start() error {
 		return err
 	}
 
-	logging.Info("[%s] resize %s -> %s", t.Server.Id, t.Server.Flavor.OriginalName, nextFlavor.Name)
+	console.Info("[%s] resize %s -> %s", t.Server.Id, t.Server.Flavor.OriginalName, nextFlavor.Name)
 
 	err = t.Client.NovaV2().Server().Resize(t.Server.Id, nextFlavor.Id)
 	if err != nil {
 		return err
 	}
-	logging.Info("[%s] resizing", t.Server.Id)
+	console.Info("[%s] resizing", t.Server.Id)
 	if err := t.WaitServerTaskFinished(false); err != nil {
 		return err
 	}
