@@ -49,8 +49,8 @@ func LogBeforeRequest(c *resty.Client, r *resty.Request) error {
 }
 
 func LogRespAfterResponse(c *resty.Client, r *resty.Response) error {
-	console.Debug("RESP: [%d] content-length: %s\n    Body: %s",
-		r.StatusCode(), r.Header().Get(CONTENT_LENGTH), string(r.Body()))
+	console.Debug("RESP: [%d]\n    Header: %s\n    Body: %s",
+		r.StatusCode(), EncodeHeaders(r.Header(), nil), string(r.Body()))
 	return nil
 }
 
