@@ -280,15 +280,16 @@ func (c BackupApi) Create(volumeId string, name string, force bool) (*cinder.Bac
 type CinderV2 struct{ *ServiceClient }
 
 func (c CinderV2) GetCurrentVersion() (*model.ApiVersion, error) {
-	result := struct{ Versions []model.ApiVersion }{}
-	_, err := c.Index(&result)
-	if err != nil {
+	result := struct{ Versions model.ApiVersions }{}
+
+	if resp, err := c.Index(nil); err != nil {
+		return nil, err
+	} else if err := resp.UnmarshalBody(&result); err != nil {
 		return nil, err
 	}
-	for _, version := range result.Versions {
-		if version.Status == "CURRENT" {
-			return &version, nil
-		}
+	version := result.Versions.Current()
+	if version != nil {
+		return version, nil
 	}
 	return nil, fmt.Errorf("current version not found")
 }

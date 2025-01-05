@@ -162,14 +162,20 @@ func (c KeystoneV3) ListUsersByProjectId(projectId string) ([]model.User, error)
 	}
 	return users, nil
 }
+
 func (c KeystoneV3) GetStableVersion() (*model.ApiVersion, error) {
 	respBody := struct {
-		Values model.ApiVersions `json:"values"`
+		Versions map[string]model.ApiVersions `json:"versions"`
 	}{}
-	if _, err := c.Index(&respBody); err != nil {
+	if resp, err := c.Index(nil); err != nil {
 		return nil, err
+	} else {
+		if err := resp.UnmarshalBody(&respBody); err != nil {
+			return nil, err
+		}
 	}
-	return respBody.Values.Stable(), nil
+	versions := respBody.Versions["values"]
+	return versions.Stable(), nil
 }
 func (c KeystoneV3) Region() *RegionApi {
 	return &RegionApi{

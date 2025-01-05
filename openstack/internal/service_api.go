@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -19,6 +20,9 @@ type Response struct{ *resty.Response }
 
 func (resp Response) RequestId() string {
 	return resp.Header().Get(HEADER_REQUEST_ID)
+}
+func (resp Response) UnmarshalBody(v interface{}) error {
+	return json.Unmarshal(resp.Body(), &v)
 }
 
 type ServiceClient struct {

@@ -72,20 +72,16 @@ func (c *NovaV2) MicroVersionLargeEqual(version string) bool {
 }
 func (c *NovaV2) GetCurrentVersion() (*model.ApiVersion, error) {
 	if c.currentVersion == nil {
-		result := struct{ Versions []model.ApiVersion }{}
-		resp, err := c.Index(&result)
-		if err != nil {
+		result := struct{ Versions model.ApiVersions }{}
+		if resp, err := c.Index(nil); err != nil {
 			return nil, err
-		}
-
-		if err := json.Unmarshal(resp.Body(), &result); err != nil {
-			return nil, err
-		}
-		for _, version := range result.Versions {
-			if version.Status == "CURRENT" {
-				return &version, nil
+		} else {
+			if err := resp.UnmarshalBody(&result); err != nil {
+				return nil, err
 			}
 		}
+		c.currentVersion = result.Versions.Current()
+
 	}
 	if c.currentVersion != nil {
 		return c.currentVersion, nil
