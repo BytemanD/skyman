@@ -101,8 +101,7 @@ var qgaCopy = &cobra.Command{
 
 		guestFile, err := domainGuest.CopyFile(localFile, guestPath)
 		if err != nil {
-			console.Error("copy file failed: %s", err)
-			os.Exit(1)
+			console.Fatal("copy file failed: %s", err)
 		} else {
 			console.Info("the path of file is %s", guestFile)
 		}

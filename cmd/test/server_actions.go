@@ -1,7 +1,6 @@
 package test
 
 import (
-	"os"
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/arrayutils"
@@ -37,8 +36,7 @@ var TestServerAction = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		testConf, err := common.LoadTaskConfig(args[0])
 		if err != nil {
-			console.Error("load task file %s failed: %s", args[0], err)
-			os.Exit(1)
+			console.Fatal("load task file %s failed: %s", args[0], err)
 		}
 
 		servers, _ := cmd.Flags().GetString("servers")
@@ -76,8 +74,7 @@ var TestServerAction = &cobra.Command{
 				}
 				acl, err := server_actions.NewActionCountList(actionCase.Actions)
 				if err != nil {
-					console.Error("parse actions '%s' failed, %s", actionCase.Actions, err)
-					os.Exit(1)
+					console.Fatal("parse actions '%s' failed, %s", actionCase.Actions, err)
 				}
 				testCase := server_actions.Case{
 					Name:    actionCase.Name,

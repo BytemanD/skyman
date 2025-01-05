@@ -3,7 +3,6 @@ package benchmark
 import (
 	"fmt"
 	"net/url"
-	"os"
 	"strconv"
 
 	"github.com/BytemanD/go-console/console"
@@ -41,8 +40,7 @@ var BenchmarkCmd = &cobra.Command{
 			results = benchmark.RunBenchmarkTest(cases)
 
 		default:
-			console.Error("invalid case: %s", args[0])
-			os.Exit(1)
+			console.Fatal("invalid case: %s", args[0])
 		}
 		for _, result := range results {
 			fmt.Println(

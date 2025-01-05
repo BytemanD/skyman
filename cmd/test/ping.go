@@ -46,8 +46,7 @@ var ServerPing = &cobra.Command{
 		console.Debug("客户端实例IP地址: %s", clientAddresses)
 		console.Debug("服务端实例IP地址: %s", serverAddresses)
 		if len(clientAddresses) == 0 || len(serverAddresses) == 0 {
-			console.Error("客户端和服务端实例必须至少有一张启用的网卡")
-			os.Exit(1)
+			console.Fatal("客户端和服务端实例必须至少有一张启用的网卡")
 		}
 
 		var stdout, stderr string

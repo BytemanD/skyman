@@ -1,8 +1,6 @@
 package server
 
 import (
-	"os"
-
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/openstack"
@@ -33,8 +31,7 @@ var serverFind = &cobra.Command{
 		if server != nil {
 			views.PrintServer(*server, c)
 		} else {
-			console.Error("server %s not found in all regions", args[0])
-			os.Exit(1)
+			console.Fatal("server %s not found in all regions", args[0])
 		}
 	},
 }

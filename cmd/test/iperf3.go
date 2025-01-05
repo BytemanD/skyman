@@ -2,7 +2,6 @@ package test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/table"
@@ -92,12 +91,10 @@ var TestNetQos = &cobra.Command{
 		utility.LogError(err, "get client failed", true)
 
 		if !serverInstance.IsActive() {
-			console.Error("instance %s is not active", serverInstance.Id)
-			os.Exit(1)
+			console.Fatal("instance %s is not active", serverInstance.Id)
 		}
 		if !clientInstance.IsActive() {
-			console.Error("instance %s is not active", clientInstance.Id)
-			os.Exit(1)
+			console.Fatal("instance %s is not active", clientInstance.Id)
 		}
 
 		console.Info("get server host and client host")
@@ -127,8 +124,7 @@ var TestNetQos = &cobra.Command{
 		}
 		_, _, err = job.Run()
 		if err != nil {
-			console.Error("test failed, %s", err)
-			os.Exit(1)
+			console.Fatal("test failed, %s", err)
 		}
 	},
 }

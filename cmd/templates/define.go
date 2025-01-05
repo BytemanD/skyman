@@ -2,7 +2,6 @@ package templates
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -179,17 +178,13 @@ var DefineCmd = &cobra.Command{
 		replace, _ := cmd.Flags().GetBool("replace")
 		for _, server := range createTemplate.Servers {
 			if server.Name == "" {
-				console.Error("invalid config, server name is empty")
-
-				os.Exit(1)
+				console.Fatal("invalid config, server name is empty")
 			}
 			if server.Flavor.Id == "" && server.Flavor.Name == "" {
-				console.Error("invalid config, server flavor is empty")
-				os.Exit(1)
+				console.Fatal("invalid config, server flavor is empty")
 			}
 			if server.Image.Id == "" && server.Image.Name == "" && len(server.BlockDeviceMappingV2) == 0 {
-				console.Error("invalid config, server image is empty")
-				os.Exit(1)
+				console.Fatal("invalid config, server image is empty")
 			}
 		}
 		client := openstack.DefaultClient()

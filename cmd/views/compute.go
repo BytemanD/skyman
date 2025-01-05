@@ -238,8 +238,7 @@ func PrintAZInfoTree(azList []nova.AvailabilityZone) {
 func PrintAzInfoJson(azInfo []nova.AvailabilityZone) {
 	jsonString, err := stringutils.JsonDumpsIndent(azInfo)
 	if err != nil {
-		console.Error("get json string failed, %v", err)
-		os.Exit(1)
+		console.Fatal("get json string failed, %v", err)
 	}
 	fmt.Println(jsonString)
 }
@@ -247,8 +246,7 @@ func PrintAzInfoJson(azInfo []nova.AvailabilityZone) {
 func PrintAzInfoYaml(azInfo []nova.AvailabilityZone) {
 	yamlString, err := common.GetYaml(azInfo)
 	if err != nil {
-		console.Error("get yaml string failed, %v", err)
-		os.Exit(1)
+		console.Fatal("get yaml string failed, %v", err)
 	}
 	fmt.Println(yamlString)
 }

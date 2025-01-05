@@ -2,7 +2,6 @@ package nova
 
 import (
 	"net/url"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -39,8 +38,7 @@ var migrationList = &cobra.Command{
 		}
 		migrations, err := client.NovaV2().Migration().List(query)
 		if err != nil {
-			console.Error("%s", err)
-			os.Exit(1)
+			console.Fatal("%s", err)
 		}
 		dataListTable := common.PrettyTable{
 			ShortColumns: []common.Column{

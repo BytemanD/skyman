@@ -3,7 +3,6 @@ package keystone
 import (
 	"fmt"
 	"net/url"
-	"os"
 
 	"github.com/BytemanD/go-console/console"
 	"github.com/spf13/cobra"
@@ -54,12 +53,10 @@ var endpointList = &cobra.Command{
 		if serviceName != "" {
 			services, err := c.Service().ListByName(serviceName)
 			if err != nil {
-				console.Error("get service '%s' failed, %v", serviceName, err)
-				os.Exit(1)
+				console.Fatal("get service '%s' failed, %v", serviceName, err)
 			}
 			if len(services) == 0 {
-				console.Error("service '%s' not found", serviceName)
-				os.Exit(1)
+				console.Fatal("service '%s' not found", serviceName)
 			}
 			for _, service := range services {
 				serviceMap[service.Id] = service
@@ -69,7 +66,7 @@ var endpointList = &cobra.Command{
 		items, err := c.Endpoint().List(query)
 		if err != nil {
 			console.Error("list endpoints failed, %s", err)
-			os.Exit(1)
+
 		}
 
 		// TODO: 优化

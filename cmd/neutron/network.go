@@ -3,7 +3,6 @@ package neutron
 import (
 	"fmt"
 	"net/url"
-	"os"
 	"strings"
 
 	"github.com/BytemanD/go-console/console"
@@ -34,7 +33,6 @@ var networkList = &cobra.Command{
 		networks, err := c.Network().List(query)
 		if err != nil {
 			fmt.Println(err)
-			os.Exit(1)
 		}
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{

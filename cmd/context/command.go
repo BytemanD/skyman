@@ -41,8 +41,7 @@ var viewCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cConf, err := LoadContextConf()
 		if err != nil {
-			console.Error("load context failed: %s", err)
-			os.Exit(1)
+			console.Fatal("load context failed: %s", err)
 		}
 		data, _ := yaml.Marshal(cConf)
 		fmt.Println(string(data))
@@ -56,23 +55,19 @@ var setCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		confPathAbs, err := filepath.Abs(args[1])
 		if err != nil {
-			console.Error("get '%s' abs path failed: %s", args[1], err)
-			os.Exit(1)
+			console.Fatal("get '%s' abs path failed: %s", args[1], err)
 		}
 		if !utility.IsFileExists(confPathAbs) {
-			console.Error("%s is not a file or not exits", confPathAbs)
-			os.Exit(1)
+			console.Fatal("%s is not a file or not exits", confPathAbs)
 		}
 
 		cConf, err := LoadContextConf()
 		if err != nil {
-			console.Error("load context failed: %s", err)
-			os.Exit(1)
+			console.Fatal("load context failed: %s", err)
 		}
 		cConf.SetContext(args[0], confPathAbs)
 		if err := cConf.Save(); err != nil {
-			console.Error("save context failed: %s", err)
-			os.Exit(1)
+			console.Fatal("save context failed: %s", err)
 		}
 	},
 }
@@ -84,13 +79,12 @@ var removeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cConf, err := LoadContextConf()
 		if err != nil {
-			console.Error("load context failed: %s", err)
-			os.Exit(1)
+			console.Fatal("load context failed: %s", err)
 
 		}
 		cConf.RemoveContext(args[0])
 		if err := cConf.Save(); err != nil {
-			console.Error("remove context failed: %s", err)
+			console.Fatal("remove context failed: %s", err)
 		}
 		cConf.Save()
 	},
@@ -102,9 +96,7 @@ var useCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		err := UseCluster(args[0])
 		if err != nil {
-			console.Error("use %s failed: %s", args[0], err)
-			os.Exit(1)
-
+			console.Fatal("use %s failed: %s", args[0], err)
 		}
 	},
 }
@@ -115,14 +107,12 @@ var resetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cConf, err := LoadContextConf()
 		if err != nil {
-			console.Error("load context failed: %s", err)
-			os.Exit(1)
+			console.Fatal("load context failed: %s", err)
 
 		}
 		cConf.Reset()
 		if err := cConf.Save(); err != nil {
-			console.Error("reset context failed: %s", err)
-			os.Exit(1)
+			console.Fatal("reset context failed: %s", err)
 
 		}
 	},

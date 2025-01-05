@@ -31,11 +31,9 @@ func RaiseIfError(err error, msg string) {
 	}
 	if compare.IsType[session.HttpError](err) {
 		httpError, _ := err.(session.HttpError)
-		console.Error("%s, %s: %s", msg, httpError.Reason, httpError.Message)
-		os.Exit(1)
+		console.Fatal("%s, %s: %s", msg, httpError.Reason, httpError.Message)
 	} else {
-		console.Error("%s, %v", msg, err)
-		os.Exit(1)
+		console.Fatal("%s, %v", msg, err)
 	}
 }
 

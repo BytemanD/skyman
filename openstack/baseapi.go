@@ -5,7 +5,6 @@ package openstack
 
 import (
 	"fmt"
-	"os"
 	"sync"
 
 	"github.com/BytemanD/go-console/console"
@@ -132,8 +131,8 @@ func (o *Openstack) GlanceV2() *internal.GlanceV2 {
 	if o.glanceClient == nil {
 		endpoint, err := o.AuthPlugin.GetServiceEndpoint(IMAGE, GLANCE, PUBLIC)
 		if err != nil {
-			console.Error("get glance endpoint falied: %v", err)
-			os.Exit(1)
+			console.Fatal("get glance endpoint falied: %v", err)
+
 		}
 		o.glanceClient = &internal.GlanceV2{
 			ServiceClient: internal.NewServiceApi[internal.ServiceClient](endpoint, V2, o.AuthPlugin),
@@ -153,8 +152,8 @@ func (o *Openstack) CinderV2() *internal.CinderV2 {
 		)
 		endpoint, err = o.AuthPlugin.GetServiceEndpoint(VOLUME_V2, CINDER_V2, PUBLIC)
 		if err != nil {
-			console.Error("get cinder endpoint falied: %v", err)
-			os.Exit(1)
+			console.Fatal("get cinder endpoint falied: %v", err)
+
 		}
 		o.cinderClient = &internal.CinderV2{
 			ServiceClient: internal.NewServiceApi[internal.ServiceClient](endpoint, V2, o.AuthPlugin),
@@ -173,8 +172,8 @@ func (o *Openstack) NeutronV2() *internal.NeutronV2 {
 			var err error
 			endpoint, err = o.AuthPlugin.GetServiceEndpoint(NETWORK, NEUTRON, PUBLIC)
 			if err != nil {
-				console.Error("get neutron endpoint falied: %v", err)
-				os.Exit(1)
+				console.Fatal("get neutron endpoint falied: %v", err)
+
 			}
 		}
 		o.neutronClient = &internal.NeutronV2{
@@ -190,8 +189,7 @@ func (o *Openstack) KeystoneV3() *internal.KeystoneV3 {
 	if o.keystoneClient == nil {
 		endpoint, err := o.AuthPlugin.GetServiceEndpoint(IDENTITY, KEYSTONE, PUBLIC)
 		if err != nil {
-			console.Error("get keystone endpoint falied: %v", err)
-			os.Exit(1)
+			console.Fatal("get keystone endpoint falied: %v", err)
 		}
 		o.keystoneClient = &internal.KeystoneV3{
 			ServiceClient: internal.NewServiceApi[internal.ServiceClient](endpoint, V3, o.AuthPlugin),

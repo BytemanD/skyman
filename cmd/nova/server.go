@@ -31,8 +31,7 @@ func refreshServers(c *openstack.Openstack, filterHosts []string, host, az strin
 	items := []nova.Server{}
 	if host != "" || az != "" {
 		if len(filterHosts) == 0 {
-			console.Error("hosts matched is none")
-			os.Exit(1)
+			console.Fatal("hosts matched is none")
 		}
 		for _, h := range filterHosts {
 			if h == "" {
@@ -86,8 +85,7 @@ var serverList = &cobra.Command{
 		if *listFlags.Flavor != "" {
 			flavor, err := c.NovaV2().Flavor().Find(*listFlags.Flavor, false)
 			if err != nil {
-				console.Error("%s", err)
-				os.Exit(1)
+				console.Fatal("%s", err)
 			}
 			query.Set("flavor", flavor.Id)
 		}
@@ -97,8 +95,7 @@ var serverList = &cobra.Command{
 			utility.LogIfError(err, true, "get project %s failed", *listFlags.Project)
 			query.Set("tenant_id", p.Id)
 			if !*listFlags.All {
-				console.Warn("--all is not set, options --project mybe ignore")
-				os.Exit(1)
+				console.Fatal("--all is not set, options --project mybe ignore")
 			}
 		}
 		if *listFlags.AZ != "" {
@@ -116,9 +113,8 @@ var serverList = &cobra.Command{
 				azHosts = append(azHosts, s.Host)
 			}
 			console.Debug("hosts matched az %s: %s", *listFlags.AZ, azHosts)
-			os.Exit(1)
 			if len(azHosts) == 0 {
-				console.Error("hosts matched az %s is none", *listFlags.AZ)
+				console.Fatal("hosts matched az %s is none", *listFlags.AZ)
 			}
 			if len(filterHosts) == 0 {
 				filterHosts = azHosts
@@ -228,7 +224,7 @@ var serverShow = &cobra.Command{
 		c := openstack.DefaultClient()
 		server, err := c.NovaV2().Server().Find(args[0])
 		if err != nil {
-			console.Error("%v", err)
+			console.Fatal("%v", err)
 		}
 		if image, err := c.GlanceV2().Images().Show(server.ImageId()); err == nil {
 			server.SetImageName(image.Name)

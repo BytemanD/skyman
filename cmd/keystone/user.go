@@ -1,8 +1,6 @@
 package keystone
 
 import (
-	"os"
-
 	"github.com/BytemanD/go-console/console"
 	"github.com/spf13/cobra"
 
@@ -40,8 +38,7 @@ var userList = &cobra.Command{
 		} else {
 			users, err := c.ListUsersByProjectId(project)
 			if err != nil {
-				console.Error("get users failed, %s", err)
-				os.Exit(1)
+				console.Fatal("get users failed, %s", err)
 			}
 			pt.AddItems(users)
 		}

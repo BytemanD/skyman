@@ -2,7 +2,6 @@ package test
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/stringutils"
@@ -50,8 +49,7 @@ var TestFio = &cobra.Command{
 		utility.LogError(err, "get server failed", true)
 
 		if !server.IsActive() {
-			console.Error("instance %s is not active", server.Id)
-			os.Exit(1)
+			console.Fatal("instance %s is not active", server.Id)
 		}
 
 		console.Info("get server host and client host")

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"os"
 	"text/template"
 
 	"github.com/BytemanD/easygo/pkg/stringutils"
@@ -243,8 +242,7 @@ var serverInspect = &cobra.Command{
 		case "yaml":
 			output, err := common.GetYaml(serverInspect)
 			if err != nil {
-				console.Error("print json failed, %s", err)
-				os.Exit(1)
+				console.Fatal("print json failed, %s", err)
 			}
 			fmt.Println(output)
 		default:

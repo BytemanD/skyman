@@ -1,8 +1,6 @@
 package nova
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/go-console/console"
@@ -20,8 +18,7 @@ var keypairList = &cobra.Command{
 		client := openstack.DefaultClient()
 		keypairs, err := client.NovaV2().Keypair().List(nil)
 		if err != nil {
-			console.Error("%s", err)
-			os.Exit(1)
+			console.Fatal("%s", err)
 		}
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{

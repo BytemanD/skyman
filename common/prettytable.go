@@ -247,8 +247,8 @@ func (pt PrettyTable) RenderToJson() (string, error) {
 func (pt PrettyTable) PrintJson() string {
 	output, err := pt.RenderToJson()
 	if err != nil {
-		console.Error("print json failed, %s", err)
-		os.Exit(1)
+		console.Fatal("print json failed, %s", err)
+
 	}
 	fmt.Println(output)
 	return output
@@ -259,8 +259,8 @@ func (pt PrettyTable) RenderToYaml() (string, error) {
 func (pt PrettyTable) PrintYaml() string {
 	output, err := pt.RenderToYaml()
 	if err != nil {
-		console.Error("print json failed, %s", err)
-		os.Exit(1)
+		console.Fatal("print json failed, %s", err)
+
 	}
 	fmt.Println(output)
 	return output
@@ -338,8 +338,8 @@ func (pt PrettyItemTable) Print(long bool) string {
 func (dt PrettyItemTable) PrintJson() string {
 	output, err := stringutils.JsonDumpsIndent(dt.Item)
 	if err != nil {
-		console.Error("print json failed, %s", err)
-		os.Exit(1)
+		console.Fatal("print json failed, %s", err)
+
 	}
 	fmt.Println(output)
 	return output
@@ -348,8 +348,8 @@ func (dt PrettyItemTable) PrintJson() string {
 func (dt PrettyItemTable) PrintYaml() string {
 	output, err := GetYaml(dt.Item)
 	if err != nil {
-		console.Error("print yaml failed, %s", err)
-		os.Exit(1)
+		console.Fatal("print yaml failed, %s", err)
+
 	}
 	fmt.Println(output)
 	return output

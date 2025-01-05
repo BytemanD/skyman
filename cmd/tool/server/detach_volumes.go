@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"os"
 	"runtime"
 
 	"github.com/BytemanD/easygo/pkg/syncutils"
@@ -54,8 +53,7 @@ var detachVolumes = &cobra.Command{
 			detachVolumes = append(detachVolumes, attachedVolumes[i].VolumeId)
 		}
 		if len(detachVolumes) < nums {
-			console.Error("the server only has %d volume(s) that can be detached", len(detachVolumes))
-			os.Exit(1)
+			console.Fatal("the server only has %d volume(s) that can be detached", len(detachVolumes))
 		}
 		if len(detachVolumes) == 0 {
 			console.Warn("nothing to do")

@@ -98,8 +98,7 @@ var flavorList = &cobra.Command{
 			for i, flavor := range filteredFlavors {
 				extraSpecs, err := client.NovaV2().Flavor().ListExtraSpecs(flavor.Id)
 				if err != nil {
-					console.Error("get flavor extra specs failed %s", err)
-					os.Exit(1)
+					console.Fatal("get flavor extra specs failed %s", err)
 				}
 				filteredFlavors[i].ExtraSpecs = extraSpecs
 			}
@@ -212,8 +211,7 @@ var flavorSet = &cobra.Command{
 		for _, property := range *flavorSetFlags.Properties {
 			splited := strings.Split(property, "=")
 			if len(splited) != 2 {
-				console.Error("Invalid property %s, must be: key=value", property)
-				os.Exit(1)
+				console.Fatal("Invalid property %s, must be: key=value", property)
 			}
 			extraSpecs[splited[0]] = splited[1]
 		}

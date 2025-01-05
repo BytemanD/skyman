@@ -1,8 +1,6 @@
 package i18n
 
 import (
-	"os"
-
 	"github.com/BytemanD/go-console/console"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
@@ -13,8 +11,8 @@ var defaultMessageMap map[string]i18n.Message
 func getDefaultMessage(msgId string) *i18n.Message {
 	value, ok := defaultMessageMap[msgId]
 	if !ok {
-		console.Error("get default message failed, %s", msgId)
-		os.Exit(1)
+		console.Fatal("get default message failed, %s", msgId)
+
 	}
 	return &value
 }
