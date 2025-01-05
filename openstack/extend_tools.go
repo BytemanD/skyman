@@ -39,6 +39,7 @@ func (o Openstack) PruneServers(query url.Values, yes bool, waitDeleted bool) {
 	console.Info("开始删除虚拟机")
 	tg := syncutils.TaskGroup{
 		Items: servers,
+		Title: fmt.Sprintf("delete %d server(s)", len(servers)),
 		Func: func(o interface{}) error {
 			s := o.(nova.Server)
 			console.Info("delete %s", s.Id)
@@ -99,6 +100,9 @@ func (o Openstack) PruneVolumes(query url.Values, matchName string, volumeType s
 	}
 	console.Info("开始清理")
 	tg := syncutils.TaskGroup{
+		Items:        volumes,
+		Title:        fmt.Sprintf("delete %d server(s)", len(volumes)),
+		ShowProgress: true,
 		Func: func(i interface{}) error {
 			volume := i.(cinder.Volume)
 			console.Debug("delete volume %s(%s)", volume.Id, volume.Name)
@@ -108,8 +112,6 @@ func (o Openstack) PruneVolumes(query url.Values, matchName string, volumeType s
 			}
 			return nil
 		},
-		Items:        volumes,
-		ShowProgress: true,
 	}
 	err = tg.Start()
 	if err != nil {
@@ -129,6 +131,9 @@ func (o Openstack) PrunePorts(ports []neutron.Port) {
 		return
 	}
 	tg := syncutils.TaskGroup{
+		Title:        fmt.Sprintf("delete %d port(s)", len(ports)),
+		Items:        ports,
+		ShowProgress: true,
 		Func: func(i interface{}) error {
 			port := i.(neutron.Port)
 			console.Debug("delete port %s(%s)", port.Id, port.Name)
@@ -138,8 +143,6 @@ func (o Openstack) PrunePorts(ports []neutron.Port) {
 			}
 			return nil
 		},
-		Items:        ports,
-		ShowProgress: true,
 	}
 	err := tg.Start()
 	if err != nil {
