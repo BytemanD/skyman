@@ -16,6 +16,7 @@ import (
 	"github.com/BytemanD/skyman/utility"
 	"github.com/dustin/go-humanize"
 	"github.com/fatih/color"
+	"github.com/mattn/go-runewidth"
 )
 
 var POWER_STATE = []string{
@@ -326,15 +327,15 @@ func resourceUsageBar(used, reserved, free int) string {
 	if total == 0 {
 		return "TOTAL is 0"
 	}
-	result := fixNumbers(50, used, reserved, free)
+	result := fixNumbers(30, used, reserved, free)
 	blockUsed := strings.Repeat(BAR_CHAR, result[0])
 	blockReserved := strings.Repeat(BAR_CHAR, result[1])
 	blockFree := strings.Repeat(BAR_CHAR, result[2])
 	return strings.Join([]string{
+		color.CyanString(blockReserved),
 		color.YellowString(blockUsed),
-		color.BlueString(blockReserved),
 		color.GreenString(blockFree),
-		fmt.Sprintf(" %d/%d/%d", used, reserved, free),
+		fmt.Sprintf(" %4d|%4d|%4d", reserved, used, free),
 	}, "")
 }
 
@@ -355,26 +356,41 @@ func (hypervisor Hypervisor) ExtraResourcesMarshal(indent bool) string {
 	return string(m)
 }
 func (hypervisor Hypervisor) NumaNodesLine() string {
-	lines := []string{}
+	lines := []string{
+		fmt.Sprintf("%4s     %12s            %12s", " ", "HuagePages", "CpuSets"),
+		"Node  reserved  used  free      reserved  used  free",
+	}
 	keys := hypervisor.NumaNodeKeys()
 	sort.Strings(keys)
 	for _, index := range keys {
 		node := hypervisor.NumaNodes[index]
 		lines = append(lines,
-			fmt.Sprintf("[%s] hugepages: %s\n       cpuset: %s",
-				index, node.HugePages, node.CpuSet))
+			fmt.Sprintf("%4s  %8d  %4d  %4d      %8d  %4d  %4d",
+				index,
+				node.HugePages.Reserved, node.HugePages.Used, node.HugePages.Free,
+				node.CpuSet.Reserved, node.CpuSet.Used, node.CpuSet.Free,
+			))
 	}
 	return strings.Join(lines, "\n")
 }
 func (hypervisor Hypervisor) NumaNodesBar() string {
-	lines := []string{}
+	lines := []string{
+		fmt.Sprintf("%s %30s %30s", "Node",
+			runewidth.FillRight("HuagePages(reserved|used|free)", 47),
+			"CpuSets(reserved|usedused|free)",
+		),
+	}
 	keys := hypervisor.NumaNodeKeys()
 	sort.Strings(keys)
 	for _, index := range keys {
 		node := hypervisor.NumaNodes[index]
 		lines = append(lines,
-			fmt.Sprintf("[%s] hugepages: %s\n       cpuset: %s",
-				index, node.HugePages.Bar(), node.CpuSet.Bar()))
+			fmt.Sprintf("%4s %s %s",
+				runewidth.FillRight(index, 4),
+				runewidth.FillRight(node.HugePages.Bar(), 68),
+				node.CpuSet.Bar(),
+			),
+		)
 	}
 	return strings.Join(lines, "\n")
 }
