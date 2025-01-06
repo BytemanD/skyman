@@ -7,6 +7,7 @@ import (
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/keystone"
+	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/spf13/viper"
 )
 
@@ -35,6 +36,7 @@ type ConfGroup struct {
 	RetryCount          int    `yaml:"retryCount"`
 	LogFile             string `yaml:"logFile"`
 	EnableLogColor      bool   `yaml:"enableLogColor"`
+	BarChar             string `yaml:"barchar"`
 
 	Auth     Auth        `yaml:"auth"`
 	Identity Identity    `yaml:"identity"`
@@ -95,6 +97,16 @@ func LoadConfig(configFile string) error {
 	CONF = DefaultConfGroup()
 	viper.Unmarshal(&CONF)
 	i18n.InitLocalizer(CONF.Language)
+	if CONF.BarChar != "" {
+		nova.BAR_CHAR = CONF.BarChar
+	} else {
+		switch i18n.GetOsLang() {
+		case "en_US":
+			nova.BAR_CHAR = "▄"
+		default:
+			nova.BAR_CHAR = "*"
+		}
+	}
 
 	// 环境变量
 	if os.Getenv("OS_IDENTITY_API_VERSION") != "" {

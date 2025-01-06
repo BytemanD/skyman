@@ -307,8 +307,9 @@ type NumaNodeCpuSet struct {
 }
 
 // const BAR_CHAR = "▄"
-// const BAR_CHAR = "#"
-const BAR_CHAR = "▄"
+// const BAR_CHAR = "*"
+
+var BAR_CHAR = "*"
 
 func fixNumbers(plus int, numbers ...int) []int {
 	total := utility.Sum(numbers...)

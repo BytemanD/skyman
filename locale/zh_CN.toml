@@ -42,3 +42,5 @@ other = '根据模板文件生成资源'
 
 [undefineResourcesFromTempFile]
 other = '根据模板文件释放资源'
+[testServerDiskIO]
+other = '测试实例磁盘IO'
