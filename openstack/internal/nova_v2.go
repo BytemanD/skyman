@@ -990,7 +990,7 @@ func (c HypervisorApi) Uptime(id string) (*nova.Hypervisor, error) {
 }
 func (c HypervisorApi) FlavorCapacities(query url.Values) (*nova.FlavorCapacities, error) {
 	body := nova.FlavorCapacities{}
-	_, err := c.NewGetRequest("hypervisors/statistics/flavor-capacities", query, &body).Send()
+	_, err := c.R().SetResult(&body).SetQuery(query).Get("statistics", "flavor-capacities")
 	if err != nil {
 		return nil, err
 	}
