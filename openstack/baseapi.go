@@ -177,7 +177,7 @@ func (o *Openstack) NeutronV2() *internal.NeutronV2 {
 			}
 		}
 		o.neutronClient = &internal.NeutronV2{
-			ServiceClient: internal.NewServiceApi[internal.ServiceClient](endpoint, V2_0, o.AuthPlugin),
+			ServiceClient: internal.NewServiceApi(endpoint, V2_0, o.AuthPlugin),
 		}
 	}
 	return o.neutronClient
@@ -220,6 +220,9 @@ func (o *Openstack) NovaV2(microVersion ...string) *internal.NovaV2 {
 			currentVersion, err := o.novaClient.GetCurrentVersion()
 			if err != nil {
 				console.Warn("get current version failed: %v", err)
+				o.novaClient.MicroVersion = &model.ApiVersion{
+					Version: V2_1,
+				}
 			} else {
 				o.novaClient.MicroVersion = currentVersion
 			}
