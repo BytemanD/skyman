@@ -17,9 +17,9 @@ require (
 	github.com/howeyc/gopass v0.0.0-20210920133722-c8aef6fb66ef
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
-	github.com/mattn/go-runewidth v0.0.15
+	github.com/mattn/go-runewidth v0.0.16
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/pelletier/go-toml/v2 v2.0.8
+	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
@@ -34,7 +34,7 @@ require (
 )
 
 require (
-	github.com/BytemanD/easygo/pkg v0.1.1
+	github.com/BytemanD/easygo/pkg v0.1.2
 	github.com/MichaelMure/go-term-markdown v0.1.4
 	github.com/cheggaaa/pb/v3 v3.1.5
 	github.com/jedib0t/go-pretty/v6 v6.5.8
@@ -44,7 +44,7 @@ require (
 )
 
 require (
-	github.com/BytemanD/go-console v0.0.3
+	github.com/BytemanD/go-console v0.0.4
 	github.com/MichaelMure/go-term-text v0.3.1 // indirect
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/alecthomas/chroma v0.7.1 // indirect

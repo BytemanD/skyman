@@ -14,6 +14,7 @@ import (
 	"github.com/BytemanD/skyman/cmd/flags"
 	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/common/datatable"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
@@ -64,47 +65,49 @@ var flavorList = &cobra.Command{
 			if *flavorListFlags.MinVcpu > 0 && flavor.Vcpus < int(*flavorListFlags.MinVcpu) {
 				continue
 			}
+			if *flavorListFlags.MinRam > 0 && flavor.Ram < int(*flavorListFlags.MinRam) {
+				continue
+			}
+			if *flavorListFlags.MinDisk > 0 && flavor.Disk < int(*flavorListFlags.MinDisk) {
+				continue
+			}
 			filteredFlavors = append(filteredFlavors, flavor)
 		}
-
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
+		table := datatable.DataTable[nova.Flavor]{
+			Columns: []datatable.Column[nova.Flavor]{
 				{Name: "Id"}, {Name: "Name"},
 				{Name: "Vcpus", Align: text.AlignRight},
-				{Name: "Ram", Align: text.AlignRight},
+				{Name: "Ram", Align: text.AlignRight,
+					RenderFunc: func(item nova.Flavor) interface{} {
+						return item.HumanRam()
+					},
+				},
 				{Name: "Disk", Align: text.AlignRight},
 				{Name: "Ephemeral", Align: text.AlignRight},
 				{Name: "IsPublic"},
 			},
-			LongColumns: []common.Column{
+			MoreColumns: []datatable.Column[nova.Flavor]{
 				{Name: "Swap"}, {Name: "RXTXFactor", Text: "RXTX Factor"},
 				{Name: "ExtraSpecs",
-					Slot: func(item interface{}) interface{} {
-						p, _ := item.(nova.Flavor)
-						return strings.Join(p.ExtraSpecs.GetList(), "\n")
+					RenderFunc: func(item nova.Flavor) interface{} {
+						return strings.Join(item.ExtraSpecs.GetList(), "\n")
 					},
 				},
 			},
 		}
-		if *flavorListFlags.Human {
-			pt.ShortColumns[3].Slot = func(item interface{}) interface{} {
-				p := item.(nova.Flavor)
-				return p.HumanRam()
-			}
-		}
-
 		if *flavorListFlags.Long {
-			pt.StyleSeparateRows = true
-			for i, flavor := range filteredFlavors {
-				extraSpecs, err := client.NovaV2().Flavor().ListExtraSpecs(flavor.Id)
+			table.SeparateRows = true
+			// 提前查询，否则输出json、yaml 格式时缺失
+			for i, item := range filteredFlavors {
+				extraSpecs, err := client.NovaV2().Flavor().ListExtraSpecs(item.Id)
 				if err != nil {
 					console.Fatal("get flavor extra specs failed %s", err)
 				}
 				filteredFlavors[i].ExtraSpecs = extraSpecs
 			}
 		}
-		pt.AddItems(filteredFlavors)
-		common.PrintPrettyTable(pt, *flavorListFlags.Long)
+		table.AddItems(filteredFlavors)
+		common.PrintDataTable(table, *flavorListFlags.Long)
 	},
 }
 var flavorShow = &cobra.Command{

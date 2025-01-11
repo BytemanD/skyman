@@ -109,8 +109,14 @@ func (t Case) firstImage() string {
 }
 func (t *Case) destroyServer(serverId string) {
 	console.Info("[%s] deleting server", serverId)
-	t.Client.NovaV2().Server().Delete(serverId)
-	t.Client.NovaV2().Server().WaitDeleted(serverId)
+	if err := t.Client.NovaV2().Server().Delete(serverId); err != nil {
+		console.Error("[%s] delete failed: %s", serverId, err)
+		return
+	}
+	console.Info("[%s] wait deleted", serverId)
+	if err := t.Client.NovaV2().Server().WaitDeleted(serverId); err != nil {
+		console.Error("[%s] wait deleted failed: %s", serverId, err)
+	}
 }
 func (t *Case) AddActionsReport(testId int, report WorkerReport) {
 	t.reportLock.Lock()
@@ -208,7 +214,7 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 		}
 		// 开始测试
 		err := startAction(action)
-		pbr.Ingrement()
+		pbr.Increment()
 		// 更新测试结果
 		actionsReport.Results = append(actionsReport.Results, ActionResult{Action: actionName, Error: err})
 		if err != nil {
@@ -242,31 +248,32 @@ func (t *Case) Start() {
 		console.Warn("action is empty")
 		return
 	}
-	taskGroup := syncutils.TaskGroup{
-		MaxWorker: t.Config.Workers,
-	}
 	console.Info("run case, worker=%d actions=%s", t.Config.Workers, t.Actions.FormatActions())
+	go console.WaitPbrs()
 	if len(t.UseServers) > 0 {
 		console.Warn("use exits servers: %s", strings.Join(t.UseServers, ","))
-		taskGroup.MaxWorker = len(t.UseServers)
-		taskGroup.Items = arrayutils.Range(1, len(t.UseServers)+1)
-		taskGroup.Func = func(item interface{}) error {
-			testId := item.(int)
-			report := t.testActions(testId, t.UseServers[testId-1])
-			t.AddActionsReport(testId, report)
-			return nil
-		}
+		syncutils.StartTasks(
+			syncutils.TaskOption{
+				MaxWorker: len(t.UseServers),
+			},
+			arrayutils.Range(1, t.Config.Workers+1),
+			func(testId int) error {
+				report := t.testActions(testId, t.UseServers[testId-1])
+				t.AddActionsReport(testId, report)
+				return nil
+			},
+		)
 	} else {
-		taskGroup.MaxWorker = max(t.Config.Workers, 1)
-		taskGroup.Items = arrayutils.Range(1, t.Config.Workers+1)
-		taskGroup.Func = func(item interface{}) error {
-			testId := item.(int)
-			report := t.testActions(testId, "")
-			t.AddActionsReport(testId, report)
-			return nil
-		}
+		syncutils.StartTasks(
+			syncutils.TaskOption{
+				MaxWorker: max(t.Config.Workers, 1),
+			},
+			arrayutils.Range(1, t.Config.Workers+1),
+			func(testId int) error {
+				report := t.testActions(testId, "")
+				t.AddActionsReport(testId, report)
+				return nil
+			},
+		)
 	}
-	go console.WaitPbrs()
-	taskGroup.Start()
-
 }

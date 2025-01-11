@@ -1,11 +1,14 @@
 package common
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
 	"github.com/BytemanD/go-console/console"
+	"github.com/jedib0t/go-pretty/v6/table"
 
+	"github.com/BytemanD/skyman/common/datatable"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 )
 
@@ -62,4 +65,32 @@ func PrintAggregate(aggregate nova.Aggregate) {
 		},
 	}
 	PrintPrettyItemTable(pt)
+}
+
+func PrintDataTable[T any](dt datatable.DataTable[T], long bool) {
+	switch CONF.Format {
+	case TABLE, "", "default":
+		dt.Print(long)
+		fmt.Println("Items: ", dt.ItemsNum())
+	case TABLE_LIGHT:
+		dt.SetStyle(table.StyleLight).Print(long)
+	case JSON:
+		if data, err := dt.GetJson(); err == nil {
+			fmt.Println(data)
+		} else {
+			console.Error("get json failed: %s", err)
+			os.Exit(1)
+		}
+	case YAML:
+		if data, err := dt.GetYaml(); err == nil {
+			fmt.Println(data)
+		} else {
+			console.Error("get yaml failed: %s", err)
+			os.Exit(1)
+		}
+	default:
+		console.Error("invalid output format: %s, valid formats: %v", CONF.Format,
+			GetOutputFormats())
+		os.Exit(1)
+	}
 }
