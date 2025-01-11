@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -11,19 +10,6 @@ import (
 	"github.com/BytemanD/skyman/openstack/session"
 	"github.com/go-resty/resty/v2"
 )
-
-const (
-	HEADER_REQUEST_ID = "X-Openstack-Request-Id"
-)
-
-type Response struct{ *resty.Response }
-
-func (resp Response) RequestId() string {
-	return resp.Header().Get(HEADER_REQUEST_ID)
-}
-func (resp Response) UnmarshalBody(v interface{}) error {
-	return json.Unmarshal(resp.Body(), &v)
-}
 
 type ServiceClient struct {
 	Url        string
@@ -53,14 +39,14 @@ func (c *ServiceClient) IndexUrl() (string, error) {
 	return parsed.String(), err
 }
 
-func (c *ServiceClient) Index(result interface{}) (*Response, error) {
+func (c *ServiceClient) Index(result interface{}) (*session.Response, error) {
 	indexUrl, err := c.IndexUrl()
 	if err != nil {
 		return nil, fmt.Errorf("get index url failed: %s", err)
 	}
 
 	resp, err := c.rawClient.R().SetResult(result).Get(indexUrl)
-	return &Response{resp}, err
+	return &session.Response{Response: resp}, err
 }
 
 func NewServiceApi[T ServiceClient](endpoint string, version string, authPlugin auth_plugin.AuthPlugin) *T {

@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
@@ -32,9 +33,10 @@ var sgList = &cobra.Command{
 			utility.LogError(err, "get project failed", true)
 			query.Set("project_id", project.Id)
 		}
-
-		sgs, err := c.NeutronV2().SecurityGroup().List(query)
+		result := c.NeutronV2().SecurityGroup().List2(query)
+		sgs, err := result.Items()
 		utility.LogError(err, "list security group failed", true)
+		console.Debug("request id: %s", result.RequestId())
 
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{

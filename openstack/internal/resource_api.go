@@ -11,18 +11,18 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-func checkError(resp *resty.Response, err error) (*Response, error) {
+func checkError(resp *resty.Response, err error) (*session.Response, error) {
 	if err != nil || resp == nil {
-		return &Response{resp}, err
+		return &session.Response{Response: resp}, err
 	}
 	if resp.IsError() {
-		return &Response{resp}, session.HttpError{
+		return &session.Response{Response: resp}, session.HttpError{
 			Status:  resp.StatusCode(),
 			Reason:  resp.Status(),
 			Message: string(resp.Body()),
 		}
 	}
-	return &Response{resp}, nil
+	return &session.Response{Response: resp}, nil
 }
 
 type ResourceApi struct {
@@ -92,11 +92,11 @@ func (r ResourceApi) NewPatchRequest(u string, body interface{}, result interfac
 	return r.NewRequest(resty.MethodPatch, u, nil, body, result)
 }
 
-func (r ResourceApi) Get(url string, q url.Values, result interface{}) (*Response, error) {
+func (r ResourceApi) Get(url string, q url.Values, result interface{}) (*session.Response, error) {
 	resp, err := r.NewGetRequest(url, q, result).Send()
 	return checkError(resp, err)
 }
-func (r ResourceApi) Delete(u string, query ...url.Values) (*Response, error) {
+func (r ResourceApi) Delete(u string, query ...url.Values) (*session.Response, error) {
 	var q url.Values
 	if len(query) > 0 {
 		q = query[0]
@@ -107,23 +107,23 @@ func (r ResourceApi) Delete(u string, query ...url.Values) (*Response, error) {
 		r.NewDeleteRequest(u, q, nil).Send(),
 	)
 }
-func (r ResourceApi) ResourceDelete(id string, query ...url.Values) (*Response, error) {
+func (r ResourceApi) ResourceDelete(id string, query ...url.Values) (*session.Response, error) {
 	if r.ResourceUrl == "" {
 		return nil, fmt.Errorf("ResourceUrl is empty")
 	}
 	return r.Delete(r.ResourceUrl+"/"+id, query...)
 }
-func (r ResourceApi) Post(url string, body interface{}, result interface{}) (*Response, error) {
+func (r ResourceApi) Post(url string, body interface{}, result interface{}) (*session.Response, error) {
 	return checkError(
 		r.NewPostRequest(url, body, result).Send(),
 	)
 }
-func (r ResourceApi) Put(url string, body interface{}, result interface{}) (*Response, error) {
+func (r ResourceApi) Put(url string, body interface{}, result interface{}) (*session.Response, error) {
 	return checkError(
 		r.NewPutRequest(url, body, result).Send(),
 	)
 }
-func (r ResourceApi) Patch(url string, body interface{}, result interface{}, headers map[string]string) (*Response, error) {
+func (r ResourceApi) Patch(url string, body interface{}, result interface{}, headers map[string]string) (*session.Response, error) {
 	return checkError(
 		r.NewPatchRequest(url, body, result).SetHeaders(headers).Send(),
 	)
@@ -170,7 +170,7 @@ func ShowResource[T any](r ResourceApi, id string) (*T, error) {
 	return respBody[r.SingularKey], nil
 }
 
-func DeleteResource(r ResourceApi, id string, query ...url.Values) (*Response, error) {
+func DeleteResource(r ResourceApi, id string, query ...url.Values) (*session.Response, error) {
 	if r.ResourceUrl == "" {
 		return nil, fmt.Errorf("ResourceUrl is empty")
 	}

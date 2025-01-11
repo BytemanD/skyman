@@ -42,8 +42,6 @@ const (
 	PUBLIC   = "public"
 	INTERNAL = "internal"
 	ADMIN    = "admin"
-
-	X_OPENSTACK_REQUEST_ID = "X-Openstack-Request-Id"
 )
 
 var COMPUTE_API_VERSION string

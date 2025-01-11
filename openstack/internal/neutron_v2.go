@@ -6,6 +6,7 @@ import (
 
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
+	"github.com/BytemanD/skyman/openstack/result"
 )
 
 const (
@@ -308,6 +309,13 @@ func (c agentApi) List(query url.Values) ([]neutron.Agent, error) {
 
 func (c sgApi) List(query url.Values) ([]neutron.SecurityGroup, error) {
 	return ListResource[neutron.SecurityGroup](c.ResourceApi, query)
+}
+func (c sgApi) List2(query url.Values) result.ItemsResult[neutron.SecurityGroup] {
+	result := result.NewItemsResult[neutron.SecurityGroup](
+		c.R().SetQuery(query).Get(),
+	)
+	result.SetKey(c.ResourceApi.PluralKey)
+	return result
 }
 func (c sgApi) Show(id string) (*neutron.SecurityGroup, error) {
 	return ShowResource[neutron.SecurityGroup](c.ResourceApi, id)
