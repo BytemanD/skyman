@@ -107,7 +107,7 @@ var flavorList = &cobra.Command{
 			}
 		}
 		table.AddItems(filteredFlavors)
-		common.PrintDataTable(table, *flavorListFlags.Long)
+		common.PrintDataTable[nova.Flavor](&table, *flavorListFlags.Long)
 	},
 }
 var flavorShow = &cobra.Command{

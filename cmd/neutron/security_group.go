@@ -4,8 +4,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/common/datatable"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
@@ -33,21 +33,34 @@ var sgList = &cobra.Command{
 			utility.LogError(err, "get project failed", true)
 			query.Set("project_id", project.Id)
 		}
-		result := c.NeutronV2().SecurityGroup().List2(query)
-		sgs, err := result.Items()
-		utility.LogError(err, "list security group failed", true)
-		console.Debug("request id: %s", result.RequestId())
 
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name"}, {Name: "Description"}, {Name: "ProjectId"},
+		// result := c.NeutronV2().SecurityGroup().List2(query)
+		// sgs, err := result.Items()
+		// console.Debug("request id: %s", result.RequestId())
+		sgs, err := c.NeutronV2().SecurityGroup().List(query)
+		utility.LogError(err, "list security group failed", true)
+
+		table := datatable.DataTable[neutron.SecurityGroup]{
+			Items: sgs,
+			Columns: []datatable.Column[neutron.SecurityGroup]{
+				{Name: "Id"}, {Name: "Name"},
+				{Name: "ProjectId"},
+				{Name: "RevisionNumber"},
+				{Name: "Rules", RenderFunc: func(item neutron.SecurityGroup) interface{} {
+					rules := []string{}
+					for _, rule := range item.Rules {
+						rules = append(rules, rule.String())
+					}
+					return strings.Join(rules, "\n")
+				}},
 			},
-			LongColumns: []common.Column{
-				{Name: "Tags"}, {Name: "Default"},
+			MoreColumns: []datatable.Column[neutron.SecurityGroup]{
+				// {Name: "Description"},
+				{Name: "CreatedAt"},
+				{Name: "UpdatedAt"},
 			},
 		}
-		pt.AddItems(sgs)
-		common.PrintPrettyTable(pt, long)
+		common.PrintDataTable[neutron.SecurityGroup](&table, long)
 	},
 }
 var sgShow = &cobra.Command{
@@ -59,18 +72,17 @@ var sgShow = &cobra.Command{
 
 		sg, err := c.NeutronV2().SecurityGroup().Find(args[0])
 		utility.LogError(err, "get security group failed", true)
-		pt := common.PrettyItemTable{
-			Item: *sg,
-			ShortFields: []common.Column{
+		table := datatable.DataIterator[neutron.SecurityGroup]{
+			Items: []neutron.SecurityGroup{*sg},
+			Fields: []datatable.Field[neutron.SecurityGroup]{
 				{Name: "Id"}, {Name: "Name"},
 				{Name: "Description"},
 				{Name: "RevisionNumber"},
 				{Name: "CreatedAt"},
 				{Name: "UpdatedAt"},
-				{Name: "Rules", Slot: func(item interface{}) interface{} {
-					p, _ := item.(neutron.SecurityGroup)
+				{Name: "Rules", RenderFunc: func(item neutron.SecurityGroup) interface{} {
 					rules := []string{}
-					for _, rule := range p.Rules {
+					for _, rule := range item.Rules {
 						rules = append(rules, rule.String())
 					}
 					return strings.Join(rules, "\n")
@@ -78,7 +90,7 @@ var sgShow = &cobra.Command{
 				{Name: "ProjectId"},
 			},
 		}
-		common.PrintPrettyItemTable(pt)
+		common.PrintDataTable[neutron.SecurityGroup](&table, false)
 	},
 }
 

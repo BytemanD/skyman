@@ -35,6 +35,8 @@ type DataTable[T any] struct {
 	SortBy       []table.SortBy
 	SeparateRows bool
 	Output       io.Writer
+
+	count int
 }
 
 func (t DataTable[T]) tableWriter() table.Writer {
@@ -58,12 +60,8 @@ func (t DataTable[T]) tableWriter() table.Writer {
 	return tableWriter
 }
 
-func (t DataTable[T]) getHeaderRow(more bool) table.Row {
+func (t DataTable[T]) getHeaderRow(columns []Column[T]) table.Row {
 	headerRow := table.Row{}
-	columns := t.Columns
-	if more {
-		columns = append(columns, t.MoreColumns...)
-	}
 	for _, col := range columns {
 		var title string
 		if col.Text != "" {
@@ -96,15 +94,14 @@ func (t *DataTable[T]) AddColumns(columns []Column[T]) *DataTable[T] {
 	t.Columns = append(t.Columns, columns...)
 	return t
 }
-func (t *DataTable[T]) SetStyle(style table.Style) *DataTable[T] {
+func (t *DataTable[T]) SetStyle(style table.Style) {
 	t.Style = style
-	return t
 }
 func (t DataTable[T]) IsStyleLight() bool {
 	return t.Style.Name != table.StyleDefault.Name
 }
-func (t DataTable[T]) ItemsNum() int {
-	return len(t.Items)
+func (t DataTable[T]) Count() int {
+	return t.count
 }
 func (t DataTable[T]) GetJson() (string, error) {
 	return stringutils.JsonDumpsIndent(t.Items)
@@ -116,57 +113,58 @@ func (t DataTable[T]) GetYaml() (string, error) {
 	}
 	return string(bytes), nil
 }
-func (t DataTable[T]) Render(more ...bool) string {
+func (t DataTable[T]) renderItem(columns []Column[T], item T) table.Row {
+	reflectValue := reflect.ValueOf(item)
+	row := table.Row{}
+	matched := true
+	for _, column := range columns {
+		var value interface{}
+		switch {
+		case column.RenderFunc != nil:
+			value = column.RenderFunc(item)
+		case column.SlotColumn != nil:
+			value = column.SlotColumn(item, column)
+		case column.Text != "":
+			value = column.Text
+		default:
+			value = reflectValue.FieldByName(column.Name)
+		}
+		// 匹配
+		if len(column.Matchs) > 0 {
+			if stringutils.ContainsString(column.Matchs, fmt.Sprintf("%v", value)) {
+				matched = false
+				break
+			}
+		}
+		if t.IsStyleLight() {
+			value = utility.NewColorStatus(fmt.Sprint(value)).String()
+		}
+		row = append(row, value)
+	}
+	if matched {
+		return row
+	}
+	return nil
+}
+func (t *DataTable[T]) Render(more ...bool) string {
 	tableWriter := t.tableWriter()
-
+	t.count = 0
 	columns := t.Columns
 	if len(more) > 0 && more[0] {
-		tableWriter.AppendHeader(t.getHeaderRow(true))
 		columns = append(columns, t.MoreColumns...)
-	} else {
-		tableWriter.AppendHeader(t.getHeaderRow(false))
 	}
-	fmt.Println(more, len(columns))
+	tableWriter.AppendHeader(t.getHeaderRow(columns))
 	for _, item := range t.Items {
-		reflectValue := reflect.ValueOf(item)
-		row := table.Row{}
-
-		isFiltered := false
-		matchedCount := len(columns)
-		for _, column := range columns {
-			var value interface{}
-			switch {
-			case column.RenderFunc != nil:
-				value = column.RenderFunc(item)
-			case column.SlotColumn != nil:
-				value = column.SlotColumn(item, column)
-			default:
-				value = reflectValue.FieldByName(column.Name)
-			}
-			// match filter
-			if len(column.Filters) > 0 {
-				if !stringutils.ContainsString(column.Filters, fmt.Sprintf("%v", value)) {
-					isFiltered = true
-					break
-				}
-			}
-			// if t.Search != "" && !strings.Contains(fmt.Sprintf("%v", value), pt.Search) {
-			// 	matchedCount -= 1
-			// }
-			if t.IsStyleLight() {
-				value = utility.NewColorStatus(fmt.Sprint(value)).String()
-			}
-			row = append(row, value)
+		row := t.renderItem(columns, item)
+		if row != nil {
+			tableWriter.AppendRow(row)
+			t.count += 1
 		}
-		if isFiltered || matchedCount <= 0 {
-			continue
-		}
-		tableWriter.AppendRow(row)
 	}
 	return tableWriter.Render()
 }
 
 func (t DataTable[T]) Print(more ...bool) {
 	fmt.Println(t.Render(more...))
-	fmt.Println("Items: ", len(t.Items))
+	fmt.Println("Items: ", t.Count())
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/BytemanD/go-console/console"
 	"github.com/jedib0t/go-pretty/v6/table"
 
-	"github.com/BytemanD/skyman/common/datatable"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 )
 
@@ -67,13 +66,20 @@ func PrintAggregate(aggregate nova.Aggregate) {
 	PrintPrettyItemTable(pt)
 }
 
-func PrintDataTable[T any](dt datatable.DataTable[T], long bool) {
+type DataRender[T any] interface {
+	SetStyle(style table.Style)
+	GetJson() (string, error)
+	GetYaml() (string, error)
+	Print(more ...bool)
+}
+
+func PrintDataTable[T any](dt DataRender[T], long bool) {
 	switch CONF.Format {
 	case TABLE, "", "default":
 		dt.Print(long)
-		fmt.Println("Items: ", dt.ItemsNum())
 	case TABLE_LIGHT:
-		dt.SetStyle(table.StyleLight).Print(long)
+		dt.SetStyle(table.StyleLight)
+		dt.Print(long)
 	case JSON:
 		if data, err := dt.GetJson(); err == nil {
 			fmt.Println(data)
