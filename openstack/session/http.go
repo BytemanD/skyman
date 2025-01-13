@@ -17,6 +17,8 @@ const (
 	CONTENT_TYPE_STREAM = "application/octet-stream"
 
 	HEADER_REQUEST_ID = "X-Openstack-Request-Id"
+
+	DEFAULT_RETRY_COUNT = 3
 )
 
 func EncodeHeaders(reqHeader, clientHeader http.Header) string {
@@ -60,6 +62,7 @@ func LogRespAfterResponse(c *resty.Client, r *resty.Response) error {
 func DefaultRestyClient() *resty.Client {
 	return resty.New().
 		SetHeader(CONTENT_TYPE, CONTENT_TYPE_JSON).
+		SetRetryCount(DEFAULT_RETRY_COUNT).
 		OnBeforeRequest(LogBeforeRequest).
 		OnAfterResponse(LogRespAfterResponse)
 }

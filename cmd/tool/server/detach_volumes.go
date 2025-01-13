@@ -65,9 +65,8 @@ var detachVolumes = &cobra.Command{
 			ShowProgress: true,
 			Func: func(item interface{}) error {
 				p := item.(string)
-				console.Debug("[volume: %s] detaching", p)
+				console.Info("[volume: %s] request to detach", p)
 				err := client.NovaV2().Server().DeleteVolumeAndWait(server.Id, p, 600)
-
 				if err != nil {
 					console.Error("[volume: %s] detach failed: %v", p, err)
 					return err

@@ -26,6 +26,7 @@ const (
 	INTERFACE_INTERVAL string = "internal"
 
 	URL_AUTH_TOKEN string = "/auth/tokens"
+	X_AUTH_TOKEN   string = "X-Auth-Token"
 )
 
 type PasswordAuthPlugin struct {
@@ -44,6 +45,7 @@ type PasswordAuthPlugin struct {
 
 	tokenLock *sync.Mutex
 
+	mu      *sync.Mutex
 	session *resty.Client
 }
 
@@ -173,17 +175,24 @@ func (plugin *PasswordAuthPlugin) SetRetryCount(count int) *PasswordAuthPlugin {
 }
 
 func (plugin PasswordAuthPlugin) AuthRequest(req *resty.Request) error {
+	plugin.mu.Lock()
+	defer plugin.mu.Unlock()
+
 	tokenId, err := plugin.GetTokenId()
 	if err != nil {
 		return err
 	}
-	req.Header.Set("X-Auth-Token", tokenId)
+	if req.Header.Get(X_AUTH_TOKEN) == tokenId {
+		return nil
+	}
+	console.Debug("set auth token %s", tokenId)
+	req.Header.Set(X_AUTH_TOKEN, tokenId)
 	return nil
 }
 func (plugin PasswordAuthPlugin) GetSafeHeader(header http.Header) http.Header {
 	safeHeaders := http.Header{}
 	for k, v := range header {
-		if k == "X-Auth-Token" {
+		if k == X_AUTH_TOKEN {
 			safeHeaders[k] = []string{"<TOKEN>"}
 		} else {
 			safeHeaders[k] = v
@@ -217,5 +226,6 @@ func NewPasswordAuthPlugin(authUrl string, user model.User, project model.Projec
 		ProjectDomainName: project.Domain.Name,
 		RegionName:        regionName,
 		tokenLock:         &sync.Mutex{},
+		mu:                &sync.Mutex{},
 	}
 }

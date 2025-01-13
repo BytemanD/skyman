@@ -315,17 +315,31 @@ var BAR_CHAR = "*"
 func fixNumbers(plus int, numbers ...int) []int {
 	total := utility.Sum(numbers...)
 	result := []int{}
+	roundCount := 0
 	for _, number := range numbers {
 		percent := float64(number) * float64(plus) / float64(total)
-		result = append(result, int(math.Round(percent)))
+		if roundCount >= 1 {
+			result = append(result, int(percent))
+		} else {
+			result = append(result, int(math.Round(percent)))
+			fmt.Println(percent, math.Mod(percent, 1.0))
+			if math.Mod(percent, 1.0) >= 0.5 {
+				roundCount += 1
+			}
+		}
 	}
+	fmt.Println(numbers, "->", result)
 	return result
 }
 
 func resourceUsageBar(used, reserved, free int) string {
 	total := utility.Sum(used, reserved, free)
 	if total == 0 {
-		return "TOTAL is 0"
+		fmt.Println(strings.Repeat(BAR_CHAR, 30))
+		return strings.Join([]string{
+			color.BlueString(strings.Repeat(" ", 10)),
+			fmt.Sprintf(" %4d|%4d|%4d", reserved, used, free),
+		}, "")
 	}
 	result := fixNumbers(30, used, reserved, free)
 	blockUsed := strings.Repeat(BAR_CHAR, result[0])
