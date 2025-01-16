@@ -62,13 +62,10 @@ func getMicroVersion(vertionStr string) microVersion {
 func (c *NovaV2) MicroVersionLargeEqual(version string) bool {
 	clientVersion := getMicroVersion(c.MicroVersion.Version)
 	otherVersion := getMicroVersion(version)
-	if clientVersion.Version > otherVersion.Version {
-		return true
-	} else if clientVersion.Version == otherVersion.Version {
-		return clientVersion.MicroVersion >= otherVersion.MicroVersion
-	} else {
-		return false
+	if clientVersion.Version != otherVersion.Version {
+		return clientVersion.Version > otherVersion.Version
 	}
+	return clientVersion.MicroVersion >= otherVersion.MicroVersion
 }
 func (c *NovaV2) GetCurrentVersion() (*model.ApiVersion, error) {
 	if c.currentVersion == nil {

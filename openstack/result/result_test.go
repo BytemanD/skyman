@@ -29,7 +29,7 @@ func getItemsResult() ItemsResult[Server] {
 	rawResp.SetBody(reqBody)
 	result := NewItemsResult[Server](&rawResp, err)
 	result.SetKey("servers")
-	return result
+	return *result
 }
 
 func TestItemsResult(t *testing.T) {

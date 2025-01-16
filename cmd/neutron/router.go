@@ -4,15 +4,11 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/go-console/console"
-	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
-	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -32,20 +28,8 @@ var routerList = &cobra.Command{
 		}
 		routers, err := c.Router().List(query)
 		utility.LogError(err, "list ports failed", true)
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name", Sort: true},
-				{Name: "Status", AutoColor: true},
-				{Name: "AdminStateUp", AutoColor: true}, {Name: "Distributed"},
-				{Name: "HA", Text: "HA"},
-			},
-			LongColumns: []common.Column{
-				{Name: "Routes"}, {Name: "ExternalGatewayinfo"},
-			},
-			ColumnConfigs: []table.ColumnConfig{{Number: 4, Align: text.AlignRight}},
-		}
-		pt.AddItems(routers)
-		common.PrintPrettyTable(pt, long)
+		common.PrintRouters(routers, long)
+
 	},
 }
 var routerShow = &cobra.Command{
@@ -55,27 +39,8 @@ var routerShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().NeutronV2()
 		router, err := c.Router().Find(args[0])
-		if err != nil {
-			utility.LogError(err, "show router failed", true)
-		}
-		table := common.PrettyItemTable{
-			Item: *router,
-			ShortFields: []common.Column{
-				{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
-				{Name: "AdminStateUp"},
-				{Name: "Distributed"}, {Name: "HA", Text: "HA"},
-				{Name: "AdminStateUp"},
-				{Name: "ExternalGatewayinfo", Slot: func(item interface{}) interface{} {
-					p, _ := item.(neutron.Router)
-					return p.MarshalExternalGatewayInfo()
-				}},
-				{Name: "AvailabilityZones"},
-				{Name: "RevsionNumber"},
-				{Name: "ProjectId"},
-				{Name: "CreatedAt"},
-			},
-		}
-		common.PrintPrettyItemTable(table)
+		utility.LogError(err, "show router failed", true)
+		common.PrintRouter(*router)
 	},
 }
 var routerDelete = &cobra.Command{
@@ -118,7 +83,7 @@ var routerCreate = &cobra.Command{
 		}
 		router, err := c.Router().Create(params)
 		utility.LogError(err, "create router failed", true)
-		views.PrintRouter(*router)
+		common.PrintRouter(*router)
 	},
 }
 

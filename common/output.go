@@ -8,6 +8,7 @@ import (
 	"github.com/BytemanD/go-console/console"
 	"github.com/jedib0t/go-pretty/v6/table"
 
+	"github.com/BytemanD/skyman/common/datatable"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 )
 
@@ -73,7 +74,14 @@ type DataRender[T any] interface {
 	Print(more ...bool)
 }
 
-func PrintDataTable[T any](dt DataRender[T], long bool) {
+type TableOptions struct {
+	SeparateRows  bool
+	More          bool
+	ColumnConfigs []table.ColumnConfig
+	SortBy        []table.SortBy
+}
+
+func printDataTable[T any](dt DataRender[T], long bool) {
 	switch CONF.Format {
 	case TABLE, "", "default":
 		dt.Print(long)
@@ -99,4 +107,25 @@ func PrintDataTable[T any](dt DataRender[T], long bool) {
 			GetOutputFormats())
 		os.Exit(1)
 	}
+}
+
+func PrintItems[T any](columns, moreColumns []datatable.Column[T], items []T, opt TableOptions) {
+	dt := datatable.DataTable[T]{
+		Columns:      columns,
+		MoreColumns:  moreColumns,
+		SeparateRows: opt.SeparateRows,
+		SortBy:       opt.SortBy,
+		Items:        items,
+	}
+	printDataTable[T](&dt, opt.More)
+}
+
+func PrintItem[T any](fields, moreFields []datatable.Field[T], item T, opt TableOptions) {
+	dt := datatable.DataIterator[T]{
+		Fields:       fields,
+		MoreFields:   moreFields,
+		SeparateRows: opt.SeparateRows,
+		Items:        []T{item},
+	}
+	printDataTable[T](&dt, opt.More)
 }

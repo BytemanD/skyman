@@ -73,30 +73,7 @@ var flavorList = &cobra.Command{
 			}
 			filteredFlavors = append(filteredFlavors, flavor)
 		}
-		table := datatable.DataTable[nova.Flavor]{
-			Columns: []datatable.Column[nova.Flavor]{
-				{Name: "Id"}, {Name: "Name"},
-				{Name: "Vcpus", Align: text.AlignRight},
-				{Name: "Ram", Align: text.AlignRight,
-					RenderFunc: func(item nova.Flavor) interface{} {
-						return item.HumanRam()
-					},
-				},
-				{Name: "Disk", Align: text.AlignRight},
-				{Name: "Ephemeral", Align: text.AlignRight},
-				{Name: "IsPublic"},
-			},
-			MoreColumns: []datatable.Column[nova.Flavor]{
-				{Name: "Swap"}, {Name: "RXTXFactor", Text: "RXTX Factor"},
-				{Name: "ExtraSpecs",
-					RenderFunc: func(item nova.Flavor) interface{} {
-						return strings.Join(item.ExtraSpecs.GetList(), "\n")
-					},
-				},
-			},
-		}
 		if *flavorListFlags.Long {
-			table.SeparateRows = true
 			// 提前查询，否则输出json、yaml 格式时缺失
 			for i, item := range filteredFlavors {
 				extraSpecs, err := client.NovaV2().Flavor().ListExtraSpecs(item.Id)
@@ -106,8 +83,30 @@ var flavorList = &cobra.Command{
 				filteredFlavors[i].ExtraSpecs = extraSpecs
 			}
 		}
-		table.AddItems(filteredFlavors)
-		common.PrintDataTable[nova.Flavor](&table, *flavorListFlags.Long)
+		common.PrintItems(
+			[]datatable.Column[nova.Flavor]{
+				{Name: "Id"}, {Name: "Name"},
+				{Name: "Vcpus", Align: text.AlignRight},
+				{Name: "Ram", Align: text.AlignRight,
+					RenderFunc: func(item nova.Flavor) interface{} { return item.HumanRam() },
+				},
+				{Name: "Disk", Align: text.AlignRight},
+				{Name: "Ephemeral", Align: text.AlignRight},
+				{Name: "IsPublic"},
+			},
+			[]datatable.Column[nova.Flavor]{
+				{Name: "Swap"}, {Name: "RXTXFactor", Text: "RXTX Factor"},
+				{Name: "ExtraSpecs",
+					RenderFunc: func(item nova.Flavor) interface{} {
+						return strings.Join(item.ExtraSpecs.GetList(), "\n")
+					},
+				},
+			},
+			filteredFlavors,
+			common.TableOptions{
+				SeparateRows: *flavorListFlags.Long,
+				More:         *flavorListFlags.Long},
+		)
 	},
 }
 var flavorShow = &cobra.Command{

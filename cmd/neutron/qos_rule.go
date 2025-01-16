@@ -19,18 +19,7 @@ var qosRuleList = &cobra.Command{
 		policy, err := c.NeutronV2().QosPolicy().Find(args[0])
 		utility.LogIfError(err, true, "get qos policy %s failed", args[0])
 
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "QosPolicyId"},
-				{Name: "Type"},
-				{Name: "Direction"},
-				{Name: "MaxKbps"},
-				{Name: "MaxBurstKbps"},
-				{Name: "MinKbps"},
-			},
-		}
-		pt.AddItems(policy.Rules)
-		common.PrintPrettyTable(pt, false)
+		common.PrintQosPolicyRules(policy.Rules, false)
 	},
 }
 

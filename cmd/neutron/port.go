@@ -1,12 +1,8 @@
 package neutron
 
 import (
-	"encoding/json"
 	"fmt"
-	"strings"
 
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/syncutils"
@@ -50,40 +46,6 @@ var portList = &cobra.Command{
 			"binding:host_id": host,
 		}))
 		utility.LogError(err, "list ports failed", true)
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name", Sort: true},
-				{Name: "Status", AutoColor: true},
-				{Name: "BindingVnicType", Text: "VnicType"},
-				{Name: "BindingVifType", Text: "VifType"},
-				{Name: "MACAddress", Text: "MAC Address"},
-				{Name: "FixedIps", Slot: func(item interface{}) interface{} {
-					p, _ := item.(neutron.Port)
-					ips := []string{}
-					if !long {
-						for _, fixedIp := range p.FixedIps {
-							ips = append(ips, fixedIp.IpAddress)
-						}
-						return strings.Join(ips, ", ")
-					} else {
-						data, _ := json.Marshal(p.FixedIps)
-						return string(data)
-					}
-				}},
-				{Name: "DeviceOwner"},
-				{Name: "BindingHostId"},
-			},
-			LongColumns: []common.Column{
-				{Name: "DeviceId"},
-				{Name: "TenantId"},
-				{Name: "BindingProfile"},
-				{Name: "SecurityGroups", Slot: func(item interface{}) interface{} {
-					p, _ := item.(neutron.Port)
-					return strings.Join(p.SecurityGroups, "\n")
-				}},
-			},
-			ColumnConfigs: []table.ColumnConfig{{Number: 4, Align: text.AlignRight}},
-		}
 		if noHost {
 			filteredPort := []neutron.Port{}
 			for _, port := range ports {
@@ -92,14 +54,10 @@ var portList = &cobra.Command{
 				}
 				filteredPort = append(filteredPort, port)
 			}
-			pt.AddItems(filteredPort)
+			common.PrintPorts(filteredPort, long)
 		} else {
-			pt.AddItems(ports)
+			common.PrintPorts(ports, long)
 		}
-		if long {
-			pt.StyleSeparateRows = true
-		}
-		common.PrintPrettyTable(pt, long)
 	},
 }
 var portShow = &cobra.Command{
@@ -109,36 +67,8 @@ var portShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient().NeutronV2()
 		port, err := c.Port().Find(args[0])
-		if err != nil {
-			utility.LogError(err, "show port failed", true)
-		}
-		table := common.PrettyItemTable{
-			Item: *port,
-			ShortFields: []common.Column{
-				{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
-				{Name: "Status"},
-				{Name: "AdminStateUp"},
-				{Name: "MACAddress", Text: "MAC Address"},
-				{Name: "BindingVnicType"},
-				{Name: "BindingVifType"},
-				{Name: "BindingProfile", Slot: func(item interface{}) interface{} {
-					p, _ := item.(neutron.Port)
-					return p.MarshalBindingProfile()
-				}},
-				{Name: "BindingDetails", Slot: func(item interface{}) interface{} {
-					p, _ := item.(neutron.Port)
-					return p.MarshalVifDetails()
-				}},
-				{Name: "BindingHostId"},
-				{Name: "FixedIps"},
-				{Name: "DeviceOwner"}, {Name: "DeviceId"},
-				{Name: "QosPolicyId"}, {Name: "SecurityGroups"},
-				{Name: "RevsionNumber"},
-				{Name: "ProjectId"},
-				{Name: "CreatedAt"}, {Name: "UpdatedAt"},
-			},
-		}
-		common.PrintPrettyItemTable(table)
+		utility.LogError(err, "show port failed", true)
+		common.PrintPort(*port)
 	},
 }
 var portDelete = &cobra.Command{
@@ -148,12 +78,15 @@ var portDelete = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		force, _ := cmd.Flags().GetBool("force")
 		c := openstack.DefaultClient().NeutronV2()
-		tg := syncutils.TaskGroup{
-			Func: func(i interface{}) error {
-				p := i.(string)
-				port, err := c.Port().Show(p)
+		syncutils.StartTasks(
+			syncutils.TaskOption{
+				TaskName: "delete ports",
+			},
+			args,
+			func(item string) error {
+				port, err := c.Port().Find(item)
 				if err != nil {
-					return fmt.Errorf("show port %s failed: %v", p, err)
+					return fmt.Errorf("show port %s failed: %v", item, err)
 				}
 				if !force {
 					if port.DeviceId != "" {
@@ -162,18 +95,15 @@ var portDelete = &cobra.Command{
 					}
 				}
 				console.Info("Reqeust to delete port %s\n", port.Id)
-				err = c.Port().Delete(p)
+				err = c.Port().Delete(port.Id)
 				if err != nil {
-					utility.LogError(err, fmt.Sprintf("Delete port %s failed", p), false)
+					utility.LogError(err, fmt.Sprintf("Delete port %s failed", item), false)
 				} else {
-					console.Info("Delete port %s success", p)
+					console.Info("Delete port %s success", item)
 				}
 				return nil
 			},
-			Items:        args,
-			ShowProgress: true,
-		}
-		tg.Start()
+		)
 	},
 }
 

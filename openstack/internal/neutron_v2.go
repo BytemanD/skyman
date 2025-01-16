@@ -123,7 +123,7 @@ func (c NeutronV2) QosPolicy() qosPolicyApi {
 			Client:      c.rawClient,
 			BaseUrl:     c.Url,
 			ResourceUrl: "qos/policies",
-			SingularKey: "policies",
+			SingularKey: "policy",
 			PluralKey:   "policies",
 		},
 	}
@@ -344,4 +344,8 @@ func (c qosPolicyApi) Show(id string) (*neutron.QosPolicy, error) {
 }
 func (c qosPolicyApi) Find(idOrName string) (*neutron.QosPolicy, error) {
 	return FindResource(idOrName, c.Show, c.List)
+}
+
+func (c qosRuleApi) List(query url.Values) ([]neutron.QosRule, error) {
+	return ListResource[neutron.QosRule](c.ResourceApi, query)
 }

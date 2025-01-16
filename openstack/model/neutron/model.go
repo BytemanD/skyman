@@ -110,6 +110,14 @@ type Agent struct {
 	Alive            bool   `json:"alive,omitempty"`
 	AdminStateUp     bool   `json:"admin_state_up,omitempty"`
 }
+
+func (agent Agent) AliveEmoji() string {
+	if agent.Alive {
+		return ":-)"
+	}
+	return "XXX"
+}
+
 type SecurityGroup struct {
 	model.Resource
 	Tags           []string            `json:"tags,omitempty"`

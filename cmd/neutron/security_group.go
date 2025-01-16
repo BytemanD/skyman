@@ -2,12 +2,9 @@ package neutron
 
 import (
 	"net/url"
-	"strings"
 
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/common/datatable"
 	"github.com/BytemanD/skyman/openstack"
-	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -39,28 +36,7 @@ var sgList = &cobra.Command{
 		// console.Debug("request id: %s", result.RequestId())
 		sgs, err := c.NeutronV2().SecurityGroup().List(query)
 		utility.LogError(err, "list security group failed", true)
-
-		table := datatable.DataTable[neutron.SecurityGroup]{
-			Items: sgs,
-			Columns: []datatable.Column[neutron.SecurityGroup]{
-				{Name: "Id"}, {Name: "Name"},
-				{Name: "ProjectId"},
-				{Name: "RevisionNumber"},
-				{Name: "Rules", RenderFunc: func(item neutron.SecurityGroup) interface{} {
-					rules := []string{}
-					for _, rule := range item.Rules {
-						rules = append(rules, rule.String())
-					}
-					return strings.Join(rules, "\n")
-				}},
-			},
-			MoreColumns: []datatable.Column[neutron.SecurityGroup]{
-				// {Name: "Description"},
-				{Name: "CreatedAt"},
-				{Name: "UpdatedAt"},
-			},
-		}
-		common.PrintDataTable[neutron.SecurityGroup](&table, long)
+		common.PrintSecurityGroups(sgs, long)
 	},
 }
 var sgShow = &cobra.Command{
@@ -72,25 +48,8 @@ var sgShow = &cobra.Command{
 
 		sg, err := c.NeutronV2().SecurityGroup().Find(args[0])
 		utility.LogError(err, "get security group failed", true)
-		table := datatable.DataIterator[neutron.SecurityGroup]{
-			Items: []neutron.SecurityGroup{*sg},
-			Fields: []datatable.Field[neutron.SecurityGroup]{
-				{Name: "Id"}, {Name: "Name"},
-				{Name: "Description"},
-				{Name: "RevisionNumber"},
-				{Name: "CreatedAt"},
-				{Name: "UpdatedAt"},
-				{Name: "Rules", RenderFunc: func(item neutron.SecurityGroup) interface{} {
-					rules := []string{}
-					for _, rule := range item.Rules {
-						rules = append(rules, rule.String())
-					}
-					return strings.Join(rules, "\n")
-				}},
-				{Name: "ProjectId"},
-			},
-		}
-		common.PrintDataTable[neutron.SecurityGroup](&table, false)
+
+		common.PrintSecurityGroup(*sg)
 	},
 }
 

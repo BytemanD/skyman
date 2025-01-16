@@ -3,13 +3,10 @@ package neutron
 import (
 	"net/url"
 
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
-	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -34,25 +31,7 @@ var agentList = &cobra.Command{
 		}
 		agents, err := c.Agent().List(query)
 		utility.LogError(err, "list ports failed", true)
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "AgentType"},
-				{Name: "Host"},
-				{Name: "AvailabilityZone"},
-				{Name: "Alive", AutoColor: true, Slot: func(item interface{}) interface{} {
-					p := item.(neutron.Agent)
-					if p.Alive {
-						return ":-)"
-					}
-					return "XXX"
-				}},
-				{Name: "AdminStateUp"},
-				{Name: "Binary"},
-			},
-			ColumnConfigs: []table.ColumnConfig{{Number: 4, Align: text.AlignRight}},
-		}
-		pt.AddItems(agents)
-		common.PrintPrettyTable(pt, long)
+		common.PrintAgents(agents, long)
 	},
 }
 

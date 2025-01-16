@@ -3,16 +3,11 @@ package neutron
 import (
 	"fmt"
 	"net/url"
-	"strings"
 
 	"github.com/BytemanD/go-console/console"
-	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
-	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 )
 
@@ -21,6 +16,7 @@ var Network = &cobra.Command{Use: "network"}
 var networkList = &cobra.Command{
 	Use:   "list",
 	Short: "List networks",
+	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 		c := openstack.DefaultClient().NeutronV2()
 
@@ -34,29 +30,7 @@ var networkList = &cobra.Command{
 		if err != nil {
 			fmt.Println(err)
 		}
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name", Sort: true},
-				{Name: "Status", AutoColor: true},
-				{Name: "AdminStateUp", AutoColor: true},
-				{Name: "Subnets", Slot: func(item interface{}) interface{} {
-					p, _ := item.(neutron.Network)
-					return strings.Join(p.Subnets, "\n")
-				}},
-			},
-			LongColumns: []common.Column{
-				{Name: "Shared"}, {Name: "ProviderNetworkType"},
-				{Name: "AvailabilityZones"},
-			},
-			ColumnConfigs: []table.ColumnConfig{
-				{Number: 4, Align: text.AlignRight},
-			},
-		}
-		pt.AddItems(networks)
-		if long {
-			pt.StyleSeparateRows = true
-		}
-		common.PrintPrettyTable(pt, long)
+		common.PrintNetworks(networks, long)
 	},
 }
 var networkDelete = &cobra.Command{
@@ -84,21 +58,7 @@ var networkShow = &cobra.Command{
 
 		network, err := c.Network().Find(args[0])
 		utility.LogError(err, "show network failed", true)
-		table := common.PrettyItemTable{
-			Item: *network,
-			ShortFields: []common.Column{
-				{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
-				{Name: "ProviderNetworkType"},
-				{Name: "ProviderPhysicalNetwork"},
-				{Name: "Status"}, {Name: "AdminStateUp"},
-				{Name: "Shared"}, {Name: "Subnets"},
-				{Name: "Mtu"},
-				{Name: "ProjectId"},
-				{Name: "AvailabilityZones"},
-				{Name: "CreatedAt"},
-			},
-		}
-		common.PrintPrettyItemTable(table)
+		common.PrintNetwork(*network)
 	},
 }
 var networkCreate = &cobra.Command{
@@ -122,7 +82,7 @@ var networkCreate = &cobra.Command{
 		}
 		network, err := c.Network().Create(params)
 		utility.LogError(err, "create network failed", true)
-		views.PrintNetwork(*network)
+		common.PrintNetwork(*network)
 	},
 }
 

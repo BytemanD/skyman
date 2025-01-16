@@ -5,7 +5,6 @@ import (
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
-	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -30,26 +29,7 @@ var sgRuleList = &cobra.Command{
 
 		sgRules, err := c.NeutronV2().SecurityGroupRule().List(query)
 		utility.LogError(err, "list security group failed", true)
-
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"},
-				{Name: "Protocol"},
-				{Name: "RemoteIpPrefix"},
-				{Name: "PortRange", Slot: func(item interface{}) interface{} {
-					p, _ := item.(neutron.SecurityGroupRule)
-					return p.PortRange()
-				}},
-				{Name: "RemoteGroupId"},
-				{Name: "SecurityGroupId"},
-			},
-			LongColumns: []common.Column{
-				{Name: "Direction"},
-				{Name: "Ethertype"},
-			},
-		}
-		pt.AddItems(sgRules)
-		common.PrintPrettyTable(pt, long)
+		common.PrintSecurityGroupRules(sgRules, long)
 	},
 }
 var sgRuleShow = &cobra.Command{
@@ -59,29 +39,9 @@ var sgRuleShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := openstack.DefaultClient()
 
-		sg, err := c.NeutronV2().SecurityGroupRule().Show(args[0])
+		sgRule, err := c.NeutronV2().SecurityGroupRule().Show(args[0])
 		utility.LogError(err, "get security group rule failed", true)
-		pt := common.PrettyItemTable{
-			Item: *sg,
-			ShortFields: []common.Column{
-				{Name: "Id"},
-				{Name: "Protocol"},
-				{Name: "Direction"},
-				{Name: "Ethertype"},
-				{Name: "RemoteIpPrefix"},
-				{Name: "PortRange", Slot: func(item interface{}) interface{} {
-					p, _ := item.(neutron.SecurityGroupRule)
-					return p.PortRange()
-				}},
-				{Name: "RemoteGroupId"},
-				{Name: "SecurityGroupId"},
-				{Name: "RevisionNumber"},
-				{Name: "CreatedAt"},
-				{Name: "UpdatedAt"},
-				{Name: "ProjectId"},
-			},
-		}
-		common.PrintPrettyItemTable(pt)
+		common.PrintSecurityGroupRule(*sgRule)
 	},
 }
 

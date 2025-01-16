@@ -1,12 +1,10 @@
 package neutron
 
 import (
-	"encoding/json"
 	"net/url"
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
-	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -32,17 +30,9 @@ var qosPolicyList = &cobra.Command{
 			query.Set("project_id", project.Id)
 		}
 
-		sgs, err := c.NeutronV2().QosPolicy().List(query)
+		policies, err := c.NeutronV2().QosPolicy().List(query)
 		utility.LogError(err, "list qos policy failed", true)
-
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name"}, {Name: "Shared"}, {Name: "Default"},
-				{Name: "ProjectId", Text: "Project"},
-			},
-		}
-		pt.AddItems(sgs)
-		common.PrintPrettyTable(pt, false)
+		common.PrintQosPolicys(policies, false)
 	},
 }
 var qosPolicyShow = &cobra.Command{
@@ -54,22 +44,7 @@ var qosPolicyShow = &cobra.Command{
 
 		policy, err := c.NeutronV2().QosPolicy().Find(args[0])
 		utility.LogIfError(err, true, "get qos policy %s failed", args[0])
-
-		pt := common.PrettyItemTable{
-			Item: *policy,
-			ShortFields: []common.Column{
-				{Name: "Id"}, {Name: "Name"},
-				{Name: "Description"},
-				{Name: "Shared"},
-				{Name: "ProjectId", Text: "Project"},
-				{Name: "Rules", Slot: func(item interface{}) interface{} {
-					p, _ := item.(neutron.QosPolicy)
-					bytes, _ := json.Marshal(p.Rules)
-					return string(bytes)
-				}},
-			},
-		}
-		common.PrintPrettyItemTable(pt)
+		common.PrintQosPolicy(*policy)
 	},
 }
 

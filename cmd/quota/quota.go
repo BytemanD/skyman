@@ -18,28 +18,13 @@ var show = &cobra.Command{
 		projectId, err := client.ProjectId()
 		utility.LogError(err, "get project id failed, %v", true)
 
-		pt := common.PrettyItemTable{
-			ShortFields: []common.Column{
-				{Name: "Instances"},
-				{Name: "Cores"}, {Name: "Ram"},
-				{Name: "MetadataItems"},
-				{Name: "SecurityGroups"},
-				{Name: "SecurityGroupsMembers"},
-				{Name: "InjectedFiles"},
-				{Name: "InjectedFileContentBytes"},
-				{Name: "InjectedFilePathBytes"},
-			},
-		}
-		// computeVersion, _ := client.NovaV2().GetCurrentVersion()
-		if !client.NovaV2().MicroVersionLargeEqual("2.36") {
-			pt.ShortFields = append(pt.ShortFields, []common.Column{
-				{Name: "FloatingIps"}, {Name: "FixedIps"},
-			}...)
-		}
 		quotaSet, err := client.NovaV2().Quota().Show(projectId)
 		utility.LogError(err, "show quota failed, %v", true)
-		pt.Item = *quotaSet
-		common.PrintPrettyItemTable(pt)
+		var showFipAndFixedIps bool
+		if !client.NovaV2().MicroVersionLargeEqual("2.36") {
+			showFipAndFixedIps = true
+		}
+		common.PrintQuotaSet(*quotaSet, showFipAndFixedIps)
 	},
 }
 

@@ -3,13 +3,10 @@ package neutron
 import (
 	"fmt"
 	"net/url"
-	"strings"
 
 	"github.com/BytemanD/go-console/console"
-	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
-	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -19,6 +16,7 @@ var Subnet = &cobra.Command{Use: "subnet"}
 var subnetList = &cobra.Command{
 	Use:   "list",
 	Short: "List subnets",
+	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 		c := openstack.DefaultClient().NeutronV2()
 
@@ -30,25 +28,7 @@ var subnetList = &cobra.Command{
 		}
 		subnets, err := c.Subnet().List(query)
 		utility.LogError(err, "get subnets failed", true)
-
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name", Sort: true},
-				{Name: "NetworkId"}, {Name: "Cidr"},
-			},
-			LongColumns: []common.Column{
-				{Name: "EnableDhcp", Text: "Dhcp"},
-				{Name: "AllocationPools", Slot: func(item interface{}) interface{} {
-					p, _ := item.(neutron.Subnet)
-					return strings.Join(p.GetAllocationPoolsList(), ",")
-				}},
-				{Name: "IpVersion"},
-				{Name: "GatewayIp"},
-			},
-			StyleSeparateRows: long,
-		}
-		pt.AddItems(subnets)
-		common.PrintPrettyTable(pt, long)
+		common.PrintSubnets(subnets, long)
 	},
 }
 var subnetCreate = &cobra.Command{
@@ -67,21 +47,16 @@ var subnetCreate = &cobra.Command{
 		network, err := c.Network().Find(netIdOrName)
 		utility.LogError(err, "get network failed", true)
 
-		params := map[string]interface{}{
-			"name":       args[0],
-			"cidr":       cidr,
-			"network_id": network.Id,
-			"ip_version": ipVersion,
-		}
-		if noDhcp {
-			params["enable_dhcp"] = false
-		}
-		if description != "" {
-			params["description"] = description
-		}
-		subnet, err := c.Subnet().Create(params)
+		subnet, err := c.Subnet().Create(map[string]interface{}{
+			"name":        args[0],
+			"cidr":        cidr,
+			"network_id":  network.Id,
+			"ip_version":  ipVersion,
+			"enable_dhcp": !noDhcp,
+			"description": description,
+		})
 		utility.LogError(err, "create subnet failed", true)
-		views.PrintSubnet(*subnet)
+		common.PrintSubnet(*subnet)
 	},
 }
 var subnetShow = &cobra.Command{
@@ -92,21 +67,7 @@ var subnetShow = &cobra.Command{
 		c := openstack.DefaultClient().NeutronV2()
 		subnet, err := c.Subnet().Find(args[0])
 		utility.LogError(err, "show subnet failed", true)
-		table := common.PrettyItemTable{
-			Item: *subnet,
-			ShortFields: []common.Column{
-				{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
-				{Name: "NetworkId"},
-				{Name: "Cidr"},
-				{Name: "RevisionNumber"}, {Name: "IpVersion"},
-				{Name: "Tags"}, {Name: "EnableDhcp"},
-				{Name: "GatewayIp"},
-				{Name: "AllocationPools"},
-				{Name: "CreatedAt"},
-			},
-		}
-		common.PrintPrettyItemTable(table)
-
+		common.PrintSubnet(*subnet)
 	},
 }
 var subnetDelete = &cobra.Command{

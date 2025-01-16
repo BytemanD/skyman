@@ -10,7 +10,6 @@ import (
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/glance"
 	"github.com/BytemanD/skyman/utility"
-	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 )
 
@@ -44,28 +43,7 @@ var ImageList = &cobra.Command{
 		c := openstack.DefaultClient().GlanceV2()
 		images, err := c.Images().List(query, int(*imageListFlags.Total))
 		utility.LogError(err, "get imges failed", true)
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name", Sort: true},
-				{Name: "Status", AutoColor: true},
-				{Name: "Size", Align: text.AlignRight,
-					Slot: func(item interface{}) interface{} {
-						p, _ := item.(glance.Image)
-						if *imageListFlags.Human {
-							return p.HumanSize()
-						} else {
-							return p.Size
-						}
-					}},
-				{Name: "DiskFormat"}, {Name: "ContainerFormat"},
-			},
-			LongColumns: []common.Column{
-				{Name: "Visibility"}, {Name: "Protected"},
-			},
-		}
-
-		pt.AddItems(images)
-		common.PrintPrettyTable(pt, *imageListFlags.Long)
+		common.PrintImages(images, *imageListFlags.Long)
 	},
 }
 var ImageShow = &cobra.Command{
@@ -77,7 +55,7 @@ var ImageShow = &cobra.Command{
 
 		image, err := c.Images().Find(args[0])
 		utility.LogIfError(err, true, "Get image %s failed", args[0])
-		printImage(*image, *imageShowFlags.Human)
+		common.PrintImage(*image, *imageShowFlags.Human)
 	},
 }
 var imageCreate = &cobra.Command{
@@ -125,8 +103,7 @@ var imageCreate = &cobra.Command{
 			image, err = client.Images().Show(image.Id)
 			utility.LogError(err, "get image failed", true)
 		}
-
-		printImage(*image, true)
+		common.PrintImage(*image, false)
 	},
 }
 
@@ -210,7 +187,7 @@ var imageSet = &cobra.Command{
 		}
 		image, err = c.Images().Set(image.Id, params)
 		utility.LogError(err, "update image failed", true)
-		printImage(*image, false)
+		common.PrintImage(*image, false)
 	},
 }
 var (
@@ -232,7 +209,7 @@ func init() {
 	}
 
 	imageShowFlags = ImageShowFlags{
-		Human: imageCreate.Flags().Bool("human", false, "Human size"),
+		Human: ImageShow.Flags().Bool("human", false, "Human size"),
 	}
 	imageCreateFlags = ImageCreateFlags{
 		Name:            imageCreate.Flags().StringP("name", "n", "", "The name of image, if --name is empty use the name of file"),
