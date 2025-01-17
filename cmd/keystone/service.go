@@ -34,18 +34,7 @@ var serviceList = &cobra.Command{
 		c := openstack.DefaultClient().KeystoneV3()
 		services, err := c.Service().List(query)
 		utility.LogError(err, "list services failed", true)
-
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name", Sort: true}, {Name: "Type"},
-				{Name: "Enabled", AutoColor: true},
-			},
-			LongColumns: []common.Column{
-				{Name: "Description"},
-			},
-		}
-		pt.AddItems(services)
-		common.PrintPrettyTable(pt, long)
+		common.PrintServices(services, long)
 	},
 }
 var serviceCreate = &cobra.Command{
@@ -68,17 +57,7 @@ var serviceCreate = &cobra.Command{
 				Resource: model.Resource{Name: name, Description: description},
 			})
 		utility.LogError(err, "create service failed", true)
-
-		pt := common.PrettyItemTable{
-			ShortFields: []common.Column{
-				{Name: "Id"}, {Name: "Name"}, {Name: "Type"},
-				{Name: "Enabled"},
-				{Name: "Description"},
-			},
-			LongFields: []common.Column{},
-			Item:       *service,
-		}
-		common.PrintPrettyItemTable(pt)
+		common.PrintService(*service)
 	},
 }
 var serviceDelete = &cobra.Command{

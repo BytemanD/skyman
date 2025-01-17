@@ -20,18 +20,7 @@ var projectList = &cobra.Command{
 		c := openstack.DefaultClient().KeystoneV3()
 		projects, err := c.Project().List(nil)
 		utility.LogError(err, "list projects failed", true)
-
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name"},
-				{Name: "Enabled", AutoColor: true},
-			},
-			LongColumns: []common.Column{
-				{Name: "DomainId"}, {Name: "Description"},
-			},
-		}
-		pt.AddItems(projects)
-		common.PrintPrettyTable(pt, long)
+		common.PrintProjects(projects, long)
 	},
 }
 var projectDelete = &cobra.Command{
@@ -52,19 +41,7 @@ var projectShow = &cobra.Command{
 		c := openstack.DefaultClient().KeystoneV3()
 		project, err := c.Project().Find(args[0])
 		utility.LogError(err, "show project failed", true)
-		pt := common.PrettyItemTable{
-			Item: *project,
-			ShortFields: []common.Column{
-				{Name: "Id"}, {Name: "Name"},
-				{Name: "Description"},
-				{Name: "DomainId"},
-				{Name: "Enabled", AutoColor: true},
-				{Name: "IsDomain"},
-				{Name: "ParentId"},
-				{Name: "Tags"},
-			},
-		}
-		common.PrintPrettyItemTable(pt)
+		common.PrintProject(*project)
 	},
 }
 

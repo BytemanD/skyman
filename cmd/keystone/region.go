@@ -17,15 +17,7 @@ var list = &cobra.Command{
 		c := openstack.DefaultClient().KeystoneV3()
 		regions, err := c.Region().List(nil)
 		utility.LogError(err, "list region failed", true)
-
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "ParentRegionId"},
-				{Name: "Description"},
-			},
-		}
-		pt.AddItems(regions)
-		common.PrintPrettyTable(pt, false)
+		common.PrintRegions(regions, false)
 	},
 }
 

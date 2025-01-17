@@ -8,7 +8,9 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 
 	"github.com/BytemanD/skyman/common/datatable"
+	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/glance"
+	"github.com/BytemanD/skyman/openstack/model/keystone"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 )
@@ -427,5 +429,143 @@ func PrintQuotaSet(item nova.QuotaSet, more bool) {
 			{Name: "FixedIps"},
 		},
 		item, TableOptions{More: more},
+	)
+}
+
+// keystone
+func PrintRegions(items []keystone.Region, long bool) {
+	PrintItems(
+		[]datatable.Column[keystone.Region]{
+			{Name: "Id"}, {Name: "ParentRegionId"},
+			{Name: "Description"},
+		},
+		[]datatable.Column[keystone.Region]{},
+		items, TableOptions{
+			SortBy: []table.SortBy{{Name: "Name"}},
+			More:   long},
+	)
+}
+func PrintServices(items []keystone.Service, long bool) {
+	PrintItems(
+		[]datatable.Column[keystone.Service]{
+			{Name: "Id"}, {Name: "Name"}, {Name: "Type"},
+			{Name: "Enabled", AutoColor: true},
+		},
+		[]datatable.Column[keystone.Service]{
+			{Name: "Description"},
+		},
+		items, TableOptions{
+			SortBy: []table.SortBy{{Name: "Name"}},
+			More:   long},
+	)
+}
+func PrintService(item keystone.Service) {
+	PrintItem(
+		[]datatable.Field[keystone.Service]{
+			{Name: "Id"}, {Name: "Name"}, {Name: "Type"},
+			{Name: "Enabled"},
+			{Name: "Description"},
+		},
+		[]datatable.Field[keystone.Service]{},
+		item, TableOptions{},
+	)
+}
+func PrintEndpoints(items []keystone.Endpoint, long bool, serviceMap map[string]keystone.Service) {
+	PrintItems(
+		[]datatable.Column[keystone.Endpoint]{
+			{Name: "Id"}, {Name: "RegionId"},
+			{Name: "Service", RenderFunc: func(item keystone.Endpoint) interface{} {
+				if serviceMap != nil {
+					if service, ok := serviceMap[item.ServiceId]; ok {
+						return service.NameOrId()
+					}
+				}
+				return item.ServiceId
+			}},
+			{Name: "Interface"}, {Name: "Url"},
+		},
+		[]datatable.Column[keystone.Endpoint]{
+			{Name: "Visibility"}, {Name: "Protected"},
+		},
+		items, TableOptions{
+			SortBy: []table.SortBy{{Name: "Name"}},
+		},
+	)
+}
+func PrintEndpoint(item keystone.Endpoint, serviceMap map[string]keystone.Service) {
+	PrintItem(
+		[]datatable.Field[keystone.Endpoint]{
+			{Name: "Id"}, {Name: "RegionId"},
+			{Name: "Service", RenderFunc: func(item keystone.Endpoint) interface{} {
+				if serviceMap != nil {
+					if service, ok := serviceMap[item.ServiceId]; ok {
+						return service.NameOrId()
+					}
+				}
+				return item.ServiceId
+			}},
+			{Name: "Interface"}, {Name: "Url"},
+		},
+		[]datatable.Field[keystone.Endpoint]{},
+		item, TableOptions{
+			SortBy: []table.SortBy{{Name: "RegionId"}},
+		},
+	)
+}
+func PrintProjects(items []model.Project, long bool) {
+	PrintItems(
+		[]datatable.Column[model.Project]{
+			{Name: "Id"}, {Name: "Name"},
+			{Name: "Enabled", AutoColor: true},
+		},
+		[]datatable.Column[model.Project]{
+			{Name: "DomainId"}, {Name: "Description"},
+		},
+		items, TableOptions{
+			More: long,
+		},
+	)
+}
+func PrintProject(item model.Project) {
+	PrintItem(
+		[]datatable.Field[model.Project]{
+			{Name: "Id"}, {Name: "Name"},
+			{Name: "Description"},
+			{Name: "DomainId"},
+			{Name: "Enabled", AutoColor: true},
+			{Name: "IsDomain"},
+			{Name: "ParentId"},
+			{Name: "Tags"},
+		},
+		[]datatable.Field[model.Project]{},
+		item, TableOptions{},
+	)
+}
+func PrintUsers(items []model.User, long bool) {
+	PrintItems(
+		[]datatable.Column[model.User]{
+			{Name: "Id"}, {Name: "Name"},
+			{Name: "Enabled", AutoColor: true},
+		},
+		[]datatable.Column[model.User]{
+			{Name: "Project"}, {Name: "DomainId"},
+			{Name: "Description"}, {Name: "Email"},
+		},
+		items, TableOptions{More: long},
+	)
+}
+func PrintUser(item model.User) {
+	PrintItem(
+		[]datatable.Field[model.User]{
+			{Name: "Id"}, {Name: "Name"},
+			{Name: "Description"},
+			{Name: "DomainId"},
+			{Name: "Enabled", AutoColor: true},
+			{Name: "IsDomain"},
+			{Name: "ParentId"},
+			{Name: "Tags"},
+		},
+		[]datatable.Field[model.User]{},
+		item, TableOptions{},
 	)
 }

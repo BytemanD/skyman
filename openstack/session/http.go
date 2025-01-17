@@ -45,8 +45,8 @@ func LogBeforeRequest(c *resty.Client, r *resty.Request) error {
 	if r.Body != nil {
 		body, _ = json.Marshal(r.Body)
 	}
-	console.Debug("REQ: %s %s\n    Header: %v\n    Body: %s",
-		r.Method, r.URL, EncodeHeaders(r.Header, c.Header), body)
+	console.Debug("REQ: %s %s?%s\n    Header: %v\n    Body: %s",
+		r.Method, r.URL, r.QueryParam.Encode(), EncodeHeaders(r.Header, c.Header), body)
 	return nil
 }
 

@@ -51,67 +51,44 @@ var endpointList = &cobra.Command{
 
 		serviceMap := map[string]keystone.Service{}
 		if serviceName != "" {
-			services, err := c.Service().ListByName(serviceName)
-			if err != nil {
-				console.Fatal("get service '%s' failed, %v", serviceName, err)
-			}
-			if len(services) == 0 {
-				console.Fatal("service '%s' not found", serviceName)
-			}
-			for _, service := range services {
-				serviceMap[service.Id] = service
-				query.Add("service_id", service.Id)
-			}
+			service, err := c.Service().Find(serviceName)
+			utility.LogIfError(err, true, "get service '%s' failed, %v", serviceName)
+			serviceMap[service.Id] = *service
+			query.Add("service_id", service.Id)
 		}
 		items, err := c.Endpoint().List(query)
-		if err != nil {
-			console.Error("list endpoints failed, %s", err)
-
-		}
-
-		// TODO: 优化
-		serviceIds := []string{}
+		utility.LogIfError(err, true, "list endpoints failed")
 		for _, endpoint := range items {
-			found := false
-			for _, id := range serviceIds {
-				if id == endpoint.ServiceId {
-					found = true
-					break
-				}
-			}
-			if found {
+			if _, ok := serviceMap[endpoint.ServiceId]; ok {
 				continue
 			}
-			serviceIds = append(serviceIds, endpoint.ServiceId)
+			services, err := c.Service().List(nil)
+			utility.LogError(err, "get services failed", true)
+			for _, srv := range services {
+				if _, ok := serviceMap[srv.Id]; ok {
+					continue
+				}
+				serviceMap[srv.Id] = srv
+			}
 		}
-		services, err := c.Service().List(nil)
-		utility.LogError(err, "get services failed", true)
-		for _, service := range services {
-			serviceMap[service.Id] = service
-		}
-
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "RegionId", Sort: true},
-				{Name: "Service", Sort: true, Slot: func(item interface{}) interface{} {
-					p, _ := item.(keystone.Endpoint)
-					if service, ok := serviceMap[p.ServiceId]; ok {
-						return service.NameOrId()
-					} else {
-						return p.ServiceId
-					}
-				}},
-				{Name: "Interface"}, {Name: "Url"},
-			},
-		}
-		pt.AddItems(items)
-		common.PrintPrettyTable(pt, long)
+		common.PrintEndpoints(items, long, serviceMap)
 	},
 }
 var endpointCreate = &cobra.Command{
 	Use:   "create <service> <url>",
 	Short: "create endpoint",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.ExactArgs(2)(cmd, args); err != nil {
+			return err
+		}
+		public, _ := cmd.Flags().GetBool("public")
+		internal, _ := cmd.Flags().GetBool("internal")
+		admin, _ := cmd.Flags().GetBool("admin")
+		if !public && !internal && !admin {
+			return fmt.Errorf("at least one of --public, --internal and --admin needs to be specified")
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		disable, _ := cmd.Flags().GetBool("disable")
 
@@ -121,7 +98,6 @@ var endpointCreate = &cobra.Command{
 		admin, _ := cmd.Flags().GetBool("admin")
 
 		s, url := args[0], args[1]
-
 		c := openstack.DefaultClient().KeystoneV3()
 
 		service, err := c.Service().Find(s)
@@ -151,17 +127,7 @@ var endpointCreate = &cobra.Command{
 			}
 			endpoints = append(endpoints, *endpoint)
 		}
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "RegionId", Sort: true},
-				{Name: "Service", Sort: true, Slot: func(item interface{}) interface{} {
-					return service.NameOrId()
-				}},
-				{Name: "Interface"}, {Name: "Url"},
-			},
-		}
-		pt.AddItems(endpoints)
-		common.PrintPrettyTable(pt, false)
+		common.PrintEndpoints(endpoints, false, nil)
 	},
 }
 var endpointDelete = &cobra.Command{
