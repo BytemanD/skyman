@@ -52,7 +52,7 @@ var endpointList = &cobra.Command{
 		serviceMap := map[string]keystone.Service{}
 		if serviceName != "" {
 			service, err := c.Service().Find(serviceName)
-			utility.LogIfError(err, true, "get service '%s' failed, %v", serviceName)
+			utility.LogIfError(err, true, "get service '%s' failed", serviceName)
 			serviceMap[service.Id] = *service
 			query.Add("service_id", service.Id)
 		}
