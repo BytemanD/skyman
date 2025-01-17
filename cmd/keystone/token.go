@@ -1,9 +1,12 @@
 package keystone
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/common/datatable"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/utility"
@@ -23,28 +26,25 @@ var tokenIssue = &cobra.Command{
 		tokenId, _ := client.AuthPlugin.GetTokenId()
 		token, _ := client.AuthPlugin.GetToken()
 
-		pt := common.PrettyItemTable{
-			Item:            *token,
-			Number2WidthMax: 184,
-			ShortFields: []common.Column{
-				{Name: "TokenId", Text: "Id", Slot: func(item interface{}) interface{} {
+		common.PrintItem[model.Token](
+			[]datatable.Field[model.Token]{
+				{Name: "TokenId", Text: "Id", RenderFunc: func(item model.Token) interface{} {
 					return tokenId
 				}},
 				{Name: "ExpiresAt"},
-				{Name: "ProjectId", Text: "Project Id", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(model.Token)
-					return p.Project.Id
+				{Name: "ProjectId", Text: "Project", RenderFunc: func(item model.Token) interface{} {
+					return fmt.Sprintf("%s (%s)", item.Project.Id, item.Project.Name)
 				}},
-				{Name: "UserId", Text: "User Id", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(model.Token)
-					return p.User.Id
+				{Name: "UserId", Text: "User", RenderFunc: func(item model.Token) interface{} {
+					return fmt.Sprintf("%s (%s)", item.User.Id, item.User.Name)
 				}},
-				{Name: "IsAdmin", Slot: func(item interface{}) interface{} {
+				{Name: "IsAdmin", RenderFunc: func(item model.Token) interface{} {
 					return client.AuthPlugin.IsAdmin()
 				}},
 			},
-		}
-		common.PrintPrettyItemTable(pt)
+			[]datatable.Field[model.Token]{},
+			*token, common.TableOptions{ValueColumnMaxWidth: 184},
+		)
 	},
 }
 

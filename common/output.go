@@ -75,10 +75,11 @@ type DataRender[T any] interface {
 }
 
 type TableOptions struct {
-	SeparateRows  bool
-	More          bool
-	ColumnConfigs []table.ColumnConfig
-	SortBy        []table.SortBy
+	SeparateRows        bool
+	More                bool
+	ColumnConfigs       []table.ColumnConfig
+	SortBy              []table.SortBy
+	ValueColumnMaxWidth int
 }
 
 func printDataTable[T any](dt DataRender[T], long bool) {
@@ -122,10 +123,11 @@ func PrintItems[T any](columns, moreColumns []datatable.Column[T], items []T, op
 
 func PrintItem[T any](fields, moreFields []datatable.Field[T], item T, opt TableOptions) {
 	dt := datatable.DataIterator[T]{
-		Fields:       fields,
-		MoreFields:   moreFields,
-		SeparateRows: opt.SeparateRows,
-		Items:        []T{item},
+		Fields:              fields,
+		MoreFields:          moreFields,
+		SeparateRows:        opt.SeparateRows,
+		Items:               []T{item},
+		ValueColumnMaxWidth: opt.ValueColumnMaxWidth,
 	}
 	printDataTable[T](&dt, opt.More)
 }
