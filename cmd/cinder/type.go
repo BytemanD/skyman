@@ -80,7 +80,7 @@ var typeList = &cobra.Command{
 		if long {
 			table.StyleSeparateRows = true
 		}
-		common.PrintPrettyTable(table, long)
+		common.PrintVolumeTypes(volumeTypes, long)
 	},
 }
 var typeShow = &cobra.Command{
@@ -91,7 +91,7 @@ var typeShow = &cobra.Command{
 		client := openstack.DefaultClient()
 		volumeType, err := client.CinderV2().VolumeType().Find(args[0])
 		utility.LogError(err, "get volume type failed", true)
-		printVolumeType(*volumeType)
+		common.PrintVolumeType(*volumeType)
 	},
 }
 var typeDefault = &cobra.Command{
@@ -102,7 +102,7 @@ var typeDefault = &cobra.Command{
 		client := openstack.DefaultClient()
 		volumeType, err := client.CinderV2().VolumeType().Show("default")
 		utility.LogError(err, "get default volume type failed", true)
-		printVolumeType(*volumeType)
+		common.PrintVolumeType(*volumeType)
 	},
 }
 var typeCreate = &cobra.Command{
@@ -153,7 +153,7 @@ var typeCreate = &cobra.Command{
 		client := openstack.DefaultClient()
 		volume, err := client.CinderV2().VolumeType().Create(params)
 		utility.LogError(err, "create volume type failed", true)
-		printVolumeType(*volume)
+		common.PrintVolumeType(*volume)
 	},
 }
 var typeDelete = &cobra.Command{

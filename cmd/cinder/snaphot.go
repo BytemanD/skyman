@@ -36,23 +36,7 @@ var snapshotList = &cobra.Command{
 		}
 		snapshots, err := client.CinderV2().Snapshot().Detail(query)
 		utility.LogError(err, "list snapshot falied", true)
-		table := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name"},
-				{Name: "Status", AutoColor: true},
-				{Name: "Size"},
-				{Name: "VolumeId"},
-			},
-			LongColumns: []common.Column{
-				{Name: "Description"},
-				{Name: "CreatedAt"},
-			},
-		}
-		table.AddItems(snapshots)
-		if long {
-			table.StyleSeparateRows = true
-		}
-		common.PrintPrettyTable(table, long)
+		common.PrintSnapshots(snapshots, long)
 	},
 }
 
@@ -65,7 +49,7 @@ var snapshotShow = &cobra.Command{
 		idOrName := args[0]
 		snapshot, err := client.CinderV2().Snapshot().Find(idOrName)
 		utility.LogError(err, "get snapshot failed", true)
-		printSnapshot(*snapshot)
+		common.PrintSnapshot(*snapshot)
 	},
 }
 var snapshotDelete = &cobra.Command{
@@ -108,7 +92,7 @@ var snapshotCreate = &cobra.Command{
 		utility.LogIfError(err, true, "create snaphost failed")
 		snapshot, err = client.CinderV2().Snapshot().Show(snapshot.Id)
 		utility.LogIfError(err, true, "show snapshot failed")
-		printSnapshot(*snapshot)
+		common.PrintSnapshot(*snapshot)
 	},
 }
 var snapshotRevert = &cobra.Command{

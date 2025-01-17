@@ -5,13 +5,11 @@ import (
 	"net/url"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/utility"
-	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 )
 
@@ -49,28 +47,7 @@ var volumeList = &cobra.Command{
 		}
 		volumes, err := client.CinderV2().Volume().Detail(query)
 		utility.LogError(err, "list volume falied", true)
-		table := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
-				{Name: "Size", Align: text.AlignRight},
-				{Name: "Bootable"}, {Name: "VolumeType"},
-				{Name: "Attachments", Slot: func(item interface{}) interface{} {
-					obj, _ := (item).(cinder.Volume)
-					return strings.Join(obj.GetAttachmentList(), "\n")
-				}},
-			},
-			LongColumns: []common.Column{
-				{Name: "Metadata", Slot: func(item interface{}) interface{} {
-					obj, _ := (item).(cinder.Volume)
-					return strings.Join(obj.GetMetadataList(), "\n")
-				}},
-			},
-		}
-		table.AddItems(volumes)
-		if long {
-			table.StyleSeparateRows = true
-		}
-		common.PrintPrettyTable(table, long)
+		common.PrintVolumes(volumes, long)
 	},
 }
 
@@ -83,7 +60,7 @@ var volumeShow = &cobra.Command{
 		idOrName := args[0]
 		volume, err := client.CinderV2().Volume().Find(idOrName)
 		utility.LogError(err, "get volume failed", true)
-		printVolume(*volume)
+		common.PrintVolume(*volume)
 	},
 }
 var volumeDelete = &cobra.Command{
@@ -138,7 +115,7 @@ var volumeCreate = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		printVolume(*volume)
+		common.PrintVolume(*volume)
 	},
 }
 var volumeExtend = &cobra.Command{

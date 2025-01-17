@@ -9,6 +9,7 @@ import (
 
 	"github.com/BytemanD/skyman/common/datatable"
 	"github.com/BytemanD/skyman/openstack/model"
+	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/openstack/model/glance"
 	"github.com/BytemanD/skyman/openstack/model/keystone"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
@@ -567,5 +568,174 @@ func PrintUser(item model.User) {
 		},
 		[]datatable.Field[model.User]{},
 		item, TableOptions{},
+	)
+}
+
+// cinder
+
+func PrintVolumeServices(items []cinder.Service, long bool) {
+	PrintItems(
+		[]datatable.Column[cinder.Service]{
+			{Name: "Binary"},
+			{Name: "Host"}, {Name: "Zone"},
+			{Name: "Status", AutoColor: true},
+			{Name: "State", AutoColor: true},
+			{Name: "UpdatedAt"},
+		},
+		[]datatable.Column[cinder.Service]{
+			{Name: "DisabledReason"},
+		},
+		items, TableOptions{
+			SeparateRows: long,
+			More:         long},
+	)
+}
+func PrintVolumeTypes(items []cinder.VolumeType, long bool) {
+	PrintItems(
+		[]datatable.Column[cinder.VolumeType]{
+			{Name: "Id"}, {Name: "Name"}, {Name: "IsPublic"},
+		},
+		[]datatable.Column[cinder.VolumeType]{
+			{Name: "Description"},
+			{Name: "ExtraSpecs", RenderFunc: func(item cinder.VolumeType) interface{} {
+				return strings.Join(item.GetExtraSpecsList(), "\n")
+			}},
+		},
+		items, TableOptions{
+			SeparateRows: long,
+			More:         long},
+	)
+}
+func PrintVolumeType(volumeType cinder.VolumeType) {
+	PrintItem(
+		[]datatable.Field[cinder.VolumeType]{
+			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
+			{Name: "IsPublic"}, {Name: "IsEncrypted"},
+			{Name: "QosSpecsId"},
+			{Name: "ExtraSpecs", RenderFunc: func(item cinder.VolumeType) interface{} {
+				return strings.Join(item.GetExtraSpecsList(), "\n")
+			}},
+		},
+		[]datatable.Field[cinder.VolumeType]{},
+		volumeType, TableOptions{},
+	)
+}
+func PrintVolumes(items []cinder.Volume, long bool) {
+	PrintItems(
+		[]datatable.Column[cinder.Volume]{
+			{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
+			{Name: "Size", Align: text.AlignRight},
+			{Name: "Bootable"}, {Name: "VolumeType"},
+			{Name: "Attachments", RenderFunc: func(item cinder.Volume) interface{} {
+				return strings.Join(item.GetAttachmentList(), "\n")
+			}},
+		},
+		[]datatable.Column[cinder.Volume]{
+			{Name: "Metadata", RenderFunc: func(item cinder.Volume) interface{} {
+				return strings.Join(item.GetMetadataList(), "\n")
+			}},
+		},
+		items, TableOptions{SeparateRows: long, More: long},
+	)
+}
+func PrintVolume(volume cinder.Volume) {
+	PrintItem(
+		[]datatable.Field[cinder.Volume]{
+			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
+			{Name: "Status"}, {Name: "TaskStatus"},
+			{Name: "Size"}, {Name: "Bootable"},
+			{Name: "Attachments", RenderFunc: func(item cinder.Volume) interface{} {
+				return strings.Join(item.GetAttachmentList(), "\n")
+			}},
+			{Name: "VolumeType"},
+			{Name: "Metadata", RenderFunc: func(item cinder.Volume) interface{} {
+				return strings.Join(item.GetMetadataList(), "\n")
+			}},
+			{Name: "AvailabilityZone"}, {Name: "Host"},
+			{Name: "Multiattach"}, {Name: "GroupId"}, {Name: "SourceVolid"},
+			{Name: "VolumeImageMetadata", RenderFunc: func(item cinder.Volume) interface{} {
+				return strings.Join(item.GetImageMetadataList(), "\n")
+			}},
+			{Name: "CreatedAt"}, {Name: "UpdatedAt"},
+			{Name: "UserId"}, {Name: "TenantId"},
+		},
+		[]datatable.Field[cinder.Volume]{},
+		volume, TableOptions{},
+	)
+}
+func PrintSnapshots(items []cinder.Snapshot, long bool) {
+	PrintItems(
+		[]datatable.Column[cinder.Snapshot]{
+			{Name: "Id"}, {Name: "Name"},
+			{Name: "Status", AutoColor: true},
+			{Name: "Size"},
+			{Name: "VolumeId"},
+		},
+		[]datatable.Column[cinder.Snapshot]{
+			{Name: "Description"},
+			{Name: "CreatedAt"},
+		},
+		items, TableOptions{SeparateRows: long, More: long},
+	)
+}
+func PrintSnapshot(snapshot cinder.Snapshot) {
+	PrintItem(
+		[]datatable.Field[cinder.Snapshot]{
+			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
+			{Name: "Status"},
+			{Name: "VolumeId"},
+			{Name: "Size"},
+			{Name: "Metadata", RenderFunc: func(p cinder.Snapshot) interface{} {
+				if p.Metadata == nil {
+					return ""
+				}
+				metatadata, _ := json.Marshal(p.Metadata)
+				return string(metatadata)
+			}},
+			{Name: "Progress"},
+			{Name: "ProjectId"},
+			{Name: "CreatedAt"}, {Name: "UpdatedAt"},
+		},
+		[]datatable.Field[cinder.Snapshot]{},
+		snapshot, TableOptions{},
+	)
+}
+func PrintBackups(items []cinder.Backup, long bool) {
+	PrintItems(
+		[]datatable.Column[cinder.Backup]{
+			{Name: "Id"}, {Name: "Name"},
+			{Name: "Status", AutoColor: true},
+			{Name: "Size"},
+			{Name: "VolumeId"},
+		},
+		[]datatable.Column[cinder.Backup]{
+			{Name: "Description"},
+			{Name: "CreatedAt"},
+		},
+		items, TableOptions{
+			SeparateRows: long,
+			More:         long},
+	)
+}
+func PrintBackup(backup cinder.Backup) {
+	PrintItem(
+		[]datatable.Field[cinder.Backup]{
+			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
+			{Name: "Status"},
+			{Name: "VolumeId"},
+			{Name: "Size"},
+			{Name: "Metadata", RenderFunc: func(p cinder.Backup) interface{} {
+				if p.Metadata == nil {
+					return ""
+				}
+				metatadata, _ := json.Marshal(p.Metadata)
+				return string(metatadata)
+			}},
+			{Name: "Progress"},
+			{Name: "ProjectId"},
+			{Name: "CreatedAt"}, {Name: "UpdatedAt"},
+		},
+		[]datatable.Field[cinder.Backup]{},
+		backup, TableOptions{},
 	)
 }

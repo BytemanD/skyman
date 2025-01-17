@@ -36,23 +36,7 @@ var backupList = &cobra.Command{
 		}
 		backups, err := client.CinderV2().Backup().Detail(query)
 		utility.LogError(err, "list backup falied", true)
-		table := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"}, {Name: "Name"},
-				{Name: "Status", AutoColor: true},
-				{Name: "Size"},
-				{Name: "VolumeId"},
-			},
-			LongColumns: []common.Column{
-				{Name: "Description"},
-				{Name: "CreatedAt"},
-			},
-		}
-		table.AddItems(backups)
-		if long {
-			table.StyleSeparateRows = true
-		}
-		common.PrintPrettyTable(table, long)
+		common.PrintBackups(backups, long)
 	},
 }
 
@@ -65,7 +49,7 @@ var backupShow = &cobra.Command{
 		idOrName := args[0]
 		backup, err := client.CinderV2().Backup().Find(idOrName)
 		utility.LogError(err, "get backup failed", true)
-		printBackup(*backup)
+		common.PrintBackup(*backup)
 	},
 }
 var backupDelete = &cobra.Command{
@@ -108,7 +92,7 @@ var backupCreate = &cobra.Command{
 		utility.LogIfError(err, true, "create backup failed")
 		backup, err = client.CinderV2().Backup().Show(backup.Id)
 		utility.LogIfError(err, true, "show backup failed")
-		printBackup(*backup)
+		common.PrintBackup(*backup)
 	},
 }
 

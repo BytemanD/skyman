@@ -8,8 +8,8 @@ import (
 	"sync"
 
 	"github.com/BytemanD/go-console/console"
-	"github.com/BytemanD/skyman/common"
 
+	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/internal"
 	"github.com/BytemanD/skyman/openstack/internal/auth_plugin"
 	"github.com/BytemanD/skyman/openstack/model"

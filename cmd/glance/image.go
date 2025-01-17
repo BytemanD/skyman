@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/spf13/cobra"
+
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/glance"
 	"github.com/BytemanD/skyman/utility"
-	"github.com/spf13/cobra"
 )
 
 var Image = &cobra.Command{Use: "image"}

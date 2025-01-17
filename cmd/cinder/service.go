@@ -5,6 +5,7 @@ import (
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -32,24 +33,18 @@ var list = &cobra.Command{
 
 		services, err := client.CinderV2().Service().List(query)
 		utility.LogIfError(err, true, "get services failed")
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Binary"},
-				{Name: "Host"}, {Name: "Zone"},
-				{Name: "Status", AutoColor: true},
-				{Name: "State", AutoColor: true},
-				{Name: "UpdatedAt"},
-			},
-			LongColumns: []common.Column{
-				{Name: "DisabledReason"},
-			},
-			Filters: map[string]string{},
-		}
 		if zone != "" {
-			pt.ShortColumns[3].Filters = []string{zone}
+			filterServices := []cinder.Service{}
+			for _, srv := range services {
+				if srv.Zone != zone {
+					continue
+				}
+				filterServices = append(filterServices, srv)
+			}
+			common.PrintVolumeServices(filterServices, long)
+		} else {
+			common.PrintVolumeServices(services, long)
 		}
-		pt.AddItems(services)
-		common.PrintPrettyTable(pt, long)
 	},
 }
 
