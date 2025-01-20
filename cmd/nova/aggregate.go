@@ -28,23 +28,6 @@ var aggList = &cobra.Command{
 		client := openstack.DefaultClient()
 		aggregates, err := client.NovaV2().Aggregate().List(nil)
 		utility.LogError(err, "list aggregates failed", true)
-		pt := common.PrettyTable{
-			ShortColumns: []common.Column{
-				{Name: "Id"},
-				{Name: "Name", Sort: true},
-				{Name: "AvailabilityZone"},
-				{Name: "HostNum", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(nova.Aggregate)
-					return len(p.Hosts)
-				}},
-			},
-			LongColumns: []common.Column{
-				{Name: "Metadata", Slot: func(item interface{}) interface{} {
-					p, _ := (item).(nova.Aggregate)
-					return p.MarshalMetadata()
-				}},
-			},
-		}
 		filteredAggs := []nova.Aggregate{}
 		if *aggListFlags.Name != "" {
 			for _, agg := range aggregates {
@@ -56,8 +39,7 @@ var aggList = &cobra.Command{
 		} else {
 			filteredAggs = aggregates
 		}
-		pt.AddItems(filteredAggs)
-		common.PrintPrettyTable(pt, *aggListFlags.Long)
+		common.PrintAggregates(filteredAggs, *aggListFlags.Long)
 	},
 }
 var aggShow = &cobra.Command{

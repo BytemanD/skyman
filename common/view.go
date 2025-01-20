@@ -16,6 +16,48 @@ import (
 	"github.com/BytemanD/skyman/openstack/model/nova"
 )
 
+// nova
+
+func PrintAggregates(items []nova.Aggregate, long bool) {
+	PrintItems(
+		[]datatable.Column[nova.Aggregate]{
+			{Name: "Id"},
+			{Name: "Name"},
+			{Name: "AvailabilityZone"},
+			{Name: "HostNum", RenderFunc: func(item nova.Aggregate) interface{} {
+				return len(item.Hosts)
+			}},
+		},
+		[]datatable.Column[nova.Aggregate]{
+			{Name: "Metadata", RenderFunc: func(item nova.Aggregate) interface{} {
+				return item.MarshalMetadata()
+			}},
+		},
+		items, TableOptions{
+			SortBy:       []table.SortBy{{Name: "Name"}},
+			SeparateRows: long,
+			More:         long},
+	)
+}
+func PrintAggregate(item nova.Aggregate) {
+	PrintItem(
+		[]datatable.Field[nova.Aggregate]{
+			{Name: "Id"}, {Name: "Name"}, {Name: "AvailabilityZone"},
+			{Name: "Hosts", RenderFunc: func(item nova.Aggregate) interface{} {
+				return strings.Join(item.Hosts, "\n")
+			}},
+			{Name: "Metadata", RenderFunc: func(item nova.Aggregate) interface{} {
+
+				return item.MarshalMetadata()
+			}},
+			{Name: "CreatedAt"}, {Name: "UpdatedAt"},
+			{Name: "Deleted"}, {Name: "DeletedAt"},
+		},
+		[]datatable.Field[nova.Aggregate]{},
+		item, TableOptions{},
+	)
+}
+
 func PrintNetworks(items []neutron.Network, long bool) {
 	PrintItems(
 		[]datatable.Column[neutron.Network]{
