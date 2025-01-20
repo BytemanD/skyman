@@ -31,6 +31,7 @@ var (
 	ACTION_REBUILD           = "rebuild"
 	ACTION_RESIZE            = "resize"
 	ACTION_RENAME            = "rename"
+	ACTION_SET_NAME          = "setname"
 	ACTION_SUSPEND           = "suspend"
 	ACTION_RESUME            = "resume"
 	ACTION_TOGGLE_SUSPEND    = "toggle_suspend"
@@ -384,6 +385,9 @@ func init() {
 	})
 	VALID_ACTIONS.register(ACTION_RENAME, func(s *nova.Server, c *openstack.Openstack) ServerAction {
 		return &ServerRename{ServerActionTest: ServerActionTest{Server: s, Client: c}}
+	})
+	VALID_ACTIONS.register(ACTION_SET_NAME, func(s *nova.Server, c *openstack.Openstack) ServerAction {
+		return &ServerSetName{ServerActionTest: ServerActionTest{Server: s, Client: c}}
 	})
 	VALID_ACTIONS.register(ACTION_SUSPEND, func(s *nova.Server, c *openstack.Openstack) ServerAction {
 		return &ServerSuspend{ServerActionTest: ServerActionTest{Server: s, Client: c}}

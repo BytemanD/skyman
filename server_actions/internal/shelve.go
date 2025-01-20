@@ -72,7 +72,6 @@ type ServerToggleShelve struct {
 }
 
 func (t ServerToggleShelve) Start() error {
-	t.RefreshServer()
 	if t.Server.IsShelved() {
 		err := t.Client.NovaV2().Server().Unshelve(t.Server.Id)
 		if err != nil {

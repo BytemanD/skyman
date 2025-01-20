@@ -77,10 +77,11 @@ var TestServerAction = &cobra.Command{
 					console.Fatal("parse actions '%s' failed, %s", actionCase.Actions, err)
 				}
 				testCase := server_actions.Case{
-					Name:    actionCase.Name,
-					Actions: *acl,
-					Client:  client,
-					Config:  common.NewActionCaseConfig(actionCase.Config, testConf.Default),
+					Name:       actionCase.Name,
+					UseServers: userServers,
+					Actions:    *acl,
+					Client:     client,
+					Config:     common.NewActionCaseConfig(actionCase.Config, testConf.Default),
 				}
 				testCases = append(testCases, testCase)
 			}

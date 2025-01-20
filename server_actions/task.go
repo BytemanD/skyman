@@ -193,7 +193,12 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 	console.Info("[%s] ======== Test actions: %s, workers: %d", server.Id,
 		strings.Join(t.Actions.FormatActions(), ","), t.Config.Workers,
 	)
-	pbr := console.NewPbr(t.Actions.Total(), fmt.Sprintf("test id: %d", testId))
+
+	title := t.Name
+	if title == "" {
+		title = strings.Join(t.Actions.FormatActions(), ",")
+	}
+	pbr := console.NewPbr(t.Actions.Total(), fmt.Sprintf("%s (%d)", title, testId))
 	for _, actionName := range t.Actions.Actions() {
 		action := internal.VALID_ACTIONS.Get(actionName, server, t.Client)
 		action.SetConfig(t.Config)
@@ -201,7 +206,7 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 			actionsReport.Error = fmt.Errorf("action '%s' not found", actionName)
 			return
 		}
-		console.Info(utility.BlueString(fmt.Sprintf("[%s] ==== %s", server.Id, actionName)))
+		console.Info(utility.BlueString("[%s] ==== %s"), server.Id, actionName)
 
 		// 更新实例信息
 		if err := action.RefreshServer(); err != nil {
@@ -253,9 +258,7 @@ func (t *Case) Start() {
 	if len(t.UseServers) > 0 {
 		console.Warn("use exits servers: %s", strings.Join(t.UseServers, ","))
 		syncutils.StartTasks(
-			syncutils.TaskOption{
-				MaxWorker: len(t.UseServers),
-			},
+			syncutils.TaskOption{MaxWorker: len(t.UseServers)},
 			arrayutils.Range(1, t.Config.Workers+1),
 			func(testId int) error {
 				report := t.testActions(testId, t.UseServers[testId-1])

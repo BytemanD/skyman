@@ -7,22 +7,22 @@ import (
 	"github.com/BytemanD/go-console/console"
 )
 
-type ServerRename struct {
+type ServerSetName struct {
 	ServerActionTest
 	EmptyCleanup
 }
 
-func (t *ServerRename) Skip() (bool, string) {
+func (t *ServerSetName) Skip() (bool, string) {
 	if t.Server.IsShelved() {
 		return true, "server is shelved"
 	}
 	return false, ""
 }
-func (t ServerRename) Start() error {
+func (t ServerSetName) Start() error {
 	console.Info("[%s] old name is %s", t.Server.Id, t.Server.Name)
 	newName := time.Now().Format(time.DateTime)
 	console.Info("[%s] set name to %s", t.Server.Id, newName)
-	err := t.Client.NovaV2().Server().Rename(t.Server.Id, newName)
+	err := t.Client.NovaV2().Server().SetName(t.Server.Id, newName)
 	if err != nil {
 		return err
 	}

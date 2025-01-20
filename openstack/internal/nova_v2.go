@@ -698,6 +698,12 @@ func (c ServerApi) WaitStatus(serverId string, status string, interval int) (*no
 	)
 	return server, err
 }
+
+func (c ServerApi) Rename(id string, name string) error {
+	_, err := c.doAction("rename", id, map[string]interface{}{"name": name})
+	return err
+}
+
 func (c ServerApi) WaitBooted(id string) (*nova.Server, error) {
 	for {
 		server, err := c.Show(id)
