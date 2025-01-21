@@ -703,26 +703,26 @@ var serverRebuild = &cobra.Command{
 		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get server %s failed", args[0])
 
-		options := map[string]interface{}{}
+		opt := nova.RebuilOpt{
+			Password: *rebuildFlags.Password,
+			Name:     *rebuildFlags.Name,
+		}
 		if *rebuildFlags.Image != "" {
 			image, err := client.GlanceV2().Images().Find(*rebuildFlags.Image)
 			utility.LogError(err, "get image failed", true)
-			options["imageRef"] = image.Id
+			opt.ImageId = image.Id
 		}
-		if *rebuildFlags.Password != "" {
-			options["adminPass"] = *rebuildFlags.Password
-		}
-		if *rebuildFlags.Name != "" {
-			options["name"] = *rebuildFlags.Name
-		}
-		if *rebuildFlags.UserData != "" {
+
+		if *rebuildFlags.UserDataUnset {
+			opt.UserData = nil
+		} else if *rebuildFlags.UserData != "" {
 			content, err := utility.LoadUserData(*rebuildFlags.UserData)
 			utility.LogError(err, "read user data failed", true)
-			options["user_data"] = content
-		} else if *rebuildFlags.UserDataUnset {
-			options["user_data"] = nil
+			opt.UserData = content
+		} else {
+			opt.UserData = ""
 		}
-		err = client.NovaV2().Server().Rebuild(server.Id, options)
+		err = client.NovaV2().Server().Rebuild(server.Id, opt)
 		if err != nil {
 			console.Error("Reqeust to rebuild server failed, %v", err)
 		} else {

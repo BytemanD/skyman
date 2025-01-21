@@ -46,3 +46,10 @@ func ParseServerOptNetworks(nics []string) []ServerOptNetwork {
 	}
 	return networks
 }
+
+type RebuilOpt struct {
+	ImageId  string
+	Password string
+	Name     string
+	UserData interface{}
+}

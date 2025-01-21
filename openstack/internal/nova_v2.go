@@ -459,8 +459,27 @@ func (c ServerApi) ResizeRevert(id string) error {
 	return err
 }
 
-// TODO: more params
-func (c ServerApi) Rebuild(id string, options map[string]interface{}) error {
+// @param	opt nova.RebuilOpt
+//
+//	UserData=nil: 删除user data
+//	UserData="" : 不指定 user data 参数
+//	UserData=非空: 指定 user data 参数
+func (c ServerApi) Rebuild(id string, opt nova.RebuilOpt) error {
+	options := map[string]interface{}{}
+	if opt.ImageId != "" {
+		options["imageRef"] = opt.ImageId
+	}
+	if opt.Password != "" {
+		options["adminPass"] = opt.Password
+	}
+	if opt.Name != "" {
+		options["name"] = opt.Name
+	}
+	if opt.UserData == nil {
+		options["user_data"] = nil
+	} else if opt.UserData != "" {
+		options["user_data"] = opt.UserData
+	}
 	_, err := c.doAction("rebuild", id, options)
 	return err
 }

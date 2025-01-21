@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/BytemanD/go-console/console"
+	"github.com/BytemanD/skyman/openstack/model/nova"
 )
 
 type ServerRebuild struct {
@@ -12,7 +13,7 @@ type ServerRebuild struct {
 }
 
 func (t ServerRebuild) Start() error {
-	err := t.Client.NovaV2().Server().Rebuild(t.Server.Id, map[string]interface{}{})
+	err := t.Client.NovaV2().Server().Rebuild(t.Server.Id, nova.RebuilOpt{})
 	if err != nil {
 		return err
 	}
