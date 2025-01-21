@@ -1,6 +1,7 @@
 package nova
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -682,13 +683,22 @@ var serverMigrate = &cobra.Command{
 var serverRebuild = &cobra.Command{
 	Use:   "rebuild <server>",
 	Short: "Rebuild server",
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
+			return err
+		}
+		if *rebuildFlags.UserData != "" && *rebuildFlags.UserDataUnset {
+			return errors.New("cannot specify '--user-data-unset' with '--user-data'")
+		}
+		if *rebuildFlags.UserData != "" {
+			if !utility.IsFileExists(*rebuildFlags.UserData) {
+				return fmt.Errorf("file %s not exists", *rebuildFlags.UserData)
+			}
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		client := openstack.DefaultClient()
-
-		// imageIdOrName, _ := cmd.Flags().GetString("image")
-		// rebuildPassword, _ := cmd.Flags().GetString("rebuild-password")
-		// name, _ := cmd.Flags().GetString("name")
 
 		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get server %s failed", args[0])
@@ -705,7 +715,13 @@ var serverRebuild = &cobra.Command{
 		if *rebuildFlags.Name != "" {
 			options["name"] = *rebuildFlags.Name
 		}
-
+		if *rebuildFlags.UserData != "" {
+			content, err := utility.LoadUserData(*rebuildFlags.UserData)
+			utility.LogError(err, "read user data failed", true)
+			options["user_data"] = content
+		} else if *rebuildFlags.UserDataUnset {
+			options["user_data"] = nil
+		}
 		err = client.NovaV2().Server().Rebuild(server.Id, options)
 		if err != nil {
 			console.Error("Reqeust to rebuild server failed, %v", err)
@@ -1024,9 +1040,11 @@ func init() {
 		Description:    serverSet.Flags().String("description", "", "Server description"),
 	}
 	rebuildFlags = flags.ServerRebuildFlags{
-		Image:    serverRebuild.Flags().String("image", "", "Name or ID of server."),
-		Password: serverRebuild.Flags().String("rebuild-password", "", " Set the provided admin password on the rebuilt server."),
-		Name:     serverRebuild.Flags().String("name", "", "Name for the new server."),
+		Image:         serverRebuild.Flags().String("image", "", "Name or ID of server."),
+		Password:      serverRebuild.Flags().String("rebuild-password", "", " Set the provided admin password on the rebuilt server."),
+		Name:          serverRebuild.Flags().String("name", "", "Name for the new server."),
+		UserData:      serverRebuild.Flags().String("user-data", "", "user data file to pass to be exposed by the metadata server."),
+		UserDataUnset: serverRebuild.Flags().Bool("user-data-unset", false, "Unset user_data in the server."),
 	}
 	createImageFlags = flags.ServerCreateImageFlags{
 		Metadata: createImageCmd.Flags().StringArray("metadata", []string{}, "Image metadata, format: key=value"),

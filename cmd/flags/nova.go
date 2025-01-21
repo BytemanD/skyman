@@ -65,9 +65,11 @@ type ServerMigrateFlags struct {
 	Wait         *bool
 }
 type ServerRebuildFlags struct {
-	Image    *string
-	Password *string
-	Name     *string
+	Image         *string
+	Password      *string
+	Name          *string
+	UserData      *string
+	UserDataUnset *bool
 }
 type ServerEvacuateFlags struct {
 	Password *string
