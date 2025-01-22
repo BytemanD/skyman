@@ -133,7 +133,7 @@ func (o *Openstack) GlanceV2() *internal.GlanceV2 {
 
 		}
 		o.glanceClient = &internal.GlanceV2{
-			ServiceClient: internal.NewServiceApi[internal.ServiceClient](endpoint, V2, o.AuthPlugin),
+			ServiceClient: internal.NewServiceApi(endpoint, V2, o.AuthPlugin),
 		}
 	}
 	return o.glanceClient
@@ -154,7 +154,7 @@ func (o *Openstack) CinderV2() *internal.CinderV2 {
 
 		}
 		o.cinderClient = &internal.CinderV2{
-			ServiceClient: internal.NewServiceApi[internal.ServiceClient](endpoint, V2, o.AuthPlugin),
+			ServiceClient: internal.NewServiceApi(endpoint, V2, o.AuthPlugin),
 		}
 	}
 	return o.cinderClient
@@ -190,7 +190,7 @@ func (o *Openstack) KeystoneV3() *internal.KeystoneV3 {
 			console.Fatal("get keystone endpoint falied: %v", err)
 		}
 		o.keystoneClient = &internal.KeystoneV3{
-			ServiceClient: internal.NewServiceApi[internal.ServiceClient](endpoint, V3, o.AuthPlugin),
+			ServiceClient: internal.NewServiceApi(endpoint, V3, o.AuthPlugin),
 		}
 	}
 	return o.keystoneClient

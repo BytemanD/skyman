@@ -33,7 +33,6 @@ func (result HttpResult) GetError() error {
 	if !result.IsError() {
 		return nil
 	}
-	fmt.Println("xxxx", result)
 	return fmt.Errorf("result Err=%v, StatusCode: %v",
 		result.Err, result.Resp.StatusCode())
 }

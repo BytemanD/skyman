@@ -49,13 +49,13 @@ func (c *ServiceClient) Index(result interface{}) (*session.Response, error) {
 	return &session.Response{Response: resp}, err
 }
 
-func NewServiceApi[T ServiceClient](endpoint string, version string, authPlugin auth_plugin.AuthPlugin) *T {
+func NewServiceApi(endpoint string, version string, authPlugin auth_plugin.AuthPlugin) *ServiceClient {
 	u, _ := url.Parse(endpoint)
 	urlPath := strings.TrimSuffix(u.Path, "/")
 	if !strings.HasPrefix(urlPath, fmt.Sprintf("/%s", version)) {
 		u.Path = fmt.Sprintf("/%s", version)
 	}
-	return &T{
+	return &ServiceClient{
 		Url:        u.String(),
 		AuthPlugin: authPlugin,
 		rawClient: session.DefaultRestyClient().
