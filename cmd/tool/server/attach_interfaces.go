@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/BytemanD/easygo/pkg/arrayutils"
-	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/spf13/cobra"
 )
 
@@ -113,7 +113,7 @@ var attachInterfaces = &cobra.Command{
 				for {
 					port, err := client.NeutronV2().Port().Show(attachment.PortId)
 
-					if securityGroup != nil && !stringutils.ContainsString(port.SecurityGroups, securityGroup.Id) {
+					if securityGroup != nil && !slice.Contain(port.SecurityGroups, securityGroup.Id) {
 						console.Info("[interface: %s] update port security group to %s(%s)", port.Id, sg, securityGroup.Id)
 						_, err = client.NeutronV2().Port().Update(
 							port.Id,

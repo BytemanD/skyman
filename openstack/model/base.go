@@ -40,10 +40,10 @@ func (resource Resource) NameOrId() string {
 	}
 }
 func (resource Resource) IsActive() bool {
-	return strings.ToUpper(resource.Status) == "ACTIVE"
+	return strings.EqualFold(resource.Status, "ACTIVE")
 }
 func (resource Resource) IsError() bool {
-	return strings.ToUpper(resource.Status) == "ERROR"
+	return strings.EqualFold(resource.Status, "ERROR")
 }
 
 type ApiVersion struct {
@@ -66,7 +66,7 @@ type ApiVersions []ApiVersion
 
 func (client ApiVersions) Current() *ApiVersion {
 	for _, version := range client {
-		if strings.ToUpper(version.Status) == "CURRENT" {
+		if strings.EqualFold(version.Status, "CURRENT") {
 			return &version
 		}
 	}
@@ -75,7 +75,7 @@ func (client ApiVersions) Current() *ApiVersion {
 
 func (client ApiVersions) Stable() *ApiVersion {
 	for _, version := range client {
-		if strings.ToUpper(version.Status) == "STABLE" {
+		if strings.EqualFold(version.Status, "STABLE") {
 			return &version
 		}
 	}

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/BytemanD/go-console/console"
-	"github.com/BytemanD/skyman/utility"
+	"github.com/wxnacy/wgo/file"
 	"gopkg.in/yaml.v3"
 )
 
@@ -50,7 +50,7 @@ func (c *ContextConf) Save() (err error) {
 		return fmt.Errorf("context file is empty")
 	}
 	console.Debug("save context to %s", c.filePath)
-	if !utility.IsFileExists(c.filePath) {
+	if file.IsFile(c.filePath) {
 		if f, err := os.OpenFile(c.filePath, os.O_CREATE, 0644); err == nil {
 			f.Close()
 		} else {

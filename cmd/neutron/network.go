@@ -27,9 +27,7 @@ var networkList = &cobra.Command{
 			query.Set("name", name)
 		}
 		networks, err := c.Network().List(query)
-		if err != nil {
-			fmt.Println(err)
-		}
+		utility.LogIfError(err, true, "list network failed")
 		common.PrintNetworks(networks, long)
 	},
 }

@@ -3,8 +3,8 @@ package glance
 import (
 	"fmt"
 
-	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/openstack/model/glance"
+	"github.com/duke-git/lancet/v2/slice"
 )
 
 type ImageListFlags struct {
@@ -58,14 +58,14 @@ func (f ImageCreateFlags) Valid() error {
 		return fmt.Errorf("must provide --name when not using --file")
 	}
 	if *f.ContainerFormat != "" &&
-		!stringutils.ContainsString(glance.IMAGE_CONTAINER_FORMATS, *f.ContainerFormat) {
+		!slice.Contain(glance.IMAGE_CONTAINER_FORMATS, *f.ContainerFormat) {
 		return fmt.Errorf("invalid container format, valid: %v", glance.IMAGE_CONTAINER_FORMATS)
 	}
 	if *f.DiskFormat != "" &&
-		!stringutils.ContainsString(glance.IMAGE_DISK_FORMATS, *f.DiskFormat) {
+		!slice.Contain(glance.IMAGE_DISK_FORMATS, *f.DiskFormat) {
 		return fmt.Errorf("invalid disk format, valid: %v", glance.IMAGE_DISK_FORMATS)
 	}
-	if *f.Visibility != "" && !stringutils.ContainsString(glance.IMAGE_VISIBILITIES, *f.Visibility) {
+	if *f.Visibility != "" && !slice.Contain(glance.IMAGE_VISIBILITIES, *f.Visibility) {
 		return fmt.Errorf("invalid visibility, valid: %v", glance.IMAGE_VISIBILITIES)
 	}
 	return nil

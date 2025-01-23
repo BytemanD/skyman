@@ -8,6 +8,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"gopkg.in/yaml.v3"
@@ -115,7 +116,7 @@ func (t DataIterator[T]) renderItem(item T, fields []Field[T]) string {
 		}
 		// 匹配
 		if len(field.Matchs) > 0 {
-			if stringutils.ContainsString(field.Matchs, fmt.Sprintf("%v", fieldValue)) {
+			if slice.Contain(field.Matchs, fmt.Sprintf("%v", fieldValue)) {
 				matched = false
 				break
 			}

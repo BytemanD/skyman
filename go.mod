@@ -11,6 +11,11 @@ require (
 require github.com/dustin/go-humanize v1.0.1
 
 require (
+	github.com/duke-git/lancet/v2 v2.3.4 // indirect
+	golang.org/x/exp v0.0.0-20221208152030-732eee02a75a // indirect
+)
+
+require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-resty/resty/v2 v2.13.1
 	github.com/hashicorp/hcl v1.0.0 // indirect

@@ -80,9 +80,9 @@ var volumeDelete = &cobra.Command{
 			}
 			err = client.CinderV2().Volume().Delete(volume.Id, force, cascade)
 			if err == nil {
-				fmt.Printf("Requested to delete volume %s\n", idOrName)
+				println("Requested to delete volume", idOrName)
 			} else {
-				fmt.Println(err)
+				println(err)
 			}
 		}
 	},
@@ -112,7 +112,7 @@ var volumeCreate = &cobra.Command{
 
 		volume, err := client.CinderV2().Volume().Create(params)
 		if err != nil {
-			fmt.Println(err)
+			println(err)
 			os.Exit(1)
 		}
 		common.PrintVolume(*volume)

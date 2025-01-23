@@ -1,8 +1,6 @@
 package nova
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/skyman/common"
@@ -34,7 +32,7 @@ var volumeList = &cobra.Command{
 		utility.LogIfError(err, true, "get server %s faield", args[0])
 		attachments, err := client.NovaV2().Server().ListVolumes(server.Id)
 		if err != nil {
-			fmt.Println(err)
+			println(err)
 		}
 		printVolumeAttachments(attachments)
 	},

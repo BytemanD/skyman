@@ -1,7 +1,7 @@
 package utility
 
 import (
-	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/fatih/color"
 )
 
@@ -18,11 +18,11 @@ type ColorStatus struct {
 
 func (s ColorStatus) String() string {
 	switch {
-	case stringutils.ContainsString(s.Formater.Green, s.status):
+	case slice.Contain(s.Formater.Green, s.status):
 		return color.GreenString(s.status)
-	case stringutils.ContainsString(s.Formater.Yellow, s.status):
+	case slice.Contain(s.Formater.Yellow, s.status):
 		return color.YellowString(s.status)
-	case stringutils.ContainsString(s.Formater.Red, s.status):
+	case slice.Contain(s.Formater.Red, s.status):
 		return color.RedString(s.status)
 	default:
 		return s.status

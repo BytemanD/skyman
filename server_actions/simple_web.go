@@ -11,6 +11,7 @@ import (
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/wxnacy/wgo/file"
 )
 
 var indexData []byte
@@ -20,7 +21,7 @@ func IndexHandler(respWriter http.ResponseWriter, request *http.Request) {
 	var err error
 	if indexData == nil {
 		for _, indexPath := range []string{"static/index.html", "/usr/share/skyman/static/index.html"} {
-			if utility.IsFileExists(indexPath) {
+			if file.IsFile(indexPath) {
 				indexData, err = os.ReadFile(indexPath)
 				break
 			}

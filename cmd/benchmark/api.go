@@ -1,7 +1,6 @@
 package benchmark
 
 import (
-	"fmt"
 	"net/url"
 	"strconv"
 
@@ -43,7 +42,7 @@ var BenchmarkCmd = &cobra.Command{
 			console.Fatal("invalid case: %s", args[0])
 		}
 		for _, result := range results {
-			fmt.Println(
+			println(
 				result.Start.Local().Format("2006-01-02 15:04:05"),
 				result.End.Local().Format("2006-01-02 15:04:05"),
 				result.Spend())

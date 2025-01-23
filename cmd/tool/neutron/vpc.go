@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/go-console/console"
+	"github.com/duke-git/lancet/v2/slice"
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
@@ -104,7 +104,7 @@ var vpcDelete = &cobra.Command{
 			for _, fixedIp := range port.FixedIps {
 				console.Info("remove subnet %s from router %s", fixedIp.SubnetId, router.Id)
 				c.Router().RemoveSubnet(router.Id, fixedIp.SubnetId)
-				if !stringutils.ContainsString(subnets, fixedIp.SubnetId) {
+				if !slice.Contain(subnets, fixedIp.SubnetId) {
 					subnets = append(subnets, fixedIp.SubnetId)
 				}
 			}

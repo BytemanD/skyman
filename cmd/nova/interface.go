@@ -42,7 +42,7 @@ var interfaceList = &cobra.Command{
 		utility.LogIfError(err, true, "get server %s faield", args[0])
 		attachments, err := client.NovaV2().Server().ListInterfaces(server.Id)
 		if err != nil {
-			fmt.Println(err)
+			println(err)
 			os.Exit(1)
 		}
 		printinterfaceAttachments(attachments)

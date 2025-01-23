@@ -28,7 +28,7 @@ var consoleLog = &cobra.Command{
 		utility.LogError(err, "get server failed", true)
 		consoleLog, err := client.NovaV2().Server().ConsoleLog(server.Id, *consoleLogFlags.Lines)
 		utility.LogError(err, "get console log failed", true)
-		fmt.Println(consoleLog.Output)
+		println(consoleLog.Output)
 	},
 }
 
@@ -59,7 +59,7 @@ var consoleUrl = &cobra.Command{
 		utility.LogError(err, "get server failed", true)
 		console, err := client.NovaV2().Server().ConsoleUrl(server.Id, args[1])
 		if err != nil {
-			fmt.Println(err)
+			println(err)
 			os.Exit(1)
 		}
 		pt := common.PrettyItemTable{

@@ -7,6 +7,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"gopkg.in/yaml.v3"
@@ -131,7 +132,7 @@ func (t DataTable[T]) renderItem(columns []Column[T], item T) table.Row {
 		}
 		// 匹配
 		if len(column.Matchs) > 0 {
-			if stringutils.ContainsString(column.Matchs, fmt.Sprintf("%v", value)) {
+			if slice.Contain(column.Matchs, fmt.Sprintf("%v", value)) {
 				matched = false
 				break
 			}

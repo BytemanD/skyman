@@ -9,11 +9,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/howeyc/gopass"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
+	"github.com/wxnacy/wgo/file"
 
-	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/cmd/flags"
 	"github.com/BytemanD/skyman/cmd/views"
@@ -123,7 +124,7 @@ var serverList = &cobra.Command{
 				filterHosts = utility.Filter[string](
 					filterHosts,
 					func(x string) bool {
-						return stringutils.ContainsString(azHosts, x)
+						return slice.Contain(azHosts, x)
 					},
 				)
 			}
@@ -315,12 +316,12 @@ var serverCreate = &cobra.Command{
 		server, err := client.NovaV2().Server().Create(createOption)
 		utility.LogError(err, "create server failed", true)
 		if err != nil {
-			fmt.Println(err)
+			println(err)
 			os.Exit(1)
 		}
 		server, err = client.NovaV2().Server().Show(server.Id)
 		if err != nil {
-			fmt.Println(err)
+			println(err)
 			os.Exit(1)
 		}
 		views.PrintServer(*server, nil)
@@ -691,7 +692,7 @@ var serverRebuild = &cobra.Command{
 			return errors.New("cannot specify '--user-data-unset' with '--user-data'")
 		}
 		if *rebuildFlags.UserData != "" {
-			if !utility.IsFileExists(*rebuildFlags.UserData) {
+			if !file.IsFile(*rebuildFlags.UserData) {
 				return fmt.Errorf("file %s not exists", *rebuildFlags.UserData)
 			}
 		}

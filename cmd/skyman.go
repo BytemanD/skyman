@@ -5,11 +5,11 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/BytemanD/easygo/pkg/global/gitutils"
-	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/go-console/console"
 
 	"github.com/BytemanD/skyman/cmd/context"
@@ -62,7 +62,7 @@ var versionCmd = &cobra.Command{
 		if GoVersion == "" {
 			GoVersion = runtime.Version()
 		}
-		fmt.Println("Client:")
+		println("Client:")
 		fmt.Printf("  %-14s: %s\n", "Version", getVersion())
 		fmt.Printf("  %-14s: %s\n", "GoVersion", GoVersion)
 		fmt.Printf("  %-14s: %s\n", "BuildDate", BuildDate)
@@ -123,7 +123,7 @@ func main() {
 		Version: getVersion(),
 		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 			format, _ := cmd.Flags().GetString("format")
-			if format != "" && !stringutils.ContainsString(common.GetOutputFormats(), format) {
+			if format != "" && !slice.Contain(common.GetOutputFormats(), format) {
 				fmt.Printf("invalid foramt '%s'\n", format)
 				os.Exit(1)
 			}

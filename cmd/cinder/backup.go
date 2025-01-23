@@ -69,7 +69,7 @@ var backupDelete = &cobra.Command{
 			if err == nil {
 				fmt.Printf("Requested to delete backup %s\n", idOrName)
 			} else {
-				fmt.Println(err)
+				println(err)
 			}
 		}
 	},

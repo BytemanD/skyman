@@ -69,7 +69,7 @@ var snapshotDelete = &cobra.Command{
 			if err == nil {
 				fmt.Printf("Requested to delete snapshot %s\n", idOrName)
 			} else {
-				fmt.Println(err)
+				println(err)
 			}
 		}
 	},

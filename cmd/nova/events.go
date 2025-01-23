@@ -23,7 +23,7 @@ func listServerActions(serverId string, actionName string, last int, long bool) 
 
 	actions, err := client.NovaV2().Server().ListActions(serverId)
 	if err != nil {
-		fmt.Println(err)
+		println(err)
 		os.Exit(1)
 	}
 	pt := common.PrettyTable{
@@ -132,7 +132,7 @@ func showAction(serverId string, requestId string, long bool) {
 		}
 		if long {
 			fmt.Printf("Event %s tracback:\n", item.Event)
-			fmt.Println(item.Traceback)
+			println(item.Traceback)
 		} else {
 			console.Warn("use --long flags to show tracebacks")
 		}

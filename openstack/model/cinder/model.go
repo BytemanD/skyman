@@ -3,7 +3,8 @@ package cinder
 import (
 	"fmt"
 
-	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/duke-git/lancet/v2/slice"
+
 	"github.com/BytemanD/skyman/openstack/model"
 )
 
@@ -19,7 +20,7 @@ const (
 var MIGRATION_POLICYS = []string{POLICY_NEVER, POLICY_ON_DEMAND}
 
 func InvalidMIgrationPoicy(policy string) error {
-	if !stringutils.ContainsString(MIGRATION_POLICYS, policy) {
+	if !slice.Contain(MIGRATION_POLICYS, policy) {
 		return fmt.Errorf("invalid migration policy: %s, supported: %s", policy, MIGRATION_POLICYS)
 	}
 	return nil

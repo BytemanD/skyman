@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
@@ -24,7 +24,7 @@ var ImageList = &cobra.Command{
 			return err
 		}
 		if *imageListFlags.Visibility != "" &&
-			!stringutils.ContainsString(glance.IMAGE_VISIBILITIES, *imageListFlags.Visibility) {
+			!slice.Contain(glance.IMAGE_VISIBILITIES, *imageListFlags.Visibility) {
 			return fmt.Errorf("invalid visibility %s, valid: %v", *imageListFlags.Visibility, glance.IMAGE_VISIBILITIES)
 		}
 		return nil

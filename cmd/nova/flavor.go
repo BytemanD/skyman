@@ -192,7 +192,7 @@ var flavorCreate = &cobra.Command{
 			extraSpecs := getExtraSpecsMap(*flavorCreateFlags.Properties)
 			createdExtraSpecs, err := client.NovaV2().Flavor().SetExtraSpecs(flavor.Id, extraSpecs)
 			if err != nil {
-				fmt.Println(err)
+				println(err)
 				os.Exit(1)
 			}
 			flavor.ExtraSpecs = createdExtraSpecs

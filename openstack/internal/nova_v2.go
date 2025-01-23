@@ -704,15 +704,14 @@ func (c ServerApi) WaitStatus(serverId string, status string, interval int) (*no
 				return false
 			}
 			console.Info("[server: %s] status: %s, taskState: %s", server.Id, server.Status, server.TaskState)
-			switch strings.ToUpper(server.Status) {
-			case "ERROR":
+			if strings.EqualFold(server.Status, "ERROR") {
 				err = fmt.Errorf("server status is error, message: %s", server.Fault.Message)
 				return false
-			case strings.ToUpper(status):
+			}
+			if strings.EqualFold(server.Status, status) {
 				return false
 			}
 			return true
-
 		},
 	)
 	return server, err
@@ -778,10 +777,10 @@ func (c ServerApi) WaitTask(id string, taskState string) (*nova.Server, error) {
 		}
 		console.Info("[%s] %s progress: %d", id, server.AllStatus(), int(server.Progress))
 
-		if strings.ToUpper(server.Status) == "ERROR" {
+		if strings.EqualFold(server.Status, "ERROR") {
 			return nil, fmt.Errorf("server %s status is ERROR", id)
 		}
-		if strings.EqualFold(server.TaskState, strings.ToUpper(taskState)) {
+		if strings.EqualFold(server.TaskState, taskState) {
 			return server, nil
 		}
 		time.Sleep(time.Second * 2)

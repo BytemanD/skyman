@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/guest"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/duke-git/lancet/v2/slice"
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +32,7 @@ var TestFio = &cobra.Command{
 			return err
 		}
 		testType := args[1]
-		if testType == "" || !stringutils.ContainsString(VALID_TEST_TYPES, testType) {
+		if testType == "" || !slice.Contain(VALID_TEST_TYPES, testType) {
 			return fmt.Errorf("invalid test type: %s, must be one of %s", testType, VALID_TEST_TYPES)
 		}
 		return nil

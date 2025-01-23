@@ -203,10 +203,10 @@ func (server Server) IsShelved() bool {
 	return server.Status == "SHELVED" || server.Status == "SHELVED_OFFLOADED"
 }
 func (server Server) IsError() bool {
-	return strings.ToUpper(server.Status) == "ERROR"
+	return server.StatusIs("ERROR")
 }
 func (server Server) IsMigrating() bool {
-	return strings.ToUpper(server.Status) == "MIGRATING"
+	return server.StatusIs("MIGRATING")
 }
 func (server Server) IsStopped() bool {
 	return server.StatusIs("SHUTOFF")
@@ -221,7 +221,7 @@ func (server Server) GuestHostname() string {
 	return strings.Replace(server.Name, ":", "", -1)
 }
 func (server Server) IsRunning() bool {
-	return strings.ToUpper(server.GetPowerState()) == "RUNNING"
+	return strings.EqualFold(server.GetPowerState(), "RUNNING")
 }
 
 type Service struct {

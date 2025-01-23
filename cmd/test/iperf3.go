@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/table"
@@ -65,7 +64,7 @@ func printServerQOSItems(server nova.Server) {
 	}
 	t := table.NewItemsTable([]string{"Position", "BpsBurst", "BpsPeak", "PPSBurst", "PPSPeak"}, items)
 	result, _ := t.SetStyle(table.StyleLight).Render()
-	fmt.Println(result)
+	println(result)
 }
 
 var TestNetQos = &cobra.Command{
@@ -107,9 +106,9 @@ var TestNetQos = &cobra.Command{
 		serverConn := guest.Guest{Connection: serverHost.HostIp, Domain: serverInstance.Id}
 		clientConn := guest.Guest{Connection: clientHost.HostIp, Domain: clientInstance.Id}
 
-		fmt.Println("服务端QOS配置:")
+		println("服务端QOS配置:")
 		printServerQOSItems(*serverInstance)
-		fmt.Println("客户端QOS配置:")
+		println("客户端QOS配置:")
 		printServerQOSItems(*clientInstance)
 
 		console.Info("start test with QGA")

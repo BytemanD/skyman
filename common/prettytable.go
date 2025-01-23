@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/BytemanD/go-console/console"
+	"github.com/duke-git/lancet/v2/slice"
 
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/utility"
@@ -68,7 +69,7 @@ func (pt *PrettyTable) AddDisplayFields(fields ...string) {
 	}
 	pt.DisplayFields = []string{"Id"}
 	for _, colName := range fields {
-		if stringutils.ContainsString(pt.DisplayFields, colName) {
+		if slice.Contain(pt.DisplayFields, colName) {
 			continue
 		}
 		pt.DisplayFields = append(pt.DisplayFields, colName)
@@ -210,7 +211,7 @@ func (pt PrettyTable) RenderToTable(long bool) string {
 			}
 			// match filter
 			if len(column.Filters) > 0 {
-				if !stringutils.ContainsString(column.Filters, fmt.Sprintf("%v", value)) {
+				if !slice.Contain(column.Filters, fmt.Sprintf("%v", value)) {
 					isFiltered = true
 					break
 				}

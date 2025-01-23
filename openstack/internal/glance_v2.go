@@ -12,6 +12,7 @@ import (
 	"github.com/BytemanD/skyman/openstack/model/glance"
 	"github.com/BytemanD/skyman/openstack/session"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/wxnacy/wgo/file"
 )
 
 type ImageApi struct{ ResourceApi }
@@ -154,7 +155,7 @@ func (c ImageApi) Download(id string, fileName string, process bool) error {
 		SetHeader(session.CONTENT_TYPE, session.CONTENT_TYPE_STREAM).
 		SetOutput(fileName)
 
-	if utility.IsFileExists(fileName) {
+	if file.IsFile(fileName) {
 		if err := os.Remove(fileName); err != nil {
 			return err
 		}

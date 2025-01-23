@@ -1,13 +1,12 @@
 package context
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/BytemanD/go-console/console"
-	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
+	"github.com/wxnacy/wgo/file"
 	"gopkg.in/yaml.v3"
 )
 
@@ -44,7 +43,7 @@ var viewCmd = &cobra.Command{
 			console.Fatal("load context failed: %s", err)
 		}
 		data, _ := yaml.Marshal(cConf)
-		fmt.Println(string(data))
+		println(string(data))
 	},
 }
 
@@ -57,7 +56,7 @@ var setCmd = &cobra.Command{
 		if err != nil {
 			console.Fatal("get '%s' abs path failed: %s", args[1], err)
 		}
-		if !utility.IsFileExists(confPathAbs) {
+		if !file.IsFile(confPathAbs) {
 			console.Fatal("%s is not a file or not exits", confPathAbs)
 		}
 

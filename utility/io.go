@@ -12,6 +12,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/fileutils"
 	"github.com/cheggaaa/pb/v3"
+	"github.com/wxnacy/wgo/file"
 )
 
 type ReaderWithProcess struct {
@@ -63,14 +64,6 @@ func EncodedUserdata(content string) string {
 	return base64.StdEncoding.EncodeToString([]byte(content))
 }
 
-func IsFileExists(filePath string) bool {
-	fileInfo, err := os.Stat(filePath)
-	if err != nil && !os.IsExist(err) {
-		return false
-	}
-	return !fileInfo.Mode().IsDir()
-}
-
 func GetAllIpaddress() ([]string, error) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
@@ -89,7 +82,7 @@ func WatchFileSize(filePath string, size int) {
 	bar := pb.StartNew(size)
 	currentSize := int64(0)
 	for {
-		if !IsFileExists(filePath) {
+		if !file.IsFile(filePath) {
 			time.Sleep(time.Second * 2)
 			continue
 		}
