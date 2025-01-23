@@ -8,12 +8,12 @@ require (
 	libvirt.org/go/libvirt v1.10002.0
 )
 
-require github.com/dustin/go-humanize v1.0.1
-
 require (
-	github.com/duke-git/lancet/v2 v2.3.4 // indirect
-	golang.org/x/exp v0.0.0-20221208152030-732eee02a75a // indirect
+	github.com/duke-git/lancet/v2 v2.3.4
+	github.com/dustin/go-humanize v1.0.1
 )
+
+require golang.org/x/exp v0.0.0-20221208152030-732eee02a75a // indirect
 
 require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
@@ -63,7 +63,7 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/wxnacy/wgo v1.0.4 // indirect
+	github.com/wxnacy/wgo v1.0.4
 	golang.org/x/image v0.0.0-20191206065243-da761ea9ff43 // indirect
 	golang.org/x/net v0.25.0 // indirect
 )
