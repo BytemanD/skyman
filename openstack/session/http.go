@@ -59,8 +59,8 @@ func LogRespAfterResponse(c *resty.Client, r *resty.Response) error {
 // 默认的 Client
 //
 // 记录请求日志，设置content-type=application/json
-func DefaultRestyClient() *resty.Client {
-	return resty.New().
+func DefaultRestyClient(baseUrl string) *resty.Client {
+	return resty.New().SetBaseURL(baseUrl).
 		SetHeader(CONTENT_TYPE, CONTENT_TYPE_JSON).
 		SetRetryCount(DEFAULT_RETRY_COUNT).
 		OnBeforeRequest(LogBeforeRequest).

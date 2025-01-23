@@ -34,9 +34,6 @@ type ResourceApi struct {
 	SingularKey     string
 	PluralKey       string
 
-	URL_LIST string
-	URL_SHOW string
-
 	MicroVersion *model.ApiVersion
 }
 

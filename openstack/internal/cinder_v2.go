@@ -25,7 +25,7 @@ type BackupApi struct{ ResourceApi }
 func (c CinderV2) Volume() VolumeApi {
 	return VolumeApi{
 		ResourceApi: ResourceApi{
-			Client: c.rawClient, BaseUrl: c.Url,
+			Client: c.Client, BaseUrl: c.BaserUrl(),
 			ResourceUrl: "volumes",
 			SingularKey: "volume",
 			PluralKey:   VOLUMES,
@@ -35,7 +35,7 @@ func (c CinderV2) Volume() VolumeApi {
 func (c CinderV2) Service() VolumeServiceApi {
 	return VolumeServiceApi{
 		ResourceApi: ResourceApi{
-			Client: c.rawClient, BaseUrl: c.Url,
+			Client: c.Client, BaseUrl: c.BaserUrl(),
 			ResourceUrl: "os-services",
 			SingularKey: "service",
 			PluralKey:   "services",
@@ -46,7 +46,7 @@ func (c CinderV2) Service() VolumeServiceApi {
 func (c CinderV2) Snapshot() SnapshotApi {
 	return SnapshotApi{
 		ResourceApi: ResourceApi{
-			Client: c.rawClient, BaseUrl: c.Url,
+			Client: c.Client, BaseUrl: c.BaserUrl(),
 			ResourceUrl: "snapshots",
 			SingularKey: "snapshot",
 			PluralKey:   SNAPSHOTS,
@@ -55,7 +55,7 @@ func (c CinderV2) Snapshot() SnapshotApi {
 }
 func (c CinderV2) Backup() BackupApi {
 	return BackupApi{
-		ResourceApi: ResourceApi{Client: c.rawClient, BaseUrl: c.Url,
+		ResourceApi: ResourceApi{Client: c.Client, BaseUrl: c.BaserUrl(),
 			ResourceUrl: "backups",
 			SingularKey: "backup",
 			PluralKey:   BACKUPS,
@@ -66,8 +66,8 @@ func (c CinderV2) Backup() BackupApi {
 func (c CinderV2) VolumeType() VolumeTypeApi {
 	return VolumeTypeApi{
 		ResourceApi{
-			Client:      c.rawClient,
-			BaseUrl:     c.Url,
+			Client:      c.Client,
+			BaseUrl:     c.BaserUrl(),
 			ResourceUrl: "types",
 			SingularKey: "volume_type",
 			PluralKey:   "volume_types",

@@ -54,7 +54,7 @@ type qosRuleApi struct{ ResourceApi }
 
 func (c NeutronV2) Router() routerApi {
 	return routerApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Url,
+		ResourceApi{Client: c.Client, BaseUrl: c.BaserUrl(),
 			ResourceUrl: "routers",
 			SingularKey: "router",
 			PluralKey:   "routers",
@@ -63,7 +63,7 @@ func (c NeutronV2) Router() routerApi {
 }
 func (c NeutronV2) Network() NetworkApi {
 	return NetworkApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Url,
+		ResourceApi{Client: c.Client, BaseUrl: c.BaserUrl(),
 			ResourceUrl: "networks",
 			SingularKey: "network",
 			PluralKey:   "networks",
@@ -73,7 +73,7 @@ func (c NeutronV2) Network() NetworkApi {
 func (c NeutronV2) Subnet() SubnetApi {
 	return SubnetApi{
 		ResourceApi{
-			Client: c.rawClient, BaseUrl: c.Url,
+			Client: c.Client, BaseUrl: c.BaserUrl(),
 			ResourceUrl: "subnets",
 			SingularKey: "subnet",
 			PluralKey:   "subnets",
@@ -82,7 +82,7 @@ func (c NeutronV2) Subnet() SubnetApi {
 }
 func (c NeutronV2) Port() PortApi {
 	return PortApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Url,
+		ResourceApi{Client: c.Client, BaseUrl: c.BaserUrl(),
 			ResourceUrl: "ports",
 			SingularKey: "port",
 			PluralKey:   "ports",
@@ -91,7 +91,7 @@ func (c NeutronV2) Port() PortApi {
 }
 func (c NeutronV2) Agent() agentApi {
 	return agentApi{
-		ResourceApi{Client: c.rawClient, BaseUrl: c.Url,
+		ResourceApi{Client: c.Client, BaseUrl: c.BaserUrl(),
 			ResourceUrl: "agents",
 			SingularKey: "agent",
 			PluralKey:   "agents",
@@ -101,7 +101,7 @@ func (c NeutronV2) Agent() agentApi {
 func (c NeutronV2) SecurityGroupRule() sgRuleApi {
 	return sgRuleApi{
 		ResourceApi{
-			Client: c.rawClient, BaseUrl: c.Url,
+			Client: c.Client, BaseUrl: c.BaserUrl(),
 			ResourceUrl: "security-group-rules",
 			SingularKey: "security_group_rule",
 			PluralKey:   "security_group_rules",
@@ -111,7 +111,7 @@ func (c NeutronV2) SecurityGroupRule() sgRuleApi {
 func (c NeutronV2) SecurityGroup() sgApi {
 	return sgApi{
 		ResourceApi{
-			Client: c.rawClient, BaseUrl: c.Url,
+			Client: c.Client, BaseUrl: c.BaserUrl(),
 			ResourceUrl: "security-groups",
 			SingularKey: "security_group",
 			PluralKey:   "security_groups"},
@@ -120,8 +120,8 @@ func (c NeutronV2) SecurityGroup() sgApi {
 func (c NeutronV2) QosPolicy() qosPolicyApi {
 	return qosPolicyApi{
 		ResourceApi{
-			Client:      c.rawClient,
-			BaseUrl:     c.Url,
+			Client:      c.Client,
+			BaseUrl:     c.BaserUrl(),
 			ResourceUrl: "qos/policies",
 			SingularKey: "policy",
 			PluralKey:   "policies",
@@ -131,8 +131,8 @@ func (c NeutronV2) QosPolicy() qosPolicyApi {
 func (c NeutronV2) QosRule() qosRuleApi {
 	return qosRuleApi{
 		ResourceApi: ResourceApi{
-			Client:      c.rawClient,
-			BaseUrl:     c.Url,
+			Client:      c.Client,
+			BaseUrl:     c.BaserUrl(),
 			ResourceUrl: "qos/policies",
 			SingularKey: "policies",
 			PluralKey:   "policies",
@@ -314,7 +314,6 @@ func (c sgApi) List2(query url.Values) result.ItemsResult[neutron.SecurityGroup]
 	r := result.NewItemsResult[neutron.SecurityGroup](
 		c.R().SetQuery(query).Get(),
 	)
-	fmt.Printf("222222222 %v \n", r)
 	r.SetKey(c.ResourceApi.PluralKey)
 	return *r
 }

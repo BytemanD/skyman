@@ -87,7 +87,7 @@ func (c *NovaV2) GetCurrentVersion() (*model.ApiVersion, error) {
 }
 
 func (c *NovaV2) String() string {
-	return fmt.Sprintf("<Compute: %s>", c.Url)
+	return fmt.Sprintf("<Compute: %s>", c.BaserUrl())
 }
 
 type ServerApi struct{ ResourceApi }
@@ -105,8 +105,8 @@ type ComputeQuotaApi struct{ ResourceApi }
 func (c NovaV2) Server() ServerApi {
 	return ServerApi{
 		ResourceApi{
-			Client:       c.rawClient,
-			BaseUrl:      c.Url,
+			Client:       c.Client,
+			BaseUrl:      c.BaserUrl(),
 			MicroVersion: c.MicroVersion,
 			ResourceUrl:  "servers",
 			SingularKey:  "server",
@@ -117,8 +117,8 @@ func (c NovaV2) Server() ServerApi {
 func (c NovaV2) Flavor() FlavorApi {
 	return FlavorApi{
 		ResourceApi{
-			Client:       c.rawClient,
-			BaseUrl:      c.Url,
+			Client:       c.Client,
+			BaseUrl:      c.BaserUrl(),
 			MicroVersion: c.MicroVersion,
 			ResourceUrl:  "flavors",
 			SingularKey:  "flavor",
@@ -129,8 +129,8 @@ func (c NovaV2) Flavor() FlavorApi {
 func (c NovaV2) Service() ComputeServiceApi {
 	return ComputeServiceApi{
 		ResourceApi{
-			Client:       c.rawClient,
-			BaseUrl:      c.Url,
+			Client:       c.Client,
+			BaseUrl:      c.BaserUrl(),
 			MicroVersion: c.MicroVersion,
 			ResourceUrl:  "os-services",
 			SingularKey:  "service",
@@ -141,8 +141,8 @@ func (c NovaV2) Service() ComputeServiceApi {
 func (c NovaV2) Keypair() KeypairApi {
 	return KeypairApi{
 		ResourceApi{
-			Client:       c.rawClient,
-			BaseUrl:      c.Url,
+			Client:       c.Client,
+			BaseUrl:      c.BaserUrl(),
 			MicroVersion: c.MicroVersion,
 			ResourceUrl:  "os-keypairs",
 			SingularKey:  "keypair",
@@ -153,8 +153,8 @@ func (c NovaV2) Keypair() KeypairApi {
 func (c NovaV2) Hypervisor() HypervisorApi {
 	return HypervisorApi{
 		ResourceApi{
-			Client:       c.rawClient,
-			BaseUrl:      c.Url,
+			Client:       c.Client,
+			BaseUrl:      c.BaserUrl(),
 			MicroVersion: c.MicroVersion,
 			ResourceUrl:  "os-hypervisors",
 			SingularKey:  "hypervisor",
@@ -166,8 +166,8 @@ func (c NovaV2) Hypervisor() HypervisorApi {
 func (c NovaV2) Aggregate() AggregateApi {
 	return AggregateApi{
 		ResourceApi{
-			Client:       c.rawClient,
-			BaseUrl:      c.Url,
+			Client:       c.Client,
+			BaseUrl:      c.BaserUrl(),
 			MicroVersion: c.MicroVersion,
 			ResourceUrl:  "os-aggregates",
 			SingularKey:  "aggregate",
@@ -178,8 +178,8 @@ func (c NovaV2) Aggregate() AggregateApi {
 func (c NovaV2) AZ() AZApi {
 	return AZApi{
 		ResourceApi{
-			Client:       c.rawClient,
-			BaseUrl:      c.Url,
+			Client:       c.Client,
+			BaseUrl:      c.BaserUrl(),
 			MicroVersion: c.MicroVersion,
 			ResourceUrl:  "os-availability-zone",
 			PluralKey:    "availabilityZoneInfo",
@@ -189,8 +189,8 @@ func (c NovaV2) AZ() AZApi {
 func (c NovaV2) Migraion() MigrationApi {
 	return MigrationApi{
 		ResourceApi{
-			Client:       c.rawClient,
-			BaseUrl:      c.Url,
+			Client:       c.Client,
+			BaseUrl:      c.BaserUrl(),
 			MicroVersion: c.MicroVersion,
 			ResourceUrl:  "os-migrations",
 			SingularKey:  "migration",
@@ -202,8 +202,8 @@ func (c NovaV2) Migraion() MigrationApi {
 func (c NovaV2) ServerGroup() ServerGroupApi {
 	return ServerGroupApi{
 		ResourceApi{
-			Client:       c.rawClient,
-			BaseUrl:      c.Url,
+			Client:       c.Client,
+			BaseUrl:      c.BaserUrl(),
 			MicroVersion: c.MicroVersion,
 			ResourceUrl:  "os-server-groups",
 			SingularKey:  "server_group",
@@ -214,8 +214,8 @@ func (c NovaV2) ServerGroup() ServerGroupApi {
 func (c NovaV2) Quota() ComputeQuotaApi {
 	return ComputeQuotaApi{
 		ResourceApi{
-			Client:       c.rawClient,
-			BaseUrl:      c.Url,
+			Client:       c.Client,
+			BaseUrl:      c.BaserUrl(),
 			MicroVersion: c.MicroVersion,
 			ResourceUrl:  "os-quota-sets",
 			SingularKey:  "quota_set",
@@ -226,8 +226,8 @@ func (c NovaV2) Quota() ComputeQuotaApi {
 func (c NovaV2) Migration() MigrationApi {
 	return MigrationApi{
 		ResourceApi{
-			Client:       c.rawClient,
-			BaseUrl:      c.Url,
+			Client:       c.Client,
+			BaseUrl:      c.BaserUrl(),
 			MicroVersion: c.MicroVersion,
 			ResourceUrl:  "os-migrations",
 			SingularKey:  "migration",

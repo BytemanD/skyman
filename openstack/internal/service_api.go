@@ -11,28 +11,28 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-type ServiceClient struct {
-	Url        string
-	AuthPlugin auth_plugin.AuthPlugin
-	rawClient  *resty.Client
-}
+type ServiceClient struct{ *resty.Client }
 
+func (c *ServiceClient) BaserUrl() string {
+	return c.BaseURL
+
+}
 func (c *ServiceClient) AddBaseHeader(k, v string) {
-	if c.rawClient == nil {
+	if c.Client == nil {
 		return
 	}
-	c.rawClient.SetHeader(k, v)
+	c.Client.SetHeader(k, v)
 }
 func (c *ServiceClient) Header() http.Header {
-	return c.rawClient.Header
+	return c.Client.Header
 }
 func (c *ServiceClient) IndexUrl() (string, error) {
-	if c.Url == "" {
+	if c.Client.BaseURL == "" {
 		return "", fmt.Errorf("endpoint is required")
 	}
-	parsed, err := url.Parse(c.Url)
+	parsed, err := url.Parse(c.BaserUrl())
 	if err != nil {
-		return "", fmt.Errorf("invalid endpoint: %s", c.Url)
+		return "", fmt.Errorf("invalid endpoint: %s", c.BaserUrl())
 	}
 	parsed.Path = ""
 	parsed.RawQuery = ""
@@ -45,7 +45,7 @@ func (c *ServiceClient) Index(result interface{}) (*session.Response, error) {
 		return nil, fmt.Errorf("get index url failed: %s", err)
 	}
 
-	resp, err := c.rawClient.R().SetResult(result).Get(indexUrl)
+	resp, err := c.Client.R().SetResult(result).Get(indexUrl)
 	return &session.Response{Response: resp}, err
 }
 
@@ -56,9 +56,7 @@ func NewServiceApi(endpoint string, version string, authPlugin auth_plugin.AuthP
 		u.Path = fmt.Sprintf("/%s", version)
 	}
 	return &ServiceClient{
-		Url:        u.String(),
-		AuthPlugin: authPlugin,
-		rawClient: session.DefaultRestyClient().
+		Client: session.DefaultRestyClient(u.String()).
 			OnBeforeRequest(func(c *resty.Client, r *resty.Request) error {
 				return authPlugin.AuthRequest(r)
 			}),

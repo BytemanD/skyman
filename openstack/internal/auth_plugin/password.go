@@ -217,7 +217,7 @@ func (plugin PasswordAuthPlugin) IsAdmin() bool {
 
 func NewPasswordAuthPlugin(authUrl string, user model.User, project model.Project, regionName string) *PasswordAuthPlugin {
 	return &PasswordAuthPlugin{
-		session:           session.DefaultRestyClient(),
+		session:           session.DefaultRestyClient(authUrl),
 		AuthUrl:           authUrl,
 		Username:          user.Name,
 		Password:          user.Password,

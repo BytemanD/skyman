@@ -180,8 +180,8 @@ func (c KeystoneV3) GetStableVersion() (*model.ApiVersion, error) {
 func (c KeystoneV3) Region() *RegionApi {
 	return &RegionApi{
 		ResourceApi{
-			Client:      c.rawClient,
-			BaseUrl:     c.Url,
+			Client:      c.Client,
+			BaseUrl:     c.BaserUrl(),
 			ResourceUrl: "regions",
 			SingularKey: "region",
 			PluralKey:   "regions",
@@ -192,8 +192,8 @@ func (c KeystoneV3) Region() *RegionApi {
 func (c KeystoneV3) Service() *ServiceApi {
 	return &ServiceApi{
 		ResourceApi{
-			Client:      c.rawClient,
-			BaseUrl:     c.Url,
+			Client:      c.Client,
+			BaseUrl:     c.BaserUrl(),
 			ResourceUrl: "services",
 			SingularKey: "service",
 			PluralKey:   "services",
@@ -204,8 +204,8 @@ func (c KeystoneV3) Service() *ServiceApi {
 func (c KeystoneV3) Endpoint() *EndpointApi {
 	return &EndpointApi{
 		ResourceApi{
-			Client:      c.rawClient,
-			BaseUrl:     c.Url,
+			Client:      c.Client,
+			BaseUrl:     c.BaserUrl(),
 			ResourceUrl: "endpoints",
 			SingularKey: "endpoint",
 			PluralKey:   "endpoints",
@@ -216,8 +216,8 @@ func (c KeystoneV3) Endpoint() *EndpointApi {
 func (c KeystoneV3) User() UserApi {
 	return UserApi{
 		ResourceApi{
-			Client:      c.rawClient,
-			BaseUrl:     c.Url,
+			Client:      c.Client,
+			BaseUrl:     c.BaserUrl(),
 			ResourceUrl: "users",
 			SingularKey: "user",
 			PluralKey:   "users",
@@ -227,8 +227,8 @@ func (c KeystoneV3) User() UserApi {
 func (c KeystoneV3) Project() ProjectApi {
 	return ProjectApi{
 		ResourceApi{
-			Client:      c.rawClient,
-			BaseUrl:     c.Url,
+			Client:      c.Client,
+			BaseUrl:     c.BaserUrl(),
 			ResourceUrl: "projects",
 			SingularKey: "project",
 			PluralKey:   "projects",
@@ -238,8 +238,8 @@ func (c KeystoneV3) Project() ProjectApi {
 func (c KeystoneV3) RoleAssignment() RoleAssignmentApi {
 	return RoleAssignmentApi{
 		ResourceApi: ResourceApi{
-			Client:      c.rawClient,
-			BaseUrl:     c.Url,
+			Client:      c.Client,
+			BaseUrl:     c.BaserUrl(),
 			ResourceUrl: "role_assignments",
 			SingularKey: "role_assignment",
 			PluralKey:   "role_assignments",
