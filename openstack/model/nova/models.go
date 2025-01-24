@@ -2,6 +2,7 @@ package nova
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 
@@ -333,28 +334,25 @@ func fixNumbers(plus int, numbers ...int) []int {
 func resourceUsageBar(used, reserved, free int) string {
 	total := utility.Sum(used, reserved, free)
 	if total == 0 {
-		return strings.Join([]string{
+		return fmt.Sprint(
 			strings.Repeat(BAR_CHAR, 30),
-			color.New(color.BgCyan).Sprintf("%4d", reserved),
-			color.New(color.BgYellow).Sprintf("%4d", used),
-			color.New(color.BgGreen).Sprintf("%4d", free),
-		}, "")
+			color.New(color.FgCyan).Sprintf("%4d", reserved),
+			color.New(color.FgYellow).Sprintf("%4d", used),
+			color.New(color.FgGreen).Sprintf("%4d", free),
+		)
 	}
 	result := fixNumbers(30, used, reserved, free)
 	blockUsed := strings.Repeat(BAR_CHAR, result[0])
 	blockReserved := strings.Repeat(BAR_CHAR, result[1])
 	blockFree := strings.Repeat(BAR_CHAR, result[2])
-	return strings.Join([]string{
+	return fmt.Sprint(
 		color.CyanString(blockReserved),
 		color.YellowString(blockUsed),
 		color.GreenString(blockFree),
-		color.New(color.BgCyan).Sprintf("%4d", reserved),
-		color.New(color.BgYellow).Sprintf("%4d", used),
-		color.New(color.BgGreen).Sprintf("%4d", free),
-		// color.New(color.BgCyan, color.FgWhite).Sprintf(" [%4d|%4d|%4d]", reserved, used, free),
-
-		// color.BgCyan (fmt.Sprintf()),
-	}, "")
+		color.New(color.FgCyan).Sprintf("%4d", reserved),
+		color.New(color.FgYellow).Sprintf("%4d", used),
+		color.New(color.FgGreen).Sprintf("%4d", free),
+	)
 }
 
 func (cpuset NumaNodeCpuSet) String() string {
@@ -393,9 +391,9 @@ func (hypervisor Hypervisor) NumaNodesLine() string {
 }
 func (hypervisor Hypervisor) NumaNodesBar() string {
 	lines := []string{
-		fmt.Sprintf("%s %30s %30s", "Node",
+		fmt.Sprintf("%s %s %s", "Node",
+			runewidth.FillRight("CpuSets(reserved|usedused|free)", 47),
 			runewidth.FillRight("HuagePages(reserved|used|free)", 47),
-			"CpuSets(reserved|usedused|free)",
 		),
 	}
 	keys := hypervisor.NumaNodeKeys()
@@ -405,8 +403,8 @@ func (hypervisor Hypervisor) NumaNodesBar() string {
 		lines = append(lines,
 			fmt.Sprintf("%4s %s %s",
 				runewidth.FillRight(index, 4),
-				runewidth.FillRight(node.HugePages.Bar(), 47),
-				node.CpuSet.Bar(),
+				runewidth.FillRight(node.CpuSet.Bar(), 47),
+				node.HugePages.Bar(),
 			),
 		)
 	}
@@ -494,10 +492,10 @@ type InstanceActionEvent struct {
 func (event InstanceActionEvent) GetSpendTime() (float64, error) {
 	// event.StartTime
 	if event.StartTime == "" {
-		return 0, fmt.Errorf("No start time")
+		return 0, errors.New("no start time")
 	}
 	if event.FinishTime == "" {
-		return 0, fmt.Errorf("No finish time")
+		return 0, errors.New("no finish time")
 	}
 	console.Debug("%s spend time: %s ~ %s", event.Event, event.StartTime, event.FinishTime)
 	startTime, _ := time.Parse("2006-01-02T15:04:05", event.StartTime)
@@ -508,7 +506,7 @@ func (event InstanceActionEvent) GetSpendTime() (float64, error) {
 func (actionWithEvents InstanceAction) GetSpendTime() (float64, error) {
 	// event.StartTime
 	if actionWithEvents.StartTime == "" {
-		return 0, fmt.Errorf("no start time")
+		return 0, errors.New("no start time")
 	}
 	var lastEventFinishTime string
 	for _, event := range actionWithEvents.Events {
@@ -517,7 +515,7 @@ func (actionWithEvents InstanceAction) GetSpendTime() (float64, error) {
 		}
 	}
 	if lastEventFinishTime == "" {
-		return 0, fmt.Errorf("no finish time")
+		return 0, errors.New("no finish time")
 	}
 
 	console.Debug("%s spend time: %s ~ %s", actionWithEvents.Action,
