@@ -49,18 +49,16 @@ var COMPUTE_API_VERSION string
 type Openstack struct {
 	AuthPlugin        auth_plugin.AuthPlugin
 	ComputeApiVersion string
+	region            string
+	neutronEndpoint   string
 
-	novaClient *internal.NovaV2
+	servieLock *sync.Mutex
 
+	novaClient     *internal.NovaV2
 	keystoneClient *internal.KeystoneV3
 	glanceClient   *internal.GlanceV2
 	cinderClient   *internal.CinderV2
 	neutronClient  *internal.NeutronV2
-
-	servieLock *sync.Mutex
-
-	neutronEndpoint string
-	region          string
 }
 
 func (o Openstack) Region() string {
@@ -81,6 +79,16 @@ func (o *Openstack) SetRegion(region string) *Openstack {
 	o.region = region
 	o.ResetAllClients()
 	return o
+}
+func (o *Openstack) WithRegion(region string) *Openstack {
+	return &Openstack{
+		AuthPlugin:        o.AuthPlugin,
+		ComputeApiVersion: o.ComputeApiVersion,
+		region:            region,
+		neutronEndpoint:   o.neutronEndpoint,
+
+		servieLock: &sync.Mutex{},
+	}
 }
 func (o Openstack) ProjectId() (string, error) {
 	return o.AuthPlugin.GetProjectId()
