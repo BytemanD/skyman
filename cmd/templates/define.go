@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/go-console/console"
+	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model"
@@ -187,7 +188,7 @@ var DefineCmd = &cobra.Command{
 				console.Fatal("invalid config, server image is empty")
 			}
 		}
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		if replace {
 			console.Info("destroy resources")
 			if err := destroyFromTemplate(client, createTemplate); err != nil {

@@ -3,8 +3,8 @@ package prune
 import (
 	"net/url"
 
+	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/spf13/cobra"
 )
 
@@ -28,7 +28,7 @@ var serverPrune = &cobra.Command{
 		for _, status := range statusList {
 			query.Add("status", status)
 		}
-		c := openstack.DefaultClient()
+		c := common.DefaultClient()
 		c.PruneServers(query, yes, true)
 	},
 }

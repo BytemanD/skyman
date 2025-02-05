@@ -11,7 +11,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/arrayutils"
 	"github.com/BytemanD/easygo/pkg/syncutils"
-	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -25,7 +25,7 @@ var attachVolume = &cobra.Command{
 		size, _ := cmd.Flags().GetInt("size")
 		volumeType, _ := cmd.Flags().GetString("type")
 
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		cinderClient := client.CinderV2()
 		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogError(err, "show server failed:", true)

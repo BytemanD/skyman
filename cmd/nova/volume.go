@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -27,7 +26,7 @@ var volumeList = &cobra.Command{
 	Short: "List service volumes",
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get server %s faield", args[0])
 		attachments, err := client.NovaV2().Server().ListVolumes(server.Id)
@@ -43,7 +42,7 @@ var volumeAttach = &cobra.Command{
 	Short: "Attach volome to service",
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get server %s faield", args[0])
@@ -61,7 +60,7 @@ var volumeDetach = &cobra.Command{
 	Short: "Detach volume from service",
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get server %s faield", args[0])
 

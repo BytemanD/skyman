@@ -8,7 +8,6 @@ import (
 	"github.com/BytemanD/skyman/cmd/flags"
 	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -23,7 +22,7 @@ var csList = &cobra.Command{
 	Use:   "list",
 	Short: "List compute services",
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		query := url.Values{}
 
@@ -61,7 +60,7 @@ var csEnable = &cobra.Command{
 	Short: "Enable compute service",
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		service, err := client.NovaV2().Service().Enable(args[0], args[1])
 		utility.LogError(err, "set service disable failed", true)
 		views.PrintServiceTable(*service)
@@ -72,7 +71,7 @@ var csDisable = &cobra.Command{
 	Short: "Disable compute service",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		service, err := client.NovaV2().Service().Disable(args[0], args[1], *csDisableFlags.Reason)
 		if err != nil {
@@ -86,7 +85,7 @@ var csUp = &cobra.Command{
 	Short: "Unset force down compute service",
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		service, err := client.NovaV2().Service().Up(args[0], args[1])
 		if err != nil {
 			utility.LogError(err, "set service up failed", true)
@@ -99,7 +98,7 @@ var csDown = &cobra.Command{
 	Short: "Force down compute service",
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		service, err := client.NovaV2().Service().Down(args[0], args[1])
 		if err != nil {
 			utility.LogError(err, "set service down failed", true)
@@ -112,7 +111,7 @@ var csDelete = &cobra.Command{
 	Short: "Delete compute service",
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		err := client.NovaV2().Service().Delete(args[0], args[1])
 		utility.LogError(err, "delete service failed", true)
 	},

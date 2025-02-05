@@ -1,11 +1,5 @@
 package model
 
-import (
-	"time"
-
-	"github.com/BytemanD/go-console/console"
-)
-
 type Domain struct {
 	Id   string `json:"id,omitempty"`
 	Name string `json:"name,omitempty"`
@@ -76,41 +70,7 @@ type Token struct {
 	Roles     []Role    `json:"roles"`
 	Project   Project
 	User      User
-}
-
-type TokenCache struct {
-	token     Token
 	TokenId   string
-	expiredAt time.Time
-}
-
-func (tc *TokenCache) IsTokenExpired() bool {
-	if tc.TokenId == "" {
-		return true
-	}
-	if tc.expiredAt.Before(time.Now()) {
-		console.Warn("token exipred, expired at: %s , now: %s", tc.expiredAt, time.Now())
-		return true
-	}
-	return false
-}
-
-func (tc *TokenCache) GetServiceEndpoints(serviceType string, serviceName string) []Endpoint {
-	endpoints := []Endpoint{}
-	for _, catalog := range tc.token.Catalogs {
-		if catalog.Type != serviceType || (serviceName != "" && catalog.Name != serviceName) {
-			continue
-		}
-		return catalog.Endpoints
-	}
-	return endpoints
-}
-func NewTokenCache(token Token, tokenId string, expiredAt time.Time) TokenCache {
-	return TokenCache{
-		token:     token,
-		TokenId:   tokenId,
-		expiredAt: time.Now().Add(time.Second * 3600),
-	}
 }
 
 type Auth struct {

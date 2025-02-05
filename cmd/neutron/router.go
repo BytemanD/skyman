@@ -8,7 +8,6 @@ import (
 
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -18,7 +17,7 @@ var routerList = &cobra.Command{
 	Use:   "list",
 	Short: "List routers",
 	Run: func(cmd *cobra.Command, _ []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
@@ -37,7 +36,7 @@ var routerShow = &cobra.Command{
 	Short: "Show router",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 		router, err := c.Router().Find(args[0])
 		utility.LogError(err, "show router failed", true)
 		common.PrintRouter(*router)
@@ -48,7 +47,7 @@ var routerDelete = &cobra.Command{
 	Short: "Delete router(s)",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 		for _, arg := range args {
 			router, err := c.Router().Find(arg)
 			if err != nil {
@@ -68,7 +67,7 @@ var routerCreate = &cobra.Command{
 	Short: "Create router",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 		// name, _ := cmd.Flags().GetString("name")
 		disable, _ := cmd.Flags().GetBool("disable")
 		description, _ := cmd.Flags().GetString("description")
@@ -95,7 +94,7 @@ var interfaceAdd = &cobra.Command{
 	Example: "  interface add ROUTER <SUBNET>\n  interface add ROUTER port=<PORT>",
 	Args:    cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 		r, i := args[0], args[1]
 
 		router, err := c.Router().Find(r)
@@ -125,7 +124,7 @@ var interfaceRemove = &cobra.Command{
 	Example: "  interface remove ROUTER <SUBNET>\n  interface remove ROUTER port=<PORT>",
 	Args:    cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 		r, i := args[0], args[1]
 
 		router, err := c.Router().Find(r)
@@ -151,7 +150,7 @@ var interfaceList = &cobra.Command{
 	Short: "list router interfaces",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 		r := args[0]
 
 		router, err := c.Router().Find(r)

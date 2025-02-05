@@ -6,7 +6,6 @@ import (
 
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -18,7 +17,7 @@ var networkList = &cobra.Command{
 	Short: "List networks",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
@@ -36,7 +35,7 @@ var networkDelete = &cobra.Command{
 	Short: "Delete network(s)",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 
 		for _, net := range args {
 			fmt.Printf("Reqeust to delete network %s\n", net)
@@ -52,7 +51,7 @@ var networkShow = &cobra.Command{
 	Short: "Show network",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 
 		network, err := c.Network().Find(args[0])
 		utility.LogError(err, "show network failed", true)
@@ -64,7 +63,7 @@ var networkCreate = &cobra.Command{
 	Short: "Create network",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 
 		// name, _ := cmd.Flags().GetString("name")
 		disable, _ := cmd.Flags().GetBool("disable")

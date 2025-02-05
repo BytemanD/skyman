@@ -6,7 +6,7 @@ import (
 
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/cmd/views"
-	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
@@ -43,7 +43,7 @@ var flavorClone = &cobra.Command{
 		setProperties, _ := cmd.Flags().GetStringArray("set")
 		unsetProperties, _ := cmd.Flags().GetStringArray("unset")
 
-		cmdent := openstack.DefaultClient()
+		cmdent := common.DefaultClient()
 		novaClient := cmdent.NovaV2()
 		console.Info("show flavor")
 		flavor, err := novaClient.Flavor().Show(flavorId)

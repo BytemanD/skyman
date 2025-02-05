@@ -15,7 +15,6 @@ type ServiceClient struct{ *resty.Client }
 
 func (c *ServiceClient) BaserUrl() string {
 	return c.BaseURL
-
 }
 func (c *ServiceClient) AddBaseHeader(k, v string) {
 	if c.Client == nil {

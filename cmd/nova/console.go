@@ -8,7 +8,6 @@ import (
 
 	"github.com/BytemanD/skyman/cmd/flags"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -22,7 +21,7 @@ var consoleLog = &cobra.Command{
 	Short: "Show console log of server",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogError(err, "get server failed", true)
@@ -42,7 +41,7 @@ var consoleUrl = &cobra.Command{
 	Short: "Show console url of server",
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		var isTypeValid bool
 		for _, item := range validType {
 			if args[1] == item {

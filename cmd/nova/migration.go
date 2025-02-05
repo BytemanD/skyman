@@ -8,7 +8,6 @@ import (
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/cmd/flags"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 )
 
 var (
@@ -20,7 +19,7 @@ var migrationList = &cobra.Command{
 	Use:   "list",
 	Short: "List server migrations",
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		query := url.Values{}
 

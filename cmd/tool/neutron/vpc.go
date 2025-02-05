@@ -8,7 +8,6 @@ import (
 	"github.com/duke-git/lancet/v2/slice"
 
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -42,7 +41,7 @@ var vpcCreate = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		vpc, cidr := args[0], args[1]
 
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 		routerName := fmt.Sprintf("%s-router", vpc)
 		networkName := fmt.Sprintf("%s-network", vpc)
 		subnetName := fmt.Sprintf("%s-subnet", vpc)
@@ -91,7 +90,7 @@ var vpcDelete = &cobra.Command{
 			vpcRouter = fmt.Sprintf("%s-router", vpc)
 		}
 
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 		// get vpc router
 		console.Info("get router %s", vpcRouter)
 		router, err := c.Router().Find(vpcRouter)

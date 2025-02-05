@@ -2,7 +2,6 @@ package neutron
 
 import (
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -14,7 +13,7 @@ var qosRuleList = &cobra.Command{
 	Short: "list qos rules",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient()
+		c := common.DefaultClient()
 
 		policy, err := c.NeutronV2().QosPolicy().Find(args[0])
 		utility.LogIfError(err, true, "get qos policy %s failed", args[0])

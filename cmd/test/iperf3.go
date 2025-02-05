@@ -5,9 +5,9 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/table"
 	"github.com/BytemanD/go-console/console"
+	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/guest"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
@@ -82,7 +82,7 @@ var TestNetQos = &cobra.Command{
 		serverOptions, _ := cmd.Flags().GetString("server-options")
 		cilentOptions, _ := cmd.Flags().GetString("client-options")
 
-		openstackClient := openstack.DefaultClient()
+		openstackClient := common.DefaultClient()
 		console.Info("get server and client")
 		serverInstance, err := openstackClient.NovaV2().Server().Find(server)
 		utility.LogError(err, "get server failed", true)

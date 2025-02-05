@@ -2,7 +2,6 @@ package quota
 
 import (
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -14,7 +13,7 @@ var show = &cobra.Command{
 	Short: "Show quotas for project or class.",
 	Args:  cobra.ExactArgs(0),
 	Run: func(_ *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		projectId, err := client.ProjectId()
 		utility.LogError(err, "get project id failed, %v", true)
 

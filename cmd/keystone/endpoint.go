@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/keystone"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -47,7 +46,7 @@ var endpointList = &cobra.Command{
 			query.Set("interface", endpointInterface)
 		}
 
-		c := openstack.DefaultClient().KeystoneV3()
+		c := common.DefaultClient().KeystoneV3()
 
 		serviceMap := map[string]keystone.Service{}
 		if serviceName != "" {
@@ -98,7 +97,7 @@ var endpointCreate = &cobra.Command{
 		admin, _ := cmd.Flags().GetBool("admin")
 
 		s, url := args[0], args[1]
-		c := openstack.DefaultClient().KeystoneV3()
+		c := common.DefaultClient().KeystoneV3()
 
 		service, err := c.Service().Find(s)
 		utility.LogError(err, "get service failed", true)
@@ -135,7 +134,7 @@ var endpointDelete = &cobra.Command{
 	Short: "Delete endpoint",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().KeystoneV3()
+		c := common.DefaultClient().KeystoneV3()
 		for _, id := range args {
 			console.Info("request to delete endpoint %s", id)
 			err := c.Endpoint().Delete(id)

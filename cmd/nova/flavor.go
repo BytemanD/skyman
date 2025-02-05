@@ -15,7 +15,6 @@ import (
 	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/datatable"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -53,7 +52,7 @@ var flavorList = &cobra.Command{
 		if *flavorListFlags.MinDisk > 0 {
 			query.Set("minDisk", strconv.FormatUint(*flavorListFlags.MinDisk, 10))
 		}
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		flavors, err := client.NovaV2().Flavor().Detail(query)
 		utility.LogError(err, "get server failed %s", true)
 
@@ -114,7 +113,7 @@ var flavorShow = &cobra.Command{
 	Short: "Show flavor",
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		idOrName := args[0]
 		flavor, err := client.NovaV2().Flavor().ShowWithExtraSpecs(idOrName)
 		utility.LogError(err, "Show flavor failed", true)
@@ -127,7 +126,7 @@ var flavorDelete = &cobra.Command{
 
 	Args: cobra.MinimumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		flavorApi := client.NovaV2().Flavor()
 		for _, flavorId := range args {
 			flavor, err := flavorApi.Find(flavorId, false)
@@ -183,7 +182,7 @@ var flavorCreate = &cobra.Command{
 			reqFlavor.Id = *flavorCreateFlags.Id
 		}
 
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		flavor, err := client.NovaV2().Flavor().Create(reqFlavor)
 		utility.LogError(err, "create flavor failed", true)
@@ -205,7 +204,7 @@ var flavorSet = &cobra.Command{
 	Short: "Set flavor properties",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmds *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		idOrName := args[0]
 
 		extraSpecs := map[string]string{}

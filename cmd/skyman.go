@@ -51,7 +51,7 @@ func getVersion() string {
 	if Version == "" {
 		return gitutils.GetVersion()
 	}
-	return fmt.Sprint(Version)
+	return Version
 }
 
 var versionCmd = &cobra.Command{
@@ -68,7 +68,7 @@ var versionCmd = &cobra.Command{
 		fmt.Printf("  %-14s: %s\n", "BuildDate", BuildDate)
 		fmt.Printf("  %-14s: %s\n", "BuildPlatform", BuildPlatform)
 
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		fmt.Println("Servers:")
 

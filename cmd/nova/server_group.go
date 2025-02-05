@@ -6,7 +6,6 @@ import (
 
 	"github.com/BytemanD/skyman/cmd/flags"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
@@ -23,7 +22,7 @@ var groupList = &cobra.Command{
 	Short: "List server groups",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		query := url.Values{}
 

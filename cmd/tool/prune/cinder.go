@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/BytemanD/skyman/cmd/flags"
+	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +31,7 @@ var volumePrune = &cobra.Command{
 		if *volumePruneFlags.Marker != "" {
 			query.Add("marker", *volumePruneFlags.Marker)
 		}
-		c := openstack.DefaultClient()
+		c := common.DefaultClient()
 		c.PruneVolumes(query, *volumePruneFlags.Name, *volumePruneFlags.Type, *volumePruneFlags.Yes)
 	},
 }

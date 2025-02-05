@@ -5,7 +5,6 @@ import (
 
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 )
 
@@ -15,7 +14,7 @@ var keypairList = &cobra.Command{
 	Use:   "list",
 	Short: "List keypairs",
 	Run: func(_ *cobra.Command, _ []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		keypairs, err := client.NovaV2().Keypair().List(nil)
 		if err != nil {
 			console.Fatal("%s", err)

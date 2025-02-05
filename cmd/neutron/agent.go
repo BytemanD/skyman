@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -17,7 +16,7 @@ var agentList = &cobra.Command{
 	Short: "List agent",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 
 		long, _ := cmd.Flags().GetBool("long")
 		binary, _ := cmd.Flags().GetString("binary")

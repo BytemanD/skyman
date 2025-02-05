@@ -4,7 +4,6 @@ import (
 	"net/url"
 
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -19,7 +18,7 @@ var sgList = &cobra.Command{
 	Short: "List security groups",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		c := openstack.DefaultClient()
+		c := common.DefaultClient()
 
 		long, _ := cmd.Flags().GetBool("long")
 		projectIdOrName, _ := cmd.Flags().GetString("project")
@@ -44,7 +43,7 @@ var sgShow = &cobra.Command{
 	Short: "Show security group",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient()
+		c := common.DefaultClient()
 
 		sg, err := c.NeutronV2().SecurityGroup().Find(args[0])
 		utility.LogError(err, "get security group failed", true)

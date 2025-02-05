@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
@@ -20,7 +19,7 @@ var volumeList = &cobra.Command{
 	Short: "List volumes",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
@@ -56,7 +55,7 @@ var volumeShow = &cobra.Command{
 	Short: "Show volume",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		idOrName := args[0]
 		volume, err := client.CinderV2().Volume().Find(idOrName)
 		utility.LogError(err, "get volume failed", true)
@@ -68,7 +67,7 @@ var volumeDelete = &cobra.Command{
 	Short: "Delete volume",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		force, _ := cmd.Flags().GetBool("force")
 		cascade, _ := cmd.Flags().GetBool("cascade")
 
@@ -108,7 +107,7 @@ var volumeCreate = &cobra.Command{
 			params["multiattach"] = multiattach
 		}
 
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		volume, err := client.CinderV2().Volume().Create(params)
 		if err != nil {
@@ -133,7 +132,7 @@ var volumeExtend = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		idOrName := args[0]
 		size, _ := strconv.Atoi(args[1])
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		volume, err := client.CinderV2().Volume().Find(idOrName)
 		utility.LogError(err, "get volume falied", true)
 
@@ -159,7 +158,7 @@ var volumeRetype = &cobra.Command{
 		newType := args[1]
 		migrationPolicy, _ := cmd.Flags().GetString("migration-policy")
 
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		volume, err := client.CinderV2().Volume().Find(idOrName)
 		utility.LogError(err, "get volume falied", true)
 

@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/go-console/console"
+	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
@@ -90,7 +91,7 @@ var UndefineCmd = &cobra.Command{
 		var err error
 		createTemplate, err := LoadCreateTemplate(args[0])
 		utility.LogError(err, "load template file failed", true)
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		destroyFromTemplate(client, createTemplate)
 	},
 }

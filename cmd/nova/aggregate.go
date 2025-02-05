@@ -8,7 +8,6 @@ import (
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/cmd/flags"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -25,7 +24,7 @@ var aggList = &cobra.Command{
 	Short: "List aggregates",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		aggregates, err := client.NovaV2().Aggregate().List(nil)
 		utility.LogError(err, "list aggregates failed", true)
 		filteredAggs := []nova.Aggregate{}
@@ -47,7 +46,7 @@ var aggShow = &cobra.Command{
 	Short: "Show aggregate",
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		aggregate, err := client.NovaV2().Aggregate().Find(args[0])
 		utility.LogIfError(err, true, "get aggregate %s failed", args[0])
 		common.PrintAggregate(*aggregate)
@@ -64,7 +63,7 @@ var aggCreate = &cobra.Command{
 		if *aggCreateFlags.AZ != "" {
 			agg.AvailabilityZone = *aggCreateFlags.AZ
 		}
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		aggregate, err := client.NovaV2().Aggregate().Create(agg)
 		utility.LogIfError(err, true, "create aggregate %s failed", name)
 		common.PrintAggregate(*aggregate)
@@ -75,7 +74,7 @@ var aggDelete = &cobra.Command{
 	Short: "delete aggregate(s)",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		for _, agg := range args {
 			aggregate, err := client.NovaV2().Aggregate().Find(agg)
 			utility.LogIfError(err, true, "get aggregate %s failed", agg)
@@ -92,7 +91,7 @@ var addHost = &cobra.Command{
 	Args:  cobra.MinimumNArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		idOrName, hosts := args[0], args[1:]
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		aggregate, err := client.NovaV2().Aggregate().Find(idOrName)
 		utility.LogIfError(err, true, "get aggregate %s failed", idOrName)
 		added := 0
@@ -116,7 +115,7 @@ var removeHost = &cobra.Command{
 	Args:  cobra.MinimumNArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		idOrName, hosts := args[0], args[1:]
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		aggregate, err := client.NovaV2().Aggregate().Find(idOrName)
 		utility.LogIfError(err, true, "get aggregate %s failed", idOrName)
 		for _, host := range hosts {

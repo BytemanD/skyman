@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/BytemanD/go-console/console"
-	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
@@ -16,7 +16,7 @@ var portPrune = &cobra.Command{
 	Short: "Prune unbond port(s)",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		c := openstack.DefaultClient()
+		c := common.DefaultClient()
 
 		name, _ := cmd.Flags().GetString("name")
 		network, _ := cmd.Flags().GetString("network")

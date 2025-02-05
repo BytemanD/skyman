@@ -5,7 +5,6 @@ import (
 	"sort"
 
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -17,7 +16,7 @@ var flavorCapacities = &cobra.Command{
 	Short: "Get flavor capacities",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		az, _ := cmd.Flags().GetString("az")
 		flavor, _ := cmd.Flags().GetString("flavor")

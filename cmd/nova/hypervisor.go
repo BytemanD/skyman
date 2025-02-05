@@ -9,7 +9,6 @@ import (
 
 	"github.com/BytemanD/skyman/cmd/flags"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -24,7 +23,7 @@ var hypervisorList = &cobra.Command{
 	Short: "List hypervisors",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		query := url.Values{}
 		if *hypervisorListFlags.WithServers {
@@ -82,7 +81,7 @@ var hypervisorShow = &cobra.Command{
 	Short: "Show hypervisor",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		hypervisor, err := client.NovaV2().Hypervisor().Find(args[0])
 		utility.LogError(err, "get hypervisor failed", true)
 
@@ -139,7 +138,7 @@ var hypervisorUptime = &cobra.Command{
 	Short: "uptime hypervisor",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		hypervisor, err := client.NovaV2().Hypervisor().Find(args[0])
 		utility.LogError(err, "get hypervisor failed", true)
 

@@ -8,7 +8,6 @@ import (
 	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -30,7 +29,7 @@ var portList = &cobra.Command{
 		return
 	},
 	Run: func(cmd *cobra.Command, _ []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
@@ -65,7 +64,7 @@ var portShow = &cobra.Command{
 	Short: "Show port",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 		port, err := c.Port().Find(args[0])
 		utility.LogError(err, "show port failed", true)
 		common.PrintPort(*port)
@@ -77,7 +76,7 @@ var portDelete = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		force, _ := cmd.Flags().GetBool("force")
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 		syncutils.StartTasks(
 			syncutils.TaskOption{
 				TaskName: "delete ports",

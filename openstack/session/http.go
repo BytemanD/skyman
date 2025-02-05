@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/BytemanD/go-console/console"
 	"github.com/go-resty/resty/v2"
@@ -18,11 +19,13 @@ const (
 
 	HEADER_REQUEST_ID = "X-Openstack-Request-Id"
 
-	DEFAULT_RETRY_COUNT = 3
+	DEFAULT_RETRY_COUNT         = 0
+	DEFAULT_RETRY_WAIT_TIME     = time.Second
+	DEFAULT_RETRY_MAX_WAIT_TIME = time.Second * 5
+	DEFAULT_TIMEOUT             = time.Second * 60
 )
 
 func EncodeHeaders(reqHeader, clientHeader http.Header) string {
-	// headersString := []string{}
 	allHeaders := map[string][]string{}
 	for k, v := range clientHeader {
 		allHeaders[k] = v
@@ -63,6 +66,9 @@ func DefaultRestyClient(baseUrl string) *resty.Client {
 	return resty.New().SetBaseURL(baseUrl).
 		SetHeader(CONTENT_TYPE, CONTENT_TYPE_JSON).
 		SetRetryCount(DEFAULT_RETRY_COUNT).
+		SetRetryWaitTime(DEFAULT_RETRY_WAIT_TIME).
+		SetRetryMaxWaitTime(DEFAULT_RETRY_MAX_WAIT_TIME).
+		SetTimeout(DEFAULT_TIMEOUT).
 		OnBeforeRequest(LogBeforeRequest).
 		OnAfterResponse(LogRespAfterResponse)
 }

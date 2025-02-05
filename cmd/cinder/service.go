@@ -4,7 +4,6 @@ import (
 	"net/url"
 
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
@@ -16,7 +15,7 @@ var list = &cobra.Command{
 	Use:   "list",
 	Short: "List volume services",
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		query := url.Values{}
 		binary, _ := cmd.Flags().GetString("binary")

@@ -4,12 +4,12 @@ OpenStack Client with Golang
 package openstack
 
 import (
-	"fmt"
+	"errors"
 	"sync"
+	"time"
 
 	"github.com/BytemanD/go-console/console"
 
-	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/internal"
 	"github.com/BytemanD/skyman/openstack/internal/auth_plugin"
 	"github.com/BytemanD/skyman/openstack/model"
@@ -60,66 +60,45 @@ type Openstack struct {
 	servieLock *sync.Mutex
 
 	neutronEndpoint string
+	region          string
 }
 
-func (o *Openstack) WithRegion(region string) *Openstack {
-	if region == o.AuthPlugin.Region() {
+func (o Openstack) Region() string {
+	return utility.OneOfString(o.region, "RegionOne")
+}
+func (o *Openstack) ResetAllClients() {
+	o.keystoneClient = nil
+	o.glanceClient = nil
+	o.cinderClient = nil
+	o.novaClient = nil
+	o.neutronClient = nil
+}
+
+func (o *Openstack) SetRegion(region string) *Openstack {
+	if o.Region() == region {
 		return o
 	}
-	authPlugin := o.AuthPlugin
-	authPlugin.SetRegion(region)
-	return &Openstack{
-		AuthPlugin:        authPlugin,
-		ComputeApiVersion: o.ComputeApiVersion,
-
-		neutronEndpoint: o.neutronEndpoint,
-
-		servieLock: &sync.Mutex{},
-	}
-}
-func (o Openstack) Region() string {
-	return o.AuthPlugin.Region()
+	o.region = region
+	o.ResetAllClients()
+	return o
 }
 func (o Openstack) ProjectId() (string, error) {
 	return o.AuthPlugin.GetProjectId()
 }
+func (o *Openstack) SetNeutronEndpoint(endpoint string) {
+	o.neutronEndpoint = endpoint
+}
+func (o *Openstack) SetComputeApiVersion(version string) {
+	o.ComputeApiVersion = version
+}
 
 func NewClient(authUrl string, user model.User, project model.Project, regionName string) *Openstack {
-	authUrl = utility.VersionUrl(authUrl, fmt.Sprintf("v%s", common.CONF.Identity.Api.Version))
-	passwordAuth := internal.NewPasswordAuth(authUrl, user, project, regionName)
-	console.Debug("new openstack client, HttpTimeoutSecond=%d RetryWaitTimeSecond=%d RetryCount=%d",
-		common.CONF.HttpTimeoutSecond, common.CONF.RetryWaitTimeSecond, common.CONF.RetryCount,
-	)
-	passwordAuth.SetHttpTimeout(common.CONF.HttpTimeoutSecond)
-	passwordAuth.SetRetryWaitTime(common.CONF.RetryWaitTimeSecond)
-	passwordAuth.SetRetryCount(common.CONF.RetryCount)
-
-	return &Openstack{AuthPlugin: passwordAuth, servieLock: &sync.Mutex{}}
-}
-
-func ClientWithRegion(region string) *Openstack {
-	user := model.User{
-		Name:     common.CONF.Auth.User.Name,
-		Password: common.CONF.Auth.User.Password,
-		Domain:   model.Domain{Name: common.CONF.Auth.User.Domain.Name},
+	return &Openstack{
+		AuthPlugin:        internal.NewPasswordAuth(authUrl, user, project),
+		ComputeApiVersion: COMPUTE_API_VERSION,
+		region:            regionName,
+		servieLock:        &sync.Mutex{},
 	}
-	project := model.Project{
-		Name: common.CONF.Auth.Project.Name,
-		Domain: model.Domain{
-			Name: common.CONF.Auth.Project.Domain.Name,
-		},
-	}
-	c := NewClient(common.CONF.Auth.Url, user, project, region)
-	c.AuthPlugin.SetLocalTokenExpire(common.CONF.Auth.TokenExpireTime)
-	return c
-}
-
-func DefaultClient() *Openstack {
-	c := ClientWithRegion(common.CONF.Auth.Region.Id)
-	c.ComputeApiVersion = "2.1"
-	c.neutronEndpoint = common.CONF.Neutron.Endpoint
-	c.ComputeApiVersion = COMPUTE_API_VERSION
-	return c
 }
 
 func (o *Openstack) GlanceV2() *internal.GlanceV2 {
@@ -127,10 +106,9 @@ func (o *Openstack) GlanceV2() *internal.GlanceV2 {
 	defer o.servieLock.Unlock()
 
 	if o.glanceClient == nil {
-		endpoint, err := o.AuthPlugin.GetServiceEndpoint(IMAGE, GLANCE, PUBLIC)
+		endpoint, err := o.AuthPlugin.GetEndpoint(o.Region(), IMAGE, GLANCE, PUBLIC)
 		if err != nil {
-			console.Fatal("get glance endpoint falied: %v", err)
-
+			console.Fatal("%s", errors.Unwrap(err))
 		}
 		o.glanceClient = &internal.GlanceV2{
 			ServiceClient: internal.NewServiceApi(endpoint, V2, o.AuthPlugin),
@@ -148,7 +126,7 @@ func (o *Openstack) CinderV2() *internal.CinderV2 {
 			endpoint string
 			err      error
 		)
-		endpoint, err = o.AuthPlugin.GetServiceEndpoint(VOLUME_V2, CINDER_V2, PUBLIC)
+		endpoint, err = o.AuthPlugin.GetEndpoint(o.Region(), VOLUME_V2, CINDER_V2, PUBLIC)
 		if err != nil {
 			console.Fatal("get cinder endpoint falied: %v", err)
 
@@ -168,7 +146,7 @@ func (o *Openstack) NeutronV2() *internal.NeutronV2 {
 		endpoint := o.neutronEndpoint
 		if endpoint == "" {
 			var err error
-			endpoint, err = o.AuthPlugin.GetServiceEndpoint(NETWORK, NEUTRON, PUBLIC)
+			endpoint, err = o.AuthPlugin.GetEndpoint(o.Region(), NETWORK, NEUTRON, PUBLIC)
 			if err != nil {
 				console.Fatal("get neutron endpoint falied: %v", err)
 
@@ -185,9 +163,9 @@ func (o *Openstack) KeystoneV3() *internal.KeystoneV3 {
 	defer o.servieLock.Unlock()
 
 	if o.keystoneClient == nil {
-		endpoint, err := o.AuthPlugin.GetServiceEndpoint(IDENTITY, KEYSTONE, PUBLIC)
+		endpoint, err := o.AuthPlugin.GetEndpoint(o.Region(), IDENTITY, KEYSTONE, PUBLIC)
 		if err != nil {
-			console.Fatal("get keystone endpoint falied: %v", err)
+			console.Fatal("%v", err)
 		}
 		o.keystoneClient = &internal.KeystoneV3{
 			ServiceClient: internal.NewServiceApi(endpoint, V3, o.AuthPlugin),
@@ -200,11 +178,12 @@ func (o *Openstack) NovaV2(microVersion ...string) *internal.NovaV2 {
 	defer o.servieLock.Unlock()
 
 	if o.novaClient == nil {
-		endpoint, err := o.AuthPlugin.GetServiceEndpoint(COMPUTE, NOVA, PUBLIC)
+		endpoint, err := o.AuthPlugin.GetEndpoint(o.Region(), COMPUTE, NOVA, PUBLIC)
 		if err != nil {
 			console.Warn("get nova endpoint falied: %v", err)
-
-			return &internal.NovaV2{}
+			return &internal.NovaV2{
+				ServiceClient: internal.NewServiceApi(endpoint, V2_1, o.AuthPlugin),
+			}
 		}
 		o.novaClient = &internal.NovaV2{
 			ServiceClient: internal.NewServiceApi(endpoint, V2_1, o.AuthPlugin),
@@ -232,4 +211,28 @@ func (o *Openstack) NovaV2(microVersion ...string) *internal.NovaV2 {
 		}
 	}
 	return o.novaClient
+}
+func (o *Openstack) SetHttpTimeout(timeout time.Duration) {
+	o.AuthPlugin.SetTimeout(timeout)
+	if o.keystoneClient != nil {
+		o.keystoneClient.Client.SetTimeout(timeout)
+	}
+}
+func (o *Openstack) SetRetryWaitTime(timeout time.Duration) {
+	o.AuthPlugin.SetRetryWaitTime(timeout)
+	if o.keystoneClient != nil {
+		o.keystoneClient.Client.SetRetryWaitTime(timeout)
+	}
+}
+func (o *Openstack) SetRetryWaitMaxTime(timeout time.Duration) {
+	o.AuthPlugin.SetRetryMaxWaitTime(timeout)
+	if o.keystoneClient != nil {
+		o.keystoneClient.Client.SetRetryMaxWaitTime(timeout)
+	}
+}
+func (o *Openstack) SetRetryCount(count int) {
+	o.AuthPlugin.SetRetryCount(count)
+	if o.keystoneClient != nil {
+		o.keystoneClient.Client.SetRetryCount(count)
+	}
 }

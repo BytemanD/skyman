@@ -9,8 +9,8 @@ import (
 	"syscall"
 
 	"github.com/BytemanD/go-console/console"
+	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/guest"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -21,7 +21,7 @@ var ServerPing = &cobra.Command{
 	Short: "Run ping from server to client",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		interval, _ := cmd.Flags().GetFloat32("interval")
 		count, _ := cmd.Flags().GetInt("count")

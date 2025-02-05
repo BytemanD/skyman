@@ -7,7 +7,6 @@ import (
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/server_actions"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
@@ -50,8 +49,8 @@ var TestServerAction = &cobra.Command{
 
 		testCases := []server_actions.Case{}
 		// 初始化用例
-		client := openstack.DefaultClient()
-		console.Info("test on region: %s", utility.OneOfString(client.AuthPlugin.Region(), "RegionOne"))
+		client := common.DefaultClient()
+		console.Info("test on region: %s", utility.OneOfString(client.Region(), "RegionOne"))
 		if cliActions != nil {
 			worker, _ := cmd.Flags().GetInt("worker")
 			actionInterval, _ := cmd.Flags().GetInt("action-interval")

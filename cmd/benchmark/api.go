@@ -6,7 +6,7 @@ import (
 
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/benchmark"
-	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/utility"
 
 	"github.com/spf13/cobra"
@@ -16,7 +16,7 @@ var BenchmarkCmd = &cobra.Command{
 	Use:  "benchmark <name>",
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		worker, _ := cmd.Flags().GetInt("worker")
 		query := url.Values{

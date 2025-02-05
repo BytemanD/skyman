@@ -8,7 +8,6 @@ import (
 
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/keystone"
 	"github.com/BytemanD/skyman/utility"
@@ -31,7 +30,7 @@ var serviceList = &cobra.Command{
 		if serviceType != "" {
 			query.Add("type", serviceType)
 		}
-		c := openstack.DefaultClient().KeystoneV3()
+		c := common.DefaultClient().KeystoneV3()
 		services, err := c.Service().List(query)
 		utility.LogError(err, "list services failed", true)
 		common.PrintServices(services, long)
@@ -48,7 +47,7 @@ var serviceCreate = &cobra.Command{
 		description, _ := cmd.Flags().GetString("description")
 		disable, _ := cmd.Flags().GetBool("disable")
 
-		c := openstack.DefaultClient().KeystoneV3()
+		c := common.DefaultClient().KeystoneV3()
 
 		service, err := c.Service().Create(
 			keystone.Service{
@@ -65,7 +64,7 @@ var serviceDelete = &cobra.Command{
 	Short: "Delete service",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().KeystoneV3()
+		c := common.DefaultClient().KeystoneV3()
 
 		for _, id := range args {
 			console.Info("request to delete service %s", id)

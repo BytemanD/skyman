@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -19,7 +18,7 @@ var userList = &cobra.Command{
 		long, _ := cmd.Flags().GetBool("long")
 		project, _ := cmd.Flags().GetString("project")
 
-		c := openstack.DefaultClient().KeystoneV3()
+		c := common.DefaultClient().KeystoneV3()
 		if project == "" {
 			users, err := c.User().List(nil)
 			utility.LogError(err, "list users failed", true)
@@ -39,7 +38,7 @@ var userShow = &cobra.Command{
 	Short: "Show user",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient().KeystoneV3()
+		client := common.DefaultClient().KeystoneV3()
 		user, err := client.User().Find(args[0])
 		utility.LogIfError(err, true, "get user %s failed", args[0])
 		common.PrintUser(*user)

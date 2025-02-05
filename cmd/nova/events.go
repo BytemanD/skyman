@@ -9,7 +9,6 @@ import (
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/cmd/flags"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -19,7 +18,7 @@ var (
 )
 
 func listServerActions(serverId string, actionName string, last int, long bool) {
-	client := openstack.DefaultClient()
+	client := common.DefaultClient()
 
 	actions, err := client.NovaV2().Server().ListActions(serverId)
 	if err != nil {
@@ -48,7 +47,7 @@ func listServerActions(serverId string, actionName string, last int, long bool) 
 	common.PrintPrettyTable(pt, long)
 }
 func listServerActionsWithSpend(serverId string, actionName string, requestId string, last int, long bool) {
-	client := openstack.DefaultClient()
+	client := common.DefaultClient()
 	actionsWithEvents, err := client.NovaV2().Server().ListActionsWithEvents(
 		serverId, actionName, requestId, last)
 	utility.LogError(err, "get server actions and events failed", true)
@@ -110,7 +109,7 @@ func listServerActionsWithSpend(serverId string, actionName string, requestId st
 	common.PrintPrettyTable(pt, long)
 }
 func showAction(serverId string, requestId string, long bool) {
-	client := openstack.DefaultClient()
+	client := common.DefaultClient()
 
 	action, err := client.NovaV2().Server().ShowAction(serverId, requestId)
 	utility.LogError(err, "get server action failed", true)
@@ -148,7 +147,7 @@ var serverAction = &cobra.Command{
 		if len(args) == 2 {
 			requestId = args[1]
 		}
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		server, err := client.NovaV2().Server().Find(args[0])
 		var serverId string
 		if err == nil {

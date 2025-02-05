@@ -6,7 +6,6 @@ import (
 	"github.com/BytemanD/skyman/cmd/flags"
 	"github.com/BytemanD/skyman/cmd/views"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 )
 
@@ -21,7 +20,7 @@ var azList = &cobra.Command{
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		azInfo, err := client.NovaV2().AZ().Detail(nil)
 		utility.LogError(err, "list availability zones failed", true)
 

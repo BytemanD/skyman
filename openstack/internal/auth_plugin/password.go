@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	DEFAUL_REGION  string = "RegionOne"
 	TYPE_COMPUTE   string = "compute"
 	TYPE_VOLUME    string = "volume"
 	TYPE_VOLUME_V2 string = "volumev2"
@@ -36,33 +37,35 @@ type PasswordAuthPlugin struct {
 	ProjectName       string
 	UserDomainName    string
 	ProjectDomainName string
-	RegionName        string
 
 	LocalTokenExpireSecond int
 	token                  *model.Token
-	tokenId                string
 	expiredAt              time.Time
 
 	tokenLock *sync.Mutex
 
-	mu      *sync.Mutex
 	session *resty.Client
-}
-
-func (plugin PasswordAuthPlugin) Region() string {
-	return plugin.RegionName
-}
-
-func (plugin *PasswordAuthPlugin) SetRegion(region string) {
-	plugin.RegionName = region
 }
 
 func (plugin *PasswordAuthPlugin) SetLocalTokenExpire(expireSeconds int) {
 	plugin.LocalTokenExpireSecond = expireSeconds
 }
 
+func (plugin *PasswordAuthPlugin) SetTimeout(timeout time.Duration) {
+	plugin.session.SetTimeout(timeout)
+}
+func (plugin *PasswordAuthPlugin) SetRetryCount(c int) {
+	plugin.session.SetRetryCount(c)
+}
+func (plugin *PasswordAuthPlugin) SetRetryWaitTime(t time.Duration) {
+	plugin.session.SetRetryWaitTime(t)
+}
+func (plugin *PasswordAuthPlugin) SetRetryMaxWaitTime(t time.Duration) {
+	plugin.session.SetRetryMaxWaitTime(t)
+}
+
 func (plugin *PasswordAuthPlugin) IsTokenExpired() bool {
-	if plugin.tokenId == "" {
+	if plugin.token == nil {
 		return true
 	}
 	if plugin.expiredAt.Before(time.Now()) {
@@ -83,14 +86,10 @@ func (plugin *PasswordAuthPlugin) makesureTokenValid() error {
 }
 
 func (plugin *PasswordAuthPlugin) GetToken() (*model.Token, error) {
-	plugin.makesureTokenValid()
-	return plugin.token, nil
-}
-func (plugin *PasswordAuthPlugin) GetTokenId() (string, error) {
 	if err := plugin.makesureTokenValid(); err != nil {
-		return "", err
+		return nil, err
 	}
-	return plugin.tokenId, nil
+	return plugin.token, nil
 }
 
 type AuthBody struct {
@@ -124,69 +123,47 @@ func (plugin *PasswordAuthPlugin) TokenIssue() error {
 	if err != nil || resp.Error() != nil {
 		return fmt.Errorf("token issue failed, %s %s", err, resp.Error())
 	}
-	plugin.tokenId = resp.Header().Get("X-Subject-Token")
+	if resp.IsError() {
+		return fmt.Errorf("token issue failed, [%d] %s", resp.StatusCode(), resp.Body())
+	}
 	plugin.token = &respBody.Token
+	plugin.token.TokenId = resp.Header().Get("X-Subject-Token")
 	plugin.expiredAt = time.Now().Add(time.Second * time.Duration(plugin.LocalTokenExpireSecond))
 	return nil
 }
-func (plugin *PasswordAuthPlugin) GetServiceEndpoints(sType string, sName string) ([]model.Endpoint, error) {
-	token, err := plugin.GetToken()
-	if err != nil {
-		return nil, err
-	}
 
-	for _, catalog := range token.Catalogs {
-		if catalog.Type != sType || (sName != "" && catalog.Name != sName) {
-			continue
-		}
-		return catalog.Endpoints, nil
-	}
-	return []model.Endpoint{}, nil
-}
-func (plugin *PasswordAuthPlugin) GetServiceEndpoint(sType string, sName string, sInterface string) (string, error) {
+func (plugin *PasswordAuthPlugin) GetEndpoint(region string, sType string, sName string, sInterface string) (string, error) {
 	if err := plugin.makesureTokenValid(); err != nil {
-		return "", fmt.Errorf("get catalogs failed: %s", err)
+		return "", fmt.Errorf("get token failed: %s", err)
 	}
-
+	if region == "" {
+		console.Warn("user default region: %s", DEFAUL_REGION)
+		region = DEFAUL_REGION
+	}
 	for _, catalog := range plugin.token.Catalogs {
 		if catalog.Type != sType || (sName != "" && catalog.Name != sName) {
 			continue
 		}
 		for _, endpoint := range catalog.Endpoints {
-			if endpoint.Interface == sInterface && endpoint.Region == plugin.RegionName {
+			if endpoint.Interface == sInterface && endpoint.Region == region {
 				return endpoint.Url, nil
 			}
 		}
 	}
 	return "", fmt.Errorf("endpoint %s:%s:%s for region '%s' not found",
-		sType, sName, sInterface, plugin.RegionName)
-}
-func (plugin *PasswordAuthPlugin) SetHttpTimeout(timeout int) *PasswordAuthPlugin {
-	plugin.session.SetTimeout(time.Second * time.Duration(timeout))
-	return plugin
-}
-func (plugin *PasswordAuthPlugin) SetRetryWaitTime(waitTime int) *PasswordAuthPlugin {
-	plugin.session.SetRetryWaitTime(time.Second * time.Duration(waitTime))
-	return plugin
-}
-func (plugin *PasswordAuthPlugin) SetRetryCount(count int) *PasswordAuthPlugin {
-	plugin.session.SetRetryCount(count)
-	return plugin
+		sType, sName, sInterface, region)
 }
 
 func (plugin PasswordAuthPlugin) AuthRequest(req *resty.Request) error {
-	plugin.mu.Lock()
-	defer plugin.mu.Unlock()
-
-	tokenId, err := plugin.GetTokenId()
+	token, err := plugin.GetToken()
 	if err != nil {
 		return err
 	}
-	if req.Header.Get(X_AUTH_TOKEN) == tokenId {
+	if req.Header.Get(X_AUTH_TOKEN) == token.TokenId {
 		return nil
 	}
-	console.Debug("set auth token %s", tokenId)
-	req.Header.Set(X_AUTH_TOKEN, tokenId)
+	console.Debug("set header %s: %s", X_AUTH_TOKEN, token.TokenId)
+	req.Header.Set(X_AUTH_TOKEN, token.TokenId)
 	return nil
 }
 func (plugin PasswordAuthPlugin) GetSafeHeader(header http.Header) http.Header {
@@ -215,7 +192,7 @@ func (plugin PasswordAuthPlugin) IsAdmin() bool {
 	return false
 }
 
-func NewPasswordAuthPlugin(authUrl string, user model.User, project model.Project, regionName string) *PasswordAuthPlugin {
+func NewPasswordAuthPlugin(authUrl string, user model.User, project model.Project) *PasswordAuthPlugin {
 	return &PasswordAuthPlugin{
 		session:           session.DefaultRestyClient(authUrl),
 		AuthUrl:           authUrl,
@@ -224,8 +201,6 @@ func NewPasswordAuthPlugin(authUrl string, user model.User, project model.Projec
 		UserDomainName:    user.Domain.Name,
 		ProjectName:       project.Name,
 		ProjectDomainName: project.Domain.Name,
-		RegionName:        regionName,
 		tokenLock:         &sync.Mutex{},
-		mu:                &sync.Mutex{},
 	}
 }

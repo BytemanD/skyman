@@ -10,7 +10,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/arrayutils"
 	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/go-console/console"
-	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/duke-git/lancet/v2/slice"
@@ -27,7 +27,7 @@ var attachInterfaces = &cobra.Command{
 		useNetId, _ := cmd.Flags().GetBool("use-net-id")
 		sg, _ := cmd.Flags().GetString("sg")
 
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		neutronClient := client.NeutronV2()
 		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogError(err, "show server failed:", true)

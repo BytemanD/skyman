@@ -5,7 +5,6 @@ import (
 	"net/url"
 
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -17,7 +16,7 @@ var snapshotList = &cobra.Command{
 	Short: "List snapshots",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
@@ -45,7 +44,7 @@ var snapshotShow = &cobra.Command{
 	Short: "Show snapshot",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		idOrName := args[0]
 		snapshot, err := client.CinderV2().Snapshot().Find(idOrName)
 		utility.LogError(err, "get snapshot failed", true)
@@ -57,7 +56,7 @@ var snapshotDelete = &cobra.Command{
 	Short: "Delete snapshot",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		for _, idOrName := range args {
 			snapshot, err := client.CinderV2().Snapshot().Find(idOrName)
@@ -83,7 +82,7 @@ var snapshotCreate = &cobra.Command{
 		force, _ := cmd.Flags().GetBool("force")
 		name, _ := cmd.Flags().GetString("name")
 
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		volume, err := client.CinderV2().Volume().Find(args[0])
 		utility.LogIfError(err, true, "get volume %s failed", args[0])
@@ -100,7 +99,7 @@ var snapshotRevert = &cobra.Command{
 	Short: "revert snapshot",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		snapshot, err := client.CinderV2().Snapshot().Find(args[0])
 		utility.LogIfError(err, true, "get snapshot %s failed", args[0])

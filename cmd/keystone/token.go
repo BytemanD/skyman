@@ -7,7 +7,6 @@ import (
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/datatable"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -19,17 +18,16 @@ var tokenIssue = &cobra.Command{
 	Short: "Issue new token",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
-		err := client.AuthPlugin.TokenIssue()
-		utility.LogError(err, "token issue failed", true)
+		client := common.DefaultClient()
 
-		tokenId, _ := client.AuthPlugin.GetTokenId()
-		token, _ := client.AuthPlugin.GetToken()
-
-		common.PrintItem[model.Token](
+		token, err := client.AuthPlugin.GetToken()
+		if err != nil {
+			utility.LogError(err, "get token issue failed", true)
+		}
+		common.PrintItem(
 			[]datatable.Field[model.Token]{
 				{Name: "TokenId", Text: "Id", RenderFunc: func(item model.Token) interface{} {
-					return tokenId
+					return token.TokenId
 				}},
 				{Name: "ExpiresAt"},
 				{Name: "ProjectId", Text: "Project", RenderFunc: func(item model.Token) interface{} {

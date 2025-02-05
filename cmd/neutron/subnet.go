@@ -6,7 +6,6 @@ import (
 
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -18,7 +17,7 @@ var subnetList = &cobra.Command{
 	Short: "List subnets",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
@@ -36,7 +35,7 @@ var subnetCreate = &cobra.Command{
 	Short: "Create subnet",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 
 		noDhcp, _ := cmd.Flags().GetBool("no-dhcp")
 		description, _ := cmd.Flags().GetString("description")
@@ -64,7 +63,7 @@ var subnetShow = &cobra.Command{
 	Short: "Show subnet",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 		subnet, err := c.Subnet().Find(args[0])
 		utility.LogError(err, "show subnet failed", true)
 		common.PrintSubnet(*subnet)
@@ -75,7 +74,7 @@ var subnetDelete = &cobra.Command{
 	Short: "Delete subnet(s)",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().NeutronV2()
+		c := common.DefaultClient().NeutronV2()
 		for _, subnet := range args {
 			fmt.Printf("Reqeust to delete subnet %s\n", subnet)
 			err := c.Subnet().Delete(subnet)

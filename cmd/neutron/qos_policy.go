@@ -4,7 +4,6 @@ import (
 	"net/url"
 
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -18,7 +17,7 @@ var qosPolicyList = &cobra.Command{
 	Short: "List qos policies",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		c := openstack.DefaultClient()
+		c := common.DefaultClient()
 
 		// long, _ := cmd.Flags().GetBool("long")
 		projectIdOrName, _ := cmd.Flags().GetString("project")
@@ -40,7 +39,7 @@ var qosPolicyShow = &cobra.Command{
 	Short: "Show qos policy",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient()
+		c := common.DefaultClient()
 
 		policy, err := c.NeutronV2().QosPolicy().Find(args[0])
 		utility.LogIfError(err, true, "get qos policy %s failed", args[0])

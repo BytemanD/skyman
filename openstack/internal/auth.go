@@ -5,6 +5,6 @@ import (
 	"github.com/BytemanD/skyman/openstack/model"
 )
 
-func NewPasswordAuth(authUrl string, user model.User, project model.Project, regionName string) *auth_plugin.PasswordAuthPlugin {
-	return auth_plugin.NewPasswordAuthPlugin(authUrl, user, project, regionName)
+func NewPasswordAuth(authUrl string, user model.User, project model.Project) *auth_plugin.PasswordAuthPlugin {
+	return auth_plugin.NewPasswordAuthPlugin(authUrl, user, project)
 }

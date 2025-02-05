@@ -5,7 +5,6 @@ import (
 	"net/url"
 
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
 )
@@ -17,7 +16,7 @@ var backupList = &cobra.Command{
 	Short: "List backups",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		long, _ := cmd.Flags().GetBool("long")
 		name, _ := cmd.Flags().GetString("name")
@@ -45,7 +44,7 @@ var backupShow = &cobra.Command{
 	Short: "Show backup",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		idOrName := args[0]
 		backup, err := client.CinderV2().Backup().Find(idOrName)
 		utility.LogError(err, "get backup failed", true)
@@ -57,7 +56,7 @@ var backupDelete = &cobra.Command{
 	Short: "Delete backup",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		for _, idOrName := range args {
 			backup, err := client.CinderV2().Backup().Find(idOrName)
@@ -83,7 +82,7 @@ var backupCreate = &cobra.Command{
 		force, _ := cmd.Flags().GetBool("force")
 		name, _ := cmd.Flags().GetString("name")
 
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		volume, err := client.CinderV2().Volume().Find(args[0])
 		utility.LogIfError(err, true, "get volume %s failed", args[0])

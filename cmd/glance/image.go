@@ -9,7 +9,6 @@ import (
 
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/glance"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -41,7 +40,7 @@ var ImageList = &cobra.Command{
 			query.Set("limit", fmt.Sprintf("%d", *imageListFlags.Limit))
 		}
 
-		c := openstack.DefaultClient().GlanceV2()
+		c := common.DefaultClient().GlanceV2()
 		images, err := c.Images().List(query, int(*imageListFlags.Total))
 		utility.LogError(err, "get imges failed", true)
 		common.PrintImages(images, *imageListFlags.Long)
@@ -52,7 +51,7 @@ var ImageShow = &cobra.Command{
 	Short: "Show image",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().GlanceV2()
+		c := common.DefaultClient().GlanceV2()
 
 		image, err := c.Images().Find(args[0])
 		utility.LogIfError(err, true, "Get image %s failed", args[0])
@@ -69,7 +68,7 @@ var imageCreate = &cobra.Command{
 		return imageCreateFlags.Valid()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient().GlanceV2()
+		client := common.DefaultClient().GlanceV2()
 
 		name, _ := cmd.Flags().GetString("name")
 		containerFormat, _ := cmd.Flags().GetString("container-format")
@@ -113,7 +112,7 @@ var imageDelete = &cobra.Command{
 	Short: "Delete image",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().GlanceV2()
+		c := common.DefaultClient().GlanceV2()
 
 		for _, idOrName := range args {
 			image, err := c.Images().Find(idOrName)
@@ -137,7 +136,7 @@ var imageSave = &cobra.Command{
 	Aliases: []string{"download"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().GlanceV2()
+		c := common.DefaultClient().GlanceV2()
 
 		image, err := c.Images().Find(args[0])
 		utility.LogError(err, fmt.Sprintf("get image %v failed", args[0]), true)
@@ -158,7 +157,7 @@ var imageSet = &cobra.Command{
 	Short: "Set image properties",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		c := openstack.DefaultClient().GlanceV2()
+		c := common.DefaultClient().GlanceV2()
 
 		image, err := c.Images().Find(args[0])
 		utility.LogError(err, "Get image failed", true)

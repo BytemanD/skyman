@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -37,7 +36,7 @@ var interfaceList = &cobra.Command{
 	Short: "List server interfaces",
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get server %s faield", args[0])
 		attachments, err := client.NovaV2().Server().ListInterfaces(server.Id)
@@ -54,7 +53,7 @@ var interfaceAttachPort = &cobra.Command{
 	Short: "Attach port to server",
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get server %s failed", args[0])
@@ -72,7 +71,7 @@ var interfaceAttachNet = &cobra.Command{
 	Short: "Attach network to server",
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get server %s failed", args[0])
 
@@ -89,7 +88,7 @@ var interfaceDetach = &cobra.Command{
 	Short: "Detach port from server",
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get server %s failed", args[0])
 

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/BytemanD/skyman/common"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
@@ -38,7 +37,7 @@ var typeList = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, _ []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		long, _ := cmd.Flags().GetBool("long")
 		public, _ := cmd.Flags().GetBool("public")
@@ -88,7 +87,7 @@ var typeShow = &cobra.Command{
 	Short: "Show volume type",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		volumeType, err := client.CinderV2().VolumeType().Find(args[0])
 		utility.LogError(err, "get volume type failed", true)
 		common.PrintVolumeType(*volumeType)
@@ -99,7 +98,7 @@ var typeDefault = &cobra.Command{
 	Short: "Show default volume type",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		volumeType, err := client.CinderV2().VolumeType().Show("default")
 		utility.LogError(err, "get default volume type failed", true)
 		common.PrintVolumeType(*volumeType)
@@ -150,7 +149,7 @@ var typeCreate = &cobra.Command{
 			params["extra_specs"] = extraSpecs
 		}
 
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		volume, err := client.CinderV2().VolumeType().Create(params)
 		utility.LogError(err, "create volume type failed", true)
 		common.PrintVolumeType(*volume)
@@ -161,7 +160,7 @@ var typeDelete = &cobra.Command{
 	Short: "Delete volume type",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		for _, idOrName := range args {
 			volumeType, err := client.CinderV2().VolumeType().Find(idOrName)

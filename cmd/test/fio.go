@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"github.com/BytemanD/go-console/console"
+	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/guest"
-	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/spf13/cobra"
@@ -44,7 +44,7 @@ var TestFio = &cobra.Command{
 		filename, _ := cmd.Flags().GetString("filename")
 		size, _ := cmd.Flags().GetString("size")
 
-		openstackClient := openstack.DefaultClient()
+		openstackClient := common.DefaultClient()
 		server, err := openstackClient.NovaV2().Server().Find(idOrName)
 		utility.LogError(err, "get server failed", true)
 

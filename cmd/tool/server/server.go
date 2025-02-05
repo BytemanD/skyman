@@ -226,7 +226,7 @@ var serverInspect = &cobra.Command{
 	Short: "inspect server ",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		format, _ := cmd.Flags().GetString("format")
 		serverInspect, err := inspect(client, args[0])
@@ -259,7 +259,7 @@ var serverClone = &cobra.Command{
 		serverName, _ := cmd.Flags().GetString("name")
 		withHost, _ := cmd.Flags().GetBool("with-host")
 
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 
 		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogIfError(err, true, "get sever %s failed", args[0])

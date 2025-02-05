@@ -7,7 +7,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/go-console/console"
-	"github.com/BytemanD/skyman/openstack"
+	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
@@ -22,7 +22,7 @@ var detachInterfaces = &cobra.Command{
 		parallel, _ := cmd.Flags().GetInt("parallel")
 		clean, _ := cmd.Flags().GetBool("clean")
 
-		client := openstack.DefaultClient()
+		client := common.DefaultClient()
 		neutronClient := client.NeutronV2()
 		server, err := client.NovaV2().Server().Find(args[0])
 		utility.LogError(err, "show server failed:", true)
