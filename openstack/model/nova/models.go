@@ -458,10 +458,12 @@ func (hypervisor *Hypervisor) SetNumaNodes(data []byte) error {
 type Hypervisors []Hypervisor
 
 type keypair struct {
+	Id          int    `json:"id"`
 	Name        string `json:"name"`
 	Type        string `json:"type"`
 	Fingerprint string `json:"fingerprint"`
 	PublicKey   string `json:"public_key"`
+	UserId      string `json:"user_id"`
 }
 
 type Keypair struct {

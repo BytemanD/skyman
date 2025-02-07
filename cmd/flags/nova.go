@@ -175,3 +175,12 @@ type GroupListFlags struct {
 type ServerCreateImageFlags struct {
 	Metadata *[]string
 }
+
+type KeypairListFlags struct {
+	UserId *string
+}
+type KeypairCreateFlags struct {
+	Type   *string
+	PubKey *string
+	UserId *string
+}

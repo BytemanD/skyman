@@ -53,3 +53,8 @@ type RebuilOpt struct {
 	Name     string
 	UserData interface{}
 }
+
+type KeypairOpt struct {
+	PublicKey string
+	UserId    string
+}

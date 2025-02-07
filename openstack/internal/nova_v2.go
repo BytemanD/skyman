@@ -1022,6 +1022,36 @@ func (c HypervisorApi) FlavorCapacities(query url.Values) (*nova.FlavorCapacitie
 func (c KeypairApi) List(query url.Values) ([]nova.Keypair, error) {
 	return ListResource[nova.Keypair](c.ResourceApi, query)
 }
+func (c KeypairApi) Show(name string) (*nova.Keypair, error) {
+	result := nova.Keypair{}
+	if _, err := c.R().SetResult(&result).Get(name); err != nil {
+		return nil, err
+	} else {
+		return &result, nil
+	}
+}
+func (c KeypairApi) Create(name string, keyType string, opt nova.KeypairOpt) (*nova.Keypair, error) {
+	result := nova.Keypair{}
+
+	keypairOption := map[string]string{"name": name, "type": keyType}
+	if opt.PublicKey != "" {
+		keypairOption["public_key"] = opt.PublicKey
+	}
+	if opt.UserId != "" {
+		keypairOption["user_id"] = opt.UserId
+	}
+	if _, err := c.R().SetBody(map[string]map[string]string{"keypair": keypairOption}).
+		SetResult(&result).Post(); err != nil {
+		return nil, err
+	} else {
+		return &result, nil
+	}
+}
+
+func (c KeypairApi) Delete(name string) error {
+	_, err := DeleteResource(c.ResourceApi, name)
+	return err
+}
 
 // service api
 func (c ComputeServiceApi) List(query url.Values) ([]nova.Service, error) {

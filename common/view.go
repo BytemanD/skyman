@@ -58,6 +58,31 @@ func PrintAggregate(item nova.Aggregate) {
 	)
 }
 
+func PrintKeypair(item nova.Keypair) {
+	PrintItem(
+		[]datatable.Field[nova.Keypair]{
+			{Name: "Id", RenderFunc: func(item nova.Keypair) interface{} {
+				return item.Keypair.Id
+			}},
+			{Name: "Name", RenderFunc: func(item nova.Keypair) interface{} {
+				return item.Keypair.Name
+			}},
+			{Name: "Type", RenderFunc: func(item nova.Keypair) interface{} {
+				return item.Keypair.Type
+			}},
+			{Name: "Fingerprint", RenderFunc: func(item nova.Keypair) interface{} {
+				return item.Keypair.Fingerprint
+			}},
+			{Name: "UserId", RenderFunc: func(item nova.Keypair) interface{} {
+				return item.Keypair.UserId
+			}},
+		},
+		[]datatable.Field[nova.Keypair]{},
+		item, TableOptions{},
+	)
+	println("Public key:", item.Keypair.PublicKey)
+}
+
 func PrintNetworks(items []neutron.Network, long bool) {
 	PrintItems(
 		[]datatable.Column[neutron.Network]{
