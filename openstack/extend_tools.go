@@ -12,25 +12,38 @@ import (
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/duke-git/lancet/v2/slice"
 )
 
 func (o Openstack) PruneServers(query url.Values, yes bool, waitDeleted bool) {
 	c := o.NovaV2()
-	if len(query) == 0 {
-		query.Set("status", "error")
-	}
 	console.Info("查询虚拟机: %v", query.Encode())
-	servers, err := c.Server().List(query)
+	servers, err := c.Server().Detail(query)
+	if query.Get("host") == "" {
+		console.Info("过滤虚拟机: No valid host was found")
+		servers = slice.Filter(servers, func(index int, item nova.Server) bool {
+			if item.Host == "" && strings.Contains(item.Fault.Message, "No valid host was found") {
+				return true
+			}
+			if item.Fault.Message == "" {
+				if server, err := c.Server().Show(item.Id); err == nil {
+					return server.Host == "" && strings.Contains(server.Fault.Message, "No valid host was found")
+				}
+			}
+			return false
+		})
+	}
 	utility.LogError(err, "query servers failed", true)
 	console.Info("需要清理的虚拟机数量: %d\n", len(servers))
 	if len(servers) == 0 {
 		return
 	}
 	if !yes {
-		fmt.Printf("即将删除 %d 个虚拟机:\n", len(servers))
 		for _, server := range servers {
-			fmt.Printf("    %s(%s)\n", server.Id, server.Name)
+			fmt.Printf("    %s (name=%s, status=%s, host=%s), fault message: %s\n",
+				server.Id, server.Name, server.Status, server.Host, server.Fault.Message)
 		}
+		fmt.Printf("即将删除 %d 个虚拟机\n", len(servers))
 		yes = stringutils.ScanfComfirm("是否删除", []string{"yes", "y"}, []string{"no", "n"})
 	}
 	if !yes {

@@ -17,6 +17,7 @@ var serverPrune = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		host, _ := cmd.Flags().GetString("host")
 		statusList, _ := cmd.Flags().GetStringArray("status")
+		allTenants, _ := cmd.Flags().GetBool("all")
 
 		query := url.Values{}
 		if name != "" {
@@ -24,6 +25,12 @@ var serverPrune = &cobra.Command{
 		}
 		if host != "" {
 			query.Set("host", host)
+		}
+		if allTenants {
+			query.Set("all_tenants", "1")
+		}
+		if len(statusList) == 0 {
+			query.Add("status", "error")
 		}
 		for _, status := range statusList {
 			query.Add("status", status)
@@ -38,4 +45,5 @@ func init() {
 	serverPrune.Flags().String("host", "", "Search by hostname")
 	serverPrune.Flags().StringArrayP("status", "s", nil, "Search by server status")
 	serverPrune.Flags().BoolP("yes", "y", false, i18n.T("answerYes"))
+	serverPrune.Flags().Bool("all", false, i18n.T("allTenants"))
 }
