@@ -5,7 +5,6 @@ import (
 
 	"github.com/duke-git/lancet/v2/fileutil"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/cmd/flags"
@@ -114,49 +113,49 @@ var keypairDelete = &cobra.Command{
 	},
 }
 
-var demoCmd = common.NewCommand(
-	common.Cli[flags.KeypairCreateFlags]{
-		Use:      "demo",
-		Short:    "create keypair",
-		ArgNames: []string{"name"},
-		Flags: func(_flags *pflag.FlagSet) flags.KeypairCreateFlags {
-			return flags.KeypairCreateFlags{
-				UserId: _flags.String("user-id", "", "ID of user to whom to add key-pair (Admin only)."),
-				Type:   _flags.String("type", "ssh", " Keypair type. Can be ssh, ecdsa or x509."),
-				PubKey: _flags.String("pub-key", "", "Path to a public ssh key."),
-			}
-		},
-		FlagsRequired: []string{"type"},
-		Run: func(args map[string]string, flags flags.KeypairCreateFlags) {
-			client := common.DefaultClient()
-			opt := nova.KeypairOpt{
-				UserId: *keypairCreateFlags.UserId,
-			}
-			if *flags.PubKey != "" {
-				if !fileutil.IsExist(*flags.PubKey) {
-					console.Fatal("file '%s' not exists", *flags.PubKey)
-				}
-				if fileutil.IsDir(*flags.PubKey) {
-					console.Fatal("'%s' is not a file", *flags.PubKey)
-				}
-				if content, err := fileutil.ReadFileToString(*flags.PubKey); err == nil {
-					opt.PublicKey = content
-				} else {
-					utility.LogIfError(err, true, "read public key failed")
-				}
-			}
+// var demoCmd = common.NewCommand(
+// 	common.Cli[flags.KeypairCreateFlags]{
+// 		Use:      "demo",
+// 		Short:    "create keypair",
+// 		ArgNames: []string{"name"},
+// 		Flags: func(_flags *pflag.FlagSet) flags.KeypairCreateFlags {
+// 			return flags.KeypairCreateFlags{
+// 				UserId: _flags.String("user-id", "", "ID of user to whom to add key-pair (Admin only)."),
+// 				Type:   _flags.String("type", "ssh", " Keypair type. Can be ssh, ecdsa or x509."),
+// 				PubKey: _flags.String("pub-key", "", "Path to a public ssh key."),
+// 			}
+// 		},
+// 		FlagsRequired: []string{"type"},
+// 		Run: func(args map[string]string, flags flags.KeypairCreateFlags) {
+// 			client := common.DefaultClient()
+// 			opt := nova.KeypairOpt{
+// 				UserId: *keypairCreateFlags.UserId,
+// 			}
+// 			if *flags.PubKey != "" {
+// 				if !fileutil.IsExist(*flags.PubKey) {
+// 					console.Fatal("file '%s' not exists", *flags.PubKey)
+// 				}
+// 				if fileutil.IsDir(*flags.PubKey) {
+// 					console.Fatal("'%s' is not a file", *flags.PubKey)
+// 				}
+// 				if content, err := fileutil.ReadFileToString(*flags.PubKey); err == nil {
+// 					opt.PublicKey = content
+// 				} else {
+// 					utility.LogIfError(err, true, "read public key failed")
+// 				}
+// 			}
 
-			keypair, err := client.NovaV2().Keypair().Create(
-				args["name"], *keypairCreateFlags.Type, opt)
+// 			keypair, err := client.NovaV2().Keypair().Create(
+// 				args["name"], *keypairCreateFlags.Type, opt)
 
-			utility.LogIfError(err, true, "create keypair failed")
-			if err != nil {
-				console.Fatal("create keypair failed: %s", err)
-			}
-			common.PrintKeypair(*keypair)
-		},
-	},
-)
+// 			utility.LogIfError(err, true, "create keypair failed")
+// 			if err != nil {
+// 				console.Fatal("create keypair failed: %s", err)
+// 			}
+// 			common.PrintKeypair(*keypair)
+// 		},
+// 	},
+// )
 
 func init() {
 	keypairListFlags = flags.KeypairListFlags{
@@ -167,5 +166,5 @@ func init() {
 		Type:   keypairCreate.Flags().String("type", "ssh", " Keypair type. Can be ssh, ecdsa or x509."),
 		PubKey: keypairCreate.Flags().String("pub-key", "", "Path to a public ssh key."),
 	}
-	Keypair.AddCommand(keypairList, keypairShow, keypairCreate, keypairDelete, demoCmd)
+	Keypair.AddCommand(keypairList, keypairShow, keypairCreate, keypairDelete)
 }
