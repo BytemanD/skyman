@@ -31,6 +31,9 @@ func getExtraSpecsMap(extraSpecs []string) nova.ExtraSpecs {
 	extraSpecsMap := nova.ExtraSpecs{}
 	for _, property := range extraSpecs {
 		kv := strings.Split(property, "=")
+		if len(kv) != 2 {
+			console.Fatal("Invalid property %s, must be: key=value", property)
+		}
 		extraSpecsMap[kv[0]] = kv[1]
 	}
 	return extraSpecsMap
@@ -71,6 +74,31 @@ var flavorList = &cobra.Command{
 				continue
 			}
 			filteredFlavors = append(filteredFlavors, flavor)
+		}
+		// 添加/更新 extra specs
+		setExtraSpecs := getExtraSpecsMap(*flavorListFlags.Set)
+		if len(setExtraSpecs) > 0 {
+			console.Info("set flavor extra specs ...")
+			for _, flavor := range filteredFlavors {
+				_, err := client.NovaV2().Flavor().SetExtraSpecs(flavor.Id, setExtraSpecs)
+				if err != nil {
+					console.Error("[%s] set flavor extra spces failed :%s", flavor.Id, err)
+				}
+			}
+		}
+		// 删除 extra specs
+		unsetExtraSpecs := *flavorListFlags.Unset
+		if len(unsetExtraSpecs) > 0 {
+			console.Info("remove flavor extra spces ...")
+			for _, flavor := range filteredFlavors {
+				for _, extraSpec := range unsetExtraSpecs {
+					err := client.NovaV2().Flavor().DeleteExtraSpec(flavor.Id, extraSpec)
+
+					if err != nil {
+						console.Error("[%s] remove flavor extra spces failed :%s", flavor.Id, err)
+					}
+				}
+			}
 		}
 		if *flavorListFlags.Long {
 			// 提前查询，否则输出json、yaml 格式时缺失
@@ -209,7 +237,7 @@ var flavorSet = &cobra.Command{
 
 		extraSpecs := map[string]string{}
 
-		for _, property := range *flavorSetFlags.Properties {
+		for _, property := range *flavorSetFlags.Set {
 			splited := strings.Split(property, "=")
 			if len(splited) != 2 {
 				console.Fatal("Invalid property %s, must be: key=value", property)
@@ -218,11 +246,16 @@ var flavorSet = &cobra.Command{
 		}
 
 		flavor, err := client.NovaV2().Flavor().Find(idOrName, true)
-
 		utility.LogError(err, "Get flavor failed", true)
-		client.NovaV2().Flavor().SetExtraSpecs(flavor.Id, extraSpecs)
-		for _, property := range *flavorSetFlags.NoProperties {
-			if _, ok := flavor.ExtraSpecs[property]; !ok {
+
+		flavorExtraSpecs, err := client.NovaV2().Flavor().ListExtraSpecs(flavor.Id)
+		utility.LogError(err, "Get flavor extra specs failed", true)
+
+		if len(extraSpecs) != 0 {
+			client.NovaV2().Flavor().SetExtraSpecs(flavor.Id, extraSpecs)
+		}
+		for _, property := range *flavorSetFlags.Unset {
+			if _, ok := flavorExtraSpecs[property]; !ok {
 				continue
 			}
 			err := client.NovaV2().Flavor().DeleteExtraSpec(flavor.Id, property)
@@ -242,6 +275,10 @@ func init() {
 		MinDisk: flavorList.Flags().Uint64("min-disk", 0, "Filters the flavors by a minimum disk space, in GiB."),
 		Long:    flavorList.Flags().BoolP("long", "l", false, "List additional fields in output"),
 		Human:   flavorList.Flags().Bool("human", false, " Print ram like 1M 2G etc"),
+		Set: flavorList.Flags().StringArray("set", []string{},
+			"Property to add or modify for the flavor(s) (repeat option to set multiple properties)"),
+		Unset: flavorList.Flags().StringArray("unset", []string{},
+			"Property to remove for the flavor(s) (repeat option to set multiple properties)"),
 	}
 	flavorCreateFlags = flags.FlavorCreateFlags{
 		Id:         flavorCreate.Flags().String("id", "", "Unique flavor ID, creates a UUID if empty"),
@@ -254,10 +291,10 @@ func init() {
 			"Property to add for this flavor (repeat option to set multiple properties)"),
 	}
 	flavorSetFlags = flags.FlavorSetFlags{
-		Properties: flavorSet.Flags().StringArrayP("property", "p", []string{},
-			"Property to add or modify for this flavor (repeat option to set multiple properties)"),
-		NoProperties: flavorSet.Flags().StringArrayP("no-property", "r", []string{},
-			"Property to remove for this flavor (repeat option to set multiple properties)"),
+		Set: flavorSet.Flags().StringArray("set", []string{},
+			"Property to add or modify for the flavor(s) (repeat option to set multiple properties)"),
+		Unset: flavorSet.Flags().StringArray("unset", []string{},
+			"Property to remove for the flavor(s) (repeat option to set multiple properties)"),
 	}
 
 	Flavor.AddCommand(flavorList, flavorShow, flavorCreate, flavorDelete,

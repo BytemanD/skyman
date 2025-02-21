@@ -895,6 +895,13 @@ func (c FlavorApi) SetExtraSpecs(id string, extraSpecs map[string]string) (nova.
 }
 func (c FlavorApi) DeleteExtraSpec(id string, extraSpec string) error {
 	_, err := c.R().Delete(id, "os-extra_specs", extraSpec)
+	if compare.IsType[session.HttpError](err) {
+		httpError, _ := err.(session.HttpError)
+		if httpError.IsNotFound() {
+			console.Warn("flavor %s dosen't has extra spec: %s", id, extraSpec)
+		}
+		return nil
+	}
 	return err
 }
 func (c FlavorApi) Copy(id string, newName string, newId string,

@@ -132,6 +132,8 @@ type FlavorListFlags struct {
 	MinDisk *uint64
 	Long    *bool
 	Human   *bool
+	Set     *[]string
+	Unset   *[]string
 }
 type FlavorCreateFlags struct {
 	Id   *string
@@ -146,8 +148,8 @@ type FlavorCreateFlags struct {
 	Long       *bool
 }
 type FlavorSetFlags struct {
-	Properties   *[]string
-	NoProperties *[]string
+	Set   *[]string
+	Unset *[]string
 }
 
 type HypervisorListFlags struct {
