@@ -184,6 +184,11 @@ func (plugin PasswordAuthPlugin) GetProjectId() (string, error) {
 	return plugin.token.Project.Id, nil
 }
 func (plugin PasswordAuthPlugin) IsAdmin() bool {
+	if plugin.token == nil {
+		if plugin.TokenIssue() != nil {
+			return false
+		}
+	}
 	for _, role := range plugin.token.Roles {
 		if role.Name == "admin" {
 			return true

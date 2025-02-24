@@ -11,7 +11,10 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-type ServiceClient struct{ *resty.Client }
+type ServiceClient struct {
+	*resty.Client
+	IsAdmin bool
+}
 
 func (c *ServiceClient) BaserUrl() string {
 	return c.BaseURL
@@ -55,6 +58,7 @@ func NewServiceApi(endpoint string, version string, authPlugin auth_plugin.AuthP
 		u.Path = fmt.Sprintf("/%s", version)
 	}
 	return &ServiceClient{
+		IsAdmin: authPlugin.IsAdmin(),
 		Client: session.DefaultRestyClient(u.String()).
 			OnBeforeRequest(func(c *resty.Client, r *resty.Request) error {
 				return authPlugin.AuthRequest(r)

@@ -251,8 +251,8 @@ func (c ServerApi) DetailByName(name string) ([]nova.Server, error) {
 func (c ServerApi) Show(id string) (*nova.Server, error) {
 	return ShowResource[nova.Server](c.ResourceApi, id)
 }
-func (c ServerApi) Find(idOrName string) (*nova.Server, error) {
-	return FindResource(idOrName, c.Show, c.Detail)
+func (c ServerApi) Find(idOrName string, allTenants ...bool) (*nova.Server, error) {
+	return FindResource(idOrName, c.Show, c.Detail, allTenants...)
 }
 func (c ServerApi) Create(options nova.ServerOpt) (*nova.Server, error) {
 	if options.Name == "" {

@@ -178,6 +178,7 @@ func FindResource[T any](
 	idOrName string,
 	showFunc func(id string) (*T, error),
 	listFunc func(query url.Values) ([]T, error),
+	allTenants ...bool,
 ) (*T, error) {
 	t, err := showFunc(idOrName)
 	if err == nil {
@@ -191,7 +192,11 @@ func FindResource[T any](
 	default:
 		return nil, err
 	}
-	ts, err := listFunc(url.Values{"name": []string{idOrName}})
+	query := url.Values{"name": []string{idOrName}}
+	if len(allTenants) > 0 && allTenants[0] {
+		query.Set("all_tenants", "1")
+	}
+	ts, err := listFunc(query)
 	if err != nil {
 		return nil, err
 	}

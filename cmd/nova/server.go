@@ -495,7 +495,7 @@ var serverShelve = &cobra.Command{
 		client := common.DefaultClient()
 
 		for _, id := range args {
-			server, err := client.NovaV2().Server().Find(id)
+			server, err := client.NovaV2().Server().Find(id, client.NovaV2().IsAdmin)
 			if err != nil {
 				utility.LogError(err, fmt.Sprintf("get server %s faield", id), false)
 				continue
