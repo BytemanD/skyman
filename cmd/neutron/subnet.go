@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
@@ -75,12 +74,12 @@ var subnetDelete = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient().NeutronV2()
-		for _, subnet := range args {
-			fmt.Printf("Reqeust to delete subnet %s\n", subnet)
-			err := c.Subnet().Delete(subnet)
-			if err != nil {
-				console.Error("Delete subnet %s failed, %s", subnet, err)
-			}
+		for _, idOrName := range args {
+			fmt.Printf("Reqeust to delete subnet %s\n", idOrName)
+			subnet, err := c.Subnet().Find(idOrName)
+			utility.LogIfError(err, true, "get subnet %s failed", idOrName)
+			err = c.Subnet().Delete(subnet.Id)
+			utility.LogIfError(err, false, "Delete subnet %s failed", idOrName)
 		}
 	},
 }

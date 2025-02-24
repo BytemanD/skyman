@@ -26,7 +26,7 @@ var routerList = &cobra.Command{
 			query.Set("name", name)
 		}
 		routers, err := c.Router().List(query)
-		utility.LogError(err, "list ports failed", true)
+		utility.LogError(err, "list routers failed", true)
 		common.PrintRouters(routers, long)
 
 	},

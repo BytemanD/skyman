@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/spf13/cobra"
@@ -37,12 +36,12 @@ var networkDelete = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient().NeutronV2()
 
-		for _, net := range args {
-			fmt.Printf("Reqeust to delete network %s\n", net)
-			err := c.Network().Delete(net)
-			if err != nil {
-				console.Error("Delete network %s failed, %s", net, err)
-			}
+		for _, idOrName := range args {
+			fmt.Printf("Reqeust to delete network %s\n", idOrName)
+			network, err := c.Network().Find(idOrName)
+			utility.LogIfError(err, true, "get network %s failed", idOrName)
+			err = c.Network().Delete(network.Id)
+			utility.LogIfError(err, false, "delete network %s failed", idOrName)
 		}
 	},
 }

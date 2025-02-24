@@ -72,6 +72,7 @@ var vpcCreate = &cobra.Command{
 			utility.LogIfError(err, true, "create subnet %s failed", subnetName)
 			// add router interface
 			console.Info("add subnet %s to router %s", subneVerionName, routerName)
+
 			err = c.Router().AddSubnet(router.Id, subnet.Id)
 			utility.LogIfError(err, true, "add subnet %s to router %s failed", subnetName, routerName)
 			console.Info("create VPC %s success", vpc)

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/pkg/errors"
 )
 
 type Request struct {
@@ -42,7 +41,7 @@ func (r Request) buildUrl(path ...string) (string, error) {
 	paths := append([]string{r.ResourceUrl}, path...)
 	url, err := url.JoinPath(r.Baseurl, paths...)
 	if err != nil {
-		return "", errors.Wrapf(err, "invalid url: %s %v", r.Baseurl, strings.Join(path, "/"))
+		return "", fmt.Errorf("invalid url( %s + %v): %w", r.Baseurl, strings.Join(path, "/"), err)
 	}
 	return url, nil
 }

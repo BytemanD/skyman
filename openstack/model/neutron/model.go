@@ -9,12 +9,17 @@ import (
 	"github.com/BytemanD/skyman/openstack/model"
 )
 
+type Route struct {
+	Nexthop       string `json:"nexthop,omitempty"`
+	Destination   string `json:"destination,omitempty"`
+	HostRouteType string `json:"host_route_type,omitempty"`
+}
 type Router struct {
 	model.Resource
 	AdminStateUp          bool                   `json:"admin_state_up,omitempty"`
 	Distributed           bool                   `json:"distributed,omitempty"`
 	HA                    bool                   `json:"ha,omitempty"`
-	Routes                []string               `json:"routes,omitempty"`
+	Routes                []Route                `json:"routes,omitempty"`
 	RevsionNumber         int                    `json:"revision_number,omitempty"`
 	ExternalGatewayInfo   map[string]interface{} `json:"external_gateway_info,omitempty"`
 	AvailabilityZones     []string               `json:"availability_zones,omitempty"`

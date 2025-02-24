@@ -153,8 +153,10 @@ func (c routerApi) Show(id string) (*neutron.Router, error) {
 	return ShowResource[neutron.Router](c.ResourceApi, id)
 }
 func (c routerApi) Create(params map[string]interface{}) (*neutron.Router, error) {
-	result := struct{ Router neutron.Router }{}
-	if _, err := c.R().SetBody(ReqBody{"router": params}).SetResult(result).Post(); err != nil {
+	result := struct {
+		Router neutron.Router `json:"router"`
+	}{}
+	if _, err := c.R().SetBody(ReqBody{"router": params}).SetResult(&result).Post(); err != nil {
 		return nil, err
 	}
 	return &result.Router, nil
