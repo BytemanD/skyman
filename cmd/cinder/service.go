@@ -6,6 +6,7 @@ import (
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 )
 
@@ -33,21 +34,18 @@ var list = &cobra.Command{
 		services, err := client.CinderV2().Service().List(query)
 		utility.LogIfError(err, true, "get services failed")
 		if zone != "" {
-			filterServices := []cinder.Service{}
-			for _, srv := range services {
-				if srv.Zone != zone {
-					continue
-				}
-				filterServices = append(filterServices, srv)
-			}
-			common.PrintVolumeServices(filterServices, long)
-		} else {
-			common.PrintVolumeServices(services, long)
+			services = lo.Filter(services, func(item cinder.Service, _ int) bool {
+				return item.Zone == zone
+			})
 		}
+		common.PrintVolumeServices(services, long)
 	},
 }
 
 func init() {
+	list.Flags().String("binary", "", "Search by binary")
+	list.Flags().String("host", "", "Search by hostname")
+	list.Flags().String("zone", "", "Search by zone")
 	list.Flags().BoolP("long", "l", false, "List additional fields in output")
 
 	service.AddCommand(list)
