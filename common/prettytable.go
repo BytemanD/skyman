@@ -9,6 +9,7 @@ import (
 
 	"github.com/BytemanD/go-console/console"
 	"github.com/duke-git/lancet/v2/slice"
+	"github.com/samber/lo"
 
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/utility"
@@ -147,13 +148,11 @@ func (pt PrettyTable) RenderToTable(long bool) string {
 	headerRow := table.Row{}
 
 	columns := []Column{}
-	if pt.DisplayFields != nil && len(pt.DisplayFields) > 0 {
+	if len(pt.DisplayFields) > 0 {
 		for _, field := range pt.DisplayFields {
-			found := utility.Filter(
+			found := lo.Filter(
 				append(pt.ShortColumns, pt.LongColumns...),
-				func(x Column) bool {
-					return x.Name == field
-				},
+				func(x Column, index int) bool { return x.Name == field },
 			)
 			if len(found) > 0 {
 				columns = append(columns, found...)
@@ -163,7 +162,7 @@ func (pt PrettyTable) RenderToTable(long bool) string {
 		}
 	} else {
 		columns = pt.ShortColumns
-		if pt.DisplayFields == nil || len(pt.DisplayFields) == 0 {
+		if len(pt.DisplayFields) == 0 {
 			if long {
 				columns = append(columns, pt.LongColumns...)
 			}

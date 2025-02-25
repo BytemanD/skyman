@@ -17,6 +17,7 @@ import (
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/openstack/session"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/samber/lo"
 )
 
 const (
@@ -1240,7 +1241,7 @@ func (c AggregateApi) Find(idOrName string) (*nova.Aggregate, error) {
 	if err != nil {
 		return nil, err
 	}
-	aggs = utility.Filter(aggs, func(x nova.Aggregate) bool {
+	aggs = lo.Filter(aggs, func(x nova.Aggregate, index int) bool {
 		return x.Name == idOrName
 	})
 	switch len(aggs) {

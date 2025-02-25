@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/duke-git/lancet/v2/slice"
 	"github.com/howeyc/gopass"
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 	"github.com/wxnacy/wgo/file"
 
@@ -104,16 +104,12 @@ var serverList = &cobra.Command{
 			computeService, err := c.NovaV2().Service().List(nil)
 			utility.LogIfError(err, true, "list compute service failed")
 
-			computeService = utility.Filter[nova.Service](
-				computeService,
-				func(x nova.Service) bool {
-					return x.Zone == *listFlags.AZ
-				},
-			)
-			azHosts := []string{}
-			for _, s := range computeService {
-				azHosts = append(azHosts, s.Host)
-			}
+			computeService = lo.Filter(computeService, func(x nova.Service, _ int) bool {
+				return x.Zone == *listFlags.AZ
+			})
+			azHosts := lo.Map(computeService, func(s nova.Service, _ int) string {
+				return s.Host
+			})
 			console.Debug("hosts matched az %s: %s", *listFlags.AZ, azHosts)
 			if len(azHosts) == 0 {
 				console.Fatal("hosts matched az %s is none", *listFlags.AZ)
@@ -121,12 +117,9 @@ var serverList = &cobra.Command{
 			if len(filterHosts) == 0 {
 				filterHosts = azHosts
 			} else {
-				filterHosts = utility.Filter[string](
-					filterHosts,
-					func(x string) bool {
-						return slice.Contain(azHosts, x)
-					},
-				)
+				filterHosts = lo.Filter(filterHosts, func(x string, _ int) bool {
+					return lo.Contains(azHosts, x)
+				})
 			}
 		}
 

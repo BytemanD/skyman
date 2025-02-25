@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/BytemanD/skyman/server_actions/internal"
+	"github.com/samber/lo"
 )
 
 type ActionCount struct {
@@ -60,11 +61,14 @@ func (acl ActionCountList) Actions() []string {
 	return actions
 }
 func (acl ActionCountList) Total() int {
-	count := 0
-	for _, ac := range acl.items {
-		count += ac.Count
-	}
-	return count
+	// count := 0
+	// for _, ac := range acl.items {
+	// 	count += ac.Count
+	// }
+	// return count
+	return lo.Reduce(acl.Items(), func(agg int, item ActionCount, index int) int {
+		return agg + item.Count
+	}, 0)
 }
 func (acl ActionCountList) FormatActions() []string {
 	actions := make([]string, 0, len(acl.items))

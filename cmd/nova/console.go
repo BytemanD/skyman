@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/skyman/cmd/flags"
@@ -31,7 +32,7 @@ var consoleLog = &cobra.Command{
 	},
 }
 
-var validType = []string{
+var validTypes = []string{
 	"novnc", "xvpvnc", "rdp-html5",
 	"spice-html5", "serial", "webmks", "ssh", "sressh",
 }
@@ -42,15 +43,8 @@ var consoleUrl = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := common.DefaultClient()
-		var isTypeValid bool
-		for _, item := range validType {
-			if args[1] == item {
-				isTypeValid = true
-				break
-			}
-		}
-		if !isTypeValid {
-			fmt.Printf("invalid type: %s, supported types: %v\n", args[1], validType)
+		if !lo.Contains(validTypes, args[1]) {
+			fmt.Printf("invalid type: %s, supported types: %v\n", args[1], validTypes)
 			os.Exit(1)
 		}
 

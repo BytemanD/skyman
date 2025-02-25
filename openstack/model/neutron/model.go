@@ -7,6 +7,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/openstack/model"
+	"github.com/samber/lo"
 )
 
 type Route struct {
@@ -167,10 +168,9 @@ func (port Port) IsUnbound() bool {
 	return port.BindingVifType == "unbound"
 }
 func (port Port) GetFixedIpaddress() []string {
-	address := []string{}
-	for _, fixedIp := range port.FixedIps {
-		address = append(address, fixedIp.IpAddress)
-	}
+	address := lo.Map(port.FixedIps, func(fixedIp FixedIp, _ int) string {
+		return fixedIp.IpAddress
+	})
 	return address
 }
 func (rule SecurityGroupRule) String() string {

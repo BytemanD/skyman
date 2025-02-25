@@ -21,7 +21,7 @@ type StringRing struct {
 }
 
 func (r *StringRing) Next() string {
-	if r.Items == nil || len(r.Items) == 0 {
+	if len(r.Items) == 0 {
 		return ""
 	}
 	if r.index >= len(r.Items) {
@@ -38,15 +38,6 @@ func (r *StringRing) Sample(count int) []string {
 	return sample
 }
 
-func Filter[T any](items []T, filterFun func(x T) bool) []T {
-	filterd := []T{}
-	for _, item := range items {
-		if filterFun(item) {
-			filterd = append(filterd, item)
-		}
-	}
-	return filterd
-}
 func OneOfString(strs ...string) string {
 	if len(strs) == 0 {
 		return ""

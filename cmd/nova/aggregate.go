@@ -3,6 +3,7 @@ package nova
 import (
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/go-console/console"
@@ -27,18 +28,13 @@ var aggList = &cobra.Command{
 		client := common.DefaultClient()
 		aggregates, err := client.NovaV2().Aggregate().List(nil)
 		utility.LogError(err, "list aggregates failed", true)
-		filteredAggs := []nova.Aggregate{}
 		if *aggListFlags.Name != "" {
-			for _, agg := range aggregates {
-				if !strings.Contains(agg.Name, *aggListFlags.Name) {
-					continue
-				}
-				filteredAggs = append(filteredAggs, agg)
-			}
-		} else {
-			filteredAggs = aggregates
+			aggregates = lo.Filter(aggregates, func(item nova.Aggregate, _ int) bool {
+				return strings.Contains(item.Name, *aggListFlags.Name)
+			})
 		}
-		common.PrintAggregates(filteredAggs, *aggListFlags.Long)
+
+		common.PrintAggregates(aggregates, *aggListFlags.Long)
 	},
 }
 var aggShow = &cobra.Command{
