@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/BytemanD/go-console/console"
+	"github.com/samber/lo"
 
 	"github.com/BytemanD/skyman/openstack/internal"
 	"github.com/BytemanD/skyman/openstack/internal/auth_plugin"
 	"github.com/BytemanD/skyman/openstack/model"
-	"github.com/BytemanD/skyman/utility"
 )
 
 const (
@@ -62,7 +62,7 @@ type Openstack struct {
 }
 
 func (o Openstack) Region() string {
-	return utility.OneOfString(o.region, "RegionOne")
+	return lo.CoalesceOrEmpty(o.region, "RegionOne")
 }
 func (o *Openstack) ResetAllClients() {
 	o.keystoneClient = nil

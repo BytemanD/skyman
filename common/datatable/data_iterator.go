@@ -11,6 +11,7 @@ import (
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
+	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 )
 
@@ -58,7 +59,7 @@ func (t DataIterator[T]) getHeaderRow() table.Row {
 }
 
 func (t DataIterator[T]) getColumnConfigs() []table.ColumnConfig {
-	valueColumneWdith := utility.OneOfNumber(t.ValueColumnMaxWidth, DEFAULT_ITERATOR_COLUMN_MAX_WIDTH)
+	valueColumneWdith := lo.CoalesceOrEmpty(t.ValueColumnMaxWidth, DEFAULT_ITERATOR_COLUMN_MAX_WIDTH)
 	return []table.ColumnConfig{{Number: 2, WidthMax: valueColumneWdith}}
 }
 

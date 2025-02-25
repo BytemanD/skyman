@@ -18,6 +18,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/fatih/color"
 	"github.com/mattn/go-runewidth"
+	"github.com/samber/lo"
 )
 
 var POWER_STATE = []string{
@@ -54,11 +55,9 @@ func (flavor Flavor) HumanRam() string {
 type ExtraSpecs map[string]string
 
 func (extraSpecs ExtraSpecs) GetList() []string {
-	properties := []string{}
-	for k, v := range extraSpecs {
-		properties = append(properties, fmt.Sprintf("%s=%s", k, v))
-	}
-	return properties
+	return lo.MapToSlice(extraSpecs, func(k, v string) string {
+		return fmt.Sprintf("%s=%s", k, v)
+	})
 }
 func (extraSpecs ExtraSpecs) Get(key string) string {
 	return extraSpecs[key]
@@ -78,11 +77,8 @@ func (fault *Fault) Marshal() string {
 type AddressList []Address
 
 func (a AddressList) Addrs() []string {
-	addrs := []string{}
-	for _, address := range a {
-		addrs = append(addrs, address.Addr)
-	}
-	return addrs
+	return lo.Map(a, func(item Address, _ int) string { return item.Addr })
+
 }
 
 type Server struct {
@@ -164,16 +160,9 @@ func (server *Server) GetTaskState() string {
 	return server.TaskState
 }
 func (server *Server) GetNetworks() []string {
-	networksMap := map[string]string{}
-
-	for net, addresses := range server.Addresses {
-		networksMap[net] = strings.Join(addresses.Addrs(), ", ")
-	}
-	networks := []string{}
-	for k, v := range networksMap {
-		networks = append(networks, fmt.Sprintf("%s=%s", k, v))
-	}
-	return networks
+	return lo.MapToSlice(server.Addresses, func(k string, v AddressList) string {
+		return fmt.Sprintf("%s: %s", k, strings.Join(v.Addrs(), ","))
+	})
 }
 func (server Server) GetFlavorExtraSpecsString() string {
 	var extraList []string
@@ -278,11 +267,7 @@ type NumaNode struct {
 }
 
 func (hypervisor Hypervisor) NumaNodeKeys() []string {
-	keys := make([]string, 0, len(hypervisor.NumaNodes))
-	for key := range hypervisor.NumaNodes {
-		keys = append(keys, key)
-	}
-	return keys
+	return lo.Keys(hypervisor.NumaNodes)
 }
 
 type NumaNodeHugePages struct {
@@ -314,7 +299,7 @@ type NumaNodeCpuSet struct {
 var BAR_CHAR = "*"
 
 func fixNumbers(plus int, numbers ...int) []int {
-	total := utility.Sum(numbers...)
+	total := lo.Sum(numbers)
 	result := []int{}
 	roundCount := 0
 	for _, number := range numbers {
@@ -332,7 +317,7 @@ func fixNumbers(plus int, numbers ...int) []int {
 }
 
 func resourceUsageBar(used, reserved, free int) string {
-	total := utility.Sum(used, reserved, free)
+	total := lo.Sum([]int{used, reserved, free})
 	if total == 0 {
 		return fmt.Sprint(
 			strings.Repeat(BAR_CHAR, 30),
@@ -510,20 +495,17 @@ func (actionWithEvents InstanceAction) GetSpendTime() (float64, error) {
 	if actionWithEvents.StartTime == "" {
 		return 0, errors.New("no start time")
 	}
-	var lastEventFinishTime string
-	for _, event := range actionWithEvents.Events {
-		if event.FinishTime > lastEventFinishTime {
-			lastEventFinishTime = event.FinishTime
-		}
-	}
-	if lastEventFinishTime == "" {
+	lastEvent := lo.MaxBy(actionWithEvents.Events, func(item InstanceActionEvent, max InstanceActionEvent) bool {
+		return item.FinishTime > max.FinishTime
+	})
+	if lastEvent.FinishTime == "" {
 		return 0, errors.New("no finish time")
 	}
 
 	console.Debug("%s spend time: %s ~ %s", actionWithEvents.Action,
-		actionWithEvents.StartTime, lastEventFinishTime)
+		actionWithEvents.StartTime, lastEvent.FinishTime)
 	startTime, _ := time.Parse("2006-01-02T15:04:05", actionWithEvents.StartTime)
-	finishTime, _ := time.Parse("2006-01-02T15:04:05", lastEventFinishTime)
+	finishTime, _ := time.Parse("2006-01-02T15:04:05", lastEvent.FinishTime)
 	return float64(finishTime.Sub(startTime).Milliseconds()) / 1000, nil
 }
 
@@ -547,24 +529,14 @@ type InterfaceAttachment struct {
 }
 
 func (attachment InterfaceAttachment) GetIpAddresses() []string {
-	addresses := []string{}
-	for _, fixedIp := range attachment.FixedIps {
-		addresses = append(addresses, fixedIp.IpAddress)
-	}
-	return addresses
+	return lo.Map(attachment.FixedIps, func(item FixedIp, _ int) string {
+		return item.IpAddress
+	})
 }
 
 type FixedIp struct {
 	IpAddress string `json:"ip_address"`
 	SubnetId  string `json:"subnet_id"`
-}
-
-func (attachment InterfaceAttachment) GetIPAddresses() []string {
-	addresses := []string{}
-	for _, fixedIp := range attachment.FixedIps {
-		addresses = append(addresses, fixedIp.IpAddress)
-	}
-	return addresses
 }
 
 type ConsoleLog struct {

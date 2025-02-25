@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/BytemanD/skyman/utility"
+	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 )
 
@@ -94,46 +94,46 @@ func LoadTaskConfig(taskFile string) (*ServerActionsTestConf, error) {
 
 func NewActionCaseConfig(config CaseConfig, def CaseConfig) CaseConfig {
 	caseConfig := CaseConfig{
-		Workers:         utility.OneOfNumber(config.Workers, def.Workers, 1),
-		ActionInterval:  utility.OneOfNumber(config.ActionInterval, def.ActionInterval),
-		DeleteIfError:   utility.OneOfBoolean(config.DeleteIfError, def.DeleteIfError),
-		DeleteIfSuccess: utility.OneOfBoolean(config.DeleteIfSuccess, def.DeleteIfSuccess),
+		Workers:         lo.CoalesceOrEmpty(config.Workers, def.Workers, 1),
+		ActionInterval:  lo.CoalesceOrEmpty(config.ActionInterval, def.ActionInterval),
+		DeleteIfError:   lo.CoalesceOrEmpty(config.DeleteIfError, def.DeleteIfError),
+		DeleteIfSuccess: lo.CoalesceOrEmpty(config.DeleteIfSuccess, def.DeleteIfSuccess),
 
-		Flavors:          utility.OneOfStringArrays(config.Flavors, def.Flavors),
-		Images:           utility.OneOfStringArrays(config.Images, def.Images),
-		AvailabilityZone: utility.OneOfString(config.AvailabilityZone, def.AvailabilityZone),
+		Flavors:          lo.CoalesceSliceOrEmpty(config.Flavors, def.Flavors),
+		Images:           lo.CoalesceSliceOrEmpty(config.Images, def.Images),
+		AvailabilityZone: lo.CoalesceOrEmpty(config.AvailabilityZone, def.AvailabilityZone),
 
-		BootFromVolume: utility.OneOfBoolean(config.BootFromVolume, def.BootFromVolume),
-		BootVolumeSize: utility.OneOfNumber(config.BootVolumeSize, def.BootVolumeSize, 50),
-		BootVolumeType: utility.OneOfString(config.BootVolumeType, def.BootVolumeType),
+		BootFromVolume: lo.CoalesceOrEmpty(config.BootFromVolume, def.BootFromVolume),
+		BootVolumeSize: lo.CoalesceOrEmpty(config.BootVolumeSize, def.BootVolumeSize, 50),
+		BootVolumeType: lo.CoalesceOrEmpty(config.BootVolumeType, def.BootVolumeType),
 
-		BootWithSG: utility.OneOfString(config.BootWithSG, def.BootWithSG),
-		Networks:   utility.OneOfStringArrays(config.Networks, def.Networks),
+		BootWithSG: lo.CoalesceOrEmpty(config.BootWithSG, def.BootWithSG),
+		Networks:   lo.CoalesceSliceOrEmpty(config.Networks, def.Networks),
 
-		VolumeType: utility.OneOfString(config.VolumeType, def.VolumeType),
-		VolumeSize: utility.OneOfNumber(config.VolumeSize, def.VolumeSize, 10),
+		VolumeType: lo.CoalesceOrEmpty(config.VolumeType, def.VolumeType),
+		VolumeSize: lo.CoalesceOrEmpty(config.VolumeSize, def.VolumeSize, 10),
 
 		InterfaceHotplug: InterfaceHotplug{
-			Nums: utility.OneOfNumber(config.InterfaceHotplug.Nums, def.InterfaceHotplug.Nums, 1),
+			Nums: lo.CoalesceOrEmpty(config.InterfaceHotplug.Nums, def.InterfaceHotplug.Nums, 1),
 		},
 		VolumeHotplug: VolumeHotplug{
-			Nums: utility.OneOfNumber(config.VolumeHotplug.Nums, def.VolumeHotplug.Nums, 1),
+			Nums: lo.CoalesceOrEmpty(config.VolumeHotplug.Nums, def.VolumeHotplug.Nums, 1),
 		},
 		QGAChecker: QGAChecker{
-			Enabled: utility.OneOfBoolean(config.QGAChecker.Enabled, def.QGAChecker.Enabled),
-			GuestConnectTimeout: utility.OneOfNumber(config.QGAChecker.GuestConnectTimeout, def.QGAChecker.GuestConnectTimeout,
+			Enabled: lo.CoalesceOrEmpty(config.QGAChecker.Enabled, def.QGAChecker.Enabled),
+			GuestConnectTimeout: lo.CoalesceOrEmpty(config.QGAChecker.GuestConnectTimeout, def.QGAChecker.GuestConnectTimeout,
 				DEFAULT_GUEST_CONNECT_TIMEOUT),
-			QgaConnectTimeout: utility.OneOfNumber(config.QGAChecker.QgaConnectTimeout, def.QGAChecker.QgaConnectTimeout,
+			QgaConnectTimeout: lo.CoalesceOrEmpty(config.QGAChecker.QgaConnectTimeout, def.QGAChecker.QgaConnectTimeout,
 				DEFAULT_QGA_CONNECT_TIMEOUT),
 		},
 		LiveMigrate: LiveMigrateOptions{
-			PingEnabled: utility.OneOfBoolean(config.LiveMigrate.PingEnabled, def.LiveMigrate.PingEnabled),
-			PingInterval: utility.OneOfNumber(config.LiveMigrate.PingInterval, def.LiveMigrate.PingInterval,
+			PingEnabled: lo.CoalesceOrEmpty(config.LiveMigrate.PingEnabled, def.LiveMigrate.PingEnabled),
+			PingInterval: lo.CoalesceOrEmpty(config.LiveMigrate.PingInterval, def.LiveMigrate.PingInterval,
 				DEFAULT_PING_INTERVAL),
-			MaxLoss: utility.OneOfNumber(config.LiveMigrate.MaxLoss, def.LiveMigrate.MaxLoss),
+			MaxLoss: lo.CoalesceOrEmpty(config.LiveMigrate.MaxLoss, def.LiveMigrate.MaxLoss),
 		},
 		RevertSystem: RevertSystemConf{
-			RepeatEveryTime: utility.OneOfNumber(config.RevertSystem.RepeatEveryTime, def.RevertSystem.RepeatEveryTime, 1),
+			RepeatEveryTime: lo.CoalesceOrEmpty(config.RevertSystem.RepeatEveryTime, def.RevertSystem.RepeatEveryTime, 1),
 		},
 	}
 

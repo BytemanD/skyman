@@ -9,6 +9,7 @@ import (
 
 	"github.com/BytemanD/go-console/console"
 	"github.com/go-resty/resty/v2"
+	"github.com/samber/lo"
 )
 
 const (
@@ -33,10 +34,9 @@ func EncodeHeaders(reqHeader, clientHeader http.Header) string {
 	for k, v := range reqHeader {
 		allHeaders[k] = v
 	}
-	headerList := []string{}
-	for k, v := range allHeaders {
-		headerList = append(headerList, fmt.Sprintf("'%s: %s'", k, strings.Join(v, ",")))
-	}
+	headerList := lo.MapToSlice(allHeaders, func(k string, v []string) string {
+		return fmt.Sprintf("'%s: %s'", k, strings.Join(v, ","))
+	})
 	return strings.Join(headerList, ", ")
 }
 func LogRequestPre(c *resty.Client, r *http.Request) error {

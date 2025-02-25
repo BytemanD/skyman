@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/BytemanD/go-console/console"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/arrayutils"
 	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/utility"
@@ -37,7 +37,7 @@ var attachVolume = &cobra.Command{
 		mu := sync.Mutex{}
 
 		taskGroup := syncutils.TaskGroup{
-			Items:        arrayutils.Range(nums),
+			Items:        lo.Range(nums),
 			MaxWorker:    parallel,
 			Title:        fmt.Sprintf("create %d volume(s)", len(volumes)),
 			ShowProgress: true,

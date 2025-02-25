@@ -73,11 +73,9 @@ type Subnet struct {
 }
 
 func (subnet Subnet) GetAllocationPoolsList() []string {
-	pools := []string{}
-	for _, pool := range subnet.AllocationPools {
-		pools = append(pools, fmt.Sprintf("%s-%s", pool.Start, pool.End))
-	}
-	return pools
+	return lo.Map(subnet.AllocationPools, func(pool AllocationPool, _ int) string {
+		return fmt.Sprintf("%s-%s", pool.Start, pool.End)
+	})
 }
 
 type FixedIp struct {
@@ -153,11 +151,9 @@ func (port Port) MarshalBindingProfile() string {
 	return string(bytes)
 }
 func (port Port) VifDetailList() []string {
-	details := []string{}
-	for k, v := range port.BindingDetails {
-		details = append(details, fmt.Sprintf("%s=%v", k, v))
-	}
-	return details
+	return lo.MapToSlice(port.BindingDetails, func(k string, v interface{}) string {
+		return fmt.Sprintf("%s=%s", k, v)
+	})
 }
 
 func (port Port) IsActive() bool {

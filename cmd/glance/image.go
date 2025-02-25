@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/duke-git/lancet/v2/slice"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/go-console/console"
@@ -141,7 +142,7 @@ var imageSave = &cobra.Command{
 		image, err := c.Images().Find(args[0])
 		utility.LogError(err, fmt.Sprintf("get image %v failed", args[0]), true)
 
-		fileName := utility.OneOfString(
+		fileName := lo.CoalesceOrEmpty(
 			*imageSaveFlags.File, fmt.Sprintf("%s.%s", image.Name, image.DiskFormat),
 		)
 

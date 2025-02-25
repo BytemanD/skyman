@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/arrayutils"
 	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/go-console/console"
+	"github.com/samber/lo"
 
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack"
@@ -129,7 +129,7 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 		server *nova.Server
 		err    error
 	)
-	actionsReport.Init(testId, utility.OneOfString(serverId, "-"))
+	actionsReport.Init(testId, lo.CoalesceOrEmpty(serverId, "-"))
 
 	console.Info("start worker, id=%d", testId)
 	if serverId == "" {
@@ -259,7 +259,7 @@ func (t *Case) Start() {
 		console.Warn("use exits servers: %s", strings.Join(t.UseServers, ","))
 		syncutils.StartTasks(
 			syncutils.TaskOption{MaxWorker: len(t.UseServers)},
-			arrayutils.Range(1, t.Config.Workers+1),
+			lo.RangeFrom(1, t.Config.Workers),
 			func(testId int) error {
 				report := t.testActions(testId, t.UseServers[testId-1])
 				t.AddActionsReport(testId, report)
@@ -271,7 +271,7 @@ func (t *Case) Start() {
 			syncutils.TaskOption{
 				MaxWorker: max(t.Config.Workers, 1),
 			},
-			arrayutils.Range(1, t.Config.Workers+1),
+			lo.RangeFrom(1, t.Config.Workers),
 			func(testId int) error {
 				report := t.testActions(testId, "")
 				t.AddActionsReport(testId, report)

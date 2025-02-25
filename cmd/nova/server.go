@@ -631,15 +631,10 @@ var serverMigrate = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := common.DefaultClient()
-		// live, _ := cmd.Flags().GetBool("live")
-		// host, _ := cmd.Flags().GetString("host")
-		// blockMigrate, _ := cmd.Flags().GetBool("block-migrate")
-		// wait, _ := cmd.Flags().GetBool("wait")
-
 		srcHostMap := map[string]string{}
 		servers := []*nova.Server{}
 		for _, idOrName := range args {
-			server, err := client.NovaV2().Server().Find(idOrName)
+			server, err := client.NovaV2().Server().Find(idOrName, client.AuthPlugin.IsAdmin())
 			utility.LogError(err, "get server server failed", true)
 			servers = append(servers, server)
 			console.Info("[%s] source host is %s", server.Id, server.Host)

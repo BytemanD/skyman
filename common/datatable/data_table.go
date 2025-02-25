@@ -4,25 +4,19 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"strings"
 
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
+	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 )
 
 func splitTitle(s string) string {
-	newStr := ""
-	for _, c := range s {
-		if c < 91 && newStr != "" {
-			newStr += " " + string(c)
-		} else {
-			newStr += string(c)
-		}
-	}
-	return newStr
+	return strings.Join(lo.Words(s), " ")
 }
 
 type DataTable[T any] struct {
@@ -64,11 +58,9 @@ func (t DataTable[T]) tableWriter() table.Writer {
 func (t DataTable[T]) getHeaderRow(columns []Column[T]) table.Row {
 	headerRow := table.Row{}
 	for _, col := range columns {
-		var title string
-		if col.Text != "" {
-			title = col.Text
-		} else {
-			title = splitTitle(col.Name)
+		title := col.Text
+		if title == "" {
+			title = strings.Join(lo.Words(col.Name), " ")
 		}
 		headerRow = append(headerRow, title)
 	}

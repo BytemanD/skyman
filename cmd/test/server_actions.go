@@ -8,7 +8,7 @@ import (
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/server_actions"
-	"github.com/BytemanD/skyman/utility"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -50,7 +50,7 @@ var TestServerAction = &cobra.Command{
 		testCases := []server_actions.Case{}
 		// 初始化用例
 		client := common.DefaultClient()
-		console.Info("test on region: %s", utility.OneOfString(client.Region(), "RegionOne"))
+		console.Info("test on region: %s", client.Region())
 		if cliActions != nil {
 			worker, _ := cmd.Flags().GetInt("worker")
 			actionInterval, _ := cmd.Flags().GetInt("action-interval")
@@ -68,7 +68,7 @@ var TestServerAction = &cobra.Command{
 			console.Info("Found %d case(s)", len(testConf.Cases))
 			for _, actionCase := range testConf.Cases {
 				if actionCase.Skip {
-					console.Warn("skip case '%s'", utility.OneOfString(actionCase.Name, actionCase.Actions))
+					console.Warn("skip case '%s'", lo.CoalesceOrEmpty(actionCase.Name, actionCase.Actions))
 					continue
 				}
 				acl, err := server_actions.NewActionCountList(actionCase.Actions)

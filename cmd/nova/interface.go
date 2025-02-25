@@ -22,7 +22,7 @@ func printinterfaceAttachments(items []nova.InterfaceAttachment) {
 			{Name: "NetId"},
 			{Name: "FixedIps", Text: "IP Addresses", Slot: func(item interface{}) interface{} {
 				attachment, _ := item.(nova.InterfaceAttachment)
-				return strings.Join(attachment.GetIPAddresses(), ", ")
+				return strings.Join(attachment.GetIpAddresses(), ", ")
 			}},
 			{Name: "MacAddr"},
 		},

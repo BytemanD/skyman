@@ -253,14 +253,14 @@ func (t *ServerLiveMigrate) Start() error {
 			return err
 		}
 		// 检测ping 是否丢包
-		err = t.checkPingBeforeMigrate(interfaces[0].GetIPAddresses()[0])
+		err = t.checkPingBeforeMigrate(interfaces[0].GetIpAddresses()[0])
 		if err != nil {
 			return fmt.Errorf("ping check failed: %s", err)
 		}
 		console.Info("[%s] ping package not loss", t.ServerId())
 		// 开始运行ping
 		// TODO: 判断 IPv4 还是 IPv6
-		err = t.startPing(interfaces[0].GetIPAddresses()[0])
+		err = t.startPing(interfaces[0].GetIpAddresses()[0])
 		if err != nil {
 			return fmt.Errorf("start ping process failed: %s", err)
 		}

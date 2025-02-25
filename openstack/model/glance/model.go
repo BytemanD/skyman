@@ -7,6 +7,7 @@ import (
 	"github.com/BytemanD/skyman/utility"
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/dustin/go-humanize"
+	"github.com/samber/lo"
 )
 
 const (
@@ -82,11 +83,9 @@ func (img Image) GetProperties() map[string]interface{} {
 	return proerties
 }
 func (img Image) GetPropertyList() []string {
-	properties := []string{}
-	for k, v := range img.GetProperties() {
-		properties = append(properties, fmt.Sprintf("%s=%s", k, v))
-	}
-	return properties
+	return lo.MapToSlice(img.GetProperties(), func(k string, v interface{}) string {
+		return fmt.Sprintf("%s=%s", k, v)
+	})
 }
 func (img Image) IsActive() bool {
 	return img.Status == "active"

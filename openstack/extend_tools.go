@@ -12,7 +12,7 @@ import (
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
-	"github.com/duke-git/lancet/v2/slice"
+	"github.com/samber/lo"
 )
 
 func (o Openstack) PruneServers(query url.Values, yes bool, waitDeleted bool) {
@@ -21,7 +21,7 @@ func (o Openstack) PruneServers(query url.Values, yes bool, waitDeleted bool) {
 	servers, err := c.Server().Detail(query)
 	if query.Get("host") == "" {
 		console.Info("过滤虚拟机: No valid host was found")
-		servers = slice.Filter(servers, func(index int, item nova.Server) bool {
+		servers = lo.Filter(servers, func(item nova.Server, _ int) bool {
 			if item.Host == "" && strings.Contains(item.Fault.Message, "No valid host was found") {
 				return true
 			}

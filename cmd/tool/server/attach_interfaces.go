@@ -7,13 +7,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/arrayutils"
 	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/model/neutron"
 	"github.com/BytemanD/skyman/utility"
 	"github.com/duke-git/lancet/v2/slice"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 )
 
@@ -59,7 +59,7 @@ var attachInterfaces = &cobra.Command{
 
 		if !useNetId {
 			taskGroup := syncutils.TaskGroup{
-				Items:        arrayutils.Range(len(nets)),
+				Items:        lo.Range(len(nets)),
 				MaxWorker:    parallel,
 				Title:        fmt.Sprintf("create %d port(s)", len(nets)),
 				ShowProgress: true,
