@@ -56,7 +56,7 @@ var ImageShow = &cobra.Command{
 
 		image, err := c.Images().Find(args[0])
 		utility.LogIfError(err, true, "Get image %s failed", args[0])
-		common.PrintImage(*image, *imageShowFlags.Human)
+		common.PrintImage(*image, !*imageShowFlags.Bytes)
 	},
 }
 var imageCreate = &cobra.Command{
@@ -205,12 +205,11 @@ func init() {
 		Limit:      ImageList.Flags().Uint("limit", 0, "Number of images to request in each paginated request"),
 		Total:      ImageList.Flags().Uint("total", 0, "Maximum number of images to get"),
 		Visibility: ImageList.Flags().String("visibility", "", "The visibility of the images to display."),
-		Human:      ImageList.Flags().Bool("human", false, "Human size"),
 		Long:       ImageList.Flags().BoolP("long", "l", false, "List additional fields in output"),
 	}
 
 	imageShowFlags = ImageShowFlags{
-		Human: ImageShow.Flags().Bool("human", false, "Human size"),
+		Bytes: ImageShow.Flags().BoolP("bytes", "b", false, "Display size in bytes."),
 	}
 	imageCreateFlags = ImageCreateFlags{
 		Name:            imageCreate.Flags().StringP("name", "n", "", "The name of image, if --name is empty use the name of file"),

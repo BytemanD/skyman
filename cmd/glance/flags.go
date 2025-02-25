@@ -19,7 +19,7 @@ type ImageListFlags struct {
 	Long *bool
 }
 type ImageShowFlags struct {
-	Human *bool
+	Bytes *bool
 }
 type ImageCreateFlags struct {
 	Name            *string

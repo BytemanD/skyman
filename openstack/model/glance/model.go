@@ -23,21 +23,6 @@ var IMAGE_DISK_FORMATS = []string{
 	"ami", "ari", "aki", "vhd", "vhdx", "vmdk", "raw", "qcow2", "vdi", "iso", "ploop", "luks"}
 var IMAGE_VISIBILITIES = []string{"public", "private", "community", "shared"}
 
-func humanSize(size uint) string {
-	switch {
-	case size >= TB:
-		return fmt.Sprintf("%.2f TB", float32(size)/TB)
-	case size >= GB:
-		return fmt.Sprintf("%.2f GB", float32(size)/GB)
-	case size >= MB:
-		return fmt.Sprintf("%.2f MB", float32(size)/MB)
-	case size >= KB:
-		return fmt.Sprintf("%.2f KB", float32(size)/KB)
-	default:
-		return fmt.Sprintf("%d B", size)
-	}
-}
-
 type Image struct {
 	model.Resource
 	DiskFormat      string   `json:"disk_format,omitempty"`
@@ -66,7 +51,6 @@ func (img *Image) SetRaw(raw map[string]interface{}) {
 
 func (img Image) HumanSize() string {
 	return humanize.IBytes(uint64(img.Size))
-	// return humanSize(img.Size)
 }
 
 func (img Image) GetProperties() map[string]interface{} {
