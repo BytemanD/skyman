@@ -8,6 +8,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 
 	"github.com/BytemanD/skyman/common/datatable"
+	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
 	"github.com/BytemanD/skyman/openstack/model/glance"
@@ -17,7 +18,66 @@ import (
 )
 
 // nova
+func PrintServers(items []nova.Server, long bool, c *openstack.Openstack, sortDsc bool) {
+	projectMap := map[string]model.Project{}
+	imageMap := map[string]glance.Image{}
 
+	PrintItems(
+		[]datatable.Column[nova.Server]{
+			{Name: "Id"}, {Name: "Name"},
+			{Name: "Status", AutoColor: true}, {Name: "TaskState"},
+			{Name: "PowerState", AutoColor: true, RenderFunc: func(item nova.Server) interface{} {
+				return item.GetPowerState()
+			}},
+			{Name: "Addresses", Text: "Networks", WidthMax: 70, RenderFunc: func(item nova.Server) interface{} {
+				return strings.Join(item.GetNetworks(), "\n")
+			}},
+			{Name: "Host"},
+		},
+		[]datatable.Column[nova.Server]{
+			{Name: "AZ", Text: "AZ"}, {Name: "InstanceName"},
+			{Name: "Flavor", RenderFunc: func(p nova.Server) interface{} {
+				return p.Flavor.OriginalName
+			}},
+			{Name: "Project", RenderFunc: func(p nova.Server) interface{} {
+				if project, ok := projectMap[p.TenantId]; ok {
+					return project.Name
+				}
+				if project, err := c.KeystoneV3().Project().Show(p.TenantId); err == nil {
+					projectMap[p.TenantId] = *project
+					return project.Name
+				}
+				return p.TenantId
+			}},
+			{Name: "Vcpus", RenderFunc: func(p nova.Server) interface{} {
+				return p.Flavor.Vcpus
+			}},
+			{Name: "Ram", RenderFunc: func(p nova.Server) interface{} {
+				return p.Flavor.Ram
+			}},
+			{Name: "Image", RenderFunc: func(p nova.Server) interface{} {
+				imageId := p.ImageId()
+				if imageId == "" {
+					return ""
+				}
+				if image, ok := imageMap[imageId]; ok {
+					return image.Name
+				}
+				if image, err := c.GlanceV2().Images().Show(imageId); err == nil {
+					imageMap[imageId] = *image
+					return image.Name
+				}
+				return imageId
+			}},
+		},
+		items,
+		TableOptions{
+			SortBy:       []table.SortBy{{Name: "Name"}},
+			SeparateRows: long,
+			More:         long,
+		},
+	)
+}
 func PrintAggregates(items []nova.Aggregate, long bool) {
 	PrintItems(
 		[]datatable.Column[nova.Aggregate]{

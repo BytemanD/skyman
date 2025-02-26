@@ -17,18 +17,6 @@ import (
 	"github.com/jedib0t/go-pretty/v6/text"
 )
 
-func splitTitle(s string) string {
-	newStr := ""
-	for _, c := range s {
-		if c < 91 && newStr != "" {
-			newStr += " " + string(c)
-		} else {
-			newStr += string(c)
-		}
-	}
-	return newStr
-}
-
 var (
 	STYLE_LIGHT = "light"
 )
@@ -70,10 +58,11 @@ func (pt *PrettyTable) AddDisplayFields(fields ...string) {
 	}
 	pt.DisplayFields = []string{"Id"}
 	for _, colName := range fields {
-		if slice.Contain(pt.DisplayFields, colName) {
+		capColName := lo.Capitalize(colName)
+		if slice.Contain(pt.DisplayFields, capColName) {
 			continue
 		}
-		pt.DisplayFields = append(pt.DisplayFields, colName)
+		pt.DisplayFields = append(pt.DisplayFields, capColName)
 	}
 }
 func (pt *PrettyTable) AddItems(items interface{}) {
@@ -173,7 +162,7 @@ func (pt PrettyTable) RenderToTable(long bool) string {
 	for _, column := range columns {
 		var title string
 		if column.Text == "" {
-			title = splitTitle(column.Name)
+			title = strings.Join(lo.Words(column.Name), " ")
 		} else {
 			title = column.Text
 		}
@@ -309,7 +298,7 @@ func (pt PrettyItemTable) Print(long bool) string {
 			fieldLabel string
 		)
 		if field.Text == "" {
-			fieldLabel = splitTitle(field.Name)
+			fieldLabel = strings.Join(lo.Words(field.Name), " ")
 		} else {
 			fieldLabel = field.Text
 		}
