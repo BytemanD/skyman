@@ -79,7 +79,7 @@ func LoadConfig(configFile string) error {
 		"AUTH.USER.PASSWORD", "PASSWORD",
 		"AUTH.USER.DOMAIN", "USER_DOMAIN",
 		"AUTH.PROJECT", "PROJECT",
-		"AUTH.REGION", "REGION",
+		"AUTH.REGION.ID", "REGION_NAME",
 		"NEUTRON.ENDPOINT", "NEUTRON_ENDPOINT",
 		".", "_"))
 

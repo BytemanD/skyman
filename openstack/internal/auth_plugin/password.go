@@ -137,8 +137,7 @@ func (plugin *PasswordAuthPlugin) GetEndpoint(region string, sType string, sName
 		return "", fmt.Errorf("get token failed: %s", err)
 	}
 	if region == "" {
-		console.Warn("user default region: %s", DEFAUL_REGION)
-		region = DEFAUL_REGION
+		return "", fmt.Errorf("region is required")
 	}
 	for _, catalog := range plugin.token.Catalogs {
 		if catalog.Type != sType || (sName != "" && catalog.Name != sName) {
