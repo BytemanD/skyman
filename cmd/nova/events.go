@@ -2,7 +2,6 @@ package nova
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -21,10 +20,7 @@ func listServerActions(serverId string, actionName string, last int, long bool) 
 	client := common.DefaultClient()
 
 	actions, err := client.NovaV2().Server().ListActions(serverId)
-	if err != nil {
-		println(err)
-		os.Exit(1)
-	}
+	utility.LogError(err, "list actions failed", true)
 	pt := common.PrettyTable{
 		ShortColumns: []common.Column{
 			{Name: "Action"}, {Name: "RequestId"}, {Name: "StartTime", Sort: true},
