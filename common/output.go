@@ -63,6 +63,7 @@ type TableOptions struct {
 func printDataTable[T any](dt DataRender[T], long bool) {
 	switch CONF.Format {
 	case TABLE, "", "default":
+		dt.SetStyle(table.StyleDefault)
 		dt.Print(long)
 	case TABLE_LIGHT:
 		dt.SetStyle(table.StyleLight)
