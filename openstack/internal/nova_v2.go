@@ -374,23 +374,22 @@ func (c ServerApi) DeleteInterfaceAndWait(id string, portId string, timeout time
 	}
 	reqId := resp.RequestId()
 	console.Info("[%s] detaching interface %s, request id: %s", id, portId, reqId)
-
-	return utility.RetryWithErrors(
+	return utility.RetryWithError(
 		utility.RetryCondition{
 			Timeout:     timeout,
 			IntervalMin: time.Second * 2},
-		[]string{"ActionNotFinishedError"},
+		ErrActionNotFinish,
 		func() error {
 			action, err := c.ShowAction(id, reqId)
 			if err != nil {
 				return fmt.Errorf("get action events failed: %s", err)
 			}
 			if len(action.Events) == 0 || action.Events[0].FinishTime == "" {
-				return utility.NewActionNotFinishedError(reqId)
+				return fmt.Errorf("%w: %s", ErrActionNotFinish, reqId)
 			}
 			console.Info("[%s] action result: %s", id, action.Events[0].Result)
 			if action.Events[0].Result == "Error" {
-				return fmt.Errorf("request %s is error", reqId)
+				return fmt.Errorf("%w: request id is %s", ErrActionFailed, reqId)
 			} else {
 				return nil
 			}
@@ -798,11 +797,11 @@ func (c ServerApi) StopAndWait(id string) error {
 	if err := c.Stop(id); err != nil {
 		return err
 	}
-	return utility.RetryWithErrors(
+	return utility.RetryWithError(
 		utility.RetryCondition{
 			Timeout:     time.Minute * 30,
 			IntervalMin: time.Second * 2},
-		[]string{"ServerNotStopped"},
+		ErrServerNotStopped,
 		func() error {
 			server, err := c.Show(id)
 			if err != nil {
@@ -811,7 +810,7 @@ func (c ServerApi) StopAndWait(id string) error {
 			if server.IsStopped() {
 				return nil
 			}
-			return utility.NewServerNotStopped(id)
+			return fmt.Errorf("%w: %s", ErrServerNotStopped, id)
 		},
 	)
 }

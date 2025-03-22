@@ -2,6 +2,7 @@ package utility
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -72,6 +73,7 @@ func Retry(condition RetryCondition, function func() bool) error {
 		time.Sleep(condition.NextInterval())
 	}
 }
+
 func RetryError(condition RetryCondition, function func() (bool, error)) error {
 	startTime := time.Now()
 	for {
@@ -123,6 +125,26 @@ func RetryWithErrors(condition RetryCondition, matchErrors []string, function fu
 		if err != nil {
 			return err
 		}
+		time.Sleep(condition.NextInterval())
+	}
+}
+
+// 如果匹配 matchError, 重试, 否则退出
+func RetryWithError(condition RetryCondition, retryError error, function func() error) error {
+	startTime := time.Now()
+	var err error
+	for {
+		err = function()
+		if err == nil {
+			return nil
+		}
+		if condition.Timeout > 0 && time.Since(startTime) >= condition.Timeout {
+			return fmt.Errorf("retry timeout(%v), last error: %v", condition.Timeout, err)
+		}
+		if !errors.Is(err, retryError) {
+			return fmt.Errorf("unexcept error: %w", err)
+		}
+
 		time.Sleep(condition.NextInterval())
 	}
 }

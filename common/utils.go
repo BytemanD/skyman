@@ -59,7 +59,7 @@ func PathExtSplit(file string) (string, string) {
 	return name, ext
 }
 
-func LastItems(items []interface{}, last int) []interface{} {
+func LastN[T any](items []T, last int) []T {
 	return items[max(len(items)-max(last, 0), 0):]
 }
 

@@ -3,6 +3,7 @@ package nova
 import (
 	"fmt"
 
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/go-console/console"
@@ -30,16 +31,15 @@ func listServerActions(serverId string, actionName string, last int, long bool) 
 			{Name: "ProjectId"}, {Name: "UserId"},
 		},
 	}
-	if last == 0 {
-		last = len(actions)
+	if actionName != "" {
+		actions = lo.Filter(actions, func(item nova.InstanceAction, _ int) bool {
+			return item.Action == actionName
+		})
 	}
-	for _, action := range actions {
-		if actionName != "" && action.Action != actionName {
-			continue
-		}
-		pt.Items = append(pt.Items, action)
+	if last > 0 {
+		actions = common.LastN(actions, last)
 	}
-	pt.Items = common.LastItems(pt.Items, last)
+	pt.Items = append(pt.Items, actions)
 	common.PrintPrettyTable(pt, long)
 }
 func listServerActionsWithSpend(serverId string, actionName string, requestId string, last int, long bool) {

@@ -7,7 +7,9 @@ import (
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/benchmark"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/samber/lo"
 
 	"github.com/spf13/cobra"
 )
@@ -28,13 +30,12 @@ var BenchmarkCmd = &cobra.Command{
 			console.Info("list servers")
 			servers, err := client.NovaV2().Server().List(query)
 			utility.LogIfError(err, true, "list server failed")
-			cases := []benchmark.ServerShow{}
-			for _, server := range servers {
-				cases = append(cases, benchmark.ServerShow{
+			cases := lo.Map(servers, func(item nova.Server, _ int) benchmark.ServerShow {
+				return benchmark.ServerShow{
 					Client: client,
-					Server: server,
-				})
-			}
+					Server: item,
+				}
+			})
 			console.Info("start test")
 			results = benchmark.RunBenchmarkTest(cases)
 
