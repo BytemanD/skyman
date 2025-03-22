@@ -42,7 +42,7 @@ var ImageList = &cobra.Command{
 		}
 
 		c := common.DefaultClient().GlanceV2()
-		images, err := c.Images().List(query, int(*imageListFlags.Total))
+		images, err := c.Images().ListWithTotal(query, int(*imageListFlags.Total))
 		utility.LogError(err, "get imges failed", true)
 		common.PrintImages(images, *imageListFlags.Long)
 	},

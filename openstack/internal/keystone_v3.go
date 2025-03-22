@@ -80,7 +80,7 @@ func (c ServiceApi) Create(service keystone.Service) (*keystone.Service, error) 
 	return &respBody.Service, nil
 }
 func (c ServiceApi) Find(idOrName string) (*keystone.Service, error) {
-	return FindResource(idOrName, c.Show, c.List)
+	return FindIdOrName(c, idOrName)
 }
 func (c ServiceApi) Delete(id string) error {
 	_, err := DeleteResource(c.ResourceApi, id)
@@ -124,7 +124,7 @@ func (c ProjectApi) Delete(id string) error {
 }
 
 func (c ProjectApi) Find(idOrName string) (*model.Project, error) {
-	return FindResource[model.Project](idOrName, c.Show, c.List)
+	return FindIdOrName(c, idOrName)
 }
 
 // user api
@@ -136,7 +136,7 @@ func (c UserApi) Show(id string) (*model.User, error) {
 	return ShowResource[model.User](c.ResourceApi, id)
 }
 func (c UserApi) Find(idOrName string) (*model.User, error) {
-	return FindResource(idOrName, c.Show, c.List)
+	return FindIdOrName(c, idOrName)
 }
 func (c RoleAssignmentApi) List(query url.Values) ([]keystone.RoleAssigment, error) {
 	return ListResource[keystone.RoleAssigment](c.ResourceApi, query)

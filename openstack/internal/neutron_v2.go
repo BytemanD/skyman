@@ -167,7 +167,7 @@ func (c routerApi) Delete(id string) error {
 	return err
 }
 func (c routerApi) Find(idOrName string) (*neutron.Router, error) {
-	return FindResource(idOrName, c.Show, c.List)
+	return FindIdOrName(c, idOrName)
 }
 
 // Interface: subnet-id | port=port-id
@@ -217,7 +217,7 @@ func (c NetworkApi) Show(id string) (*neutron.Network, error) {
 	return ShowResource[neutron.Network](c.ResourceApi, id)
 }
 func (c NetworkApi) Find(idOrName string) (*neutron.Network, error) {
-	return FindResource(idOrName, c.Show, c.List)
+	return FindIdOrName(c, idOrName)
 }
 func (c NetworkApi) Create(params map[string]interface{}) (*neutron.Network, error) {
 	body := struct{ Network neutron.Network }{}
@@ -245,7 +245,7 @@ func (c SubnetApi) Show(id string) (*neutron.Subnet, error) {
 	return ShowResource[neutron.Subnet](c.ResourceApi, id)
 }
 func (c SubnetApi) Find(idOrName string) (*neutron.Subnet, error) {
-	return FindResource(idOrName, c.Show, c.List)
+	return FindIdOrName(c, idOrName)
 }
 func (c SubnetApi) Create(params map[string]interface{}) (*neutron.Subnet, error) {
 	body := struct{ Subnet neutron.Subnet }{}
@@ -272,11 +272,7 @@ func (c PortApi) ListByDeviceId(deviceId string) (neutron.Ports, error) {
 	return c.List(url.Values{"device_id": []string{deviceId}})
 }
 func (c PortApi) Show(id string) (*neutron.Port, error) {
-	body := struct{ Port neutron.Port }{}
-	if _, err := c.Get("ports/"+id, nil, &body); err != nil {
-		return nil, err
-	}
-	return &body.Port, nil
+	return ShowResource[neutron.Port](c.ResourceApi, id)
 }
 func (c PortApi) Update(id string, options map[string]interface{}) (*neutron.Port, error) {
 	body := struct{ Port neutron.Port }{}
@@ -298,7 +294,7 @@ func (c PortApi) Delete(id string) error {
 	return err
 }
 func (c PortApi) Find(idOrName string) (*neutron.Port, error) {
-	return FindResource(idOrName, c.Show, c.List)
+	return FindIdOrName(c, idOrName)
 }
 
 // neutron agent api
@@ -323,7 +319,7 @@ func (c sgApi) Show(id string) (*neutron.SecurityGroup, error) {
 	return ShowResource[neutron.SecurityGroup](c.ResourceApi, id)
 }
 func (c sgApi) Find(idOrName string) (*neutron.SecurityGroup, error) {
-	return FindResource(idOrName, c.Show, c.List)
+	return FindIdOrName(c, idOrName)
 }
 
 // security group rule api
@@ -344,7 +340,7 @@ func (c qosPolicyApi) Show(id string) (*neutron.QosPolicy, error) {
 	return ShowResource[neutron.QosPolicy](c.ResourceApi, id)
 }
 func (c qosPolicyApi) Find(idOrName string) (*neutron.QosPolicy, error) {
-	return FindResource(idOrName, c.Show, c.List)
+	return FindIdOrName(c, idOrName)
 }
 
 func (c qosRuleApi) List(query url.Values) ([]neutron.QosRule, error) {

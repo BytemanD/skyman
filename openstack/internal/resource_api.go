@@ -2,6 +2,7 @@ package internal
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"reflect"
@@ -9,6 +10,7 @@ import (
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/session"
 	"github.com/go-resty/resty/v2"
+	"github.com/samber/lo"
 )
 
 func checkError(resp *resty.Response, err error) (*session.Response, error) {
@@ -16,10 +18,11 @@ func checkError(resp *resty.Response, err error) (*session.Response, error) {
 		return &session.Response{Response: resp}, err
 	}
 	if resp.IsError() {
-		return &session.Response{Response: resp}, session.HttpError{
-			Status:  resp.StatusCode(),
-			Reason:  resp.Status(),
-			Message: string(resp.Body()),
+		switch resp.StatusCode() {
+		case 404:
+			return nil, fmt.Errorf("%w: %w, %s", session.ErrHTTPStatus, session.ErrHTTP404, resp.Body())
+		default:
+			return nil, fmt.Errorf("%w: [%d], %s", session.ErrHTTPStatus, resp.StatusCode(), string(resp.Body()))
 		}
 	}
 	return &session.Response{Response: resp}, nil
@@ -160,7 +163,6 @@ func ShowResource[T any](r ResourceApi, id string) (*T, error) {
 		return nil, fmt.Errorf("SingularKey is empty")
 	}
 	respBody := map[string]*T{}
-	// respBody[r.SingularKey] = T{}
 	if _, err := r.R().SetResult(&respBody).Get(id); err != nil {
 		return nil, err
 	}
@@ -174,59 +176,35 @@ func DeleteResource(r ResourceApi, id string, query ...url.Values) (*session.Res
 	return r.Delete(r.ResourceUrl+"/"+id, query...)
 }
 
-func FindResource[T any](
-	idOrName string,
-	showFunc func(id string) (*T, error),
-	listFunc func(query url.Values) ([]T, error),
-	allTenants ...bool,
-) (*T, error) {
-	t, err := showFunc(idOrName)
-	if err == nil {
-		return t, nil
-	}
-	switch errType := err.(type) {
-	case session.HttpError:
-		if !errType.IsNotFound() {
-			return nil, err
-		}
-	default:
+type FindCaseInterface[T any] interface {
+	List(query url.Values) ([]T, error)
+	Show(id string) (*T, error)
+}
+
+func FindIdOrName[T any](api FindCaseInterface[T], idOrName string, allTenants ...bool) (*T, error) {
+	if found, err := api.Show(idOrName); err == nil {
+		return found, nil
+	} else if !errors.Is(err, session.ErrHTTP404) && !errors.Is(err, ErrResourceNotFound) {
 		return nil, err
 	}
 	query := url.Values{"name": []string{idOrName}}
 	if len(allTenants) > 0 && allTenants[0] {
 		query.Set("all_tenants", "1")
 	}
-	ts, err := listFunc(query)
-	if err != nil {
+	if founds, err := api.List(query); err != nil {
 		return nil, err
-	}
-	switch len(ts) {
-	case 0:
-		return nil, fmt.Errorf("resource %s not found", idOrName)
-	case 1:
-		t := ts[0]
-		value := reflect.ValueOf(t)
-		valueName := value.FieldByName("Name")
-		if valueName.String() != idOrName {
-			return nil, fmt.Errorf("resource %s not found", idOrName)
-		} else {
-			return &t, nil
-		}
-	default:
-		fileted := []T{}
-		for _, t := range ts {
-			value := reflect.ValueOf(t)
-			valueName := value.FieldByName("Name")
-			if valueName.Kind() == reflect.String && valueName.String() == idOrName {
-				fileted = append(fileted, t)
-			}
-		}
-		if len(fileted) == 0 {
-			return nil, fmt.Errorf("resource %s not found", idOrName)
-		}
-		if len(fileted) == 1 {
+	} else {
+		fileted := lo.Filter(founds, func(item T, _ int) bool {
+			valueName := reflect.ValueOf(item).FieldByName("Name")
+			return valueName.Kind() == reflect.String && valueName.String() == idOrName
+		})
+		switch len(fileted) {
+		case 0:
+			return nil, fmt.Errorf("%w with id or name %s", ErrResourceNotFound, idOrName)
+		case 1:
 			return &fileted[0], nil
+		default:
+			return nil, fmt.Errorf("%w with id or name: %s", ErrResourceMulti, idOrName)
 		}
-		return nil, fmt.Errorf("found %d resources with name %s ", len(fileted), idOrName)
 	}
 }

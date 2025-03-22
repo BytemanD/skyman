@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/compare"
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/openstack/model"
@@ -253,7 +252,7 @@ func (c ServerApi) Show(id string) (*nova.Server, error) {
 	return ShowResource[nova.Server](c.ResourceApi, id)
 }
 func (c ServerApi) Find(idOrName string, allTenants ...bool) (*nova.Server, error) {
-	return FindResource(idOrName, c.Show, c.Detail, allTenants...)
+	return FindIdOrName(c, idOrName, allTenants...)
 }
 func (c ServerApi) Create(options nova.ServerOpt) (*nova.Server, error) {
 	if options.Name == "" {
@@ -757,13 +756,10 @@ func (c ServerApi) WaitDeleted(id string) error {
 				console.Info("[%s] %s", id, server.AllStatus())
 				return true
 			}
-			if compare.IsType[session.HttpError](err) {
-				httpError, _ := err.(session.HttpError)
-				if httpError.IsNotFound() {
-					console.Info("[%s] deleted", id)
-					err = nil
-					return false
-				}
+			if errors.Is(err, session.ErrHTTP404) {
+				console.Info("[%s] deleted", id)
+				err = nil
+				return false
 			}
 			return false
 		},
@@ -858,7 +854,7 @@ func (c FlavorApi) Delete(id string) error {
 }
 
 func (c FlavorApi) Find(idOrName string, withExtraSpecs bool) (*nova.Flavor, error) {
-	return FindResource(idOrName, c.Show, c.List)
+	return FindIdOrName(c, idOrName)
 }
 
 func (c FlavorApi) Create(flavor nova.Flavor) (*nova.Flavor, error) {
@@ -896,11 +892,8 @@ func (c FlavorApi) SetExtraSpecs(id string, extraSpecs map[string]string) (nova.
 }
 func (c FlavorApi) DeleteExtraSpec(id string, extraSpec string) error {
 	_, err := c.R().Delete(id, "os-extra_specs", extraSpec)
-	if compare.IsType[session.HttpError](err) {
-		httpError, _ := err.(session.HttpError)
-		if httpError.IsNotFound() {
-			console.Warn("flavor %s dosen't has extra spec: %s", id, extraSpec)
-		}
+	if errors.Is(err, session.ErrHTTP404) {
+		console.Warn("flavor %s dosen't has extra spec: %s", id, extraSpec)
 		return nil
 	}
 	return err
@@ -1230,11 +1223,7 @@ func (c AggregateApi) Find(idOrName string) (*nova.Aggregate, error) {
 	if err == nil {
 		return agg, nil
 	}
-	if !compare.IsType[session.HttpError](err) {
-		return nil, err
-	}
-	httpError, _ := err.(session.HttpError)
-	if !httpError.IsNotFound() {
+	if !errors.Is(err, session.ErrHTTP404) {
 		return nil, err
 	}
 	aggs, err := c.List(nil)

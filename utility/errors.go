@@ -6,7 +6,7 @@ import (
 )
 
 type ErrArgs struct {
-	Args []interface{}
+	Args []any
 }
 
 type ActionNotFinishedError ErrArgs

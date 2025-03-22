@@ -96,7 +96,7 @@ func (c VolumeApi) Show(id string) (*cinder.Volume, error) {
 }
 
 func (c VolumeApi) Find(idOrName string) (*cinder.Volume, error) {
-	return FindResource(idOrName, c.Show, c.Detail)
+	return FindIdOrName(c, idOrName)
 }
 func (c VolumeApi) Create(options map[string]interface{}) (*cinder.Volume, error) {
 	result := struct {
@@ -184,7 +184,7 @@ func (c VolumeTypeApi) Default() (*cinder.VolumeType, error) {
 	return c.Show("default")
 }
 func (c VolumeTypeApi) Find(idOrName string) (*cinder.VolumeType, error) {
-	return FindResource(idOrName, c.Show, c.List)
+	return FindIdOrName(c, idOrName)
 }
 func (c VolumeTypeApi) Create(params map[string]interface{}) (*cinder.VolumeType, error) {
 	result := struct {
@@ -223,7 +223,7 @@ func (c SnapshotApi) Delete(id string) error {
 	return err
 }
 func (c SnapshotApi) Find(idOrName string) (*cinder.Snapshot, error) {
-	return FindResource(idOrName, c.Show, c.List)
+	return FindIdOrName(c, idOrName)
 }
 func (c SnapshotApi) Create(volumeId string, name string, force bool) (*cinder.Snapshot, error) {
 	result := struct {
@@ -259,7 +259,7 @@ func (c BackupApi) Delete(id string) error {
 	return err
 }
 func (c BackupApi) Find(idOrName string) (*cinder.Backup, error) {
-	return FindResource(idOrName, c.Show, c.List)
+	return FindIdOrName(c, idOrName)
 }
 func (c BackupApi) Create(volumeId string, name string, force bool) (*cinder.Backup, error) {
 	result := struct{ Backup cinder.Backup }{}

@@ -50,7 +50,7 @@ var typeList = &cobra.Command{
 		if argDefault {
 			volumeType, err := client.CinderV2().VolumeType().Default()
 			volumeTypes = append(volumeTypes, *volumeType)
-			utility.RaiseIfError(err, "list default volume falied")
+			utility.LogIfError(err, true, "list default volume falied")
 		} else {
 			query := url.Values{}
 			if public {
@@ -60,7 +60,7 @@ var typeList = &cobra.Command{
 				query.Set("is_public", "false")
 			}
 			volumeTypes, err = client.CinderV2().VolumeType().List(query)
-			utility.RaiseIfError(err, "list volume type falied")
+			utility.LogIfError(err, true, "list volume type falied")
 		}
 
 		table := common.PrettyTable{

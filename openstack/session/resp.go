@@ -2,9 +2,18 @@ package session
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 
 	"github.com/go-resty/resty/v2"
 )
+
+const (
+	CODE_404 = 404
+)
+
+var ErrHTTPStatus = errors.New("http error")
+var ErrHTTP404 = fmt.Errorf("%w: %d", ErrHTTPStatus, CODE_404)
 
 type Response struct{ *resty.Response }
 
@@ -13,14 +22,19 @@ func (r Response) RequestId() string {
 }
 
 func (r Response) Error() error {
-	return HttpError{
-		Status:  r.StatusCode(),
-		Reason:  r.Status(),
-		Message: string(r.Body())}
+	if !r.IsError() {
+		return nil
+	}
+	switch r.StatusCode() {
+	case 404:
+		return fmt.Errorf("%w: %s", ErrHTTP404, r.Body())
+	default:
+		return fmt.Errorf("%w: [%d], %s", ErrHTTPStatus, r.StatusCode(), string(r.Body()))
+	}
 }
 func (r Response) IsNotFound() bool {
-	return r.StatusCode() == CODE_404
+	return errors.Is(r.Error(), ErrHTTP404)
 }
-func (r Response) UnmarshalBody(v interface{}) error {
+func (r Response) UnmarshalBody(v any) error {
 	return json.Unmarshal(r.Body(), v)
 }

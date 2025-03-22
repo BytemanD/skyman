@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -115,6 +116,12 @@ var versionCmd = &cobra.Command{
 }
 
 var TestCmd = &cobra.Command{Use: "test", Short: "Test tools"}
+
+var ErrFoo = errors.New("foo error")
+
+func bar() error {
+	return ErrFoo
+}
 
 func main() {
 	rootCmd := cobra.Command{

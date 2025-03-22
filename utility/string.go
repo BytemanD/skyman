@@ -8,9 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/compare"
 	"github.com/BytemanD/go-console/console"
-	"github.com/BytemanD/skyman/openstack/session"
 	"github.com/fatih/color"
 )
 
@@ -25,28 +23,11 @@ func UrlJoin(path ...string) string {
 	return strings.Join(path, "/")
 }
 
-func RaiseIfError(err error, msg string) {
-	if err == nil {
-		return
-	}
-	if compare.IsType[session.HttpError](err) {
-		httpError, _ := err.(session.HttpError)
-		console.Fatal("%s, %s: %s", msg, httpError.Reason, httpError.Message)
-	} else {
-		console.Fatal("%s, %v", msg, err)
-	}
-}
-
 func LogError(err error, message string, exit bool) {
 	if err == nil {
 		return
 	}
-	if compare.IsType[session.HttpError](err) {
-		httpError, _ := err.(session.HttpError)
-		console.Error("%s, %s: %s", message, httpError.Reason, httpError.Message)
-	} else {
-		console.Error("%s: %v", message, err)
-	}
+	console.Error("%s: %v", message, err)
 	if exit {
 		os.Exit(1)
 	}
@@ -55,12 +36,7 @@ func LogIfError(err error, exit bool, format string, args ...interface{}) {
 	if err == nil {
 		return
 	}
-	if compare.IsType[session.HttpError](err) {
-		httpError, _ := err.(session.HttpError)
-		console.Error(fmt.Sprintf(format, args...)+": [%s] %s", httpError.Reason, httpError.Message)
-	} else {
-		console.Error(fmt.Sprintf(format, args...)+": %v", err)
-	}
+	console.Error(fmt.Sprintf(format, args...)+": %s", err)
 	if exit {
 		os.Exit(1)
 	}

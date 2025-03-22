@@ -17,7 +17,7 @@ import (
 
 type ImageApi struct{ ResourceApi }
 
-func (c ImageApi) List(query url.Values, total int) ([]glance.Image, error) {
+func (c ImageApi) ListWithTotal(query url.Values, total int) ([]glance.Image, error) {
 	images := []glance.Image{}
 	fixQuery := query
 	if !fixQuery.Has("limit") {
@@ -56,11 +56,12 @@ func (c ImageApi) List(query url.Values, total int) ([]glance.Image, error) {
 	}
 	return images, nil
 }
-func (c ImageApi) ListAll(query url.Values) ([]glance.Image, error) {
-	return c.List(query, 0)
+func (c ImageApi) List(query url.Values) ([]glance.Image, error) {
+	return c.ListWithTotal(query, 0)
 }
+
 func (c ImageApi) ListByName(name string) ([]glance.Image, error) {
-	return c.List(url.Values{"name": []string{name}}, 0)
+	return c.ListWithTotal(url.Values{"name": []string{name}}, 0)
 }
 func (c ImageApi) Show(id string) (*glance.Image, error) {
 	result := glance.Image{}
@@ -81,7 +82,7 @@ func (c ImageApi) FoundByName(name string) (*glance.Image, error) {
 	return c.Show(images[0].Id)
 }
 func (c ImageApi) Find(idOrName string) (*glance.Image, error) {
-	return FindResource(idOrName, c.Show, c.ListAll)
+	return FindIdOrName(c, idOrName)
 }
 func (c ImageApi) Delete(id string) error {
 	_, err := c.ResourceApi.Delete("images/" + id)
