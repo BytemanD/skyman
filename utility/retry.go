@@ -60,19 +60,8 @@ func (c *RetryCondition) NextInterval() time.Duration {
 	return c.interval
 
 }
-func Retry(condition RetryCondition, function func() bool) error {
-	startTime := time.Now()
-	for {
-		retry := function()
-		if !retry {
-			return nil
-		}
-		if condition.Timeout > 0 && time.Since(startTime) >= condition.Timeout {
-			return fmt.Errorf("retry timeout(%v)", condition.Timeout)
-		}
-		time.Sleep(condition.NextInterval())
-	}
-}
+
+var ErrRetryTimeout = errors.New("retry timeout")
 
 func RetryError(condition RetryCondition, function func() (bool, error)) error {
 	startTime := time.Now()
@@ -139,11 +128,12 @@ func RetryWithError(condition RetryCondition, retryError error, function func() 
 			return nil
 		}
 		if condition.Timeout > 0 && time.Since(startTime) >= condition.Timeout {
-			return fmt.Errorf("retry timeout(%v), last error: %v", condition.Timeout, err)
+			return fmt.Errorf("%w(%s): last error: %v", ErrRetryTimeout, condition.Timeout, err)
 		}
 		if !errors.Is(err, retryError) {
 			return fmt.Errorf("unexcept error: %w", err)
 		}
+		console.Warn("catch error: %s, retrying", err)
 
 		time.Sleep(condition.NextInterval())
 	}

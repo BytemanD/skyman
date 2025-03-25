@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"time"
@@ -79,33 +80,35 @@ func (t *ServerActionTest) RefreshServer() error {
 	return nil
 }
 
+var ErrServerHasTask = errors.New("server has task")
+
 func (t *ServerActionTest) WaitServerTaskFinished(showProgress bool) error {
-	serverError := false
-	utility.Retry(
+	return utility.RetryWithError(
 		utility.RetryCondition{
 			Timeout:      time.Second * 60 * 20,
 			IntervalMin:  time.Second,
 			IntervalMax:  time.Second * 10,
 			IntervalStep: time.Second * 2,
 		},
-		func() bool {
+		ErrServerHasTask,
+		func() error {
 			if err := t.RefreshServer(); err != nil {
-				serverError = true
-				return false
+				return fmt.Errorf("refresh server failed: %w", err)
+			}
+			if t.Server.IsError() {
+				return fmt.Errorf("server is error")
 			}
 			progress := ""
 			if showProgress {
 				progress = fmt.Sprintf(", progress: %d", int(t.Server.Progress))
 			}
 			console.Info("[%s] %s%s", t.Server.Id, t.Server.AllStatus(), progress)
-			return t.Server.TaskState != ""
+			if t.Server.TaskState == "" {
+				return nil
+			}
+			return ErrServerHasTask
 		},
 	)
-	if serverError {
-		return fmt.Errorf("server is error")
-	} else {
-		return nil
-	}
 }
 func (t *ServerActionTest) nextNetwork() (string, error) {
 	if len(t.Config.Networks) == 0 {

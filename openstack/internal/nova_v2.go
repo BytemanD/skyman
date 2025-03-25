@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -691,26 +690,26 @@ func (c ServerApi) CreateImage(id string, imagName string, metadata map[string]s
 func (c ServerApi) WaitStatus(serverId string, status string, interval int) (*nova.Server, error) {
 	var (
 		server *nova.Server
-		err    error
 	)
-	utility.Retry(
+	err := utility.RetryWithError(
 		utility.RetryCondition{
-			Timeout: time.Second * 60 * 10, IntervalMin: time.Second * time.Duration(interval),
+			Timeout:     time.Second * 60 * 10,
+			IntervalMin: time.Second * time.Duration(interval),
 		},
-		func() bool {
-			server, err = c.Show(serverId)
+		ErrServerIsError,
+		func() error {
+			server, err := c.Show(serverId)
 			if err != nil {
-				return false
+				return nil
 			}
 			console.Info("[server: %s] status: %s, taskState: %s", server.Id, server.Status, server.TaskState)
 			if strings.EqualFold(server.Status, "ERROR") {
-				err = fmt.Errorf("server status is error, message: %s", server.Fault.Message)
-				return false
+				return fmt.Errorf("%w, message: %s", ErrServerIsError, server.Fault.Message)
 			}
 			if strings.EqualFold(server.Status, status) {
-				return false
+				return nil
 			}
-			return true
+			return fmt.Errorf("server status is %s, but want: %s", server.Status, status)
 		},
 	)
 	return server, err
@@ -738,32 +737,25 @@ func (c ServerApi) WaitBooted(id string) (*nova.Server, error) {
 	}
 }
 func (c ServerApi) WaitDeleted(id string) error {
-	var (
-		server *nova.Server
-		err    error
-	)
-	cxt := context.TODO()
-	cxt.Done()
-
-	utility.Retry(
+	return utility.RetryWithError(
 		utility.RetryCondition{
 			Timeout:     time.Second * 60 * 10,
 			IntervalMin: time.Second * time.Duration(2)},
-		func() bool {
-			server, err = c.Show(id)
+		ErrServerIsNotDeleted,
+		func() error {
+			server, err := c.Show(id)
 			if err == nil {
 				console.Info("[%s] %s", id, server.AllStatus())
-				return true
+				return ErrServerIsNotDeleted
 			}
 			if errors.Is(err, session.ErrHTTP404) {
 				console.Info("[%s] deleted", id)
-				err = nil
-				return false
+				return nil
+			} else {
+				return err
 			}
-			return false
 		},
 	)
-	return err
 }
 func (c ServerApi) WaitTask(id string, taskState string) (*nova.Server, error) {
 	for {

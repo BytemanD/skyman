@@ -336,6 +336,7 @@ var serverDelete = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := common.DefaultClient()
 
+		deleteServers := []string{}
 		for _, idOrName := range args {
 			client.NovaV2().Server().Find(idOrName)
 			s, err := client.NovaV2().Server().Find(idOrName)
@@ -349,9 +350,10 @@ var serverDelete = &cobra.Command{
 				continue
 			}
 			fmt.Printf("Requested to delete server: %s\n", idOrName)
+			deleteServers = append(deleteServers, s.Id)
 		}
 		if *deleteFlags.Wait {
-			for _, id := range args {
+			for _, id := range deleteServers {
 				client.NovaV2().Server().WaitDeleted(id)
 			}
 		}
