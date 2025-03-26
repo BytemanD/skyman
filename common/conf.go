@@ -1,10 +1,8 @@
 package common
 
 import (
-	"os"
-	"strings"
-
 	"github.com/BytemanD/skyman/common/i18n"
+	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/model/keystone"
 	"github.com/BytemanD/skyman/openstack/model/nova"
@@ -31,16 +29,14 @@ type ConfGroup struct {
 	Debug               bool   `yaml:"debug"`
 	Format              string `yaml:"format"`
 	Language            string `yaml:"language"`
-	HttpTimeoutSecond   int    `yaml:"httpTimeoutSecond"`
-	RetryWaitTimeSecond int    `yaml:"retryWaitTimeSecond"`
 	RetryCount          int    `yaml:"retryCount"`
 	LogFile             string `yaml:"logFile"`
 	EnableLogColor      bool   `yaml:"enableLogColor"`
 	BarChar             string `yaml:"barchar"`
+	HttpTimeoutSecond   int    `yaml:"httpTimeoutSecond"`
+	RetryWaitTimeSecond int    `yaml:"retryWaitTimeSecond"`
 
-	Auth     Auth        `yaml:"auth"`
-	Identity Identity    `yaml:"identity"`
-	Neutron  NeutronConf `yaml:"neutron"`
+	openstack.Config
 }
 type Auth struct {
 	Url             string          `yaml:"url"`
@@ -60,28 +56,9 @@ type NeutronConf struct {
 	Endpoint string `yaml:"endpoint"`
 }
 
-func DefaultConfGroup() ConfGroup {
-	return ConfGroup{
-		Identity: Identity{
-			Api: Api{Version: "3"},
-		},
-		Auth: Auth{
-			TokenExpireTime: DEFAULT_TOKEN_EXPIRE_TIME,
-		},
-	}
-}
-
 func LoadConfig(configFile string) error {
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("OS")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(
-		"AUTH.USER.NAME", "USERNAME",
-		"AUTH.USER.PASSWORD", "PASSWORD",
-		"AUTH.USER.DOMAIN", "USER_DOMAIN",
-		"AUTH.PROJECT", "PROJECT",
-		"AUTH.REGION.ID", "REGION_NAME",
-		"NEUTRON.ENDPOINT", "NEUTRON_ENDPOINT",
-		".", "_"))
 
 	viper.SetConfigType("yaml")
 	if configFile != "" {
@@ -94,7 +71,7 @@ func LoadConfig(configFile string) error {
 	if err := viper.ReadInConfig(); err != nil {
 		return err
 	}
-	CONF = DefaultConfGroup()
+	CONF = ConfGroup{}
 	viper.Unmarshal(&CONF)
 	i18n.InitLocalizer(CONF.Language)
 	if CONF.BarChar != "" {
@@ -109,9 +86,9 @@ func LoadConfig(configFile string) error {
 	}
 
 	// 环境变量
-	if os.Getenv("OS_IDENTITY_API_VERSION") != "" {
-		CONF.Identity.Api.Version = os.Getenv("OS_IDENTITY_API_VERSION")
-	}
+	// if os.Getenv("OS_IDENTITY_API_VERSION") != "" {
+	// 	CONF.Identity.Api.Version = os.Getenv("OS_IDENTITY_API_VERSION")
+	// }
 
 	return nil
 }

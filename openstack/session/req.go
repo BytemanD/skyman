@@ -35,9 +35,9 @@ func (r *Request) SetResult(result interface{}) *Request {
 	return r
 }
 func (r Request) buildUrl(path ...string) (string, error) {
-	if !strings.HasPrefix(r.Baseurl, "http://") && !strings.HasPrefix(r.Baseurl, "https://") {
-		return "", fmt.Errorf("invalid baseurl: %s", r.Baseurl)
-	}
+	// if !strings.HasPrefix(r.Baseurl, "http://") && !strings.HasPrefix(r.Baseurl, "https://") {
+	// 	return "", fmt.Errorf("invalid baseurl: %s", r.Baseurl)
+	// }
 	paths := append([]string{r.ResourceUrl}, path...)
 	url, err := url.JoinPath(r.Baseurl, paths...)
 	if err != nil {

@@ -84,7 +84,28 @@ func (c *NovaV2) GetCurrentVersion() (*model.ApiVersion, error) {
 	}
 	return nil, fmt.Errorf("current version not found")
 }
-
+func (c *NovaV2) DiscoverMicroVersion() error {
+	if c.MicroVersion != nil {
+		return nil
+	}
+	console.Debug("get current version of nova")
+	if resp, err := c.Index(nil); err != nil {
+		return err
+	} else {
+		result := struct{ Versions model.ApiVersions }{}
+		if err := resp.UnmarshalBody(&result); err != nil {
+			return err
+		}
+		if result.Versions.Current() == nil {
+			return fmt.Errorf("current version not found")
+		}
+		console.Debug("current nova version: %s", c.MicroVersion.VersoinInfo())
+		fmt.Println("xxxxxxxxxxxxxx")
+		c.MicroVersion = result.Versions.Current()
+		fmt.Println("xxxxxxxxxxxxxx")
+	}
+	return nil
+}
 func (c *NovaV2) String() string {
 	return fmt.Sprintf("<Compute: %s>", c.BaserUrl())
 }

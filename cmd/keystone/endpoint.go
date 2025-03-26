@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/keystone"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -37,7 +38,7 @@ var endpointList = &cobra.Command{
 
 		query := url.Values{}
 		if current {
-			endpointRegion = common.CONF.Auth.Region.Id
+			endpointRegion = openstack.CloudConfig().RegionName
 		}
 		if endpointRegion != "" {
 			query.Set("region_id", endpointRegion)

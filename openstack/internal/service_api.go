@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/openstack/internal/auth_plugin"
 	"github.com/BytemanD/skyman/openstack/session"
 	"github.com/go-resty/resty/v2"
@@ -51,17 +52,32 @@ func (c *ServiceClient) Index(result interface{}) (*session.Response, error) {
 	return &session.Response{Response: resp}, err
 }
 
-func NewServiceApi(endpoint string, version string, authPlugin auth_plugin.AuthPlugin) *ServiceClient {
-	u, _ := url.Parse(endpoint)
-	urlPath := strings.TrimSuffix(u.Path, "/")
-	if !strings.HasPrefix(urlPath, fmt.Sprintf("/%s", version)) {
-		u.Path = fmt.Sprintf("/%s", version)
-	}
-	return &ServiceClient{
+func NewServiceClient(regionName string, sType, sName, sInterface string, version string, authPlugin auth_plugin.AuthPlugin) *ServiceClient {
+	client := &ServiceClient{
 		IsAdmin: authPlugin.IsAdmin(),
-		Client: session.DefaultRestyClient(u.String()).
-			OnBeforeRequest(func(c *resty.Client, r *resty.Request) error {
-				return authPlugin.AuthRequest(r)
-			}),
+		Client:  session.DefaultRestyClient(""),
 	}
+	client.Client.OnBeforeRequest(func(c *resty.Client, _ *resty.Request) error {
+		if c.BaseURL != "" {
+			return nil
+		}
+		console.Debug("get endpoint for %s:%s:%s", sType, sName, sInterface)
+		endpoint, err := authPlugin.GetEndpoint(regionName, sType, sName, sInterface)
+		if err != nil {
+			return err
+		}
+		u, err := url.Parse(endpoint)
+		if err != nil {
+			return fmt.Errorf("parse endpoint falied: %w", err)
+		}
+		// u.Path 可能是 / 或 /vX.Y 或 /vX.Y/xxxxxxxxxx
+		if !strings.HasPrefix(u.Path, "/"+version) {
+			u = u.JoinPath(version)
+		}
+		c.BaseURL = u.String()
+		return nil
+	}).OnBeforeRequest(func(c *resty.Client, r *resty.Request) error {
+		return authPlugin.AuthRequest(r)
+	}).OnBeforeRequest(session.LogBeforeRequest)
+	return client
 }

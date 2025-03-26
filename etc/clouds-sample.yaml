@@ -1,0 +1,10 @@
+clouds:
+  default:
+    region_name: RegionOne
+    auth:
+      auth_url: http://keystone.region1.dev:35357/v3
+      project_domain_id: default
+      user_domain_id: default
+      project_name: admin
+      username: admin
+      password: PASSWORD

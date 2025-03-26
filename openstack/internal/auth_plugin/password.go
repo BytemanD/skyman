@@ -3,6 +3,7 @@ package auth_plugin
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -119,7 +120,7 @@ func (plugin *PasswordAuthPlugin) TokenIssue() error {
 	}{}
 	resp, err := plugin.session.R().SetBody(plugin.newAuthReqBody()).
 		SetResult(&respBody).
-		Post(fmt.Sprintf("%s%s", plugin.AuthUrl, URL_AUTH_TOKEN))
+		Post(URL_AUTH_TOKEN)
 	if err != nil || resp.Error() != nil {
 		return fmt.Errorf("token issue failed, %s %s", err, resp.Error())
 	}
@@ -134,7 +135,7 @@ func (plugin *PasswordAuthPlugin) TokenIssue() error {
 
 func (plugin *PasswordAuthPlugin) GetEndpoint(region string, sType string, sName string, sInterface string) (string, error) {
 	if err := plugin.makesureTokenValid(); err != nil {
-		return "", fmt.Errorf("get token failed: %s", err)
+		return "", fmt.Errorf("get token failed: %w", err)
 	}
 	if region == "" {
 		return "", fmt.Errorf("region is required")
@@ -184,9 +185,7 @@ func (plugin PasswordAuthPlugin) GetProjectId() (string, error) {
 }
 func (plugin PasswordAuthPlugin) IsAdmin() bool {
 	if plugin.token == nil {
-		if plugin.TokenIssue() != nil {
-			return false
-		}
+		return false
 	}
 	for _, role := range plugin.token.Roles {
 		if role.Name == "admin" {
@@ -198,8 +197,9 @@ func (plugin PasswordAuthPlugin) IsAdmin() bool {
 
 func NewPasswordAuthPlugin(authUrl string, user model.User, project model.Project) *PasswordAuthPlugin {
 	return &PasswordAuthPlugin{
-		session:           session.DefaultRestyClient(authUrl),
-		AuthUrl:           authUrl,
+		session: session.DefaultRestyClient(strings.TrimSuffix(authUrl, "/")).
+			OnBeforeRequest(session.LogBeforeRequest),
+		AuthUrl:           strings.TrimSuffix(authUrl, "/"),
 		Username:          user.Name,
 		Password:          user.Password,
 		UserDomainName:    user.Domain.Name,

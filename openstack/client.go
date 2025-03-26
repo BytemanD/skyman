@@ -4,7 +4,6 @@ OpenStack Client with Golang
 package openstack
 
 import (
-	"errors"
 	"sync"
 	"time"
 
@@ -114,12 +113,10 @@ func (o *Openstack) GlanceV2() *internal.GlanceV2 {
 	defer o.servieLock.Unlock()
 
 	if o.glanceClient == nil {
-		endpoint, err := o.AuthPlugin.GetEndpoint(o.Region(), IMAGE, GLANCE, PUBLIC)
-		if err != nil {
-			console.Fatal("%s", errors.Unwrap(err))
-		}
 		o.glanceClient = &internal.GlanceV2{
-			ServiceClient: internal.NewServiceApi(endpoint, V2, o.AuthPlugin),
+			ServiceClient: internal.NewServiceClient(
+				o.Region(), IMAGE, GLANCE, PUBLIC, V2, o.AuthPlugin,
+			),
 		}
 	}
 	return o.glanceClient
@@ -130,17 +127,10 @@ func (o *Openstack) CinderV2() *internal.CinderV2 {
 	defer o.servieLock.Unlock()
 
 	if o.cinderClient == nil {
-		var (
-			endpoint string
-			err      error
-		)
-		endpoint, err = o.AuthPlugin.GetEndpoint(o.Region(), VOLUME_V2, CINDER_V2, PUBLIC)
-		if err != nil {
-			console.Fatal("get cinder endpoint falied: %v", err)
-
-		}
 		o.cinderClient = &internal.CinderV2{
-			ServiceClient: internal.NewServiceApi(endpoint, V2, o.AuthPlugin),
+			ServiceClient: internal.NewServiceClient(
+				o.Region(), VOLUME_V2, CINDER_V2, PUBLIC, V2, o.AuthPlugin,
+			),
 		}
 	}
 	return o.cinderClient
@@ -152,16 +142,13 @@ func (o *Openstack) NeutronV2() *internal.NeutronV2 {
 
 	if o.neutronClient == nil {
 		endpoint := o.neutronEndpoint
-		if endpoint == "" {
-			var err error
-			endpoint, err = o.AuthPlugin.GetEndpoint(o.Region(), NETWORK, NEUTRON, PUBLIC)
-			if err != nil {
-				console.Fatal("get neutron endpoint falied: %v", err)
-
-			}
-		}
 		o.neutronClient = &internal.NeutronV2{
-			ServiceClient: internal.NewServiceApi(endpoint, V2_0, o.AuthPlugin),
+			ServiceClient: internal.NewServiceClient(
+				o.Region(), NETWORK, NEUTRON, PUBLIC, V2_0, o.AuthPlugin,
+			),
+		}
+		if endpoint != "" {
+			o.neutronClient.Client.BaseURL = endpoint
 		}
 	}
 	return o.neutronClient
@@ -171,12 +158,10 @@ func (o *Openstack) KeystoneV3() *internal.KeystoneV3 {
 	defer o.servieLock.Unlock()
 
 	if o.keystoneClient == nil {
-		endpoint, err := o.AuthPlugin.GetEndpoint(o.Region(), IDENTITY, KEYSTONE, PUBLIC)
-		if err != nil {
-			console.Fatal("%v", err)
-		}
 		o.keystoneClient = &internal.KeystoneV3{
-			ServiceClient: internal.NewServiceApi(endpoint, V3, o.AuthPlugin),
+			ServiceClient: internal.NewServiceClient(
+				o.Region(), IDENTITY, KEYSTONE, PUBLIC, V3, o.AuthPlugin,
+			),
 		}
 	}
 	return o.keystoneClient
@@ -186,33 +171,15 @@ func (o *Openstack) NovaV2(microVersion ...string) *internal.NovaV2 {
 	defer o.servieLock.Unlock()
 
 	if o.novaClient == nil {
-		endpoint, err := o.AuthPlugin.GetEndpoint(o.Region(), COMPUTE, NOVA, PUBLIC)
-		if err != nil {
-			console.Warn("get nova endpoint falied: %v", err)
-			return &internal.NovaV2{
-				ServiceClient: internal.NewServiceApi(endpoint, V2_1, o.AuthPlugin),
-			}
-		}
 		o.novaClient = &internal.NovaV2{
-			ServiceClient: internal.NewServiceApi(endpoint, V2_1, o.AuthPlugin),
+			ServiceClient: internal.NewServiceClient(
+				o.Region(), COMPUTE, NOVA, PUBLIC, V2_1, o.AuthPlugin,
+			),
+			MicroVersion: &model.ApiVersion{Version: "2.1"},
 		}
-		if o.ComputeApiVersion != "" {
-			o.novaClient.MicroVersion = &model.ApiVersion{
-				Version: o.ComputeApiVersion,
-			}
-		} else {
-			console.Debug("get current version of nova")
-			currentVersion, err := o.novaClient.GetCurrentVersion()
-			if err != nil {
-				console.Warn("get current version failed: %v", err)
-				o.novaClient.MicroVersion = &model.ApiVersion{
-					Version: V2_1,
-				}
-			} else {
-				o.novaClient.MicroVersion = currentVersion
-			}
+		if err := o.novaClient.DiscoverMicroVersion(); err != nil {
+			console.Warn("get current version failed: %v", err)
 		}
-		console.Debug("current nova version: %s", o.novaClient.MicroVersion.VersoinInfo())
 		if o.novaClient.MicroVersion != nil {
 			o.novaClient.AddBaseHeader("Openstack-Api-Version", o.novaClient.MicroVersion.Version)
 			o.novaClient.AddBaseHeader("X-Openstack-Nova-Api-Version", o.novaClient.MicroVersion.Version)

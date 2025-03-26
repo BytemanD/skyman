@@ -119,16 +119,14 @@ var TestCmd = &cobra.Command{Use: "test", Short: "Test tools"}
 
 var ErrFoo = errors.New("foo error")
 
-func bar() error {
-	return ErrFoo
-}
-
 func main() {
 	rootCmd := cobra.Command{
 		Use:     "skyman",
 		Short:   "Golang OpenStack Client \n" + LOGO,
 		Version: getVersion(),
 		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
+			openstack.LoadConfig()
+
 			format, _ := cmd.Flags().GetString("format")
 			if format != "" && !slice.Contain(common.GetOutputFormats(), format) {
 				fmt.Printf("invalid foramt '%s'\n", format)

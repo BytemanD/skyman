@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -48,13 +49,14 @@ func LogBeforeRequest(c *resty.Client, r *resty.Request) error {
 	if r.Body != nil {
 		body, _ = json.Marshal(r.Body)
 	}
-	console.Debug("REQ: %s %s?%s\n    Header: %v\n    Body: %s",
-		r.Method, r.URL, r.QueryParam.Encode(), EncodeHeaders(r.Header, c.Header), body)
+	u, _ := url.JoinPath(c.BaseURL, r.URL)
+	console.Debug("---- REQ ----: %s %s?%s\n    Header: %v\n    Body: %s",
+		r.Method, u, r.QueryParam.Encode(), EncodeHeaders(r.Header, c.Header), body)
 	return nil
 }
 
 func LogRespAfterResponse(c *resty.Client, r *resty.Response) error {
-	console.Debug("RESP: [%d]\n    Header: %s\n    Body: %s",
+	console.Debug("---- RESP ----: [%d]\n    Header: %s\n    Body: %s",
 		r.StatusCode(), EncodeHeaders(r.Header(), nil), string(r.Body()))
 	return nil
 }
@@ -69,6 +71,5 @@ func DefaultRestyClient(baseUrl string) *resty.Client {
 		SetRetryWaitTime(DEFAULT_RETRY_WAIT_TIME).
 		SetRetryMaxWaitTime(DEFAULT_RETRY_MAX_WAIT_TIME).
 		SetTimeout(DEFAULT_TIMEOUT).
-		OnBeforeRequest(LogBeforeRequest).
 		OnAfterResponse(LogRespAfterResponse)
 }
