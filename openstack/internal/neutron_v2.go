@@ -28,9 +28,7 @@ type NeutronV2 struct {
 func (c *NeutronV2) GetCurrentVersion() (*model.ApiVersion, error) {
 	if c.currentVersion == nil {
 		result := struct{ Versions model.ApiVersions }{}
-		if resp, err := c.Index(nil); err != nil {
-			return nil, err
-		} else if err := resp.UnmarshalBody(&result); err != nil {
+		if _, err := c.Index(&result); err != nil {
 			return nil, err
 		}
 		versions := result.Versions

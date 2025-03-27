@@ -27,18 +27,20 @@ const (
 	DEFAULT_TIMEOUT             = time.Second * 60
 )
 
-func EncodeHeaders(reqHeader, clientHeader http.Header) string {
-	allHeaders := map[string][]string{}
-	for k, v := range clientHeader {
-		allHeaders[k] = v
-	}
-	for k, v := range reqHeader {
-		allHeaders[k] = v
-	}
-	headerList := lo.MapToSlice(allHeaders, func(k string, v []string) string {
-		return fmt.Sprintf("'%s: %s'", k, strings.Join(v, ","))
+func EncodeHeaders(reqHeader, clientHeader http.Header) []string {
+	allKeys := lo.Uniq(append(lo.Keys(reqHeader), lo.Keys(clientHeader)...))
+	return lo.FilterMap(allKeys, func(key string, _ int) (string, bool) {
+		if key == "X-Auth-Token" {
+			return fmt.Sprintf("%s: %s", key, "<token>"), true
+		}
+		if lo.HasKey(reqHeader, key) {
+			return fmt.Sprintf("%s: %s", key, strings.Join(reqHeader[key], ", ")), true
+		}
+		if lo.HasKey(clientHeader, key) {
+			return fmt.Sprintf("%s: %s", key, strings.Join(clientHeader[key], ", ")), true
+		}
+		return "", false
 	})
-	return strings.Join(headerList, ", ")
 }
 func LogRequestPre(c *resty.Client, r *http.Request) error {
 	console.Debug("REQ: %s %s\n    Header: %v", r.Method, r.URL, EncodeHeaders(r.Header, c.Header))
@@ -46,18 +48,27 @@ func LogRequestPre(c *resty.Client, r *http.Request) error {
 }
 func LogBeforeRequest(c *resty.Client, r *resty.Request) error {
 	body := []byte{}
-	if r.Body != nil {
+	if r.Header.Get(CONTENT_TYPE) != CONTENT_TYPE_STREAM && r.Body != nil {
 		body, _ = json.Marshal(r.Body)
 	}
-	u, _ := url.JoinPath(c.BaseURL, r.URL)
+	var u string
+	if strings.HasPrefix(r.URL, "http://") || strings.HasPrefix(r.URL, "https://") {
+		u = r.URL
+	} else {
+		u, _ = url.JoinPath(c.BaseURL, r.URL)
+	}
 	console.Debug("---- REQ ----: %s %s?%s\n    Header: %v\n    Body: %s",
-		r.Method, u, r.QueryParam.Encode(), EncodeHeaders(r.Header, c.Header), body)
+		r.Method, u, r.QueryParam.Encode(),
+		strings.Join(EncodeHeaders(r.Header, c.Header), "\n            "),
+		body)
 	return nil
 }
 
 func LogRespAfterResponse(c *resty.Client, r *resty.Response) error {
 	console.Debug("---- RESP ----: [%d]\n    Header: %s\n    Body: %s",
-		r.StatusCode(), EncodeHeaders(r.Header(), nil), string(r.Body()))
+		r.StatusCode(),
+		strings.Join(EncodeHeaders(r.Header(), nil), "\n            "),
+		string(r.Body()))
 	return nil
 }
 

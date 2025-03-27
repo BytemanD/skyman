@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -42,14 +43,12 @@ func (c *ServiceClient) IndexUrl() (string, error) {
 	return parsed.String(), err
 }
 
-func (c *ServiceClient) Index(result interface{}) (*session.Response, error) {
-	indexUrl, err := c.IndexUrl()
-	if err != nil {
-		return nil, fmt.Errorf("get index url failed: %s", err)
+func (c *ServiceClient) Index(result interface{}) (*resty.Response, error) {
+	resp, err := c.Client.R().SetResult(nil).Get("{index}")
+	if err == nil && !resp.IsError() && result != nil {
+		err = json.Unmarshal([]byte(resp.Body()), result)
 	}
-
-	resp, err := c.Client.R().SetResult(result).Get(indexUrl)
-	return &session.Response{Response: resp}, err
+	return resp, err
 }
 
 func NewServiceClient(regionName string, sType, sName, sInterface string, version string, authPlugin auth_plugin.AuthPlugin) *ServiceClient {
@@ -57,7 +56,7 @@ func NewServiceClient(regionName string, sType, sName, sInterface string, versio
 		IsAdmin: authPlugin.IsAdmin(),
 		Client:  session.DefaultRestyClient(""),
 	}
-	client.Client.OnBeforeRequest(func(c *resty.Client, _ *resty.Request) error {
+	client.Client.OnBeforeRequest(func(c *resty.Client, r *resty.Request) error {
 		if c.BaseURL != "" {
 			return nil
 		}
@@ -77,6 +76,15 @@ func NewServiceClient(regionName string, sType, sName, sInterface string, versio
 		c.BaseURL = u.String()
 		return nil
 	}).OnBeforeRequest(func(c *resty.Client, r *resty.Request) error {
+		if r.URL == "{index}" {
+			if u, err := url.Parse(c.BaseURL); err != nil {
+				return err
+			} else {
+				u.Path = ""
+				r.URL = u.String()
+				return nil
+			}
+		}
 		return authPlugin.AuthRequest(r)
 	}).OnBeforeRequest(session.LogBeforeRequest)
 	return client

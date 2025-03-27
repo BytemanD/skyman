@@ -177,16 +177,8 @@ func (c GlanceV2) Images() ImageApi {
 
 func (c GlanceV2) GetCurrentVersion() (*model.ApiVersion, error) {
 	result := struct{ Versions model.ApiVersions }{}
-	if resp, err := c.Index(nil); err != nil {
+	if _, err := c.Index(&result); err != nil {
 		return nil, err
-	} else {
-		if err := resp.UnmarshalBody(&result); err != nil {
-			return nil, err
-		}
 	}
-	version := result.Versions.Current()
-	if version != nil {
-		return version, nil
-	}
-	return nil, fmt.Errorf("current version not found")
+	return &result.Versions[0], nil
 }

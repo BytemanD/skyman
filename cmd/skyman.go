@@ -6,7 +6,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/duke-git/lancet/v2/slice"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -81,9 +81,9 @@ var versionCmd = &cobra.Command{
 		fmt.Printf("  %-11s: %s\n", "Keystone", identityVerion.VersoinInfo())
 
 		errors := 0
-		computeVerion, err := client.NovaV2().GetCurrentVersion()
+		err = client.NovaV2().DiscoverMicroVersion()
 		if err == nil {
-			fmt.Printf("  %-11s: %s\n", "Nova", computeVerion.VersoinInfo())
+			fmt.Printf("  %-11s: %s\n", "Nova", client.NovaV2().MicroVersion.VersoinInfo())
 		} else {
 			fmt.Printf("  %-11s: Unknown (%s)\n", "Nova", err)
 			errors++
@@ -125,26 +125,13 @@ func main() {
 		Short:   "Golang OpenStack Client \n" + LOGO,
 		Version: getVersion(),
 		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
-			openstack.LoadConfig()
-
 			format, _ := cmd.Flags().GetString("format")
-			if format != "" && !slice.Contain(common.GetOutputFormats(), format) {
+			conf, _ := cmd.Flags().GetString("conf")
+
+			if format != "" && !lo.Contains(common.GetOutputFormats(), format) {
 				fmt.Printf("invalid foramt '%s'\n", format)
 				os.Exit(1)
 			}
-			conf, _ := cmd.Flags().GetString("conf")
-			if conf == "" {
-				ctxConf, err := context.LoadContextConf()
-				if err != nil {
-					console.Debug("load context failed: %s", err)
-				} else {
-					if ctx := ctxConf.GetCurrent(); ctx != nil {
-						console.Debug("use conf from context")
-						conf = ctx.Conf
-					}
-				}
-			}
-
 			if err := common.LoadConfig(conf); err != nil {
 				fmt.Printf("load config failed: %v\n", err)
 				os.Exit(1)
@@ -181,7 +168,7 @@ func main() {
 	)
 
 	rootCmd.AddCommand(
-		versionCmd, context.ContextCmd,
+		versionCmd, context.CloudsCmd,
 
 		keystone.Token,
 		keystone.Service, keystone.Endpoint, keystone.Region,

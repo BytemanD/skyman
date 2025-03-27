@@ -13,6 +13,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+const ENV_CLOUD_NAME = "OS_CLOUD_NAME"
+
 var cloud Cloud
 var CONF Config
 
@@ -30,6 +32,10 @@ type Cloud struct {
 	Neutron         NeutronConf `yaml:"neutron"`
 	RegionName      string      `yaml:"region_name" mapstructure:"region_name"`
 	Auth            Auth        `yaml:"auth"`
+}
+
+func (c Cloud) Region() string {
+	return lo.CoalesceOrEmpty(c.RegionName, "RegionOne")
 }
 
 type Auth struct {
@@ -125,7 +131,7 @@ func connectCloud() (*Openstack, error) {
 	cloud.TokenExpireTime = lo.CoalesceOrEmpty(cloud.TokenExpireTime, 60*30)
 
 	if cloud.Auth.AuthUrl == "" {
-		return nil, fmt.Errorf("auth url is null, forget to load env or set cloud name?")
+		return nil, fmt.Errorf("auth url is emptu, forget to load env or set cloud name?")
 	}
 	conn := NewClient(
 		cloud.Auth.AuthUrl,
@@ -138,7 +144,7 @@ func connectCloud() (*Openstack, error) {
 			Name:   cloud.Auth.ProjectName,
 			Domain: model.Domain{Name: cloud.Auth.ProjectDomainId},
 		},
-		cloud.RegionName,
+		cloud.Region(),
 	)
 	conn.AuthPlugin.SetLocalTokenExpire(cloud.TokenExpireTime)
 	if CONF.HttpTimeoutSecond > 0 {
@@ -175,14 +181,10 @@ func Connect(name ...string) (*Openstack, error) {
 	if len(name) > 0 && name[0] != "" {
 		return GetOne(name[0])
 	}
-	if os.Getenv("OS_CLOUD_NAME") != "" {
-		return GetOne(os.Getenv("OS_CLOUD_NAME"))
+	if os.Getenv(ENV_CLOUD_NAME) != "" {
+		return GetOne(os.Getenv(ENV_CLOUD_NAME))
 	}
 	loadFromEnv()
-	if cloud.Auth.AuthUrl != "" {
-
-	}
-
 	if c, ok := CONF.Clouds["default"]; ok {
 		cloud = c
 	}

@@ -3,16 +3,9 @@ package common
 import (
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
-	"github.com/BytemanD/skyman/openstack/model"
-	"github.com/BytemanD/skyman/openstack/model/keystone"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/spf13/viper"
 )
-
-var CONF_FILES = []string{
-	"etc/skyman.yaml",
-	"/etc/skyman/skyman.yaml",
-}
 
 var (
 	CONF      ConfGroup
@@ -36,43 +29,34 @@ type ConfGroup struct {
 	HttpTimeoutSecond   int    `yaml:"httpTimeoutSecond"`
 	RetryWaitTimeSecond int    `yaml:"retryWaitTimeSecond"`
 
-	openstack.Config
-}
-type Auth struct {
-	Url             string          `yaml:"url"`
-	Region          keystone.Region `yaml:"region"`
-	User            model.User      `yaml:"user"`
-	Project         model.Project   `yaml:"project"`
-	TokenExpireTime int             `yaml:"tokenExpireTime"`
+	// openstack.Config
 }
 
-type Api struct {
-	Version string `yaml:"version"`
-}
-type Identity struct {
-	Api Api `yaml:"api"`
-}
-type NeutronConf struct {
-	Endpoint string `yaml:"endpoint"`
-}
+// type Auth struct {
+// 	Url             string          `yaml:"url"`
+// 	Region          keystone.Region `yaml:"region"`
+// 	User            model.User      `yaml:"user"`
+// 	Project         model.Project   `yaml:"project"`
+// 	TokenExpireTime int             `yaml:"tokenExpireTime"`
+// }
+
+// type Api struct {
+// 	Version string `yaml:"version"`
+// }
+// type Identity struct {
+// 	Api Api `yaml:"api"`
+// }
+// type NeutronConf struct {
+// 	Endpoint string `yaml:"endpoint"`
+// }
 
 func LoadConfig(configFile string) error {
-	viper.AutomaticEnv()
-	viper.SetEnvPrefix("OS")
-
-	viper.SetConfigType("yaml")
-	if configFile != "" {
-		viper.SetConfigFile(configFile)
-	} else {
-		viper.SetConfigName("skyman.yaml")
-		viper.AddConfigPath("./etc")
-		viper.AddConfigPath("/etc/skyman")
-	}
-	if err := viper.ReadInConfig(); err != nil {
+	if err := openstack.LoadConfig(configFile); err != nil {
 		return err
 	}
-	CONF = ConfGroup{}
+
 	viper.Unmarshal(&CONF)
+
 	i18n.InitLocalizer(CONF.Language)
 	if CONF.BarChar != "" {
 		nova.BAR_CHAR = CONF.BarChar

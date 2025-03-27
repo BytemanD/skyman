@@ -58,6 +58,8 @@ type Openstack struct {
 	glanceClient   *internal.GlanceV2
 	cinderClient   *internal.CinderV2
 	neutronClient  *internal.NeutronV2
+
+	novaClientOnce *sync.Once
 }
 
 func (o Openstack) Region() string {
@@ -105,6 +107,7 @@ func NewClient(authUrl string, user model.User, project model.Project, regionNam
 		ComputeApiVersion: COMPUTE_API_VERSION,
 		region:            regionName,
 		servieLock:        &sync.Mutex{},
+		novaClientOnce:    &sync.Once{},
 	}
 }
 
@@ -115,7 +118,7 @@ func (o *Openstack) GlanceV2() *internal.GlanceV2 {
 	if o.glanceClient == nil {
 		o.glanceClient = &internal.GlanceV2{
 			ServiceClient: internal.NewServiceClient(
-				o.Region(), IMAGE, GLANCE, PUBLIC, V2, o.AuthPlugin,
+				o.Region(), IMAGE, GLANCE, PUBLIC, V2_1, o.AuthPlugin,
 			),
 		}
 	}
@@ -167,10 +170,7 @@ func (o *Openstack) KeystoneV3() *internal.KeystoneV3 {
 	return o.keystoneClient
 }
 func (o *Openstack) NovaV2(microVersion ...string) *internal.NovaV2 {
-	o.servieLock.Lock()
-	defer o.servieLock.Unlock()
-
-	if o.novaClient == nil {
+	o.novaClientOnce.Do(func() {
 		o.novaClient = &internal.NovaV2{
 			ServiceClient: internal.NewServiceClient(
 				o.Region(), COMPUTE, NOVA, PUBLIC, V2_1, o.AuthPlugin,
@@ -181,10 +181,10 @@ func (o *Openstack) NovaV2(microVersion ...string) *internal.NovaV2 {
 			console.Warn("get current version failed: %v", err)
 		}
 		if o.novaClient.MicroVersion != nil {
-			o.novaClient.AddBaseHeader("Openstack-Api-Version", o.novaClient.MicroVersion.Version)
+			// o.novaClient.AddBaseHeader("Openstack-Api-Version", o.novaClient.MicroVersion.Version)
 			o.novaClient.AddBaseHeader("X-Openstack-Nova-Api-Version", o.novaClient.MicroVersion.Version)
 		}
-	}
+	})
 	return o.novaClient
 }
 func (o *Openstack) SetHttpTimeout(timeout time.Duration) {

@@ -2,121 +2,51 @@ package context
 
 import (
 	"os"
-	"path/filepath"
 
-	"github.com/BytemanD/go-console/console"
+	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/common/datatable"
+	"github.com/BytemanD/skyman/openstack"
+	"github.com/fatih/color"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
-	"github.com/wxnacy/wgo/file"
-	"gopkg.in/yaml.v3"
+	"github.com/spf13/viper"
 )
 
-func LoadContextConf() (*ContextConf, error) {
-	filePath := getContextFilePath()
-	console.Debug("context file path: %s", filePath)
-	conf := ContextConf{
-		filePath: filePath,
-	}
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return &conf, nil
+var CloudsCmd = &cobra.Command{
+	Use:   "clouds",
+	Short: "Show clouds",
+	Run: func(cmd *cobra.Command, args []string) {
+		println("配置文件:", viper.ConfigFileUsed())
+
+		type CloudView struct {
+			openstack.Cloud
+			Name string
+		}
+		items := lo.MapToSlice(openstack.CONF.Clouds, func(k string, v openstack.Cloud) CloudView {
+			return CloudView{v, k}
+		})
+		common.PrintItems(
+			[]datatable.Column[CloudView]{
+				{Name: "Name"},
+				{Name: "AuthUrl", RenderFunc: func(item CloudView) interface{} {
+					return item.Auth.AuthUrl
+				}},
+				{Name: "RegionName"},
+				{Name: "ProjectName", RenderFunc: func(item CloudView) interface{} {
+					return item.Auth.ProjectName
+				}},
+				{Name: "Username", RenderFunc: func(item CloudView) interface{} {
+					return item.Auth.Username
+				}},
+			},
+			[]datatable.Column[CloudView]{},
+			items,
+			common.TableOptions{},
+		)
+		if os.Getenv("OS_CLOUD_NAME") != "" {
+			println(color.CyanString("使用云环境: %s", os.Getenv("OS_CLOUD_NAME")))
 		} else {
-			return nil, err
-		}
-	}
-	if err := yaml.Unmarshal(data, &conf); err != nil {
-		return nil, err
-	}
-	return &conf, nil
-}
-
-var ContextCmd = &cobra.Command{
-	Use: "context",
-}
-var viewCmd = &cobra.Command{
-	Use:   "view",
-	Short: "Display context",
-	Args:  cobra.ExactArgs(0),
-	Run: func(cmd *cobra.Command, args []string) {
-		cConf, err := LoadContextConf()
-		if err != nil {
-			console.Fatal("load context failed: %s", err)
-		}
-		data, _ := yaml.Marshal(cConf)
-		println(string(data))
-	},
-}
-
-var setCmd = &cobra.Command{
-	Use:   "set <name> <conf file>",
-	Short: "Set context",
-	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
-		confPathAbs, err := filepath.Abs(args[1])
-		if err != nil {
-			console.Fatal("get '%s' abs path failed: %s", args[1], err)
-		}
-		if !file.IsFile(confPathAbs) {
-			console.Fatal("%s is not a file or not exits", confPathAbs)
-		}
-
-		cConf, err := LoadContextConf()
-		if err != nil {
-			console.Fatal("load context failed: %s", err)
-		}
-		cConf.SetContext(args[0], confPathAbs)
-		if err := cConf.Save(); err != nil {
-			console.Fatal("save context failed: %s", err)
+			println(color.YellowString("云名称未配置, 使用环境变量或者默认环境"))
 		}
 	},
-}
-
-var removeCmd = &cobra.Command{
-	Use:   "remove <name>",
-	Short: "Remove context",
-	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		cConf, err := LoadContextConf()
-		if err != nil {
-			console.Fatal("load context failed: %s", err)
-
-		}
-		cConf.RemoveContext(args[0])
-		if err := cConf.Save(); err != nil {
-			console.Fatal("remove context failed: %s", err)
-		}
-		cConf.Save()
-	},
-}
-var useCmd = &cobra.Command{
-	Use:   "use <name>",
-	Short: "Use context",
-	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		err := UseCluster(args[0])
-		if err != nil {
-			console.Fatal("use %s failed: %s", args[0], err)
-		}
-	},
-}
-var resetCmd = &cobra.Command{
-	Use:   "reset",
-	Short: "Reset context",
-	Args:  cobra.ExactArgs(0),
-	Run: func(cmd *cobra.Command, args []string) {
-		cConf, err := LoadContextConf()
-		if err != nil {
-			console.Fatal("load context failed: %s", err)
-
-		}
-		cConf.Reset()
-		if err := cConf.Save(); err != nil {
-			console.Fatal("reset context failed: %s", err)
-
-		}
-	},
-}
-
-func init() {
-	ContextCmd.AddCommand(viewCmd, useCmd, resetCmd, setCmd, removeCmd)
 }
