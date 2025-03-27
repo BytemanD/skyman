@@ -13,7 +13,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/gitutils"
 	"github.com/BytemanD/go-console/console"
 
-	"github.com/BytemanD/skyman/cmd/context"
+	"github.com/BytemanD/skyman/cmd/cloud"
 	"github.com/BytemanD/skyman/cmd/neutron"
 
 	"github.com/BytemanD/skyman/cmd/benchmark"
@@ -168,7 +168,7 @@ func main() {
 	)
 
 	rootCmd.AddCommand(
-		versionCmd, context.CloudsCmd,
+		versionCmd, cloud.CloudsCmd,
 
 		keystone.Token,
 		keystone.Service, keystone.Endpoint, keystone.Region,

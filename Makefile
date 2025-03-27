@@ -27,7 +27,7 @@ build-rpm: dist/skyman
 	cp release/skyman.spec $(BUILD_SPEC)
 	sed -i "s|VERSION|$(VERSION)|g" $(BUILD_SPEC)
 	mkdir -p /root/rpmbuild/SOURCES
-	cp dist/skyman etc/skyman-template.yaml  locale/* static/* /root/rpmbuild/SOURCES
+	cp dist/skyman etc/clouds-sample.yaml  locale/* static/* /root/rpmbuild/SOURCES
 	cp etc/resource-template.yaml /root/rpmbuild/SOURCES
 	cp etc/server-actions-test-template.yaml /root/rpmbuild/SOURCES
 	rpmbuild -bb $(BUILD_SPEC)

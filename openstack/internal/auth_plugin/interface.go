@@ -16,6 +16,7 @@ type AuthPlugin interface {
 	AuthRequest(req *resty.Request) error
 	GetSafeHeader(header http.Header) http.Header
 	GetProjectId() (string, error)
+	Roles() []string
 	IsAdmin() bool
 	// set http client
 	SetTimeout(t time.Duration)

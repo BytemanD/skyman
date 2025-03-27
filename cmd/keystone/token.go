@@ -2,6 +2,7 @@ package keystone
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -36,8 +37,8 @@ var tokenIssue = &cobra.Command{
 				{Name: "UserId", Text: "User", RenderFunc: func(item model.Token) interface{} {
 					return fmt.Sprintf("%s (%s)", item.User.Id, item.User.Name)
 				}},
-				{Name: "IsAdmin", RenderFunc: func(item model.Token) interface{} {
-					return client.AuthPlugin.IsAdmin()
+				{Name: "Roles", RenderFunc: func(item model.Token) interface{} {
+					return strings.Join(client.AuthPlugin.Roles(), ", ")
 				}},
 			},
 			[]datatable.Field[model.Token]{},

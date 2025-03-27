@@ -11,6 +11,7 @@ import (
 	"github.com/BytemanD/skyman/openstack/model"
 	"github.com/BytemanD/skyman/openstack/session"
 	"github.com/go-resty/resty/v2"
+	"github.com/samber/lo"
 )
 
 const (
@@ -183,16 +184,19 @@ func (plugin PasswordAuthPlugin) GetProjectId() (string, error) {
 	}
 	return plugin.token.Project.Id, nil
 }
+func (plugin PasswordAuthPlugin) Roles() []string {
+	if plugin.token == nil {
+		return []string{}
+	}
+	return lo.Map(plugin.token.Roles, func(item model.Role, _ int) string {
+		return item.Name
+	})
+}
 func (plugin PasswordAuthPlugin) IsAdmin() bool {
 	if plugin.token == nil {
 		return false
 	}
-	for _, role := range plugin.token.Roles {
-		if role.Name == "admin" {
-			return true
-		}
-	}
-	return false
+	return lo.Contains(plugin.Roles(), "admin")
 }
 
 func NewPasswordAuthPlugin(authUrl string, user model.User, project model.Project) *PasswordAuthPlugin {

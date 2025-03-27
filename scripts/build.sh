@@ -45,7 +45,7 @@ function rpmBuild() {
     logInfo "版本: $(awk '/^Version/{print $2}' ${buldingSpec})"
 
     mkdir -p /root/rpmbuild/SOURCES
-    cp dist/skyman etc/skyman-template.yaml locale/* /root/rpmbuild/SOURCES || exit 1
+    cp dist/skyman etc/clouds-sample.yaml locale/* /root/rpmbuild/SOURCES || exit 1
     cp etc/resource-template.yaml /root/rpmbuild/SOURCES || exit 1
     cp etc/server-actions-test-template.yaml /root/rpmbuild/SOURCES || exit 1
     rpmbuild -bb ${buldingSpec} || exit 1

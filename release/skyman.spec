@@ -6,7 +6,7 @@ Summary: Golang OpenStack Client
 License: ASL 2.0
 
 Source0: skyman
-Source1: skyman-template.yaml
+Source1: clouds-sample.yaml
 Source2: zh_CN.toml
 Source3: index.html
 Source4: resource-template.yaml
@@ -30,7 +30,7 @@ mkdir -p %{_builddir}${SHARE_STATIC_PATH}
 
 %files
 %{_bindir}/skyman
-%{_sysconfdir}/skyman/skyman-template.yaml
+%{_sysconfdir}/skyman/clouds-sample.yaml
 %{_sysconfdir}/skyman/resource-template.yaml
 %{_sysconfdir}/skyman/server-actions-test-template.yaml
 %{SHARE_LOCALE_PATH}/zh_CN.toml
@@ -52,6 +52,6 @@ install -p -m 755 -t %{buildroot}%{SHARE_STATIC_PATH} %{SOURCE3}
 %post
 
 cd %{_sysconfdir}/skyman/
-if [[ ! -f skyman.yaml ]]; then
-    cp skyman-template.yaml skyman.yaml
+if [[ ! -f clouds.yaml ]]; then
+    cp clouds-sample.yaml clouds.yaml
 fi
