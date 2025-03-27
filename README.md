@@ -32,32 +32,39 @@ Use "skyman [command] --help" for more information about a command.
 
 ### 构建
 
-1. 编译
-   
-   ```bash
-   sh scripts/build.sh
-   ```
-   
-   > 输出目录: ./dist
+1. 本地编译
 
-2. 构建 rpm 包（使用podman或docker）
-   
+   ```bash
+   make
+   ```
+
+2. 通过容器编译（使用docker）
+
    ```bash
    sh scripts/build-with-docker.sh
    ```
-   
-   > 输出目录: ./dist
 
-## 安装
+> 保存目录: ./dist
 
-```bash
-rpm -ivh dist/skyman-<版本>-1.x86_64.rpm
-```
-## 设置语言
+## 安装&更新
 
 ```bash
-export SKYMAN_LANG=zh_CN
+rpm -iUvh dist/skyman-<版本>-1.x86_64.rpm
 ```
+
+
+## 设置
+
+配置文件  /etc/skyman/clouds.yaml
+
+1. 设置语言
+
+  修改配置文件
+  ```yaml
+  language: en_US
+  ```
+
+  或者执行 `export SKYMAN_LANG=zh_CN`
 
 ## 支持的命令
 
@@ -87,4 +94,3 @@ skyman router list
 skyman port list
 ...
 ```
-
