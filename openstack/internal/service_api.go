@@ -51,6 +51,20 @@ func (c *ServiceClient) Index(result interface{}) (*resty.Response, error) {
 	return resp, err
 }
 
+func urlWithVersion(urlPath, version string) (string, error) {
+	if strings.HasPrefix(urlPath, version) {
+		return urlPath, nil
+	}
+	return url.JoinPath(version, urlPath)
+}
+func urlWithoutVersion(u string) (string, error) {
+	if u, err := url.Parse(u); err != nil {
+		return "", err
+	} else {
+		u.Path = ""
+		return u.String(), nil
+	}
+}
 func NewServiceClient(regionName string, sType, sName, sInterface string, version string, authPlugin auth_plugin.AuthPlugin) *ServiceClient {
 	client := &ServiceClient{
 		IsAdmin: authPlugin.IsAdmin(),
@@ -58,6 +72,16 @@ func NewServiceClient(regionName string, sType, sName, sInterface string, versio
 	}
 	client.Client.OnBeforeRequest(func(c *resty.Client, r *resty.Request) error {
 		if c.BaseURL != "" {
+			if u, err := url.Parse(c.BaseURL); err != nil {
+				return err
+			} else {
+				if newPath, err := urlWithVersion(u.Path, version); err != nil {
+					return err
+				} else {
+					u.Path = newPath
+				}
+				c.BaseURL = u.String()
+			}
 			return nil
 		}
 		console.Debug("get endpoint for %s:%s:%s", sType, sName, sInterface)
@@ -77,11 +101,10 @@ func NewServiceClient(regionName string, sType, sName, sInterface string, versio
 		return nil
 	}).OnBeforeRequest(func(c *resty.Client, r *resty.Request) error {
 		if r.URL == "{index}" {
-			if u, err := url.Parse(c.BaseURL); err != nil {
+			if u, err := urlWithoutVersion(c.BaseURL); err != nil {
 				return err
 			} else {
-				u.Path = ""
-				r.URL = u.String()
+				r.URL = u
 				return nil
 			}
 		}

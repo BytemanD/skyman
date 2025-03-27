@@ -127,22 +127,24 @@ func main() {
 		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 			format, _ := cmd.Flags().GetString("format")
 			conf, _ := cmd.Flags().GetString("conf")
+			debug, _ := cmd.Flags().GetBool("debug")
 
 			if format != "" && !lo.Contains(common.GetOutputFormats(), format) {
 				fmt.Printf("invalid foramt '%s'\n", format)
 				os.Exit(1)
 			}
-			if err := common.LoadConfig(conf); err != nil {
-				fmt.Printf("load config failed: %v\n", err)
-				os.Exit(1)
-			}
-			if common.CONF.Debug {
+			common.LoadConfig(conf)
+			if common.CONF.Debug || debug {
 				console.EnableLogDebug()
 			}
 			if common.CONF.LogFile != "" {
 				console.SetLogFile(common.CONF.LogFile)
 			}
-			console.Debug("load config file from %s", viper.ConfigFileUsed())
+			if viper.ConfigFileUsed() == "" {
+				console.Debug("配置文件查找失败")
+			} else {
+				console.Debug("load config file from %s", viper.ConfigFileUsed())
+			}
 			computeApiVersion, _ := cmd.Flags().GetString("compute-api-version")
 			openstack.COMPUTE_API_VERSION = computeApiVersion
 		},

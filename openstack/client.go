@@ -60,6 +60,8 @@ type Openstack struct {
 	neutronClient  *internal.NeutronV2
 
 	novaClientOnce *sync.Once
+
+	cloudConfig Cloud
 }
 
 func (o Openstack) Region() string {
@@ -144,15 +146,12 @@ func (o *Openstack) NeutronV2() *internal.NeutronV2 {
 	defer o.servieLock.Unlock()
 
 	if o.neutronClient == nil {
-		endpoint := o.neutronEndpoint
 		o.neutronClient = &internal.NeutronV2{
 			ServiceClient: internal.NewServiceClient(
 				o.Region(), NETWORK, NEUTRON, PUBLIC, V2_0, o.AuthPlugin,
 			),
 		}
-		if endpoint != "" {
-			o.neutronClient.Client.BaseURL = endpoint
-		}
+		o.neutronClient.Client.BaseURL = o.cloudConfig.Neutron.Endpoint
 	}
 	return o.neutronClient
 }
