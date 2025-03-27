@@ -10,6 +10,7 @@ BUILD_SPEC=/tmp/skyman.spec
 all: build build-rpm
 
 build:
+	go version
 	go mod download
 	mkdir -p dist
 	go build -ldflags " \
