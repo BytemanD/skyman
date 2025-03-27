@@ -35,4 +35,4 @@ RUN source $HOME/.bashrc \
 
 RUN cd /root/skyman \
     && source $HOME/.bashrc \
-    && make build build-rpm
+    && make
