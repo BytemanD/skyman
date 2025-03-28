@@ -54,7 +54,6 @@ func LoadConfig(configFile string) error {
 	if err := openstack.LoadConfig(configFile); err != nil {
 		return err
 	}
-
 	viper.Unmarshal(&CONF)
 
 	i18n.InitLocalizer(CONF.Language)

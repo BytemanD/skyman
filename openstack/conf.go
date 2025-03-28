@@ -123,7 +123,7 @@ func loadFromEnv() {
 	cloud.Auth.Password = lo.CoalesceOrEmpty(os.Getenv("OS_PASSWORD"), cloud.Auth.Password)
 
 	cloud.Identity.Api.Version = lo.CoalesceOrEmpty(os.Getenv("OS_IDENTITY_API_VERSION"), cloud.Identity.Api.Version)
-	cloud.Neutron.Endpoint = lo.CoalesceOrEmpty(os.Getenv("OS_NEUTRON_ENDPOINT"), cloud.Identity.Api.Version)
+	cloud.Neutron.Endpoint = lo.CoalesceOrEmpty(os.Getenv("OS_NEUTRON_ENDPOINT"), cloud.Neutron.Endpoint)
 
 }
 func connectCloud() (*Openstack, error) {
@@ -146,6 +146,11 @@ func connectCloud() (*Openstack, error) {
 		},
 		cloud.Region(),
 	)
+	conn.cloudConfig = cloud
+	// conn.neutronEndpoint = lo.CoalesceOrEmpty(
+	// 	os.Getenv("OS_NEUTRON_ENDPOINT"), cloud.Neutron.Endpoint,
+	// 	cloud.conn.neutronEndpoint,
+	// )
 	conn.AuthPlugin.SetLocalTokenExpire(cloud.TokenExpireTime)
 	if CONF.HttpTimeoutSecond > 0 {
 		conn.SetHttpTimeout(time.Second * time.Duration(CONF.HttpTimeoutSecond))

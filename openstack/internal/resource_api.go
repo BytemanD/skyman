@@ -52,21 +52,9 @@ func (c *ResourceApi) MicroVersionLargeEqual(version string) bool {
 	}
 }
 func (r ResourceApi) NewRequest(method string, u string, q url.Values, body interface{}, result interface{}) *resty.Request {
-	req := r.Client.R().SetQueryParamsFromValues(q).SetResult(result)
-	if reqUrl, err := url.JoinPath(r.BaseUrl, u); err != nil {
-		req.Error = err
-	} else {
-		req.URL = reqUrl
-	}
+	req := r.Client.R().SetQueryParamsFromValues(q).SetResult(result).SetBody(body)
 	req.Method = method
-	if body != nil {
-		req.SetBody(body)
-	}
-	if url, err := url.JoinPath(r.BaseUrl, u); err != nil {
-		req.Error = err
-	} else {
-		req.URL = url
-	}
+	req.URL = u
 	return req
 }
 func (r *ResourceApi) R() *session.Request {
