@@ -2,9 +2,11 @@ debug: false
 # 输出格式，可选值: table, table-light, json, yaml
 format: table
 language: en_US
-# http 重试
-httpTimeout: 3
-enableLogColor: false
+# http 超时和重试
+# httpTimeoutSecond: 0
+# enableLogColor: false
+# retryWaitTimeSecond: 2
+# retryCount: 0
 
 retryWaitTimeSecond: 1
 retryCount: 5

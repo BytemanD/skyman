@@ -81,6 +81,5 @@ func DefaultRestyClient(baseUrl string) *resty.Client {
 		SetRetryCount(DEFAULT_RETRY_COUNT).
 		SetRetryWaitTime(DEFAULT_RETRY_WAIT_TIME).
 		SetRetryMaxWaitTime(DEFAULT_RETRY_MAX_WAIT_TIME).
-		SetTimeout(DEFAULT_TIMEOUT).
 		OnAfterResponse(LogRespAfterResponse)
 }
