@@ -16,6 +16,10 @@ import (
 	"github.com/wxnacy/wgo/file"
 )
 
+const (
+	URL_IMAGE_FILE = "images/%s/file"
+)
+
 type ImageApi struct{ ResourceApi }
 
 func (c ImageApi) ListWithTotal(query url.Values, total int) ([]glance.Image, error) {
@@ -136,39 +140,42 @@ func (c ImageApi) Upload(id string, file string) error {
 
 	// TODO:
 	reader := utility.NewProcessReader(fileReader, int(fileStat.Size()))
-	_, err = c.NewPutRequest(utility.UrlJoin("images", id, "file"), reader, nil).
+	resp, err := c.NewPutRequest(utility.UrlJoin("images", id, "file"), reader, nil).
 		SetHeader(session.CONTENT_TYPE, session.CONTENT_TYPE_STREAM).
 		Send()
-
-	return err
+	if err != nil {
+		return err
+	}
+	return session.CheckResponse(resp)
 }
 
 func (c ImageApi) Download(id string, fileName string, process bool) error {
 	if file.IsFile(fileName) {
 		return fmt.Errorf("file %s exists", fileName)
 	}
-	urlFormat := "images/%s/file"
 	resp, err := c.Client.R().
 		SetHeader(session.CONTENT_TYPE, session.CONTENT_TYPE_STREAM).
 		SetDoNotParseResponse(true).
-		Get(fmt.Sprintf(urlFormat, id))
+		Get(fmt.Sprintf(URL_IMAGE_FILE, id))
 	if err != nil {
 		return err
 	}
-	if err != nil {
+	if err := session.CheckResponse(resp); err != nil {
 		return err
 	}
+
 	imageWriter, err := os.Create(fileName)
 	if err != nil {
 		return err
 	}
-	var writers io.Writer
+	defer imageWriter.Close()
+	var writer io.Writer
 	if total, err := strconv.Atoi(resp.Header().Get(session.CONTENT_LENGTH)); err == nil {
-		writers = io.MultiWriter(imageWriter, utility.NewPbrWriter(total))
+		writer = utility.NewPbrWriter(total, imageWriter)
 	} else {
-		writers = imageWriter
+		writer = imageWriter
 	}
-	_, err = io.Copy(writers, resp.RawBody())
+	_, err = io.Copy(writer, resp.RawBody())
 	return err
 }
 

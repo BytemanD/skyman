@@ -217,7 +217,11 @@ var serverShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		c := common.DefaultClient()
-		server, err := c.NovaV2().Server().Find(args[0])
+		server, err := c.NovaV2().Server().Find(args[0], c.IsAdmin())
+		if err != nil {
+			console.Fatal("%v", err)
+		}
+		server, err = c.NovaV2().Server().Show(server.Id)
 		if err != nil {
 			console.Fatal("%v", err)
 		}

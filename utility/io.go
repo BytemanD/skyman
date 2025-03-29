@@ -5,10 +5,12 @@ import (
 	"encoding/base64"
 	"io"
 	"net"
+	"os"
 	"reflect"
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/fileutils"
+	"github.com/BytemanD/go-console/console"
 	"github.com/cheggaaa/pb/v3"
 )
 
@@ -83,9 +85,53 @@ func (pw *ProgressWriter) Write(p []byte) (int, error) {
 	if pw.pbr != nil {
 		pw.pbr.Add(len(p))
 	}
+	// println("========", len(p), pw.pbr.Total())
 	return len(p), nil
 }
 
-func NewPbrWriter(total int) *ProgressWriter {
-	return &ProgressWriter{pbr: pb.New(total).Start()}
+func NewPbrWriter(total int, writer io.Writer) io.Writer {
+	return io.MultiWriter(writer, &ProgressWriter{pbr: pb.StartNew(total)})
+}
+
+// type ProgressReader struct {
+// 	pbr *pb.ProgressBar
+// }
+
+// func (pr *ProgressReader) Read(p []byte) (int, error) {
+// 	// io.Reader
+// 	// if pr.pbr != nil {
+// 	// 	pr.pbr.Add(len(p))
+// 	// }
+// 	// println("====>", len(p))
+// 	console.Info("========> %d total: %d", len(p), pr.pbr.Total())
+// 	return len(p), nil
+// }
+
+func NewPbrReader(total int64, reader io.Reader) io.Reader {
+	return io.TeeReader(reader, &ProgressWriter{pbr: pb.Start64(total)})
+}
+
+type FileProgress struct {
+	*os.File
+	Total  int64
+	readed int64
+}
+
+func (f *FileProgress) Read(p []byte) (int, error) {
+	n, err := f.File.Read(p)
+	f.readed += int64(n)
+	console.Info("========> read: %d/%d", f.readed, f.Total)
+	return n, err
+}
+
+func OpenWithProgress(name string) (*FileProgress, error) {
+	fileStat, err := os.Stat(name)
+	if err != nil {
+		return nil, err
+	}
+	f, err := os.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	return &FileProgress{File: f, Total: fileStat.Size()}, nil
 }

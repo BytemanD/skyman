@@ -64,6 +64,9 @@ type Openstack struct {
 	cloudConfig Cloud
 }
 
+func (o Openstack) IsAdmin() bool {
+	return o.AuthPlugin != nil && o.AuthPlugin.IsAdmin()
+}
 func (o Openstack) Region() string {
 	return lo.CoalesceOrEmpty(o.region, "RegionOne")
 }

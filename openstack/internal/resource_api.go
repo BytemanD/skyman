@@ -55,7 +55,6 @@ func (r ResourceApi) NewRequest(method string, u string, q url.Values, body inte
 	req := r.Client.R().SetQueryParamsFromValues(q).SetResult(result).SetBody(body)
 	req.Method = method
 	req.URL = u
-	fmt.Println("xxxx", r.Client.BaseURL, req.URL)
 	return req
 }
 func (r *ResourceApi) R() *session.Request {
@@ -124,13 +123,13 @@ func ListResource[T any](r ResourceApi, query url.Values, detail ...bool) ([]T, 
 		return nil, fmt.Errorf("PluralKey is empty")
 	}
 	items := []T{}
-	respBody := map[string]interface{}{}
+	respBody := map[string]any{}
 	if len(detail) > 0 && detail[0] {
-		if _, err := r.R().SetQuery(query).SetResult(&respBody).Get("detail"); err != nil {
+		if _, err := r.R().SetQuery(query).SetResult(&respBody).Get(r.ResourceUrl, "detail"); err != nil {
 			return nil, err
 		}
 	} else {
-		if _, err := r.R().SetQuery(query).SetResult(&respBody).Get(); err != nil {
+		if _, err := r.R().SetQuery(query).SetResult(&respBody).Get(r.ResourceUrl); err != nil {
 			return nil, err
 		}
 	}
@@ -151,7 +150,7 @@ func ShowResource[T any](r ResourceApi, id string) (*T, error) {
 		return nil, fmt.Errorf("SingularKey is empty")
 	}
 	respBody := map[string]*T{}
-	if _, err := r.R().SetResult(&respBody).Get(id); err != nil {
+	if _, err := r.R().SetResult(&respBody).Get(r.ResourceUrl, id); err != nil {
 		return nil, err
 	}
 	return respBody[r.SingularKey], nil

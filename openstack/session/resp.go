@@ -38,3 +38,7 @@ func (r Response) IsNotFound() bool {
 func (r Response) UnmarshalBody(v any) error {
 	return json.Unmarshal(r.Body(), v)
 }
+
+func CheckResponse(resp *resty.Response) error {
+	return Response{resp}.Error()
+}

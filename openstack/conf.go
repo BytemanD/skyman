@@ -147,10 +147,6 @@ func connectCloud() (*Openstack, error) {
 		cloud.Region(),
 	)
 	conn.cloudConfig = cloud
-	// conn.neutronEndpoint = lo.CoalesceOrEmpty(
-	// 	os.Getenv("OS_NEUTRON_ENDPOINT"), cloud.Neutron.Endpoint,
-	// 	cloud.conn.neutronEndpoint,
-	// )
 	conn.AuthPlugin.SetLocalTokenExpire(cloud.TokenExpireTime)
 	if CONF.HttpTimeoutSecond > 0 {
 		conn.SetHttpTimeout(time.Second * time.Duration(CONF.HttpTimeoutSecond))

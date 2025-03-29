@@ -30,9 +30,6 @@ var sgList = &cobra.Command{
 			query.Set("project_id", project.Id)
 		}
 
-		// result := c.NeutronV2().SecurityGroup().List2(query)
-		// sgs, err := result.Items()
-		// console.Debug("request id: %s", result.RequestId())
 		sgs, err := c.NeutronV2().SecurityGroup().List(query)
 		utility.LogError(err, "list security group failed", true)
 		common.PrintSecurityGroups(sgs, long)
