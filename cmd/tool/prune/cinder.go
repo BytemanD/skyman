@@ -18,7 +18,6 @@ var volumePrune = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		query := url.Values{}
-		// query.Set("sort", "created_at:desc")
 		if *volumePruneFlags.Status != "" {
 			query.Add("status", *volumePruneFlags.Status)
 		}

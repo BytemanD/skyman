@@ -12,7 +12,6 @@ import (
 type ServerCheckerInterface interface {
 	MakesureServerRunning() error
 	MakesureServerStopped() error
-	// MakesureHostname(hostname string) error
 	MakesureInterfaceExist(attachment *nova.InterfaceAttachment) error
 	MakesureInterfaceNotExists(port *neutron.Port) error
 	MakesureVolumeExist(attachment *nova.VolumeAttachment) error

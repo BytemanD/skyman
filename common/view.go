@@ -337,7 +337,6 @@ func PrintSecurityGroups(items []neutron.SecurityGroup, long bool) {
 			}},
 		},
 		[]datatable.Column[neutron.SecurityGroup]{
-			// {Name: "Description"},
 			{Name: "CreatedAt"},
 			{Name: "UpdatedAt"},
 		},
@@ -379,7 +378,6 @@ func PrintSecurityGroupRules(items []neutron.SecurityGroupRule, long bool) {
 			{Name: "SecurityGroupId"},
 		},
 		[]datatable.Column[neutron.SecurityGroupRule]{
-			// {Name: "Description"},
 			{Name: "Direction"},
 			{Name: "Ethertype"},
 		},

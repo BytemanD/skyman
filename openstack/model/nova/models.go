@@ -147,7 +147,6 @@ func (s *Server) SetImageName(name string) {
 		p["name"] = name
 	}
 	s.Image = s
-	// return ""
 }
 
 func (server *Server) GetPowerState() string {
@@ -292,9 +291,6 @@ type NumaNodeCpuSet struct {
 	Reserved int
 	Used     int
 }
-
-// const BAR_CHAR = "▄"
-// const BAR_CHAR = "*"
 
 var BAR_CHAR = "*"
 
@@ -611,7 +607,6 @@ func (agg Aggregate) MarshalMetadata() string {
 	return string(data)
 }
 
-// {"policies": ["soft-anti-affinity"], "name": "soft-anti-affinity", "custom": false, "members": [], "id": "7357b2f7-d004-4c72-b38a-d3a156827c11", "metadata": {}}]
 type ServerGroup struct {
 	Id        string                 `json:"id"`
 	Name      string                 `json:"name"`
@@ -658,15 +653,6 @@ type FlavorCapacities struct {
 	Capacities []Capacity `json:"capacities"`
 }
 
-// {"injected_file_content_bytes": -1, "metadata_items": -1, "server_group_members": -1,
-//
-//	"server_groups": -1, "ram": -1, "floating_ips": 10, "key_pairs": -1,
-//
-// "id": "4f362d490e5848ab9f1be44b5479b084",
-//
-// "instances": -1, "security_group_rules": 20, "injected_files": -1, "cores": -1,
-//
-//	"fixed_ips": -1, "injected_file_path_bytes": -1, "security_groups": 10}}
 type QuotaSet struct {
 	Instances                int `json:"instances"`
 	Cores                    int `json:"cores"`

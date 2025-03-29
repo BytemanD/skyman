@@ -168,7 +168,6 @@ func (c routerApi) Find(idOrName string) (*neutron.Router, error) {
 	return FindIdOrName(c, idOrName)
 }
 
-// Interface: subnet-id | port=port-id
 func (c routerApi) AddSubnet(routerId, subnetId string) error {
 	body := map[string]string{"subnet_id": subnetId}
 	if _, err := c.R().SetBody(body).Put(routerId, "add_router_interface"); err != nil {

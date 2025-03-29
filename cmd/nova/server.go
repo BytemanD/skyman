@@ -1004,9 +1004,8 @@ func init() {
 	}
 
 	regionMigrateFlags = flags.ServerRegionMigrateFlags{
-		Live: serverRegionLiveMigrate.Flags().Bool("live", false, "Migrate running server."),
-		Host: serverRegionLiveMigrate.Flags().String("host", "", "Destination host name."),
-		// serverRegionLiveMigrate.Flags().Bool("block-migrate", false, "True in case of block_migration.")
+		Live:   serverRegionLiveMigrate.Flags().Bool("live", false, "Migrate running server."),
+		Host:   serverRegionLiveMigrate.Flags().String("host", "", "Destination host name."),
 		DryRun: serverRegionLiveMigrate.Flags().Bool("dry-run", false, "True in case of dry run."),
 	}
 	serverRegion.AddCommand(serverRegionLiveMigrate)

@@ -131,8 +131,6 @@ func (pt PrettyTable) RenderToTable(long bool) string {
 	tableWriter := pt.getTableWriter()
 	if pt.Title != "" {
 		fmt.Println(pt.Title)
-		// tableWriter.SetTitle("%s", pt.Title)
-		// tableWriter.Style().Title.Align = text.AlignCenter
 	}
 	headerRow := table.Row{}
 
@@ -224,7 +222,6 @@ func (pt PrettyTable) RenderToTable(long bool) string {
 }
 func (pt PrettyTable) Print(long bool) string {
 	result := pt.RenderToTable(long)
-	// tableWriter.Render()
 	if !pt.HideTotalItems {
 		fmt.Printf("Total items: %d\n", len(pt.Items))
 	}

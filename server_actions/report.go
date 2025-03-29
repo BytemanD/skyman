@@ -20,43 +20,6 @@ type ServerActionEvents struct {
 func PrintServerEvents(client *openstack.Openstack) (string, error) {
 	fmt.Println("Server events")
 	return "", nil
-	// serverEventReport := []ServerActionEvents{}
-	// pt := common.PrettyTable{
-	// 	Style: common.STYLE_LIGHT,
-	// 	ShortColumns: []common.Column{
-	// 		{Name: "ServerId"},
-	// 		{Name: "Action"},
-	// 		{Name: "RequestId"},
-	// 		{Name: "Events", Slot: func(item interface{}) interface{} {
-	// 			p := item.(ServerActionEvents)
-	// 			eventResult := []string{}
-	// 			for _, event := range p.Events {
-	// 				eventResult = append(eventResult, fmt.Sprintf("%s(%s)", event.Event, event.Result))
-	// 			}
-	// 			return strings.Join(eventResult, "\n")
-	// 		}},
-	// 	},
-	// }
-	// for _, task := range TestTasks {
-	// 	actions, err := client.NovaV2().Server().ListActionsWithEvents(task.ServerId, "", "", 0)
-	// 	if err != nil {
-	// 		return "", err
-	// 	}
-	// 	for _, action := range actions {
-	// 		serverEvents := ServerActionEvents{
-	// 			ServerId:  task.ServerId,
-	// 			RequestId: action.RequestId,
-	// 			Action:    action.Action,
-	// 			Events:    action.Events,
-	// 		}
-	// 		serverEventReport = append(serverEventReport, serverEvents)
-	// 	}
-
-	// }
-	// pt.AddItems(serverEventReport)
-
-	// fmt.Println("server events:")
-	// return common.PrintPrettyTable(pt, false), nil
 }
 
 // action result

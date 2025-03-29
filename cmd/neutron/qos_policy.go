@@ -48,7 +48,6 @@ var qosPolicyShow = &cobra.Command{
 }
 
 func init() {
-	// qosPolicyList.Flags().BoolP("long", "l", false, "List additional fields in output")
 	qosPolicyList.Flags().StringP("project", "", "", "List according to the project")
 
 	policy.AddCommand(qosPolicyList, qosPolicyShow)

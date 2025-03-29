@@ -1,4 +1,5 @@
 debug: false
+# logFile: clouds.log
 # 输出格式，可选值: table, table-light, json, yaml
 format: table
 language: en_US

@@ -140,10 +140,6 @@ func (c ImageApi) Upload(id string, file string) error {
 		SetHeader(session.CONTENT_TYPE, session.CONTENT_TYPE_STREAM).
 		Send()
 
-	// _, err := c.NewPutRequest(utility.UrlJoin("images", id, "file"), nil, nil).
-	// 	SetHeader(httpclient.CONTENT_TYPE, httpclient.CONTENT_TYPE_STREAM).
-	// 	SetFile("image", file).
-	// 	Send()
 	return err
 }
 

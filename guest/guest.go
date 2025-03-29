@@ -85,7 +85,6 @@ func (g Guest) IsShutoff() bool {
 	return domainInfo.State == libvirt.DOMAIN_SHUTOFF
 }
 
-// testType: iops || bandwidth || latency
 func (g Guest) RunFio(opts FioOptions) (string, error) {
 	if err := g.Connect(); err != nil {
 		return "", fmt.Errorf("连接实例失败, %s", err)

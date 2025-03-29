@@ -29,7 +29,6 @@ func deleteFlavor(client *openstack.Openstack, flavor Flavor) error {
 	}
 	console.Info("deleting flavor %s", f.Id)
 	return client.NovaV2().Flavor().Delete(f.Id)
-	// utility.LogError(err, fmt.Sprintf("delete flavor %s failed", f.Id), false)
 }
 func deleteNetwork(client *openstack.Openstack, network Network) error {
 	net, err := client.NeutronV2().Network().Find(network.Name)
@@ -39,8 +38,6 @@ func deleteNetwork(client *openstack.Openstack, network Network) error {
 	}
 	console.Info("deleting network %s", network.Name)
 	return client.NeutronV2().Network().Delete(net.Id)
-
-	// utility.LogError(err, fmt.Sprintf("delete network %s failed: %s", network.Name, err), false)
 }
 
 func deleteServer(client *openstack.Openstack, server Server, watch bool) error {
@@ -51,7 +48,6 @@ func deleteServer(client *openstack.Openstack, server Server, watch bool) error 
 	}
 	err = client.NovaV2().Server().Delete(s.Id)
 	if err != nil {
-		// utility.LogError(err, fmt.Sprintf("delete server %s failed", s.Name), false)
 		return nil
 	}
 

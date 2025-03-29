@@ -28,27 +28,7 @@ type ConfGroup struct {
 	BarChar             string `yaml:"barchar"`
 	HttpTimeoutSecond   int    `yaml:"httpTimeoutSecond"`
 	RetryWaitTimeSecond int    `yaml:"retryWaitTimeSecond"`
-
-	// openstack.Config
 }
-
-// type Auth struct {
-// 	Url             string          `yaml:"url"`
-// 	Region          keystone.Region `yaml:"region"`
-// 	User            model.User      `yaml:"user"`
-// 	Project         model.Project   `yaml:"project"`
-// 	TokenExpireTime int             `yaml:"tokenExpireTime"`
-// }
-
-// type Api struct {
-// 	Version string `yaml:"version"`
-// }
-// type Identity struct {
-// 	Api Api `yaml:"api"`
-// }
-// type NeutronConf struct {
-// 	Endpoint string `yaml:"endpoint"`
-// }
 
 func LoadConfig(configFile string) error {
 	if err := openstack.LoadConfig(configFile); err != nil {
@@ -67,11 +47,5 @@ func LoadConfig(configFile string) error {
 			nova.BAR_CHAR = "*"
 		}
 	}
-
-	// 环境变量
-	// if os.Getenv("OS_IDENTITY_API_VERSION") != "" {
-	// 	CONF.Identity.Api.Version = os.Getenv("OS_IDENTITY_API_VERSION")
-	// }
-
 	return nil
 }

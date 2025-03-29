@@ -39,7 +39,6 @@ var TestServerAction = &cobra.Command{
 		}
 
 		servers, _ := cmd.Flags().GetString("servers")
-		// reportEvents, _ := cmd.Flags().GetBool("report-events")
 		web, _ := cmd.Flags().GetBool("web")
 
 		userServers := []string{}
