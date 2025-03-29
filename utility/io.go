@@ -5,14 +5,11 @@ import (
 	"encoding/base64"
 	"io"
 	"net"
-	"os"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/BytemanD/easygo/pkg/fileutils"
 	"github.com/cheggaaa/pb/v3"
-	"github.com/wxnacy/wgo/file"
 )
 
 type ReaderWithProcess struct {
@@ -78,24 +75,17 @@ func GetAllIpaddress() ([]string, error) {
 	return ips, nil
 }
 
-func WatchFileSize(filePath string, size int) {
-	bar := pb.StartNew(size)
-	currentSize := int64(0)
-	for {
-		if !file.IsFile(filePath) {
-			time.Sleep(time.Second * 2)
-			continue
-		}
-		stat, err := os.Stat(filePath)
-		if err != nil {
-			break
-		}
-		bar.Add(int(stat.Size() - currentSize))
-		if bar.Current() == bar.Total() {
-			break
-		}
-		currentSize = stat.Size()
-		time.Sleep(time.Second * 2)
+type ProgressWriter struct {
+	pbr *pb.ProgressBar
+}
+
+func (pw *ProgressWriter) Write(p []byte) (int, error) {
+	if pw.pbr != nil {
+		pw.pbr.Add(len(p))
 	}
-	bar.Finish()
+	return len(p), nil
+}
+
+func NewPbrWriter(total int) *ProgressWriter {
+	return &ProgressWriter{pbr: pb.New(total).Start()}
 }

@@ -3,11 +3,14 @@ package glance
 import (
 	"fmt"
 	"net/url"
+	"os"
 
 	"github.com/duke-git/lancet/v2/slice"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
+	"github.com/wxnacy/wgo/file"
 
+	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/model/glance"
@@ -76,7 +79,7 @@ var imageCreate = &cobra.Command{
 		diskFormat, _ := cmd.Flags().GetString("disk-format")
 		file, _ := cmd.Flags().GetString("file")
 
-		protect, _ := cmd.Flags().GetBool("file")
+		protect, _ := cmd.Flags().GetBool("protect")
 		visibility, _ := cmd.Flags().GetString("visibility")
 		// osDistro, _ := cmd.Flags().GetString("os-distro")
 
@@ -145,11 +148,22 @@ var imageSave = &cobra.Command{
 		fileName := lo.CoalesceOrEmpty(
 			*imageSaveFlags.File, fmt.Sprintf("%s.%s", image.Name, image.DiskFormat),
 		)
-
-		console.Info("Saving image to %s", fileName)
+		if file.IsFile(fileName) {
+			if !*imageSaveFlags.OverWrite {
+				if !stringutils.DefaultScanComfirm(fmt.Sprintf("文件 %s 已存在，是否删除", fileName)) {
+					return
+				}
+			} else {
+				console.Warn("删除文件: %s", fileName)
+				if err := os.Remove(fileName); err != nil {
+					console.Fatal("删除失败 %s", err)
+				}
+			}
+		}
+		console.Info("saving image to %s", fileName)
 		err = c.Images().Download(image.Id, fileName, true)
 		utility.LogError(err, fmt.Sprintf("download image %v failed", args[0]), true)
-		console.Info("Image saved")
+		console.Info("image saved")
 	},
 }
 
@@ -221,7 +235,8 @@ func init() {
 		DiskFormat:      imageCreate.Flags().String("disk-format", "", fmt.Sprintf("Format of the disk. Valid:\n%v", glance.IMAGE_DISK_FORMATS)),
 	}
 	imageSaveFlags = ImageSaveFlags{
-		File: imageSave.Flags().String("file", "", "Downloaded image save filename."),
+		File:      imageSave.Flags().String("file", "", "output file"),
+		OverWrite: imageSave.Flags().Bool("overwrite", false, "overwriter if file exists"),
 	}
 	imageSetFlags = ImageSetFlags{
 		Name:            imageSet.Flags().String("file", "", "Set name of image"),

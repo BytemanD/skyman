@@ -3,6 +3,7 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/url"
 	"os"
 	"strconv"
@@ -30,9 +31,8 @@ func (c ImageApi) ListWithTotal(query url.Values, total int) ([]glance.Image, er
 	}
 	for {
 		respBbody := glance.ImagesResp{}
-		req := c.NewGetRequest("images", fixQuery, nil)
-		console.Debug("query params: %s", req.QueryParam.Encode())
-		_, err := req.SetResult(&respBbody).Send()
+		console.Debug("query params: %s", query.Encode())
+		_, err := c.R().SetQuery(fixQuery).SetResult(&respBbody).Get("images")
 		if err != nil {
 			return nil, err
 		}
@@ -65,7 +65,7 @@ func (c ImageApi) ListByName(name string) ([]glance.Image, error) {
 }
 func (c ImageApi) Show(id string) (*glance.Image, error) {
 	result := glance.Image{}
-	_, err := c.Get("images/"+id, nil, &result)
+	_, err := c.R().SetResult(&result).Get("images/" + id)
 	return &result, err
 }
 func (c ImageApi) FoundByName(name string) (*glance.Image, error) {
@@ -144,22 +144,31 @@ func (c ImageApi) Upload(id string, file string) error {
 }
 
 func (c ImageApi) Download(id string, fileName string, process bool) error {
-	image, err := c.Show(id)
+	if file.IsFile(fileName) {
+		return fmt.Errorf("file %s exists", fileName)
+	}
+	urlFormat := "images/%s/file"
+	resp, err := c.Client.R().
+		SetHeader(session.CONTENT_TYPE, session.CONTENT_TYPE_STREAM).
+		SetDoNotParseResponse(true).
+		Get(fmt.Sprintf(urlFormat, id))
 	if err != nil {
 		return err
 	}
-	req := c.NewGetRequest(utility.UrlJoin("images", id, "file"), nil, nil).
-		SetHeader(session.CONTENT_TYPE, session.CONTENT_TYPE_STREAM).
-		SetOutput(fileName)
-
-	if file.IsFile(fileName) {
-		if err := os.Remove(fileName); err != nil {
-			return err
-		}
+	if err != nil {
+		return err
 	}
-	// TODO: 异常
-	go req.Send()
-	utility.WatchFileSize(fileName, int(image.Size))
+	imageWriter, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	var writers io.Writer
+	if total, err := strconv.Atoi(resp.Header().Get(session.CONTENT_LENGTH)); err == nil {
+		writers = io.MultiWriter(imageWriter, utility.NewPbrWriter(total))
+	} else {
+		writers = imageWriter
+	}
+	_, err = io.Copy(writers, resp.RawBody())
 	return err
 }
 
@@ -167,7 +176,10 @@ type GlanceV2 struct{ *ServiceClient }
 
 func (c GlanceV2) Images() ImageApi {
 	return ImageApi{
-		ResourceApi: ResourceApi{Client: c.Client, BaseUrl: c.BaserUrl()},
+		ResourceApi: ResourceApi{
+			Client:      c.Client,
+			ResourceUrl: "images",
+		},
 	}
 }
 

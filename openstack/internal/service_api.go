@@ -43,7 +43,7 @@ func (c *ServiceClient) IndexUrl() (string, error) {
 	return parsed.String(), err
 }
 
-func (c *ServiceClient) Index(result interface{}) (*resty.Response, error) {
+func (c *ServiceClient) Index(result any) (*resty.Response, error) {
 	resp, err := c.Client.R().SetResult(nil).Get("{index}")
 	if err == nil && !resp.IsError() && result != nil {
 		err = json.Unmarshal([]byte(resp.Body()), result)
@@ -52,7 +52,7 @@ func (c *ServiceClient) Index(result interface{}) (*resty.Response, error) {
 }
 
 func urlWithVersion(urlPath, version string) (string, error) {
-	if strings.HasPrefix(urlPath, version) {
+	if strings.HasPrefix(urlPath, "/"+version) {
 		return urlPath, nil
 	}
 	return url.JoinPath(version, urlPath)
@@ -97,7 +97,7 @@ func NewServiceClient(regionName string, sType, sName, sInterface string, versio
 		if !strings.HasPrefix(u.Path, "/"+version) {
 			u = u.JoinPath(version)
 		}
-		c.BaseURL = u.String()
+		c.SetBaseURL(u.String())
 		return nil
 	}).OnBeforeRequest(func(c *resty.Client, r *resty.Request) error {
 		if r.URL == "{index}" {

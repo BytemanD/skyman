@@ -55,6 +55,7 @@ func (r ResourceApi) NewRequest(method string, u string, q url.Values, body inte
 	req := r.Client.R().SetQueryParamsFromValues(q).SetResult(result).SetBody(body)
 	req.Method = method
 	req.URL = u
+	fmt.Println("xxxx", r.Client.BaseURL, req.URL)
 	return req
 }
 func (r *ResourceApi) R() *session.Request {
@@ -81,8 +82,7 @@ func (r ResourceApi) NewPatchRequest(u string, body interface{}, result interfac
 }
 
 func (r ResourceApi) Get(url string, q url.Values, result interface{}) (*session.Response, error) {
-	resp, err := r.NewGetRequest(url, q, result).Send()
-	return checkError(resp, err)
+	return r.R().SetResult(&result).SetQuery(q).Get(url)
 }
 func (r ResourceApi) Delete(u string, query ...url.Values) (*session.Response, error) {
 	var q url.Values

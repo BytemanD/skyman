@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/samber/lo"
 )
 
 type Request struct {
@@ -35,9 +36,6 @@ func (r *Request) SetResult(result interface{}) *Request {
 	return r
 }
 func (r Request) buildUrl(path ...string) (string, error) {
-	// if !strings.HasPrefix(r.Baseurl, "http://") && !strings.HasPrefix(r.Baseurl, "https://") {
-	// 	return "", fmt.Errorf("invalid baseurl: %s", r.Baseurl)
-	// }
 	paths := append([]string{r.ResourceUrl}, path...)
 	url, err := url.JoinPath(r.Baseurl, paths...)
 	if err != nil {
@@ -54,12 +52,13 @@ func (r Request) buildResponse(rawResp *resty.Response) (*Response, error) {
 	}
 }
 
-func (r Request) Get(path ...string) (*Response, error) {
-	url, err := r.buildUrl(path...)
-	if err != nil {
-		return nil, err
-	}
-	rawResp, err := r.Request.Get(url)
+func (r Request) Get(paths ...string) (*Response, error) {
+	// url, err := r.buildUrl(path...)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	u := lo.Filter(paths, func(item string, _ int) bool { return item != "" })
+	rawResp, err := r.Request.Get(strings.Join(u, "/"))
 	if err != nil {
 		return nil, err
 	}

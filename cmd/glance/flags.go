@@ -31,13 +31,9 @@ type ImageCreateFlags struct {
 	DiskFormat      *string
 }
 type ImageSaveFlags struct {
-	Name            *string
-	File            *string
-	Protect         *bool
-	Visibility      *string
-	OSDistro        *string
-	ContainerFormat *string
-	DiskFormat      *string
+	Name      *string
+	File      *string
+	OverWrite *bool
 }
 
 func (f ImageCreateFlags) Valid() error {
