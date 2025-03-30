@@ -26,7 +26,7 @@ var groupList = &cobra.Command{
 
 		query := url.Values{}
 
-		serverGroups, err := client.NovaV2().ServerGroup().List(query)
+		serverGroups, err := client.NovaV2().ListServerGroup(query)
 		utility.LogError(err, "Get server groups failed", true)
 
 		pt := common.PrettyTable{

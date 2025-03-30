@@ -32,7 +32,7 @@ var hypervisorList = &cobra.Command{
 		if *hypervisorListFlags.Name != "" {
 			query.Set("hypervisor_hostname_pattern", *hypervisorListFlags.Name)
 		}
-		hypervisors, err := client.NovaV2().Hypervisor().Detail(query)
+		hypervisors, err := client.NovaV2().ListHypervisor(query, true)
 		utility.LogError(err, "list hypervisors failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
@@ -82,7 +82,7 @@ var hypervisorShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := common.DefaultClient()
-		hypervisor, err := client.NovaV2().Hypervisor().Find(args[0])
+		hypervisor, err := client.NovaV2().FindHypervisor(args[0])
 		utility.LogError(err, "get hypervisor failed", true)
 
 		pt := common.PrettyItemTable{
@@ -139,10 +139,10 @@ var hypervisorUptime = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := common.DefaultClient()
-		hypervisor, err := client.NovaV2().Hypervisor().Find(args[0])
+		hypervisor, err := client.NovaV2().FindHypervisor(args[0])
 		utility.LogError(err, "get hypervisor failed", true)
 
-		hypervisor, err = client.NovaV2().Hypervisor().Uptime(hypervisor.Id)
+		hypervisor, err = client.NovaV2().GetHypervisorUptime(hypervisor.Id)
 		utility.LogError(err, "get hypervisor uptime failed", true)
 
 		pt := common.PrettyItemTable{

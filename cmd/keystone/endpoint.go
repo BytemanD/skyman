@@ -51,18 +51,18 @@ var endpointList = &cobra.Command{
 
 		serviceMap := map[string]keystone.Service{}
 		if serviceName != "" {
-			service, err := c.Service().Find(serviceName)
+			service, err := c.FindService(serviceName)
 			utility.LogIfError(err, true, "get service '%s' failed", serviceName)
 			serviceMap[service.Id] = *service
 			query.Add("service_id", service.Id)
 		}
-		items, err := c.Endpoint().List(query)
+		items, err := c.ListEndpoint(query)
 		utility.LogIfError(err, true, "list endpoints failed")
 		for _, endpoint := range items {
 			if _, ok := serviceMap[endpoint.ServiceId]; ok {
 				continue
 			}
-			services, err := c.Service().List(nil)
+			services, err := c.ListService(nil)
 			utility.LogError(err, "get services failed", true)
 			for _, srv := range services {
 				if _, ok := serviceMap[srv.Id]; ok {
@@ -100,7 +100,7 @@ var endpointCreate = &cobra.Command{
 		s, url := args[0], args[1]
 		c := common.DefaultClient().KeystoneV3()
 
-		service, err := c.Service().Find(s)
+		service, err := c.FindService(s)
 		utility.LogError(err, "get service failed", true)
 		interfaceMap := map[string]bool{
 			"public":   public,
@@ -120,7 +120,7 @@ var endpointCreate = &cobra.Command{
 				Enabled:   !disable,
 			}
 			console.Info("create %s endpoint", k)
-			endpoint, err := c.Endpoint().Create(e)
+			endpoint, err := c.CreateEndpoint(e)
 			if err != nil {
 				utility.LogError(err, fmt.Sprintf("create %s endpoint failed", k), false)
 				continue
@@ -138,7 +138,7 @@ var endpointDelete = &cobra.Command{
 		c := common.DefaultClient().KeystoneV3()
 		for _, id := range args {
 			console.Info("request to delete endpoint %s", id)
-			err := c.Endpoint().Delete(id)
+			err := c.DeleteEndpoint(id)
 			utility.LogError(err, fmt.Sprintf("delete endpoint %s failed", id), false)
 		}
 	},

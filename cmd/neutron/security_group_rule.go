@@ -21,12 +21,12 @@ var sgRuleList = &cobra.Command{
 		sgIdOrName, _ := cmd.Flags().GetString("security-group")
 		query := url.Values{}
 		if sgIdOrName != "" {
-			sg, err := c.NeutronV2().SecurityGroup().Find(sgIdOrName)
+			sg, err := c.NeutronV2().FindSecurityGroup(sgIdOrName)
 			utility.LogError(err, "get security group failed", true)
 			query.Set("security_group_id", sg.Id)
 		}
 
-		sgRules, err := c.NeutronV2().SecurityGroupRule().List(query)
+		sgRules, err := c.NeutronV2().ListSecurityGroupRule(query)
 		utility.LogError(err, "list security group failed", true)
 		common.PrintSecurityGroupRules(sgRules, long)
 	},
@@ -38,7 +38,7 @@ var sgRuleShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient()
 
-		sgRule, err := c.NeutronV2().SecurityGroupRule().Show(args[0])
+		sgRule, err := c.NeutronV2().GetSecurityGroupRule(args[0])
 		utility.LogError(err, "get security group rule failed", true)
 		common.PrintSecurityGroupRule(*sgRule)
 	},

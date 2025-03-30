@@ -25,7 +25,7 @@ var routerList = &cobra.Command{
 		if name != "" {
 			query.Set("name", name)
 		}
-		routers, err := c.Router().List(query)
+		routers, err := c.ListRouter(query)
 		utility.LogError(err, "list routers failed", true)
 		common.PrintRouters(routers, long)
 
@@ -37,7 +37,7 @@ var routerShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient().NeutronV2()
-		router, err := c.Router().Find(args[0])
+		router, err := c.FindRouter(args[0])
 		utility.LogError(err, "show router failed", true)
 		common.PrintRouter(*router)
 	},
@@ -49,13 +49,13 @@ var routerDelete = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient().NeutronV2()
 		for _, arg := range args {
-			router, err := c.Router().Find(arg)
+			router, err := c.FindRouter(arg)
 			if err != nil {
 				console.Warn("get router %s failed", arg)
 				continue
 			}
 			console.Info("Reqeust to delete router %s\n", arg)
-			err = c.Router().Delete(router.Id)
+			err = c.DeleteRouter(router.Id)
 			if err != nil {
 				console.Error("Delete router %s failed, %s", arg, err)
 			}
@@ -80,7 +80,7 @@ var routerCreate = &cobra.Command{
 		if description != "" {
 			params["description"] = description
 		}
-		router, err := c.Router().Create(params)
+		router, err := c.CreateRouter(params)
 		utility.LogError(err, "create router failed", true)
 		common.PrintRouter(*router)
 	},
@@ -97,20 +97,20 @@ var interfaceAdd = &cobra.Command{
 		c := common.DefaultClient().NeutronV2()
 		r, i := args[0], args[1]
 
-		router, err := c.Router().Find(r)
+		router, err := c.FindRouter(r)
 		utility.LogIfError(err, true, "get router %s failed", r)
 
 		if strings.HasPrefix(i, "port=") {
 			i = strings.Replace(i, "port=", "", 1)
-			port, err := c.Port().Find(i)
+			port, err := c.FindPort(i)
 			utility.LogIfError(err, true, "get port,  %s failed", i)
-			err = c.Router().AddPort(router.Id, port.Id)
+			err = c.AddRouterPort(router.Id, port.Id)
 			utility.LogIfError(err, true, "add port,  failed")
 			console.Info("added subnet %s to router %s", i, r)
 		} else {
-			subnet, err := c.Subnet().Find(i)
+			subnet, err := c.FindSubnet(i)
 			utility.LogIfError(err, true, "get subnet %s failed", i)
-			err = c.Router().AddSubnet(router.Id, subnet.Id)
+			err = c.AddRouterSubnet(router.Id, subnet.Id)
 			utility.LogIfError(err, true, "add interface failed")
 			console.Info("added subnet %s to router %s", i, r)
 
@@ -127,19 +127,19 @@ var interfaceRemove = &cobra.Command{
 		c := common.DefaultClient().NeutronV2()
 		r, i := args[0], args[1]
 
-		router, err := c.Router().Find(r)
+		router, err := c.FindRouter(r)
 		utility.LogIfError(err, true, "get router %s failed", r)
 		if strings.HasPrefix(i, "port=") {
 			i = strings.Replace(i, "port=", "", 1)
-			port, err := c.Port().Find(i)
+			port, err := c.FindPort(i)
 			utility.LogIfError(err, true, "get port %s failed", i)
-			err = c.Router().RemovePort(router.Id, port.Id)
+			err = c.RemoveRouterPort(router.Id, port.Id)
 			utility.LogIfError(err, true, "remove interface failed")
 			console.Info("remoeved port %s from router %s", i, r)
 		} else {
-			subnet, err := c.Subnet().Find(i)
+			subnet, err := c.FindSubnet(i)
 			utility.LogIfError(err, true, "get subnet %s failed", i)
-			err = c.Router().RemoveSubnet(router.Id, subnet.Id)
+			err = c.RemoveRouterSubnet(router.Id, subnet.Id)
 			utility.LogIfError(err, true, "remove interface failed")
 			console.Info("removed subnet %s from router %s", i, r)
 		}
@@ -153,12 +153,12 @@ var interfaceList = &cobra.Command{
 		c := common.DefaultClient().NeutronV2()
 		r := args[0]
 
-		router, err := c.Router().Find(r)
+		router, err := c.FindRouter(r)
 		utility.LogIfError(err, true, "get router %s failed", r)
 
 		query := url.Values{}
 		query.Set("device_id", router.Id)
-		ports, err := c.Port().List(query)
+		ports, err := c.ListPort(query)
 		utility.LogIfError(err, true, "list router ports failed")
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{

@@ -24,7 +24,7 @@ var networkList = &cobra.Command{
 		if name != "" {
 			query.Set("name", name)
 		}
-		networks, err := c.Network().List(query)
+		networks, err := c.ListNetwork(query)
 		utility.LogIfError(err, true, "list network failed")
 		common.PrintNetworks(networks, long)
 	},
@@ -38,9 +38,9 @@ var networkDelete = &cobra.Command{
 
 		for _, idOrName := range args {
 			fmt.Printf("Reqeust to delete network %s\n", idOrName)
-			network, err := c.Network().Find(idOrName)
+			network, err := c.FindNetwork(idOrName)
 			utility.LogIfError(err, true, "get network %s failed", idOrName)
-			err = c.Network().Delete(network.Id)
+			err = c.DeleteNetwork(network.Id)
 			utility.LogIfError(err, false, "delete network %s failed", idOrName)
 		}
 	},
@@ -52,7 +52,7 @@ var networkShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient().NeutronV2()
 
-		network, err := c.Network().Find(args[0])
+		network, err := c.FindNetwork(args[0])
 		utility.LogError(err, "show network failed", true)
 		common.PrintNetwork(*network)
 	},
@@ -76,7 +76,7 @@ var networkCreate = &cobra.Command{
 		if description != "" {
 			params["description"] = description
 		}
-		network, err := c.Network().Create(params)
+		network, err := c.CreateNetwork(params)
 		utility.LogError(err, "create network failed", true)
 		common.PrintNetwork(*network)
 	},

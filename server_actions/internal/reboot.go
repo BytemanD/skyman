@@ -18,7 +18,7 @@ func (t *ServerReboot) Skip() (bool, string) {
 	return false, ""
 }
 func (t ServerReboot) Start() error {
-	err := t.Client.NovaV2().Server().Reboot(t.Server.Id, false)
+	err := t.Client.NovaV2().RebootServer(t.Server.Id, false)
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ type ServerHardReboot struct {
 }
 
 func (t ServerHardReboot) Start() error {
-	err := t.Client.NovaV2().Server().Reboot(t.Server.Id, true)
+	err := t.Client.NovaV2().RebootServer(t.Server.Id, true)
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (t ServerStop) Skip() (bool, string) {
 	return false, ""
 }
 func (t ServerStop) Start() error {
-	err := t.Client.NovaV2().Server().Stop(t.Server.Id)
+	err := t.Client.NovaV2().StopServer(t.Server.Id)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (t ServerStart) Skip() (bool, string) {
 	return false, ""
 }
 func (t ServerStart) Start() error {
-	err := t.Client.NovaV2().Server().Start(t.Server.Id)
+	err := t.Client.NovaV2().StartServer(t.Server.Id)
 	if err != nil {
 		return err
 	}

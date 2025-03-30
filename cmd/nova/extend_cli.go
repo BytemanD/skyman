@@ -28,7 +28,7 @@ var flavorCapacities = &cobra.Command{
 		if flavor != "" {
 			query.Set("flavor", flavor)
 		}
-		capacities, err := client.NovaV2().Hypervisor().FlavorCapacities(query)
+		capacities, err := client.NovaV2().GetHypervisorFlavorCapacities(query)
 		utility.LogError(err, "get flavor capacities failed", true)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{

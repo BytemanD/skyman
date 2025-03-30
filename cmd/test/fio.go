@@ -45,7 +45,7 @@ var TestFio = &cobra.Command{
 		size, _ := cmd.Flags().GetString("size")
 
 		openstackClient := common.DefaultClient()
-		server, err := openstackClient.NovaV2().Server().Find(idOrName)
+		server, err := openstackClient.NovaV2().FindServer(idOrName)
 		utility.LogError(err, "get server failed", true)
 
 		if !server.IsActive() {
@@ -53,7 +53,7 @@ var TestFio = &cobra.Command{
 		}
 
 		console.Info("get server host and client host")
-		serverHost, err := openstackClient.NovaV2().Hypervisor().Find(server.Host)
+		serverHost, err := openstackClient.NovaV2().FindHypervisor(server.Host)
 		utility.LogError(err, "get server host failed", true)
 
 		serverConn := guest.Guest{Connection: serverHost.HostIp, Domain: server.Id}

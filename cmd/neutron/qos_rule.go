@@ -15,7 +15,7 @@ var qosRuleList = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient()
 
-		policy, err := c.NeutronV2().QosPolicy().Find(args[0])
+		policy, err := c.NeutronV2().FindQosPolicy(args[0])
 		utility.LogIfError(err, true, "get qos policy %s failed", args[0])
 
 		common.PrintQosPolicyRules(policy.Rules, false)

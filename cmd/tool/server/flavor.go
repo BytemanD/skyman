@@ -46,7 +46,7 @@ var flavorClone = &cobra.Command{
 		cmdent := common.DefaultClient()
 		novaClient := cmdent.NovaV2()
 		console.Info("show flavor")
-		flavor, err := novaClient.Flavor().Show(flavorId)
+		flavor, err := novaClient.GetFlavor(flavorId)
 		utility.LogError(err, "show flavor failed", true)
 
 		flavor.Name = newName
@@ -74,7 +74,7 @@ var flavorClone = &cobra.Command{
 			flavor.RXTXFactor = rxtxFactor
 		}
 		console.Info("show flavor extra specs")
-		extraSpecs, err := novaClient.Flavor().ListExtraSpecs(flavorId)
+		extraSpecs, err := novaClient.GetFlavorExtraSpecs(flavorId)
 		utility.LogError(err, "show flavor extra specs failed", true)
 
 		newProperties := nova.ParseExtraSpecsMap(setProperties)
@@ -85,16 +85,16 @@ var flavorClone = &cobra.Command{
 			delete(extraSpecs, k)
 		}
 		console.Info("create new flavor")
-		newFlavor, err := novaClient.Flavor().Create(*flavor)
+		newFlavor, err := novaClient.CreateFlavor(*flavor)
 		utility.LogError(err, "create flavor failed", true)
 
 		if len(extraSpecs) != 0 {
 			console.Info("set new flavor extra specs")
-			_, err = novaClient.Flavor().SetExtraSpecs(newFlavor.Id, extraSpecs)
+			_, err = novaClient.SetFlavorExtraSpecs(newFlavor.Id, extraSpecs)
 			utility.LogError(err, "set new flavor extra specs failed", true)
 		}
 
-		newFlavor, err = novaClient.Flavor().ShowWithExtraSpecs(newFlavor.Id)
+		newFlavor, err = novaClient.GetFlavorWithExtraSpecs(newFlavor.Id)
 		utility.LogError(err, "show new flavor", true)
 		views.PrintFlavor(*newFlavor)
 	},

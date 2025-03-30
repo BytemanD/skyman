@@ -38,7 +38,7 @@ var portList = &cobra.Command{
 		host, _ := cmd.Flags().GetString("host")
 		noHost, _ := cmd.Flags().GetBool("no-host")
 
-		ports, err := c.Port().List(utility.UrlValues(map[string]string{
+		ports, err := c.ListPort(utility.UrlValues(map[string]string{
 			"name":            name,
 			"network_id":      network,
 			"device_id":       device_id,
@@ -65,7 +65,7 @@ var portShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient().NeutronV2()
-		port, err := c.Port().Find(args[0])
+		port, err := c.FindPort(args[0])
 		utility.LogError(err, "show port failed", true)
 		common.PrintPort(*port)
 	},
@@ -83,7 +83,7 @@ var portDelete = &cobra.Command{
 			},
 			args,
 			func(item string) error {
-				port, err := c.Port().Find(item)
+				port, err := c.FindPort(item)
 				if err != nil {
 					return fmt.Errorf("show port %s failed: %v", item, err)
 				}
@@ -94,7 +94,7 @@ var portDelete = &cobra.Command{
 					}
 				}
 				console.Info("Reqeust to delete port %s\n", port.Id)
-				err = c.Port().Delete(port.Id)
+				err = c.DeletePort(port.Id)
 				if err != nil {
 					utility.LogError(err, fmt.Sprintf("Delete port %s failed", item), false)
 				} else {

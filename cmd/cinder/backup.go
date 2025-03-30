@@ -33,7 +33,7 @@ var backupList = &cobra.Command{
 		if all {
 			query.Set("all_tenants", "true")
 		}
-		backups, err := client.CinderV2().Backup().Detail(query)
+		backups, err := client.CinderV2().ListBackup(query, true)
 		utility.LogError(err, "list backup falied", true)
 		common.PrintBackups(backups, long)
 	},
@@ -46,7 +46,7 @@ var backupShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := common.DefaultClient()
 		idOrName := args[0]
-		backup, err := client.CinderV2().Backup().Find(idOrName)
+		backup, err := client.CinderV2().FindBackup(idOrName)
 		utility.LogError(err, "get backup failed", true)
 		common.PrintBackup(*backup)
 	},
@@ -59,12 +59,12 @@ var backupDelete = &cobra.Command{
 		client := common.DefaultClient()
 
 		for _, idOrName := range args {
-			backup, err := client.CinderV2().Backup().Find(idOrName)
+			backup, err := client.CinderV2().FindBackup(idOrName)
 			if err != nil {
 				utility.LogError(err, "get backup failed", false)
 				continue
 			}
-			err = client.CinderV2().Backup().Delete(backup.Id)
+			err = client.CinderV2().DeleteBackup(backup.Id)
 			if err == nil {
 				fmt.Printf("Requested to delete backup %s\n", idOrName)
 			} else {
@@ -84,12 +84,12 @@ var backupCreate = &cobra.Command{
 
 		client := common.DefaultClient()
 
-		volume, err := client.CinderV2().Volume().Find(args[0])
+		volume, err := client.CinderV2().FindVolume(args[0])
 		utility.LogIfError(err, true, "get volume %s failed", args[0])
 
-		backup, err := client.CinderV2().Backup().Create(volume.Id, name, force)
+		backup, err := client.CinderV2().CreateBackup(volume.Id, name, force)
 		utility.LogIfError(err, true, "create backup failed")
-		backup, err = client.CinderV2().Backup().Show(backup.Id)
+		backup, err = client.CinderV2().GetBackup(backup.Id)
 		utility.LogIfError(err, true, "show backup failed")
 		common.PrintBackup(*backup)
 	},

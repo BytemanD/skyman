@@ -84,9 +84,9 @@ var TestNetQos = &cobra.Command{
 
 		openstackClient := common.DefaultClient()
 		console.Info("get server and client")
-		serverInstance, err := openstackClient.NovaV2().Server().Find(server)
+		serverInstance, err := openstackClient.NovaV2().FindServer(server)
 		utility.LogError(err, "get server failed", true)
-		clientInstance, err := openstackClient.NovaV2().Server().Find(client)
+		clientInstance, err := openstackClient.NovaV2().FindServer(client)
 		utility.LogError(err, "get client failed", true)
 
 		if !serverInstance.IsActive() {
@@ -97,10 +97,10 @@ var TestNetQos = &cobra.Command{
 		}
 
 		console.Info("get server host and client host")
-		serverHost, err := openstackClient.NovaV2().Hypervisor().Find(serverInstance.Host)
+		serverHost, err := openstackClient.NovaV2().FindHypervisor(serverInstance.Host)
 		utility.LogError(err, "get server host failed", true)
 
-		clientHost, err := openstackClient.NovaV2().Hypervisor().Find(clientInstance.Host)
+		clientHost, err := openstackClient.NovaV2().FindHypervisor(clientInstance.Host)
 		utility.LogError(err, "get client host failed", true)
 
 		serverConn := guest.Guest{Connection: serverHost.HostIp, Domain: serverInstance.Id}

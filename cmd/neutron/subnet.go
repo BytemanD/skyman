@@ -24,7 +24,7 @@ var subnetList = &cobra.Command{
 		if name != "" {
 			query.Set("name", name)
 		}
-		subnets, err := c.Subnet().List(query)
+		subnets, err := c.ListSubnet(query)
 		utility.LogError(err, "get subnets failed", true)
 		common.PrintSubnets(subnets, long)
 	},
@@ -42,10 +42,10 @@ var subnetCreate = &cobra.Command{
 		cidr, _ := cmd.Flags().GetString("cidr")
 		ipVersion, _ := cmd.Flags().GetInt("ip-version")
 
-		network, err := c.Network().Find(netIdOrName)
+		network, err := c.FindNetwork(netIdOrName)
 		utility.LogError(err, "get network failed", true)
 
-		subnet, err := c.Subnet().Create(map[string]interface{}{
+		subnet, err := c.CreateSubnet(map[string]interface{}{
 			"name":        args[0],
 			"cidr":        cidr,
 			"network_id":  network.Id,
@@ -63,7 +63,7 @@ var subnetShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient().NeutronV2()
-		subnet, err := c.Subnet().Find(args[0])
+		subnet, err := c.FindSubnet(args[0])
 		utility.LogError(err, "show subnet failed", true)
 		common.PrintSubnet(*subnet)
 	},
@@ -76,9 +76,9 @@ var subnetDelete = &cobra.Command{
 		c := common.DefaultClient().NeutronV2()
 		for _, idOrName := range args {
 			fmt.Printf("Reqeust to delete subnet %s\n", idOrName)
-			subnet, err := c.Subnet().Find(idOrName)
+			subnet, err := c.FindSubnet(idOrName)
 			utility.LogIfError(err, true, "get subnet %s failed", idOrName)
-			err = c.Subnet().Delete(subnet.Id)
+			err = c.DeleteSubnet(subnet.Id)
 			utility.LogIfError(err, false, "Delete subnet %s failed", idOrName)
 		}
 	},

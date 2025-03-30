@@ -65,6 +65,6 @@ func (c *ServerShow) PreStart() error {
 	return nil
 }
 func (c *ServerShow) Start() error {
-	_, err := c.Client.NovaV2().Server().Show(c.Server.Id)
+	_, err := c.Client.NovaV2().GetServer(c.Server.Id)
 	return err
 }

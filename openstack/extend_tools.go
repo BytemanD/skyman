@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/openstack/model/cinder"
@@ -18,7 +17,7 @@ import (
 func (o Openstack) PruneServers(query url.Values, yes bool, waitDeleted bool) {
 	c := o.NovaV2()
 	console.Info("查询虚拟机: %v", query.Encode())
-	servers, err := c.Server().Detail(query)
+	servers, err := c.ListServer(query, true)
 	if query.Get("host") == "" {
 		console.Info("过滤虚拟机: No valid host was found")
 		servers = lo.Filter(servers, func(item nova.Server, _ int) bool {
@@ -26,7 +25,7 @@ func (o Openstack) PruneServers(query url.Values, yes bool, waitDeleted bool) {
 				return true
 			}
 			if item.Fault.Message == "" {
-				if server, err := c.Server().Show(item.Id); err == nil {
+				if server, err := c.GetServer(item.Id); err == nil {
 					return server.Host == "" && strings.Contains(server.Fault.Message, "No valid host was found")
 				}
 			}
@@ -44,7 +43,7 @@ func (o Openstack) PruneServers(query url.Values, yes bool, waitDeleted bool) {
 				server.Id, server.Name, server.Status, server.Host, server.Fault.Message)
 		}
 		fmt.Printf("即将删除 %d 个虚拟机\n", len(servers))
-		yes = stringutils.ScanfComfirm("是否删除", []string{"yes", "y"}, []string{"no", "n"})
+		yes = utility.DefaultScanComfirm("是否删除")
 	}
 	if !yes {
 		return
@@ -56,12 +55,12 @@ func (o Openstack) PruneServers(query url.Values, yes bool, waitDeleted bool) {
 		Func: func(o interface{}) error {
 			s := o.(nova.Server)
 			console.Info("delete %s", s.Id)
-			err := c.Server().Delete(s.Id)
+			err := c.DeleteServer(s.Id)
 			if err != nil {
 				return fmt.Errorf("delete %s failed: %v", s.Id, err)
 			}
 			if waitDeleted {
-				c.Server().WaitDeleted(s.Id)
+				c.WaitServerDeleted(s.Id)
 			}
 			return nil
 		},
@@ -79,7 +78,7 @@ func (o Openstack) PruneVolumes(query url.Values, matchName string, volumeType s
 		query.Add("status", "error")
 	}
 	console.Info("查询卷: %s", query.Encode())
-	volumes, err := c.Volume().Detail(query)
+	volumes, err := c.ListVolume(query, true)
 	filterdVolumes := []cinder.Volume{}
 	for _, vol := range volumes {
 		if volumeType != "" && vol.VolumeType != volumeType {
@@ -106,7 +105,7 @@ func (o Openstack) PruneVolumes(query url.Values, matchName string, volumeType s
 			fmt.Printf("%s 名称: %s\t创建时间: %s\n", volume.Id, volume.Name, volume.CreatedAt)
 		}
 		fmt.Printf("即将清理 %d 个卷:\n", len(volumes))
-		yes = stringutils.ScanfComfirm("是否删除?", []string{"yes", "y"}, []string{"no", "n"})
+		yes = utility.DefaultScanComfirm("是否删除?")
 		if !yes {
 			return
 		}
@@ -119,7 +118,7 @@ func (o Openstack) PruneVolumes(query url.Values, matchName string, volumeType s
 		Func: func(i interface{}) error {
 			volume := i.(cinder.Volume)
 			console.Debug("delete volume %s(%s)", volume.Id, volume.Name)
-			err := c.Volume().Delete(volume.Id, true, true)
+			err := c.DeleteVolume(volume.Id, true, true)
 			if err != nil {
 				return fmt.Errorf("delete volume %s failed: %v", volume.Id, err)
 			}
@@ -139,7 +138,7 @@ func (o Openstack) PrunePorts(ports []neutron.Port) {
 		fmt.Printf("%s (%s)\n", port.Id, port.Name)
 	}
 	fmt.Printf("即将清理 %d 个Port(s)\n", len(ports))
-	yes := stringutils.ScanfComfirm("是否清理?", []string{"yes", "y"}, []string{"no", "n"})
+	yes := utility.DefaultScanComfirm("是否清理?")
 	if !yes {
 		return
 	}
@@ -150,7 +149,7 @@ func (o Openstack) PrunePorts(ports []neutron.Port) {
 		Func: func(i interface{}) error {
 			port := i.(neutron.Port)
 			console.Debug("delete port %s(%s)", port.Id, port.Name)
-			err := c.Port().Delete(port.Id)
+			err := c.DeletePort(port.Id)
 			if err != nil {
 				return fmt.Errorf("delete port %s failed: %v", port.Id, err)
 			}

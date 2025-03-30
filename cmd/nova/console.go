@@ -24,9 +24,9 @@ var consoleLog = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := common.DefaultClient()
 
-		server, err := client.NovaV2().Server().Find(args[0])
+		server, err := client.NovaV2().FindServer(args[0])
 		utility.LogError(err, "get server failed", true)
-		consoleLog, err := client.NovaV2().Server().ConsoleLog(server.Id, *consoleLogFlags.Lines)
+		consoleLog, err := client.NovaV2().GetServerConsoleLog(server.Id, *consoleLogFlags.Lines)
 		utility.LogError(err, "get console log failed", true)
 		println(consoleLog.Output)
 	},
@@ -48,9 +48,9 @@ var consoleUrl = &cobra.Command{
 			os.Exit(1)
 		}
 
-		server, err := client.NovaV2().Server().Find(args[0])
+		server, err := client.NovaV2().FindServer(args[0])
 		utility.LogError(err, "get server failed", true)
-		console, err := client.NovaV2().Server().ConsoleUrl(server.Id, args[1])
+		console, err := client.NovaV2().GetServerConsoleUrl(server.Id, args[1])
 		if err != nil {
 			println(err)
 			os.Exit(1)

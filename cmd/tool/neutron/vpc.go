@@ -51,12 +51,12 @@ var vpcCreate = &cobra.Command{
 		// create router
 		routerParams := map[string]interface{}{"name": routerName}
 		console.Info("create router %s", routerName)
-		router, err := c.Router().Create(routerParams)
+		router, err := c.CreateRouter(routerParams)
 		utility.LogIfError(err, true, "create router %s failed", routerName)
 		// create network
 		networkParams := map[string]interface{}{"name": networkName}
 		console.Info("create network %s", networkName)
-		network, err := c.Network().Create(networkParams)
+		network, err := c.CreateNetwork(networkParams)
 		utility.LogIfError(err, true, "create network %s failed", networkParams)
 		// create router
 		for _, v := range ipVersions {
@@ -68,12 +68,12 @@ var vpcCreate = &cobra.Command{
 				"cidr":       cidr,
 			}
 			console.Info("create subnet %s", subneVerionName)
-			subnet, err := c.Subnet().Create(subnetParams)
+			subnet, err := c.CreateSubnet(subnetParams)
 			utility.LogIfError(err, true, "create subnet %s failed", subnetName)
 			// add router interface
 			console.Info("add subnet %s to router %s", subneVerionName, routerName)
 
-			err = c.Router().AddSubnet(router.Id, subnet.Id)
+			err = c.AddRouterSubnet(router.Id, subnet.Id)
 			utility.LogIfError(err, true, "add subnet %s to router %s failed", subnetName, routerName)
 			console.Info("create VPC %s success", vpc)
 		}
@@ -94,16 +94,16 @@ var vpcDelete = &cobra.Command{
 		c := common.DefaultClient().NeutronV2()
 		// get vpc router
 		console.Info("get router %s", vpcRouter)
-		router, err := c.Router().Find(vpcRouter)
+		router, err := c.FindRouter(vpcRouter)
 		utility.LogIfError(err, true, "get router %s failed", vpcRouter)
 		// remove router ports
-		routerPorts, err := c.Port().ListByDeviceId(router.Id)
+		routerPorts, err := c.ListPortByDeviceId(router.Id)
 		utility.LogIfError(err, true, "list router ports failed")
 		subnets := []string{}
 		for _, port := range routerPorts {
 			for _, fixedIp := range port.FixedIps {
 				console.Info("remove subnet %s from router %s", fixedIp.SubnetId, router.Id)
-				c.Router().RemoveSubnet(router.Id, fixedIp.SubnetId)
+				c.RemoveRouterSubnet(router.Id, fixedIp.SubnetId)
 				if !slice.Contain(subnets, fixedIp.SubnetId) {
 					subnets = append(subnets, fixedIp.SubnetId)
 				}
@@ -111,16 +111,16 @@ var vpcDelete = &cobra.Command{
 		}
 		// delete vpc networks
 		for _, subnetId := range subnets {
-			subnet, err := c.Subnet().Show(subnetId)
+			subnet, err := c.GetSubnet(subnetId)
 			utility.LogIfError(err, true, "get subnet %s failed", subnetId)
 			console.Info("delete vpc network %s", subnet.NetworkId)
-			err = c.Network().Delete(subnet.NetworkId)
+			err = c.DeleteNetwork(subnet.NetworkId)
 			utility.LogIfError(err, true, "delete network %s failed", subnet.NetworkId)
 		}
 
 		// delete vpc router
 		console.Info("delete vpc router %s", vpcRouter)
-		err = c.Router().Delete(router.Id)
+		err = c.DeleteRouter(router.Id)
 		utility.LogIfError(err, true, "dele router %s failed", vpcRouter)
 		console.Info("VPC %s delete success", vpc)
 	},

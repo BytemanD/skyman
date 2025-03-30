@@ -31,7 +31,7 @@ var serviceList = &cobra.Command{
 			query.Add("type", serviceType)
 		}
 		c := common.DefaultClient().KeystoneV3()
-		services, err := c.Service().List(query)
+		services, err := c.ListService(query)
 		utility.LogError(err, "list services failed", true)
 		common.PrintServices(services, long)
 	},
@@ -49,7 +49,7 @@ var serviceCreate = &cobra.Command{
 
 		c := common.DefaultClient().KeystoneV3()
 
-		service, err := c.Service().Create(
+		service, err := c.CreateService(
 			keystone.Service{
 				Type:     serviceType,
 				Enabled:  !disable,
@@ -68,7 +68,7 @@ var serviceDelete = &cobra.Command{
 
 		for _, id := range args {
 			console.Info("request to delete service %s", id)
-			err := c.Service().Delete(id)
+			err := c.DeleteService(id)
 			utility.LogError(err, fmt.Sprintf("delete service %s failed", id), false)
 		}
 	},

@@ -30,7 +30,7 @@ var portPrune = &cobra.Command{
 		}
 
 		console.Info("list ports ...")
-		ports, err := c.NeutronV2().Port().List(query)
+		ports, err := c.NeutronV2().ListPort(query)
 		utility.LogError(err, "list ports failed", true)
 		filterPorts := []neutron.Port{}
 

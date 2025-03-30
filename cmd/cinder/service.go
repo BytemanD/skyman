@@ -31,7 +31,7 @@ var list = &cobra.Command{
 			query.Set("host", host)
 		}
 
-		services, err := client.CinderV2().Service().List(query)
+		services, err := client.CinderV2().ListService(query)
 		utility.LogIfError(err, true, "get services failed")
 		if zone != "" {
 			services = lo.Filter(services, func(item cinder.Service, _ int) bool {

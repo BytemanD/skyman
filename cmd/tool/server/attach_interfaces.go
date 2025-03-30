@@ -29,21 +29,21 @@ var attachInterfaces = &cobra.Command{
 
 		client := common.DefaultClient()
 		neutronClient := client.NeutronV2()
-		server, err := client.NovaV2().Server().Find(args[0])
+		server, err := client.NovaV2().FindServer(args[0])
 		utility.LogError(err, "show server failed:", true)
 		if server.IsError() {
 			utility.LogIfError(err, true, "server %s is Error", args[0])
 		}
 		var securityGroup *neutron.SecurityGroup
 		if sg != "" {
-			securityGroup, err = neutronClient.SecurityGroup().Find(sg)
+			securityGroup, err = neutronClient.FindSecurityGroup(sg)
 			utility.LogIfError(err, true, "get security group %s failed:", sg)
 		}
 
 		netIds := []string{}
 		for _, idOrName := range args[1:] {
 			// tenant id
-			net, err := client.NeutronV2().Network().Find(idOrName)
+			net, err := client.NeutronV2().FindNetwork(idOrName)
 			utility.LogIfError(err, true, "get net %s failed:", idOrName)
 			netIds = append(netIds, net.Id)
 		}
@@ -73,7 +73,7 @@ var attachInterfaces = &cobra.Command{
 					if securityGroup != nil {
 						options["security_groups"] = []string{securityGroup.Id}
 					}
-					port, err := neutronClient.Port().Create(options)
+					port, err := neutronClient.CreatePort(options)
 
 					if err != nil {
 						console.Error("create port failed: %v", err)
@@ -104,18 +104,18 @@ var attachInterfaces = &cobra.Command{
 			ShowProgress: true,
 			Func: func(item interface{}) error {
 				p := item.(Interface)
-				attachment, err := client.NovaV2().Server().AddInterface(server.Id, p.NetId, p.PortId)
+				attachment, err := client.NovaV2().ServerAddInterface(server.Id, p.NetId, p.PortId)
 				if err != nil {
 					console.Error("[interface: %s] attach failed: %v", p, err)
 					return err
 				}
 				console.Debug("[interface: %s] attaching", attachment.PortId)
 				for {
-					port, err := client.NeutronV2().Port().Show(attachment.PortId)
+					port, err := client.NeutronV2().GetPort(attachment.PortId)
 
 					if securityGroup != nil && !slice.Contain(port.SecurityGroups, securityGroup.Id) {
 						console.Info("[interface: %s] update port security group to %s(%s)", port.Id, sg, securityGroup.Id)
-						_, err = client.NeutronV2().Port().Update(
+						_, err = client.NeutronV2().UpdatePort(
 							port.Id,
 							map[string]interface{}{"security_groups": []string{securityGroup.Id}},
 						)
@@ -135,7 +135,7 @@ var attachInterfaces = &cobra.Command{
 				err = utility.RetryError(
 					utility.RetryCondition{Timeout: time.Second * 60, IntervalMin: time.Second},
 					func() (bool, error) {
-						interfaces, err := client.NovaV2().Server().ListInterfaces(server.Id)
+						interfaces, err := client.NovaV2().ListServerInterfaces(server.Id)
 						if err != nil {
 							console.Error("list server interfaces failed: %s", err)
 							return false, err

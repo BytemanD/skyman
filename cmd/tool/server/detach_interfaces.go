@@ -24,12 +24,12 @@ var detachInterfaces = &cobra.Command{
 
 		client := common.DefaultClient()
 		neutronClient := client.NeutronV2()
-		server, err := client.NovaV2().Server().Find(args[0])
+		server, err := client.NovaV2().FindServer(args[0])
 		utility.LogError(err, "show server failed:", true)
 		if server.IsError() {
 			utility.LogIfError(err, true, "server %s is Error", args[0])
 		}
-		interfaces, err := client.NovaV2().Server().ListInterfaces(server.Id)
+		interfaces, err := client.NovaV2().ListServerInterfaces(server.Id)
 		utility.LogError(err, "list server interfaces failed:", true)
 
 		console.Info("server has %d interfaces", len(interfaces))
@@ -48,13 +48,13 @@ var detachInterfaces = &cobra.Command{
 			Func: func(item interface{}) error {
 				p := item.(nova.InterfaceAttachment)
 				console.Info("[interface: %s] detaching", p.PortId)
-				err := client.NovaV2().Server().DeleteInterfaceAndWait(server.Id, p.PortId, time.Minute*5)
+				err := client.NovaV2().DeleteServerInterfaceAndWait(server.Id, p.PortId, time.Minute*5)
 				if err != nil {
 					console.Error("[interface: %s] detach failed: %v", p.PortId, err)
 					return err
 				}
 				if clean {
-					err = neutronClient.Port().Delete(p.PortId)
+					err = neutronClient.DeletePort(p.PortId)
 					if err == nil {
 						console.Info("[interface: %s] deleted", p.PortId)
 					} else {

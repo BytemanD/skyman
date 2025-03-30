@@ -31,12 +31,12 @@ var detachVolumes = &cobra.Command{
 
 		client := common.DefaultClient()
 		cinderClient := client.CinderV2()
-		server, err := client.NovaV2().Server().Find(args[0])
+		server, err := client.NovaV2().FindServer(args[0])
 		utility.LogError(err, "show server failed:", true)
 		if server.IsError() {
 			utility.LogIfError(err, true, "server %s is Error", args[0])
 		}
-		attachedVolumes, err := client.NovaV2().Server().ListVolumes(server.Id)
+		attachedVolumes, err := client.NovaV2().ListServerVolumes(server.Id)
 		utility.LogError(err, "list server interfaces failed:", true)
 
 		console.Info("the server has %d volume(s)", len(attachedVolumes))
@@ -66,7 +66,7 @@ var detachVolumes = &cobra.Command{
 			Func: func(item interface{}) error {
 				p := item.(string)
 				console.Info("[volume: %s] request to detach", p)
-				err := client.NovaV2().Server().DeleteVolumeAndWait(server.Id, p, 600)
+				err := client.NovaV2().DeleteServerVolumeAndWait(server.Id, p, 600)
 				if err != nil {
 					console.Error("[volume: %s] detach failed: %v", p, err)
 					return err
@@ -87,7 +87,7 @@ var detachVolumes = &cobra.Command{
 			Func: func(item interface{}) error {
 				p := item.(string)
 				console.Debug("[volume: %s] deleting", p)
-				err := cinderClient.Volume().Delete(p, true, true)
+				err := cinderClient.DeleteVolume(p, true, true)
 				// TODO: wait deleted
 				if err != nil {
 					console.Error("[volume: %s] delete failed: %v", p, err)

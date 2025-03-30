@@ -15,12 +15,12 @@ var serverFind = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		c := common.DefaultClient()
-		regions, err := c.KeystoneV3().Region().List(nil)
+		regions, err := c.KeystoneV3().ListRegion(nil)
 		utility.LogError(err, "get regions failed", true)
 		var server *nova.Server
 		for _, region := range regions {
 			console.Info("try to find server in region '%s'", region.Id)
-			server, err = c.SetRegion(region.Id).NovaV2().Server().Find(args[0])
+			server, err = c.SetRegion(region.Id).NovaV2().FindServer(args[0])
 			if err != nil {
 				console.Warn("server %s not found in region %s: %s", args[0], region.Id, err)
 				continue

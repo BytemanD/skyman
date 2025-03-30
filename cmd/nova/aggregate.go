@@ -26,7 +26,7 @@ var aggList = &cobra.Command{
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 		client := common.DefaultClient()
-		aggregates, err := client.NovaV2().Aggregate().List(nil)
+		aggregates, err := client.NovaV2().ListAgg(nil)
 		utility.LogError(err, "list aggregates failed", true)
 		if *aggListFlags.Name != "" {
 			aggregates = lo.Filter(aggregates, func(item nova.Aggregate, _ int) bool {
@@ -43,7 +43,7 @@ var aggShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		client := common.DefaultClient()
-		aggregate, err := client.NovaV2().Aggregate().Find(args[0])
+		aggregate, err := client.NovaV2().FindAgg(args[0])
 		utility.LogIfError(err, true, "get aggregate %s failed", args[0])
 		common.PrintAggregate(*aggregate)
 	},
@@ -60,7 +60,7 @@ var aggCreate = &cobra.Command{
 			agg.AvailabilityZone = *aggCreateFlags.AZ
 		}
 		client := common.DefaultClient()
-		aggregate, err := client.NovaV2().Aggregate().Create(agg)
+		aggregate, err := client.NovaV2().CreateAgg(agg)
 		utility.LogIfError(err, true, "create aggregate %s failed", name)
 		common.PrintAggregate(*aggregate)
 	},
@@ -72,9 +72,9 @@ var aggDelete = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		client := common.DefaultClient()
 		for _, agg := range args {
-			aggregate, err := client.NovaV2().Aggregate().Find(agg)
+			aggregate, err := client.NovaV2().FindAgg(agg)
 			utility.LogIfError(err, true, "get aggregate %s failed", agg)
-			err = client.NovaV2().Aggregate().Delete(aggregate.Id)
+			err = client.NovaV2().DeleteAgg(aggregate.Id)
 			utility.LogIfError(err, true, "delete aggregate %s failed", agg)
 		}
 	},
@@ -88,11 +88,11 @@ var addHost = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		idOrName, hosts := args[0], args[1:]
 		client := common.DefaultClient()
-		aggregate, err := client.NovaV2().Aggregate().Find(idOrName)
+		aggregate, err := client.NovaV2().FindAgg(idOrName)
 		utility.LogIfError(err, true, "get aggregate %s failed", idOrName)
 		added := 0
 		for _, host := range hosts {
-			agg, err := client.NovaV2().Aggregate().AddHost(aggregate.Id, host)
+			agg, err := client.NovaV2().AggAddHost(aggregate.Id, host)
 			utility.LogIfError(err, false, "add %s to aggregate %s failed", host, idOrName)
 			if err == nil {
 				aggregate = agg
@@ -112,11 +112,11 @@ var removeHost = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		idOrName, hosts := args[0], args[1:]
 		client := common.DefaultClient()
-		aggregate, err := client.NovaV2().Aggregate().Find(idOrName)
+		aggregate, err := client.NovaV2().FindAgg(idOrName)
 		utility.LogIfError(err, true, "get aggregate %s failed", idOrName)
 		for _, host := range hosts {
 			console.Debug("remove host %s from aggregate %s", host, idOrName)
-			agg, err := client.NovaV2().Aggregate().RemoveHost(aggregate.Id, host)
+			agg, err := client.NovaV2().AggRemoveHost(aggregate.Id, host)
 			utility.LogIfError(err, false, "remove %s to aggregate %s failed", host, idOrName)
 			if err == nil {
 				aggregate = agg

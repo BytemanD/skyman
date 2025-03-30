@@ -16,13 +16,9 @@ import (
 	"github.com/wxnacy/wgo/file"
 )
 
-const (
-	URL_IMAGE_FILE = "images/%s/file"
-)
+type GlanceV2 struct{ *ServiceClient }
 
-type ImageApi struct{ ResourceApi }
-
-func (c ImageApi) ListWithTotal(query url.Values, total int) ([]glance.Image, error) {
+func (c GlanceV2) ListWithTotal(query url.Values, total int) ([]glance.Image, error) {
 	images := []glance.Image{}
 	fixQuery := query
 	if !fixQuery.Has("limit") {
@@ -36,7 +32,7 @@ func (c ImageApi) ListWithTotal(query url.Values, total int) ([]glance.Image, er
 	for {
 		respBbody := glance.ImagesResp{}
 		console.Debug("query params: %s", query.Encode())
-		_, err := c.R().SetQuery(fixQuery).SetResult(&respBbody).Get("images")
+		_, err := c.R().SetQueryParamsFromValues(fixQuery).SetResult(&respBbody).Get(URL_IMAGES.F())
 		if err != nil {
 			return nil, err
 		}
@@ -60,20 +56,15 @@ func (c ImageApi) ListWithTotal(query url.Values, total int) ([]glance.Image, er
 	}
 	return images, nil
 }
-func (c ImageApi) List(query url.Values) ([]glance.Image, error) {
+func (c GlanceV2) ListImage(query url.Values) ([]glance.Image, error) {
 	return c.ListWithTotal(query, 0)
 }
 
-func (c ImageApi) ListByName(name string) ([]glance.Image, error) {
-	return c.ListWithTotal(url.Values{"name": []string{name}}, 0)
+func (c GlanceV2) GetImage(id string) (*glance.Image, error) {
+	return GetResource[glance.Image](c.ServiceClient, URL_IMAGES.F(), "images")
 }
-func (c ImageApi) Show(id string) (*glance.Image, error) {
-	result := glance.Image{}
-	_, err := c.R().SetResult(&result).Get("images/" + id)
-	return &result, err
-}
-func (c ImageApi) FoundByName(name string) (*glance.Image, error) {
-	images, err := c.ListByName(name)
+func (c GlanceV2) FoundByName(name string) (*glance.Image, error) {
+	images, err := c.ListImage(url.Values{"name": []string{name}})
 	if err != nil {
 		return nil, err
 	}
@@ -83,25 +74,22 @@ func (c ImageApi) FoundByName(name string) (*glance.Image, error) {
 	if len(images) > 1 {
 		return nil, fmt.Errorf("found multi images named %s ", name)
 	}
-	return c.Show(images[0].Id)
+	return c.GetImage(images[0].Id)
 }
-func (c ImageApi) Find(idOrName string) (*glance.Image, error) {
-	return FindIdOrName(c, idOrName)
+func (c GlanceV2) FindImage(idOrName string) (*glance.Image, error) {
+	return QueryByIdOrName(idOrName, c.GetImage, c.ListImage)
 }
-func (c ImageApi) Delete(id string) error {
-	_, err := c.ResourceApi.Delete("images/" + id)
-	return err
+
+func (c GlanceV2) DeleteImage(id string) error {
+	return DeleteResource(c.ServiceClient, URL_IMAGE.F(id))
 }
-func (c ImageApi) Create(options glance.Image) (*glance.Image, error) {
+func (c GlanceV2) CreateImage(options glance.Image) (*glance.Image, error) {
 	respBody := glance.Image{}
-	_, err := c.Post("images", options, &respBody)
-	if err != nil {
-		return nil, err
-	}
-	return &respBody, nil
+	_, err := c.R().SetBody(options).SetResult(&respBody).Post(URL_IMAGES.F())
+	return &respBody, err
 
 }
-func (c ImageApi) Set(id string, params map[string]interface{}) (*glance.Image, error) {
+func (c GlanceV2) UpdateImage(id string, params map[string]interface{}) (*glance.Image, error) {
 	attributies := []glance.AttributeOp{}
 	for k, v := range params {
 		attributies = append(attributies, glance.AttributeOp{
@@ -110,11 +98,12 @@ func (c ImageApi) Set(id string, params map[string]interface{}) (*glance.Image, 
 			Op:    "replace",
 		})
 	}
-	headers := map[string]string{
-		"Content-Type": "application/openstack-images-v2.1-json-patch",
+	headers := map[string][]string{
+		"Content-Type": {"application/openstack-images-v2.1-json-patch"},
 	}
 	body := glance.Image{}
-	resp, err := c.Patch("images/"+id, attributies, &body, headers)
+	resp, err := c.R().SetHeaderMultiValues(headers).SetBody(attributies).
+		SetResult(&body).Patch(URL_IMAGE.F(id))
 	if err != nil {
 		return nil, err
 	}
@@ -122,12 +111,11 @@ func (c ImageApi) Set(id string, params map[string]interface{}) (*glance.Image, 
 	if err := json.Unmarshal(resp.Body(), &rawBody); err != nil {
 		return nil, err
 	}
-
 	body.SetRaw(rawBody)
 	return &body, nil
 }
 
-func (c ImageApi) Upload(id string, file string) error {
+func (c GlanceV2) UploadImage(id string, file string) error {
 	fileStat, err := os.Stat(file)
 	if err != nil {
 		return err
@@ -140,30 +128,21 @@ func (c ImageApi) Upload(id string, file string) error {
 
 	// TODO:
 	reader := utility.NewProcessReader(fileReader, int(fileStat.Size()))
-	resp, err := c.NewPutRequest(utility.UrlJoin("images", id, "file"), reader, nil).
-		SetHeader(session.CONTENT_TYPE, session.CONTENT_TYPE_STREAM).
-		Send()
-	if err != nil {
-		return err
-	}
-	return session.CheckResponse(resp)
+	_, err = c.R().SetHeader(session.CONTENT_TYPE, session.CONTENT_TYPE_STREAM).
+		SetBody(reader).Put(URL_IMAGE_FILE.F(id))
+	return err
 }
 
-func (c ImageApi) Download(id string, fileName string, process bool) error {
+func (c GlanceV2) DownloadImage(id string, fileName string, process bool) error {
 	if file.IsFile(fileName) {
 		return fmt.Errorf("file %s exists", fileName)
 	}
-	resp, err := c.Client.R().
+	resp, err := c.Client.R().SetDoNotParseResponse(true).
 		SetHeader(session.CONTENT_TYPE, session.CONTENT_TYPE_STREAM).
-		SetDoNotParseResponse(true).
-		Get(fmt.Sprintf(URL_IMAGE_FILE, id))
+		Get(URL_IMAGE_FILE.F(id))
 	if err != nil {
 		return err
 	}
-	if err := session.CheckResponse(resp); err != nil {
-		return err
-	}
-
 	imageWriter, err := os.Create(fileName)
 	if err != nil {
 		return err
@@ -177,17 +156,6 @@ func (c ImageApi) Download(id string, fileName string, process bool) error {
 	}
 	_, err = io.Copy(writer, resp.RawBody())
 	return err
-}
-
-type GlanceV2 struct{ *ServiceClient }
-
-func (c GlanceV2) Images() ImageApi {
-	return ImageApi{
-		ResourceApi: ResourceApi{
-			Client:      c.Client,
-			ResourceUrl: "images",
-		},
-	}
 }
 
 func (c GlanceV2) GetCurrentVersion() (*model.ApiVersion, error) {

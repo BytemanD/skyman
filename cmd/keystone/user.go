@@ -20,11 +20,11 @@ var userList = &cobra.Command{
 
 		c := common.DefaultClient().KeystoneV3()
 		if project == "" {
-			users, err := c.User().List(nil)
+			users, err := c.ListUser(nil)
 			utility.LogError(err, "list users failed", true)
 			common.PrintUsers(users, long)
 		} else {
-			users, err := c.ListUsersByProjectId(project)
+			users, err := c.ListUsersByProject(project)
 			if err != nil {
 				console.Fatal("get users failed, %s", err)
 			}
@@ -39,7 +39,7 @@ var userShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := common.DefaultClient().KeystoneV3()
-		user, err := client.User().Find(args[0])
+		user, err := client.FindUser(args[0])
 		utility.LogIfError(err, true, "get user %s failed", args[0])
 		common.PrintUser(*user)
 	},

@@ -28,7 +28,7 @@ var BenchmarkCmd = &cobra.Command{
 		switch args[0] {
 		case "server-show":
 			console.Info("list servers")
-			servers, err := client.NovaV2().Server().List(query)
+			servers, err := client.NovaV2().ListServer(query)
 			utility.LogIfError(err, true, "list server failed")
 			cases := lo.Map(servers, func(item nova.Server, _ int) benchmark.ServerShow {
 				return benchmark.ServerShow{

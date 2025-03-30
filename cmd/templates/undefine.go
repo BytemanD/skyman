@@ -15,45 +15,45 @@ func deleteFlavor(client *openstack.Openstack, flavor Flavor) error {
 	var f *nova.Flavor
 	var err error
 	if flavor.Id != "" {
-		f, err = client.NovaV2().Flavor().Show(flavor.Id)
+		f, err = client.NovaV2().GetFlavor(flavor.Id)
 		if err != nil {
 			console.Warn("get flavor %s failed: %s", flavor.Id, err)
 			return nil
 		}
 	} else if flavor.Name != "" {
-		f, err = client.NovaV2().Flavor().Find(flavor.Name, false)
+		f, err = client.NovaV2().FindFlavor(flavor.Name)
 		if err != nil {
 			console.Warn("get flavor %s failed, %s", flavor.Name, err)
 			return nil
 		}
 	}
 	console.Info("deleting flavor %s", f.Id)
-	return client.NovaV2().Flavor().Delete(f.Id)
+	return client.NovaV2().DeleteFlavor(f.Id)
 }
 func deleteNetwork(client *openstack.Openstack, network Network) error {
-	net, err := client.NeutronV2().Network().Find(network.Name)
+	net, err := client.NeutronV2().FindNetwork(network.Name)
 	if err != nil {
 		console.Warn("get network %s failed: %s", network.Name, err)
 		return nil
 	}
 	console.Info("deleting network %s", network.Name)
-	return client.NeutronV2().Network().Delete(net.Id)
+	return client.NeutronV2().DeleteNetwork(net.Id)
 }
 
 func deleteServer(client *openstack.Openstack, server Server, watch bool) error {
-	s, err := client.NovaV2().Server().Find(server.Name)
+	s, err := client.NovaV2().FindServer(server.Name)
 	if err != nil {
 		console.Warn("get server %s failed, %s", server.Name, err)
 		return nil
 	}
-	err = client.NovaV2().Server().Delete(s.Id)
+	err = client.NovaV2().DeleteServer(s.Id)
 	if err != nil {
 		return nil
 	}
 
 	console.Info("[%s] deleting (%s)", s.Id, s.Name)
 	if watch {
-		return client.NovaV2().Server().WaitDeleted(s.Id)
+		return client.NovaV2().WaitServerDeleted(s.Id)
 	}
 	return nil
 }

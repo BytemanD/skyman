@@ -30,7 +30,7 @@ var keypairList = &cobra.Command{
 		if *keypairListFlags.UserId != "" {
 			query.Set("user_id", *keypairListFlags.UserId)
 		}
-		keypairs, err := client.NovaV2().Keypair().List(query)
+		keypairs, err := client.NovaV2().ListKeypair(query)
 		if err != nil {
 			console.Fatal("%s", err)
 		}
@@ -60,7 +60,7 @@ var keypairShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		client := common.DefaultClient()
-		keypair, err := client.NovaV2().Keypair().Show(args[0])
+		keypair, err := client.NovaV2().GetKeypair(args[0])
 
 		utility.LogIfError(err, true, "get keypair failed")
 		common.PrintKeypair(*keypair)
@@ -89,7 +89,7 @@ var keypairCreate = &cobra.Command{
 			}
 		}
 
-		keypair, err := client.NovaV2().Keypair().Create(
+		keypair, err := client.NovaV2().CreateKeypair(
 			args[0], *keypairCreateFlags.Type, opt)
 
 		utility.LogIfError(err, true, "create keypair failed")
@@ -107,7 +107,7 @@ var keypairDelete = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := common.DefaultClient()
 		for _, keypair := range args {
-			err := client.NovaV2().Keypair().Delete(keypair)
+			err := client.NovaV2().DeleteKeypair(keypair)
 			utility.LogIfError(err, false, "delete keypair %s failed", keypair)
 		}
 	},

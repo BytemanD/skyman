@@ -33,7 +33,7 @@ var snapshotList = &cobra.Command{
 		if all {
 			query.Set("all_tenants", "true")
 		}
-		snapshots, err := client.CinderV2().Snapshot().Detail(query)
+		snapshots, err := client.CinderV2().ListSnapshot(query, true)
 		utility.LogError(err, "list snapshot falied", true)
 		common.PrintSnapshots(snapshots, long)
 	},
@@ -46,7 +46,7 @@ var snapshotShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := common.DefaultClient()
 		idOrName := args[0]
-		snapshot, err := client.CinderV2().Snapshot().Find(idOrName)
+		snapshot, err := client.CinderV2().FindSnapshot(idOrName)
 		utility.LogError(err, "get snapshot failed", true)
 		common.PrintSnapshot(*snapshot)
 	},
@@ -59,12 +59,12 @@ var snapshotDelete = &cobra.Command{
 		client := common.DefaultClient()
 
 		for _, idOrName := range args {
-			snapshot, err := client.CinderV2().Snapshot().Find(idOrName)
+			snapshot, err := client.CinderV2().FindSnapshot(idOrName)
 			if err != nil {
 				utility.LogError(err, "get snapshot failed", false)
 				continue
 			}
-			err = client.CinderV2().Snapshot().Delete(snapshot.Id)
+			err = client.CinderV2().DeleteSnapshot(snapshot.Id)
 			if err == nil {
 				fmt.Printf("Requested to delete snapshot %s\n", idOrName)
 			} else {
@@ -84,12 +84,12 @@ var snapshotCreate = &cobra.Command{
 
 		client := common.DefaultClient()
 
-		volume, err := client.CinderV2().Volume().Find(args[0])
+		volume, err := client.CinderV2().FindVolume(args[0])
 		utility.LogIfError(err, true, "get volume %s failed", args[0])
 
-		snapshot, err := client.CinderV2().Snapshot().Create(volume.Id, name, force)
+		snapshot, err := client.CinderV2().CreateSnapshot(volume.Id, name, force)
 		utility.LogIfError(err, true, "create snaphost failed")
-		snapshot, err = client.CinderV2().Snapshot().Show(snapshot.Id)
+		snapshot, err = client.CinderV2().GetSnapshot(snapshot.Id)
 		utility.LogIfError(err, true, "show snapshot failed")
 		common.PrintSnapshot(*snapshot)
 	},
@@ -101,13 +101,13 @@ var snapshotRevert = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := common.DefaultClient()
 
-		snapshot, err := client.CinderV2().Snapshot().Find(args[0])
+		snapshot, err := client.CinderV2().FindSnapshot(args[0])
 		utility.LogIfError(err, true, "get snapshot %s failed", args[0])
 
-		volume, err := client.CinderV2().Volume().Show(snapshot.VolumeId)
+		volume, err := client.CinderV2().GetVolume(snapshot.VolumeId)
 		utility.LogIfError(err, true, "get volume %s failed", snapshot.VolumeId)
 
-		err = client.CinderV2().Volume().Revert(volume.Id, snapshot.Id)
+		err = client.CinderV2().RevertVolume(volume.Id, snapshot.Id)
 		utility.LogIfError(err, true, "revert volume %s failed", snapshot.VolumeId)
 	},
 }

@@ -24,7 +24,6 @@ type ConfGroup struct {
 	Language            string `yaml:"language"`
 	RetryCount          int    `yaml:"retryCount"`
 	LogFile             string `yaml:"logFile"`
-	EnableLogColor      bool   `yaml:"enableLogColor"`
 	BarChar             string `yaml:"barchar"`
 	HttpTimeoutSecond   int    `yaml:"httpTimeoutSecond"`
 	RetryWaitTimeSecond int    `yaml:"retryWaitTimeSecond"`

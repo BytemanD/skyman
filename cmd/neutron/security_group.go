@@ -25,12 +25,12 @@ var sgList = &cobra.Command{
 		query := url.Values{}
 
 		if projectIdOrName != "" {
-			project, err := c.KeystoneV3().Project().Find(projectIdOrName)
+			project, err := c.KeystoneV3().FindProject(projectIdOrName)
 			utility.LogError(err, "get project failed", true)
 			query.Set("project_id", project.Id)
 		}
 
-		sgs, err := c.NeutronV2().SecurityGroup().List(query)
+		sgs, err := c.NeutronV2().ListSecurityGroup(query)
 		utility.LogError(err, "list security group failed", true)
 		common.PrintSecurityGroups(sgs, long)
 	},
@@ -42,7 +42,7 @@ var sgShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient()
 
-		sg, err := c.NeutronV2().SecurityGroup().Find(args[0])
+		sg, err := c.NeutronV2().FindSecurityGroup(args[0])
 		utility.LogError(err, "get security group failed", true)
 
 		common.PrintSecurityGroup(*sg)

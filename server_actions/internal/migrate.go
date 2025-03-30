@@ -25,12 +25,12 @@ type ServerLiveMigrate struct {
 func (t *ServerLiveMigrate) createClientServer() error {
 	clientServerOpt := t.getServerBootOption(fmt.Sprintf("client-%s", t.Server.Name))
 	clientServerOpt.AvailabilityZone = t.Server.AZ
-	clientServer, err := t.Client.NovaV2().Server().Create(clientServerOpt)
+	clientServer, err := t.Client.NovaV2().CreateServer(clientServerOpt)
 	if err != nil {
 		return fmt.Errorf("create client instance failed: %s", err)
 	}
 	console.Info("[%s] creating client server", t.ServerId())
-	t.clientServer, err = t.Client.NovaV2().Server().WaitBooted(clientServer.Id)
+	t.clientServer, err = t.Client.NovaV2().WaitServerBooted(clientServer.Id)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (t *ServerLiveMigrate) waitServerBooted(serverId string) error {
 		},
 		[]string{"ServerNotBooted"},
 		func() error {
-			consoleLog, err := t.Client.NovaV2().Server().ConsoleLog(serverId, 50)
+			consoleLog, err := t.Client.NovaV2().GetServerConsoleLog(serverId, 50)
 			if err != nil {
 				return fmt.Errorf("get console log failed: %s", err)
 			}
@@ -66,7 +66,7 @@ func (t *ServerLiveMigrate) waitServerBooted(serverId string) error {
 
 func (t *ServerLiveMigrate) getClientGuest() (*guest.Guest, error) {
 	if t.clientGuest == nil {
-		host, err := t.Client.NovaV2().Hypervisor().Find(t.clientServer.Host)
+		host, err := t.Client.NovaV2().FindHypervisor(t.clientServer.Host)
 		if err != nil {
 			return nil, err
 		}
@@ -185,7 +185,7 @@ func (t *ServerLiveMigrate) checkPingBeforeMigrate(targetIp string) error {
 }
 
 func (t *ServerLiveMigrate) startLiveMigrate() error {
-	err := t.Client.NovaV2().Server().LiveMigrate(t.Server.Id, "auto", "")
+	err := t.Client.NovaV2().ServerLiveMigrate(t.Server.Id, "auto", "")
 	if err != nil {
 		return err
 	}
@@ -193,7 +193,7 @@ func (t *ServerLiveMigrate) startLiveMigrate() error {
 	return t.WaitServerTaskFinished(true)
 }
 func (t ServerLiveMigrate) confirmServerHasIpAddress() error {
-	serverHost, err := t.Client.NovaV2().Hypervisor().Find(t.Server.Host)
+	serverHost, err := t.Client.NovaV2().FindHypervisor(t.Server.Host)
 	if err != nil {
 		return err
 	}
@@ -231,7 +231,7 @@ func (t *ServerLiveMigrate) Start() error {
 		console.Warn("[%s] disable ping check because qga checker is disabled", t.ServerId())
 	}
 	if t.enablePing {
-		interfaces, err := t.Client.NovaV2().Server().ListInterfaces(t.ServerId())
+		interfaces, err := t.Client.NovaV2().ListServerInterfaces(t.ServerId())
 		if err != nil {
 			return err
 		}
@@ -324,10 +324,10 @@ func (t *ServerLiveMigrate) confirmPingResult() error {
 func (t ServerLiveMigrate) TearDown() error {
 	if t.clientServer != nil {
 		console.Info("[%s] deleting client server %s", t.ServerId(), t.clientServer.Id)
-		if err := t.Client.NovaV2().Server().Delete(t.clientServer.Id); err != nil {
+		if err := t.Client.NovaV2().DeleteServer(t.clientServer.Id); err != nil {
 			return err
 		}
-		if err := t.Client.NovaV2().Server().WaitDeleted(t.clientServer.Id); err != nil {
+		if err := t.Client.NovaV2().WaitServerDeleted(t.clientServer.Id); err != nil {
 			return err
 		}
 	}
@@ -348,7 +348,7 @@ func (t ServerMigrate) Start() error {
 	startTime := time.Now()
 	console.Info("[%s] source host is %s", t.Server.Id, sourceHost)
 
-	err := t.Client.NovaV2().Server().Migrate(t.Server.Id, "")
+	err := t.Client.NovaV2().ServerMigrate(t.Server.Id, "")
 	if err != nil {
 		return err
 	}

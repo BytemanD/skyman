@@ -17,7 +17,7 @@ var show = &cobra.Command{
 		projectId, err := client.ProjectId()
 		utility.LogError(err, "get project id failed, %v", true)
 
-		quotaSet, err := client.NovaV2().Quota().Show(projectId)
+		quotaSet, err := client.NovaV2().GetQuotaSet(projectId)
 		utility.LogError(err, "show quota failed, %v", true)
 		var showFipAndFixedIps bool
 		if !client.NovaV2().MicroVersionLargeEqual("2.36") {

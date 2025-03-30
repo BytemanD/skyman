@@ -79,16 +79,16 @@ func (t Case) getServerBootOption(testId int) nova.ServerOpt {
 }
 func (t Case) createDefaultServer(testId int) (*nova.Server, error) {
 	bootOption := t.getServerBootOption(testId)
-	return t.Client.NovaV2().Server().Create(bootOption)
+	return t.Client.NovaV2().CreateServer(bootOption)
 }
 func (t Case) waitServerCreated(serverId string) error {
 	var err error
-	server, err := t.Client.NovaV2().Server().Show(serverId)
+	server, err := t.Client.NovaV2().GetServer(serverId)
 	if err != nil {
 		return err
 	}
 	console.Info("[%s] creating with name %s", server.Id, server.Resource.Name)
-	server, err = t.Client.NovaV2().Server().WaitBooted(server.Id)
+	server, err = t.Client.NovaV2().WaitServerBooted(server.Id)
 	if err != nil {
 		return err
 	}
@@ -109,12 +109,12 @@ func (t Case) firstImage() string {
 }
 func (t *Case) destroyServer(serverId string) {
 	console.Info("[%s] deleting server", serverId)
-	if err := t.Client.NovaV2().Server().Delete(serverId); err != nil {
+	if err := t.Client.NovaV2().DeleteServer(serverId); err != nil {
 		console.Error("[%s] delete failed: %s", serverId, err)
 		return
 	}
 	console.Info("[%s] wait deleted", serverId)
-	if err := t.Client.NovaV2().Server().WaitDeleted(serverId); err != nil {
+	if err := t.Client.NovaV2().WaitServerDeleted(serverId); err != nil {
 		console.Error("[%s] wait deleted failed: %s", serverId, err)
 	}
 }
@@ -155,7 +155,7 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 			actionsReport.Error = fmt.Errorf("create server failed")
 			return
 		}
-		server, err = t.Client.NovaV2().Server().Show(server.Id)
+		server, err = t.Client.NovaV2().GetServer(server.Id)
 		if err != nil {
 			console.Error("get server failed, %s", err)
 			actionsReport.Error = fmt.Errorf("get server failed")
@@ -180,7 +180,7 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 		}()
 	} else {
 		var err error
-		server, err = t.Client.NovaV2().Server().Find(serverId)
+		server, err = t.Client.NovaV2().FindServer(serverId)
 		if err != nil {
 			console.Error("get server failed, %s", err)
 			actionsReport.Error = fmt.Errorf("get server failed")

@@ -59,12 +59,13 @@ type Openstack struct {
 	cinderClient   *internal.CinderV2
 	neutronClient  *internal.NeutronV2
 
-	novaClientOnce *sync.Once
+	novaClientOnce   *sync.Once
+	cinderClientOnce *sync.Once
 
 	cloudConfig Cloud
 }
 
-func (o Openstack) IsAdmin() bool {
+func (o *Openstack) IsAdmin() bool {
 	return o.AuthPlugin != nil && o.AuthPlugin.IsAdmin()
 }
 func (o Openstack) Region() string {
@@ -113,6 +114,7 @@ func NewClient(authUrl string, user model.User, project model.Project, regionNam
 		region:            regionName,
 		servieLock:        &sync.Mutex{},
 		novaClientOnce:    &sync.Once{},
+		cinderClientOnce:  &sync.Once{},
 	}
 }
 
@@ -131,16 +133,13 @@ func (o *Openstack) GlanceV2() *internal.GlanceV2 {
 }
 
 func (o *Openstack) CinderV2() *internal.CinderV2 {
-	o.servieLock.Lock()
-	defer o.servieLock.Unlock()
-
-	if o.cinderClient == nil {
+	o.cinderClientOnce.Do(func() {
 		o.cinderClient = &internal.CinderV2{
 			ServiceClient: internal.NewServiceClient(
 				o.Region(), VOLUME_V2, CINDER_V2, PUBLIC, V2, o.AuthPlugin,
 			),
 		}
-	}
+	})
 	return o.cinderClient
 }
 
@@ -183,8 +182,8 @@ func (o *Openstack) NovaV2(microVersion ...string) *internal.NovaV2 {
 			console.Warn("get current version failed: %v", err)
 		}
 		if o.novaClient.MicroVersion != nil {
-			// o.novaClient.AddBaseHeader("Openstack-Api-Version", o.novaClient.MicroVersion.Version)
-			o.novaClient.AddBaseHeader("X-Openstack-Nova-Api-Version", o.novaClient.MicroVersion.Version)
+			// o.novaClient.SetHeader("Openstack-Api-Version", o.novaClient.MicroVersion.Version)
+			o.novaClient.SetHeader("X-Openstack-Nova-Api-Version", o.novaClient.MicroVersion.Version)
 		}
 	})
 	return o.novaClient

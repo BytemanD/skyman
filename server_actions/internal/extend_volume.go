@@ -19,12 +19,12 @@ func (t ServerExtendVolume) Start() error {
 		return err
 	}
 
-	volume, err := t.Client.CinderV2().Volume().Show(attachment.VolumeId)
+	volume, err := t.Client.CinderV2().GetVolume(attachment.VolumeId)
 	if err != nil {
 		return fmt.Errorf("get volume failed: %s", err)
 	}
 	newSize := volume.Size + 10
-	err = t.Client.CinderV2().Volume().Extend(attachment.VolumeId, int(newSize))
+	err = t.Client.CinderV2().ExtendVolume(attachment.VolumeId, int(newSize))
 	console.Info("[%s] extending volume size %s to %dG", t.Server.Id, attachment.VolumeId, newSize)
 	if err != nil {
 		return err
@@ -37,7 +37,7 @@ func (t ServerExtendVolume) Start() error {
 			IntervalMax:  time.Second * 5},
 		[]string{"VolumeHasTaskError"},
 		func() error {
-			vol, err := t.Client.CinderV2().Volume().Show(attachment.VolumeId)
+			vol, err := t.Client.CinderV2().GetVolume(attachment.VolumeId)
 			if err != nil {
 				return err
 			}

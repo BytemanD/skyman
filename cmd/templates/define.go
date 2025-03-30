@@ -19,17 +19,17 @@ import (
 func getImage(client *openstack.Openstack, resource BaseResource) (*glance.Image, error) {
 	if resource.Id != "" {
 		console.Info("find image %s", resource.Id)
-		return client.GlanceV2().Images().Show(resource.Id)
+		return client.GlanceV2().GetImage(resource.Id)
 	} else if resource.Name != "" {
 		console.Info("find image %s", resource.Name)
-		return client.GlanceV2().Images().Find(resource.Name)
+		return client.GlanceV2().FindImage(resource.Name)
 	} else {
 		return nil, fmt.Errorf("image is empty")
 	}
 }
 func createFlavor(client *openstack.Openstack, flavor Flavor) {
 	computeClient := client.NovaV2()
-	f, _ := computeClient.Flavor().Show(flavor.Id)
+	f, _ := computeClient.GetFlavor(flavor.Id)
 	if f != nil {
 		console.Warn("network %s exists", flavor.Id)
 		return
@@ -41,17 +41,17 @@ func createFlavor(client *openstack.Openstack, flavor Flavor) {
 		Ram:   flavor.Ram,
 	}
 	console.Info("creating flavor %s", newFlavor.Id)
-	f, err := computeClient.Flavor().Create(newFlavor)
+	f, err := computeClient.CreateFlavor(newFlavor)
 	utility.LogError(err, "create flavor failed", true)
 	if flavor.ExtraSpecs != nil {
 		console.Info("creating flavor extra specs")
-		_, err = computeClient.Flavor().SetExtraSpecs(f.Id, flavor.ExtraSpecs)
+		_, err = computeClient.SetFlavorExtraSpecs(f.Id, flavor.ExtraSpecs)
 		utility.LogError(err, "create flavor extra specs failed", true)
 	}
 }
 func createNetwork(client *openstack.Openstack, network Network) {
 	networkClient := client.NeutronV2()
-	_, err := networkClient.Network().Find(network.Name)
+	_, err := networkClient.FindNetwork(network.Name)
 	if err == nil {
 		console.Warn("network %s exists", network.Name)
 		return
@@ -60,7 +60,7 @@ func createNetwork(client *openstack.Openstack, network Network) {
 		"name": network.Name,
 	}
 	console.Info("creating network %s", network.Name)
-	net, err := networkClient.Network().Create(netParams)
+	net, err := networkClient.CreateNetwork(netParams)
 	utility.LogError(err, fmt.Sprintf("create network %s failed", network.Name), true)
 	for _, subnet := range network.Subnets {
 		if subnet.IpVersion == 0 {
@@ -73,7 +73,7 @@ func createNetwork(client *openstack.Openstack, network Network) {
 			"ip_version": subnet.IpVersion,
 		}
 		console.Info("creating subnet %s (cidr: %s)", subnet.Name, subnet.Cidr)
-		_, err2 := networkClient.Subnet().Create(subnetParams)
+		_, err2 := networkClient.CreateSubnet(subnetParams)
 		utility.LogError(err2, fmt.Sprintf("create subnet %s failed", subnet.Name), true)
 	}
 }
@@ -82,7 +82,7 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 	computeClient := client.NovaV2()
 	networkClient := client.NeutronV2()
 
-	s, _ := client.NovaV2().Server().Find(server.Name)
+	s, _ := client.NovaV2().FindServer(server.Name)
 	if s != nil {
 		console.Warn("server %s exists (%s)", s.Name, s.Status)
 		return s, nil
@@ -109,10 +109,10 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 
 	if server.Flavor.Id != "" {
 		console.Info("find flavor %s", server.Flavor.Id)
-		flavor, err = client.NovaV2().Flavor().Show(server.Flavor.Id)
+		flavor, err = client.NovaV2().GetFlavor(server.Flavor.Id)
 	} else if server.Flavor.Name != "" {
 		console.Info("find flavor %s", server.Flavor.Name)
-		flavor, err = client.NovaV2().Flavor().Find(server.Flavor.Name, false)
+		flavor, err = client.NovaV2().FindFlavor(server.Flavor.Name)
 	}
 	utility.LogError(err, "get flavor failed", true)
 	serverOption.Flavor = flavor.Id
@@ -147,7 +147,7 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 			} else if nic.Port != "" {
 				networks = append(networks, nova.ServerOptNetwork{Port: nic.Port})
 			} else if nic.Name != "" {
-				network, err := networkClient.Network().Find(nic.Name)
+				network, err := networkClient.FindNetwork(nic.Name)
 				utility.LogError(err, "found network failed", true)
 				networks = append(networks, nova.ServerOptNetwork{UUID: network.Id})
 			}
@@ -157,11 +157,11 @@ func createServer(client *openstack.Openstack, server Server, watch bool) (*nova
 	if server.UserData != "" {
 		serverOption.UserData = utility.EncodedUserdata(server.UserData)
 	}
-	s, err = computeClient.Server().Create(serverOption)
+	s, err = computeClient.CreateServer(serverOption)
 	utility.LogError(err, "create server failed", true)
 	console.Info("creating server %s", serverOption.Name)
 	if watch {
-		computeClient.Server().WaitStatus(s.Id, "ACTIVE", 2)
+		computeClient.WaitServerStatus(s.Id, "ACTIVE", 2)
 	}
 	return s, nil
 }

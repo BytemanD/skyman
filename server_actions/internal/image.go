@@ -16,7 +16,7 @@ type ServerSnapshot struct {
 
 func (t *ServerSnapshot) Start() error {
 	imageName := fmt.Sprintf("skyman-image-for-%s", t.Server.Name)
-	imageId, err := t.Client.NovaV2().Server().CreateImage(t.Server.Id, imageName, nil)
+	imageId, err := t.Client.NovaV2().ServerCreateImage(t.Server.Id, imageName, nil)
 	if err != nil {
 		return err
 	}
@@ -28,7 +28,7 @@ func (t *ServerSnapshot) Start() error {
 			IntervalMin: time.Second * 2},
 		[]string{"ImageNotActive"},
 		func() error {
-			image, err := t.Client.GlanceV2().Images().Show(imageId)
+			image, err := t.Client.GlanceV2().GetImage(imageId)
 			if err != nil {
 				return fmt.Errorf("get image %s failed: %s", imageId, err)
 			}
@@ -48,6 +48,6 @@ func (t ServerSnapshot) TearDown() error {
 		return nil
 	}
 	console.Info("[%s] request to delete image %s", t.Server.Id, t.imageId)
-	t.Client.GlanceV2().Images().Delete(t.imageId)
+	t.Client.GlanceV2().DeleteImage(t.imageId)
 	return nil
 }

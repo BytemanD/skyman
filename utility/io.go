@@ -3,6 +3,7 @@ package utility
 import (
 	"bufio"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"net"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/fileutils"
 	"github.com/BytemanD/go-console/console"
 	"github.com/cheggaaa/pb/v3"
+	"github.com/samber/lo"
 )
 
 type ReaderWithProcess struct {
@@ -85,27 +87,12 @@ func (pw *ProgressWriter) Write(p []byte) (int, error) {
 	if pw.pbr != nil {
 		pw.pbr.Add(len(p))
 	}
-	// println("========", len(p), pw.pbr.Total())
 	return len(p), nil
 }
 
 func NewPbrWriter(total int, writer io.Writer) io.Writer {
 	return io.MultiWriter(writer, &ProgressWriter{pbr: pb.StartNew(total)})
 }
-
-// type ProgressReader struct {
-// 	pbr *pb.ProgressBar
-// }
-
-// func (pr *ProgressReader) Read(p []byte) (int, error) {
-// 	// io.Reader
-// 	// if pr.pbr != nil {
-// 	// 	pr.pbr.Add(len(p))
-// 	// }
-// 	// println("====>", len(p))
-// 	console.Info("========> %d total: %d", len(p), pr.pbr.Total())
-// 	return len(p), nil
-// }
 
 func NewPbrReader(total int64, reader io.Reader) io.Reader {
 	return io.TeeReader(reader, &ProgressWriter{pbr: pb.Start64(total)})
@@ -134,4 +121,22 @@ func OpenWithProgress(name string) (*FileProgress, error) {
 		return nil, err
 	}
 	return &FileProgress{File: f, Total: fileStat.Size()}, nil
+}
+
+func DefaultScanComfirm(message string) bool {
+	return ScanfComfirm(message, []string{"yes", "y"}, []string{"no", "n"})
+}
+func ScanfComfirm(message string, yes, no []string) bool {
+	var confirm string
+	for {
+		fmt.Printf("%s [%s|%s]: ", message, strings.Join(yes, "/"), strings.Join(no, "/"))
+		fmt.Scanf("%s %d %f", &confirm)
+		if lo.Contains(yes, confirm) {
+			return true
+		} else if lo.Contains(no, confirm) {
+			return false
+		} else {
+			fmt.Print("输入错误, 请重新输入!")
+		}
+	}
 }

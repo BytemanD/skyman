@@ -15,21 +15,23 @@ import (
 )
 
 const (
-	DEFAUL_REGION  string = "RegionOne"
-	TYPE_COMPUTE   string = "compute"
-	TYPE_VOLUME    string = "volume"
-	TYPE_VOLUME_V2 string = "volumev2"
-	TYPE_VOLUME_V3 string = "volumev3"
-	TYPE_IDENTITY  string = "identity"
-	TYPE_IMAGE     string = "image"
-	TYPE_NETWORK   string = "network"
+	DEFAUL_REGION  = "RegionOne"
+	TYPE_COMPUTE   = "compute"
+	TYPE_VOLUME    = "volume"
+	TYPE_VOLUME_V2 = "volumev2"
+	TYPE_VOLUME_V3 = "volumev3"
+	TYPE_IDENTITY  = "identity"
+	TYPE_IMAGE     = "image"
+	TYPE_NETWORK   = "network"
 
-	INTERFACE_PUBLIC   string = "public"
-	INTERFACE_ADMIN    string = "admin"
-	INTERFACE_INTERVAL string = "internal"
+	INTERFACE_PUBLIC   = "public"
+	INTERFACE_ADMIN    = "admin"
+	INTERFACE_INTERVAL = "internal"
 
-	URL_AUTH_TOKEN string = "/auth/tokens"
-	X_AUTH_TOKEN   string = "X-Auth-Token"
+	URL_AUTH_TOKEN = "/auth/tokens"
+
+	X_SUBNECT_TOKEN = "X-Subject-Token"
+	X_AUTH_TOKEN    = "X-Auth-Token"
 )
 
 type PasswordAuthPlugin struct {
@@ -120,16 +122,13 @@ func (plugin *PasswordAuthPlugin) TokenIssue() error {
 		Token model.Token `json:"token"`
 	}{}
 	resp, err := plugin.session.R().SetBody(plugin.newAuthReqBody()).
-		SetResult(&respBody).
-		Post(URL_AUTH_TOKEN)
-	if err != nil || resp.Error() != nil {
-		return fmt.Errorf("token issue failed, %s %s", err, resp.Error())
-	}
-	if resp.IsError() {
-		return fmt.Errorf("token issue failed, [%d] %s", resp.StatusCode(), resp.Body())
+		SetResult(&respBody).Post(URL_AUTH_TOKEN)
+
+	if err != nil {
+		return fmt.Errorf("token issue failed, %s", err)
 	}
 	plugin.token = &respBody.Token
-	plugin.token.TokenId = resp.Header().Get("X-Subject-Token")
+	plugin.token.TokenId = resp.Header().Get(X_SUBNECT_TOKEN)
 	plugin.expiredAt = time.Now().Add(time.Second * time.Duration(plugin.LocalTokenExpireSecond))
 	return nil
 }
@@ -184,7 +183,8 @@ func (plugin PasswordAuthPlugin) GetProjectId() (string, error) {
 	}
 	return plugin.token.Project.Id, nil
 }
-func (plugin PasswordAuthPlugin) Roles() []string {
+func (plugin *PasswordAuthPlugin) Roles() []string {
+	plugin.makesureTokenValid()
 	if plugin.token == nil {
 		return []string{}
 	}
@@ -192,15 +192,12 @@ func (plugin PasswordAuthPlugin) Roles() []string {
 		return item.Name
 	})
 }
-func (plugin PasswordAuthPlugin) IsAdmin() bool {
-	if plugin.token == nil {
-		return false
-	}
+func (plugin *PasswordAuthPlugin) IsAdmin() bool {
 	return lo.Contains(plugin.Roles(), "admin")
 }
 
 func NewPasswordAuthPlugin(authUrl string, user model.User, project model.Project) *PasswordAuthPlugin {
-	return &PasswordAuthPlugin{
+	plugin := &PasswordAuthPlugin{
 		session: session.DefaultRestyClient(strings.TrimSuffix(authUrl, "/")).
 			OnBeforeRequest(session.LogBeforeRequest),
 		AuthUrl:           strings.TrimSuffix(authUrl, "/"),
@@ -211,4 +208,5 @@ func NewPasswordAuthPlugin(authUrl string, user model.User, project model.Projec
 		ProjectDomainName: project.Domain.Name,
 		tokenLock:         &sync.Mutex{},
 	}
+	return plugin
 }

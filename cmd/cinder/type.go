@@ -48,7 +48,7 @@ var typeList = &cobra.Command{
 		var err error
 
 		if argDefault {
-			volumeType, err := client.CinderV2().VolumeType().Default()
+			volumeType, err := client.CinderV2().GetDefaultType()
 			volumeTypes = append(volumeTypes, *volumeType)
 			utility.LogIfError(err, true, "list default volume falied")
 		} else {
@@ -59,7 +59,7 @@ var typeList = &cobra.Command{
 			if private {
 				query.Set("is_public", "false")
 			}
-			volumeTypes, err = client.CinderV2().VolumeType().List(query)
+			volumeTypes, err = client.CinderV2().ListType(query)
 			utility.LogIfError(err, true, "list volume type falied")
 		}
 
@@ -88,7 +88,7 @@ var typeShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := common.DefaultClient()
-		volumeType, err := client.CinderV2().VolumeType().Find(args[0])
+		volumeType, err := client.CinderV2().FindType(args[0])
 		utility.LogError(err, "get volume type failed", true)
 		common.PrintVolumeType(*volumeType)
 	},
@@ -99,7 +99,7 @@ var typeDefault = &cobra.Command{
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := common.DefaultClient()
-		volumeType, err := client.CinderV2().VolumeType().Show("default")
+		volumeType, err := client.CinderV2().GetDefaultType()
 		utility.LogError(err, "get default volume type failed", true)
 		common.PrintVolumeType(*volumeType)
 	},
@@ -150,7 +150,7 @@ var typeCreate = &cobra.Command{
 		}
 
 		client := common.DefaultClient()
-		volume, err := client.CinderV2().VolumeType().Create(params)
+		volume, err := client.CinderV2().CreateType(params)
 		utility.LogError(err, "create volume type failed", true)
 		common.PrintVolumeType(*volume)
 	},
@@ -163,12 +163,12 @@ var typeDelete = &cobra.Command{
 		client := common.DefaultClient()
 
 		for _, idOrName := range args {
-			volumeType, err := client.CinderV2().VolumeType().Find(idOrName)
+			volumeType, err := client.CinderV2().FindType(idOrName)
 			if err != nil {
 				utility.LogError(err, "get volume type failed", false)
 				continue
 			}
-			err = client.CinderV2().VolumeType().Delete(volumeType.Id)
+			err = client.CinderV2().DeleteType(volumeType.Id)
 			if err != nil {
 				utility.LogError(err, fmt.Sprintf("delete volume type %s failed", idOrName), false)
 			} else {

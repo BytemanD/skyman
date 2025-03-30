@@ -20,7 +20,7 @@ func (t *ServerPause) Skip() (bool, string) {
 
 func (t ServerPause) Start() error {
 
-	err := t.Client.NovaV2().Server().Pause(t.Server.Id)
+	err := t.Client.NovaV2().PauseServer(t.Server.Id)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func (t *ServerUnpause) Skip() (bool, string) {
 }
 
 func (t ServerUnpause) Start() error {
-	err := t.Client.NovaV2().Server().Unpause(t.Server.Id)
+	err := t.Client.NovaV2().UnpauseServer(t.Server.Id)
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ type ServerTogglePause struct{ ServerActionTest }
 func (t ServerTogglePause) Start() error {
 	t.RefreshServer()
 	if t.Server.IsPaused() {
-		err := t.Client.NovaV2().Server().Unpause(t.Server.Id)
+		err := t.Client.NovaV2().UnpauseServer(t.Server.Id)
 		if err != nil {
 			return err
 		}
@@ -78,7 +78,7 @@ func (t ServerTogglePause) Start() error {
 			return fmt.Errorf("server is not active")
 		}
 	} else if t.Server.IsActive() {
-		err := t.Client.NovaV2().Server().Pause(t.Server.Id)
+		err := t.Client.NovaV2().PauseServer(t.Server.Id)
 		if err != nil {
 			return err
 		}

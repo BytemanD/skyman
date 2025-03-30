@@ -22,7 +22,7 @@ func (t ServerSetName) Start() error {
 	console.Info("[%s] old name is %s", t.Server.Id, t.Server.Name)
 	newName := time.Now().Format(time.DateTime)
 	console.Info("[%s] set name to %s", t.Server.Id, newName)
-	err := t.Client.NovaV2().Server().SetName(t.Server.Id, newName)
+	err := t.Client.NovaV2().ServerSetName(t.Server.Id, newName)
 	if err != nil {
 		return err
 	}

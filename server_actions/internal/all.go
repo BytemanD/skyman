@@ -72,7 +72,7 @@ func (t ServerActionTest) ServerId() string {
 }
 
 func (t *ServerActionTest) RefreshServer() error {
-	server, err := t.Client.NovaV2().Server().Show(t.Server.Id)
+	server, err := t.Client.NovaV2().GetServer(t.Server.Id)
 	if err != nil {
 		return nil
 	}
@@ -121,7 +121,7 @@ func (t *ServerActionTest) nextNetwork() (string, error) {
 	return t.Config.Networks[t.networkIndex], nil
 }
 func (t *ServerActionTest) lastVolume() (*nova.VolumeAttachment, error) {
-	volumes, err := t.Client.NovaV2().Server().ListVolumes(t.Server.Id)
+	volumes, err := t.Client.NovaV2().ListServerVolumes(t.Server.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (t *ServerActionTest) lastVolume() (*nova.VolumeAttachment, error) {
 }
 
 func (t *ServerActionTest) ServerMustHasNotInterface(portId string) error {
-	interfaces, err := t.Client.NovaV2().Server().ListInterfaces(t.Server.Id)
+	interfaces, err := t.Client.NovaV2().ListServerInterfaces(t.Server.Id)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func (t *ServerActionTest) ServerMustHasNotInterface(portId string) error {
 }
 
 func (t *ServerActionTest) ServerMustHasNotVolume(volumeId string) error {
-	volumes, err := t.Client.NovaV2().Server().ListVolumes(t.Server.Id)
+	volumes, err := t.Client.NovaV2().ListServerVolumes(t.Server.Id)
 	if err != nil {
 		return err
 	}
@@ -170,12 +170,12 @@ func (t ServerActionTest) CreateBlankVolume() (*cinder.Volume, error) {
 	if t.Config.VolumeType != "" {
 		options["volume_type"] = t.Config.VolumeType
 	}
-	volume, err := t.Client.CinderV2().Volume().Create(options)
+	volume, err := t.Client.CinderV2().CreateVolume(options)
 	if err != nil {
 		return nil, err
 	}
 	for i := 0; i <= 60; i++ {
-		volume, err = t.Client.CinderV2().Volume().Show(volume.Id)
+		volume, err = t.Client.CinderV2().GetVolume(volume.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -241,7 +241,7 @@ func (t *ServerActionTest) GetRootVolume() (*nova.VolumeAttachment, error) {
 	if t.Server.RootBdmType != "volume" {
 		return nil, fmt.Errorf("root bdm is not volume")
 	}
-	volumes, err := t.Client.NovaV2().Server().ListVolumes(t.Server.Id)
+	volumes, err := t.Client.NovaV2().ListServerVolumes(t.Server.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +259,7 @@ func (t *ServerActionTest) WaitSnapshotCreated(snapshotId string) error {
 			IntervalMin: time.Second * 2},
 		[]string{"SnapshotIsNotAvailable"},
 		func() error {
-			snapshot, err := t.Client.CinderV2().Snapshot().Show(snapshotId)
+			snapshot, err := t.Client.CinderV2().GetSnapshot(snapshotId)
 			if err != nil {
 				return err
 			}
@@ -284,7 +284,7 @@ func (t *ServerActionTest) WaitVolumeTaskDone(volumeId string) error {
 			IntervalMax:  time.Second * 10},
 		[]string{"VolumeHasTaskError"},
 		func() error {
-			vol, err := t.Client.CinderV2().Volume().Show(volumeId)
+			vol, err := t.Client.CinderV2().GetVolume(volumeId)
 			if err != nil {
 				return err
 			}

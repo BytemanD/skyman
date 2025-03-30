@@ -27,7 +27,7 @@ var attachVolume = &cobra.Command{
 
 		client := common.DefaultClient()
 		cinderClient := client.CinderV2()
-		server, err := client.NovaV2().Server().Find(args[0])
+		server, err := client.NovaV2().FindServer(args[0])
 		utility.LogError(err, "show server failed:", true)
 		if server.IsError() {
 			utility.LogIfError(err, true, "server %s is Error", args[0])
@@ -51,7 +51,7 @@ var attachVolume = &cobra.Command{
 					createOption["volume_type"] = volumeType
 				}
 				console.Debug("creating volume %s", name)
-				volume, err := cinderClient.Volume().CreateAndWait(createOption, 600)
+				volume, err := cinderClient.CreateVolumeAndWait(createOption, 600)
 				if err != nil {
 					console.Error("create volume failed: %v", err)
 					return err
@@ -77,7 +77,7 @@ var attachVolume = &cobra.Command{
 			Func: func(item interface{}) error {
 				p := item.(Volume)
 				console.Debug("[volume: %s] attaching", p)
-				attachment, err := client.NovaV2().Server().AddVolume(server.Id, p.Id)
+				attachment, err := client.NovaV2().ServerAddVolume(server.Id, p.Id)
 				if err != nil {
 					console.Error("[volume: %s] attach failed: %v", p, err)
 					return err
@@ -87,7 +87,7 @@ var attachVolume = &cobra.Command{
 				}
 				startTime := time.Now()
 				for {
-					attachedVolume, err := client.NovaV2().Server().ListVolumes(server.Id)
+					attachedVolume, err := client.NovaV2().ListServerVolumes(server.Id)
 					if err != nil {
 						utility.LogError(err, "list server volumes failed:", false)
 						return err
@@ -96,7 +96,7 @@ var attachVolume = &cobra.Command{
 						if vol.VolumeId != p.Id {
 							continue
 						}
-						v, err := client.CinderV2().Volume().Show(vol.VolumeId)
+						v, err := client.CinderV2().GetVolume(vol.VolumeId)
 						console.Info("[volume: %s] status is %s", vol.Id, v.Status)
 						if err == nil && v.IsInuse() {
 							console.Info("[volume: %s] attach success", p.Id)

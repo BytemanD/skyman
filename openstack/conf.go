@@ -164,6 +164,9 @@ func connectCloud() (*Openstack, error) {
 	console.Debug("new openstack client, HttpTimeoutSecond=%d RetryWaitTimeSecond=%d RetryCount=%d",
 		CONF.HttpTimeoutSecond, CONF.RetryWaitTimeSecond, CONF.RetryCount,
 	)
+	if _, err := conn.AuthPlugin.GetToken(); err != nil {
+		return nil, fmt.Errorf("auth failed: %w", err)
+	}
 	return conn, nil
 }
 func GetOne(name string) (*Openstack, error) {

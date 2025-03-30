@@ -56,7 +56,7 @@ var flavorList = &cobra.Command{
 			query.Set("minDisk", strconv.FormatUint(*flavorListFlags.MinDisk, 10))
 		}
 		client := common.DefaultClient()
-		flavors, err := client.NovaV2().Flavor().Detail(query)
+		flavors, err := client.NovaV2().ListFlavors(query, true)
 		utility.LogError(err, "get server failed %s", true)
 
 		filteredFlavors := []nova.Flavor{}
@@ -80,7 +80,7 @@ var flavorList = &cobra.Command{
 		if len(setExtraSpecs) > 0 {
 			console.Info("set flavor extra specs ...")
 			for _, flavor := range filteredFlavors {
-				_, err := client.NovaV2().Flavor().SetExtraSpecs(flavor.Id, setExtraSpecs)
+				_, err := client.NovaV2().SetFlavorExtraSpecs(flavor.Id, setExtraSpecs)
 				if err != nil {
 					console.Error("[%s] set flavor extra spces failed :%s", flavor.Id, err)
 				}
@@ -92,7 +92,7 @@ var flavorList = &cobra.Command{
 			console.Info("remove flavor extra spces ...")
 			for _, flavor := range filteredFlavors {
 				for _, extraSpec := range unsetExtraSpecs {
-					err := client.NovaV2().Flavor().DeleteExtraSpec(flavor.Id, extraSpec)
+					err := client.NovaV2().DeleteFlavorExtraSpec(flavor.Id, extraSpec)
 
 					if err != nil {
 						console.Error("[%s] remove flavor extra spces failed :%s", flavor.Id, err)
@@ -103,7 +103,7 @@ var flavorList = &cobra.Command{
 		if *flavorListFlags.Long {
 			// 提前查询，否则输出json、yaml 格式时缺失
 			for i, item := range filteredFlavors {
-				extraSpecs, err := client.NovaV2().Flavor().ListExtraSpecs(item.Id)
+				extraSpecs, err := client.NovaV2().GetFlavorExtraSpecs(item.Id)
 				if err != nil {
 					console.Fatal("get flavor extra specs failed %s", err)
 				}
@@ -140,11 +140,11 @@ var flavorShow = &cobra.Command{
 	Use:   "show <flavor id or name>",
 	Short: "Show flavor",
 	Args:  cobra.ExactArgs(1),
-	Run: func(_ *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, args []string) {
 		client := common.DefaultClient()
 		idOrName := args[0]
-		flavor, err := client.NovaV2().Flavor().ShowWithExtraSpecs(idOrName)
-		utility.LogError(err, "Show flavor failed", true)
+		flavor, err := client.NovaV2().FindFlavor(idOrName)
+		utility.LogIfError(err, true, "Show flavor failed")
 		views.PrintFlavor(*flavor)
 	},
 }
@@ -154,15 +154,14 @@ var flavorDelete = &cobra.Command{
 
 	Args: cobra.MinimumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client := common.DefaultClient()
-		flavorApi := client.NovaV2().Flavor()
+		client := common.DefaultClient().NovaV2()
 		for _, flavorId := range args {
-			flavor, err := flavorApi.Find(flavorId, false)
+			flavor, err := client.FindFlavor(flavorId)
 			if err != nil {
 				utility.LogError(err, "Get flavor failed", false)
 				continue
 			}
-			err = flavorApi.Delete(flavor.Id)
+			err = client.DeleteFlavor(flavor.Id)
 			utility.LogError(err, "Delete flavor failed", false)
 
 			fmt.Printf("Flavor %s deleted \n", flavorId)
@@ -212,12 +211,12 @@ var flavorCreate = &cobra.Command{
 
 		client := common.DefaultClient()
 
-		flavor, err := client.NovaV2().Flavor().Create(reqFlavor)
+		flavor, err := client.NovaV2().CreateFlavor(reqFlavor)
 		utility.LogError(err, "create flavor failed", true)
 
 		if len(*flavorCreateFlags.Properties) > 0 {
 			extraSpecs := getExtraSpecsMap(*flavorCreateFlags.Properties)
-			createdExtraSpecs, err := client.NovaV2().Flavor().SetExtraSpecs(flavor.Id, extraSpecs)
+			createdExtraSpecs, err := client.NovaV2().SetFlavorExtraSpecs(flavor.Id, extraSpecs)
 			if err != nil {
 				println(err)
 				os.Exit(1)
@@ -245,20 +244,20 @@ var flavorSet = &cobra.Command{
 			extraSpecs[splited[0]] = splited[1]
 		}
 
-		flavor, err := client.NovaV2().Flavor().Find(idOrName, true)
+		flavor, err := client.NovaV2().FindFlavor(idOrName)
 		utility.LogError(err, "Get flavor failed", true)
 
-		flavorExtraSpecs, err := client.NovaV2().Flavor().ListExtraSpecs(flavor.Id)
+		flavorExtraSpecs, err := client.NovaV2().GetFlavorExtraSpecs(flavor.Id)
 		utility.LogError(err, "Get flavor extra specs failed", true)
 
 		if len(extraSpecs) != 0 {
-			client.NovaV2().Flavor().SetExtraSpecs(flavor.Id, extraSpecs)
+			client.NovaV2().SetFlavorExtraSpecs(flavor.Id, extraSpecs)
 		}
 		for _, property := range *flavorSetFlags.Unset {
 			if _, ok := flavorExtraSpecs[property]; !ok {
 				continue
 			}
-			err := client.NovaV2().Flavor().DeleteExtraSpec(flavor.Id, property)
+			err := client.NovaV2().DeleteFlavorExtraSpec(flavor.Id, property)
 			if err != nil {
 				utility.LogError(err, "delete extra spec failed", false)
 			}

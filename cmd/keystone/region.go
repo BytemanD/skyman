@@ -14,7 +14,7 @@ var list = &cobra.Command{
 	Short: "List regions",
 	Run: func(cmd *cobra.Command, _ []string) {
 		c := common.DefaultClient().KeystoneV3()
-		regions, err := c.Region().List(nil)
+		regions, err := c.ListRegion(nil)
 		utility.LogError(err, "list region failed", true)
 		common.PrintRegions(regions, false)
 	},

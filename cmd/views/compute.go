@@ -92,7 +92,7 @@ func PrintServer(server nova.Server, client *openstack.Openstack) {
 			{Name: "TenantId", Text: "ProjectId", Slot: func(item interface{}) interface{} {
 				p, _ := item.(nova.Server)
 				if client != nil {
-					project, err := client.KeystoneV3().Project().Show(p.TenantId)
+					project, err := client.KeystoneV3().GetProject(p.TenantId)
 					if err != nil {
 						console.Warn("get project %s failed: %s", p.TenantId, err)
 					} else {

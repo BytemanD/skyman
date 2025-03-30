@@ -24,12 +24,12 @@ var qosPolicyList = &cobra.Command{
 		query := url.Values{}
 
 		if projectIdOrName != "" {
-			project, err := c.KeystoneV3().Project().Find(projectIdOrName)
+			project, err := c.KeystoneV3().FindProject(projectIdOrName)
 			utility.LogError(err, "get project failed", true)
 			query.Set("project_id", project.Id)
 		}
 
-		policies, err := c.NeutronV2().QosPolicy().List(query)
+		policies, err := c.NeutronV2().ListQosPolicy(query)
 		utility.LogError(err, "list qos policy failed", true)
 		common.PrintQosPolicys(policies, false)
 	},
@@ -41,7 +41,7 @@ var qosPolicyShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient()
 
-		policy, err := c.NeutronV2().QosPolicy().Find(args[0])
+		policy, err := c.NeutronV2().FindQosPolicy(args[0])
 		utility.LogIfError(err, true, "get qos policy %s failed", args[0])
 		common.PrintQosPolicy(*policy)
 	},

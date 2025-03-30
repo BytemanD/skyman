@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/wxnacy/wgo/file"
 
-	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/model/glance"
@@ -45,7 +44,7 @@ var ImageList = &cobra.Command{
 		}
 
 		c := common.DefaultClient().GlanceV2()
-		images, err := c.Images().ListWithTotal(query, int(*imageListFlags.Total))
+		images, err := c.ListWithTotal(query, int(*imageListFlags.Total))
 		utility.LogError(err, "get imges failed", true)
 		common.PrintImages(images, *imageListFlags.Long)
 	},
@@ -57,7 +56,7 @@ var ImageShow = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient().GlanceV2()
 
-		image, err := c.Images().Find(args[0])
+		image, err := c.FindImage(args[0])
 		utility.LogIfError(err, true, "Get image %s failed", args[0])
 		common.PrintImage(*image, !*imageShowFlags.Bytes)
 	},
@@ -95,16 +94,16 @@ var imageCreate = &cobra.Command{
 		reqImage.Name = name
 
 		console.Info("create image name=%s", name)
-		image, err := client.Images().Create(reqImage)
+		image, err := client.CreateImage(reqImage)
 		utility.LogError(err, "Create image failed", true)
 		if file != "" {
 			console.Info("upload image")
-			err = client.Images().Upload(image.Id, file)
+			err = client.UploadImage(image.Id, file)
 			if err != nil {
-				client.Images().Delete(image.Id)
+				client.DeleteImage(image.Id)
 				utility.LogError(err, "Upload image failed", true)
 			}
-			image, err = client.Images().Show(image.Id)
+			image, err = client.GetImage(image.Id)
 			utility.LogError(err, "get image failed", true)
 		}
 		common.PrintImage(*image, false)
@@ -119,12 +118,12 @@ var imageDelete = &cobra.Command{
 		c := common.DefaultClient().GlanceV2()
 
 		for _, idOrName := range args {
-			image, err := c.Images().Find(idOrName)
+			image, err := c.FindImage(idOrName)
 			if err != nil {
 				utility.LogError(err, fmt.Sprintf("get image %v failed", idOrName), false)
 				continue
 			}
-			err = c.Images().Delete(image.Id)
+			err = c.DeleteImage(image.Id)
 			if err != nil {
 				utility.LogError(err, fmt.Sprintf("delete image %s failed", idOrName), false)
 				continue
@@ -142,7 +141,7 @@ var imageSave = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient().GlanceV2()
 
-		image, err := c.Images().Find(args[0])
+		image, err := c.FindImage(args[0])
 		utility.LogError(err, fmt.Sprintf("get image %v failed", args[0]), true)
 
 		fileName := lo.CoalesceOrEmpty(
@@ -150,7 +149,7 @@ var imageSave = &cobra.Command{
 		)
 		if file.IsFile(fileName) {
 			if !*imageSaveFlags.OverWrite {
-				if !stringutils.DefaultScanComfirm(fmt.Sprintf("文件 %s 已存在，是否删除", fileName)) {
+				if !utility.DefaultScanComfirm(fmt.Sprintf("文件 %s 已存在，是否删除", fileName)) {
 					return
 				}
 			} else {
@@ -161,7 +160,7 @@ var imageSave = &cobra.Command{
 			}
 		}
 		console.Info("saving image to %s", fileName)
-		err = c.Images().Download(image.Id, fileName, true)
+		err = c.DownloadImage(image.Id, fileName, true)
 		utility.LogError(err, fmt.Sprintf("download image %v failed", args[0]), true)
 		console.Info("image saved")
 	},
@@ -174,7 +173,7 @@ var imageSet = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient().GlanceV2()
 
-		image, err := c.Images().Find(args[0])
+		image, err := c.FindImage(args[0])
 		utility.LogError(err, "Get image failed", true)
 		params := map[string]interface{}{}
 
@@ -200,7 +199,7 @@ var imageSet = &cobra.Command{
 			console.Warn("nothing to do")
 			return
 		}
-		image, err = c.Images().Set(image.Id, params)
+		image, err = c.UpdateImage(image.Id, params)
 		utility.LogError(err, "update image failed", true)
 		common.PrintImage(*image, false)
 	},

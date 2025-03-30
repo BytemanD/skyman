@@ -18,7 +18,7 @@ func (t *ServerShelve) Skip() (bool, string) {
 	return false, ""
 }
 func (t ServerShelve) Start() error {
-	err := t.Client.NovaV2().Server().Shelve(t.Server.Id)
+	err := t.Client.NovaV2().ShelveServer(t.Server.Id)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (t *ServerUnshelve) Skip() (bool, string) {
 	return false, ""
 }
 func (t ServerUnshelve) Start() error {
-	err := t.Client.NovaV2().Server().Unshelve(t.Server.Id)
+	err := t.Client.NovaV2().UnshelveServer(t.Server.Id)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ type ServerToggleShelve struct {
 
 func (t ServerToggleShelve) Start() error {
 	if t.Server.IsShelved() {
-		err := t.Client.NovaV2().Server().Unshelve(t.Server.Id)
+		err := t.Client.NovaV2().UnshelveServer(t.Server.Id)
 		if err != nil {
 			return err
 		}
@@ -86,7 +86,7 @@ func (t ServerToggleShelve) Start() error {
 		}
 		return nil
 	} else {
-		err := t.Client.NovaV2().Server().Shelve(t.Server.Id)
+		err := t.Client.NovaV2().ShelveServer(t.Server.Id)
 		if err != nil {
 			return err
 		}

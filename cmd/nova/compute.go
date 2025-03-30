@@ -33,7 +33,7 @@ var csList = &cobra.Command{
 			query.Set("host", *csListFlags.Host)
 		}
 
-		services, _ := client.NovaV2().Service().List(query)
+		services, _ := client.NovaV2().ListService(query)
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Binary"},
@@ -61,7 +61,7 @@ var csEnable = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := common.DefaultClient()
-		service, err := client.NovaV2().Service().Enable(args[0], args[1])
+		service, err := client.NovaV2().EnableService(args[0], args[1])
 		utility.LogError(err, "set service disable failed", true)
 		views.PrintServiceTable(*service)
 	},
@@ -73,7 +73,7 @@ var csDisable = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		client := common.DefaultClient()
 
-		service, err := client.NovaV2().Service().Disable(args[0], args[1], *csDisableFlags.Reason)
+		service, err := client.NovaV2().DisableService(args[0], args[1], *csDisableFlags.Reason)
 		if err != nil {
 			utility.LogError(err, "set service disable failed", true)
 		}
@@ -86,7 +86,7 @@ var csUp = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := common.DefaultClient()
-		service, err := client.NovaV2().Service().Up(args[0], args[1])
+		service, err := client.NovaV2().UpService(args[0], args[1])
 		if err != nil {
 			utility.LogError(err, "set service up failed", true)
 		}
@@ -99,7 +99,7 @@ var csDown = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := common.DefaultClient()
-		service, err := client.NovaV2().Service().Down(args[0], args[1])
+		service, err := client.NovaV2().DownService(args[0], args[1])
 		if err != nil {
 			utility.LogError(err, "set service down failed", true)
 		}
@@ -112,7 +112,7 @@ var csDelete = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(_ *cobra.Command, args []string) {
 		client := common.DefaultClient()
-		err := client.NovaV2().Service().Delete(args[0], args[1])
+		err := client.NovaV2().DeleteService(args[0], args[1])
 		utility.LogError(err, "delete service failed", true)
 	},
 }

@@ -20,7 +20,7 @@ var (
 func listServerActions(serverId string, actionName string, last int, long bool) {
 	client := common.DefaultClient()
 
-	actions, err := client.NovaV2().Server().ListActions(serverId)
+	actions, err := client.NovaV2().ListServerActions(serverId)
 	utility.LogError(err, "list actions failed", true)
 	pt := common.PrettyTable{
 		ShortColumns: []common.Column{
@@ -44,7 +44,7 @@ func listServerActions(serverId string, actionName string, last int, long bool) 
 }
 func listServerActionsWithSpend(serverId string, actionName string, requestId string, last int, long bool) {
 	client := common.DefaultClient()
-	actionsWithEvents, err := client.NovaV2().Server().ListActionsWithEvents(
+	actionsWithEvents, err := client.NovaV2().ListServerActionsWithEvents(
 		serverId, actionName, requestId, last)
 	utility.LogError(err, "get server actions and events failed", true)
 
@@ -107,7 +107,7 @@ func listServerActionsWithSpend(serverId string, actionName string, requestId st
 func showAction(serverId string, requestId string, long bool) {
 	client := common.DefaultClient()
 
-	action, err := client.NovaV2().Server().ShowAction(serverId, requestId)
+	action, err := client.NovaV2().GetServerAction(serverId, requestId)
 	utility.LogError(err, "get server action failed", true)
 	pt := common.PrettyTable{
 		Title: fmt.Sprintf("Action: %s", action.Action),
@@ -144,7 +144,7 @@ var serverAction = &cobra.Command{
 			requestId = args[1]
 		}
 		client := common.DefaultClient()
-		server, err := client.NovaV2().Server().Find(args[0])
+		server, err := client.NovaV2().FindServer(args[0])
 		var serverId string
 		if err == nil {
 			serverId = server.Id

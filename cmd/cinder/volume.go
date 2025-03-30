@@ -44,7 +44,7 @@ var volumeList = &cobra.Command{
 		if all {
 			query.Set("all_tenants", "true")
 		}
-		volumes, err := client.CinderV2().Volume().Detail(query)
+		volumes, err := client.CinderV2().ListVolume(query, true)
 		utility.LogError(err, "list volume falied", true)
 		common.PrintVolumes(volumes, long)
 	},
@@ -56,8 +56,7 @@ var volumeShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		client := common.DefaultClient()
-		idOrName := args[0]
-		volume, err := client.CinderV2().Volume().Find(idOrName)
+		volume, err := client.CinderV2().FindVolume(args[0], client.IsAdmin())
 		utility.LogError(err, "get volume failed", true)
 		common.PrintVolume(*volume)
 	},
@@ -72,12 +71,12 @@ var volumeDelete = &cobra.Command{
 		cascade, _ := cmd.Flags().GetBool("cascade")
 
 		for _, idOrName := range args {
-			volume, err := client.CinderV2().Volume().Find(idOrName)
+			volume, err := client.CinderV2().FindVolume(idOrName)
 			if err != nil {
 				utility.LogError(err, "get volume failed", false)
 				continue
 			}
-			err = client.CinderV2().Volume().Delete(volume.Id, force, cascade)
+			err = client.CinderV2().DeleteVolume(volume.Id, force, cascade)
 			if err == nil {
 				println("Requested to delete volume", idOrName)
 			} else {
@@ -109,7 +108,7 @@ var volumeCreate = &cobra.Command{
 
 		client := common.DefaultClient()
 
-		volume, err := client.CinderV2().Volume().Create(params)
+		volume, err := client.CinderV2().CreateVolume(params)
 		if err != nil {
 			println(err)
 			os.Exit(1)
@@ -133,10 +132,10 @@ var volumeExtend = &cobra.Command{
 		idOrName := args[0]
 		size, _ := strconv.Atoi(args[1])
 		client := common.DefaultClient()
-		volume, err := client.CinderV2().Volume().Find(idOrName)
+		volume, err := client.CinderV2().FindVolume(idOrName)
 		utility.LogError(err, "get volume falied", true)
 
-		err = client.CinderV2().Volume().Extend(volume.Id, size)
+		err = client.CinderV2().ExtendVolume(volume.Id, size)
 		utility.LogError(err, "extend volume falied", true)
 	},
 }
@@ -159,10 +158,10 @@ var volumeRetype = &cobra.Command{
 		migrationPolicy, _ := cmd.Flags().GetString("migration-policy")
 
 		client := common.DefaultClient()
-		volume, err := client.CinderV2().Volume().Find(idOrName)
+		volume, err := client.CinderV2().FindVolume(idOrName)
 		utility.LogError(err, "get volume falied", true)
 
-		err = client.CinderV2().Volume().Retype(volume.Id, newType, migrationPolicy)
+		err = client.CinderV2().RetypeVolume(volume.Id, newType, migrationPolicy)
 		utility.LogError(err, "extend volume falied", true)
 	},
 }

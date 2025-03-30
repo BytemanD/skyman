@@ -2,9 +2,11 @@ package session
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 
@@ -25,10 +27,16 @@ const (
 	DEFAULT_RETRY_WAIT_TIME     = time.Second
 	DEFAULT_RETRY_MAX_WAIT_TIME = time.Second * 5
 	DEFAULT_TIMEOUT             = time.Second * 60
+
+	CODE_404 = 404
 )
+
+var ErrHTTPStatus = errors.New("http error")
+var ErrHTTP404 = fmt.Errorf("%w: %d", ErrHTTPStatus, CODE_404)
 
 func EncodeHeaders(reqHeader, clientHeader http.Header) []string {
 	allKeys := lo.Uniq(append(lo.Keys(reqHeader), lo.Keys(clientHeader)...))
+	sort.Strings(allKeys)
 	return lo.FilterMap(allKeys, func(key string, _ int) (string, bool) {
 		if key == "X-Auth-Token" {
 			return fmt.Sprintf("%s: %s", key, "<token>"), true
@@ -42,10 +50,7 @@ func EncodeHeaders(reqHeader, clientHeader http.Header) []string {
 		return "", false
 	})
 }
-func LogRequestPre(c *resty.Client, r *http.Request) error {
-	console.Debug("REQ: %s %s\n    Header: %v", r.Method, r.URL, EncodeHeaders(r.Header, c.Header))
-	return nil
-}
+
 func LogBeforeRequest(c *resty.Client, r *resty.Request) error {
 	body := []byte{}
 	if r.Header.Get(CONTENT_TYPE) != CONTENT_TYPE_STREAM && r.Body != nil {
@@ -71,6 +76,20 @@ func LogRespAfterResponse(c *resty.Client, r *resty.Response) error {
 		string(r.Body()))
 	return nil
 }
+func CheckStatusAfterResponse(c *resty.Client, r *resty.Response) error {
+	if !r.IsError() {
+		return nil
+	}
+	switch r.StatusCode() {
+	case CODE_404:
+		return fmt.Errorf("%w: %s", ErrHTTP404, r.Body())
+	default:
+		if r.IsError() {
+			return fmt.Errorf("%w: [%d], %s", ErrHTTPStatus, r.StatusCode(), string(r.Body()))
+		}
+		return nil
+	}
+}
 
 // 默认的 Client, 设置content-type=application/json
 func DefaultRestyClient(baseUrl string) *resty.Client {
@@ -79,5 +98,6 @@ func DefaultRestyClient(baseUrl string) *resty.Client {
 		SetRetryCount(DEFAULT_RETRY_COUNT).
 		SetRetryWaitTime(DEFAULT_RETRY_WAIT_TIME).
 		SetRetryMaxWaitTime(DEFAULT_RETRY_MAX_WAIT_TIME).
-		OnAfterResponse(LogRespAfterResponse)
+		OnAfterResponse(LogRespAfterResponse).
+		OnAfterResponse(CheckStatusAfterResponse)
 }

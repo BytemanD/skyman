@@ -16,7 +16,7 @@ func (t ServerSuspend) Start() error {
 	if !t.Server.IsActive() {
 		return fmt.Errorf("server is not active")
 	}
-	err := t.Client.NovaV2().Server().Suspend(t.Server.Id)
+	err := t.Client.NovaV2().SuspendServer(t.Server.Id)
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func (t *ServerResume) Skip() (bool, string) {
 	return false, ""
 }
 func (t ServerResume) Start() error {
-	err := t.Client.NovaV2().Server().Resume(t.Server.Id)
+	err := t.Client.NovaV2().ResumeServer(t.Server.Id)
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ type ServerToggleSuspend struct {
 
 func (t ServerToggleSuspend) Start() error {
 	if t.Server.IsSuspended() {
-		err := t.Client.NovaV2().Server().Resume(t.Server.Id)
+		err := t.Client.NovaV2().ResumeServer(t.Server.Id)
 		if err != nil {
 			return err
 		}
@@ -75,7 +75,7 @@ func (t ServerToggleSuspend) Start() error {
 			return fmt.Errorf("server is not active")
 		}
 	} else if t.Server.IsActive() {
-		err := t.Client.NovaV2().Server().Suspend(t.Server.Id)
+		err := t.Client.NovaV2().SuspendServer(t.Server.Id)
 		if err != nil {
 			return err
 		}

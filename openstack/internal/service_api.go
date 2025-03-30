@@ -2,16 +2,21 @@ package internal
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/openstack/internal/auth_plugin"
 	"github.com/BytemanD/skyman/openstack/session"
 	"github.com/go-resty/resty/v2"
+	"github.com/samber/lo"
 )
+
+type ReqBody map[string]map[string]any
 
 type ServiceClient struct {
 	*resty.Client
@@ -21,12 +26,7 @@ type ServiceClient struct {
 func (c *ServiceClient) BaserUrl() string {
 	return c.BaseURL
 }
-func (c *ServiceClient) AddBaseHeader(k, v string) {
-	if c.Client == nil {
-		return
-	}
-	c.Client.SetHeader(k, v)
-}
+
 func (c *ServiceClient) Header() http.Header {
 	return c.Client.Header
 }
@@ -111,4 +111,69 @@ func NewServiceClient(regionName string, sType, sName, sInterface string, versio
 		return authPlugin.AuthRequest(r)
 	}).OnBeforeRequest(session.LogBeforeRequest)
 	return client
+}
+
+func QueryResource[T any](c *ServiceClient, u string, query url.Values, bodyKey string) ([]T, error) {
+	result := map[string]any{}
+	_, err := c.R().SetQueryParamsFromValues(query).SetResult(&result).Get(u)
+	if err != nil {
+		return nil, err
+	}
+	if itemBytes, err := json.Marshal(result[bodyKey]); err != nil {
+		return nil, err
+	} else {
+		items := []T{}
+		return items, json.Unmarshal(itemBytes, &items)
+	}
+}
+
+func GetResource[T any](c *ServiceClient, u string, bodyKey string) (*T, error) {
+	result := map[string]*T{}
+	_, err := c.R().SetResult(&result).Get(u)
+	return result[bodyKey], err
+}
+func DeleteResource(c *ServiceClient, u string, query ...url.Values) error {
+	_, err := DeleteResourceWithResp(c, u, query...)
+	return err
+}
+func DeleteResourceWithResp(c *ServiceClient, u string, query ...url.Values) (*resty.Response, error) {
+	req := c.R()
+	if len(query) > 0 {
+		req.SetQueryParamsFromValues(query[0])
+	}
+	return req.Delete(u)
+}
+func FindResource[T any](c *ServiceClient, u string, bodyKey string) (*T, error) {
+
+	result := map[string]*T{}
+	_, err := c.R().SetResult(&result).Get(u)
+	return result[bodyKey], err
+}
+
+func QueryByIdOrName[T any](
+	idOrName string,
+	showFunc func(id string) (*T, error),
+	listFunc func(query url.Values) ([]T, error),
+) (*T, error) {
+	if item, err := showFunc(idOrName); err == nil {
+		return item, nil
+	} else if !errors.Is(err, session.ErrHTTP404) && !errors.Is(err, ErrResourceNotFound) {
+		return nil, err
+	}
+	if items, err := listFunc(url.Values{"name": []string{idOrName}}); err != nil {
+		return nil, err
+	} else {
+		fileted := lo.Filter(items, func(item T, _ int) bool {
+			valueName := reflect.ValueOf(item).FieldByName("Name")
+			return valueName.Kind() == reflect.String && valueName.String() == idOrName
+		})
+		switch len(fileted) {
+		case 0:
+			return nil, fmt.Errorf("%w with id or name %s", ErrResourceNotFound, idOrName)
+		case 1:
+			return &fileted[0], nil
+		default:
+			return nil, fmt.Errorf("%w with id or name: %s", ErrResourceMulti, idOrName)
+		}
+	}
 }

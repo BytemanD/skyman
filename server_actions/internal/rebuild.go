@@ -13,7 +13,7 @@ type ServerRebuild struct {
 }
 
 func (t ServerRebuild) Start() error {
-	err := t.Client.NovaV2().Server().Rebuild(t.Server.Id, nova.RebuilOpt{})
+	err := t.Client.NovaV2().RebuildServer(t.Server.Id, nova.RebuilOpt{})
 	if err != nil {
 		return err
 	}

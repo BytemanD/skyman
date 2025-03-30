@@ -17,7 +17,7 @@ var projectList = &cobra.Command{
 		long, _ := cmd.Flags().GetBool("long")
 
 		c := common.DefaultClient().KeystoneV3()
-		projects, err := c.Project().List(nil)
+		projects, err := c.ListProject(nil)
 		utility.LogError(err, "list projects failed", true)
 		common.PrintProjects(projects, long)
 	},
@@ -28,7 +28,7 @@ var projectDelete = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient().KeystoneV3()
-		err := c.Project().Delete(args[0])
+		err := c.DeleteProject(args[0])
 		utility.LogError(err, "delete project failed", true)
 	},
 }
@@ -38,7 +38,7 @@ var projectShow = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient().KeystoneV3()
-		project, err := c.Project().Find(args[0])
+		project, err := c.FindProject(args[0])
 		utility.LogError(err, "show project failed", true)
 		common.PrintProject(*project)
 	},

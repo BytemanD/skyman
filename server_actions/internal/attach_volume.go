@@ -18,7 +18,7 @@ func (t ServerAttachVolume) Start() error {
 	if err != nil {
 		return fmt.Errorf("create volume failed: %s", err)
 	}
-	attachment, err := t.Client.NovaV2().Server().AddVolume(t.Server.Id, volume.Id)
+	attachment, err := t.Client.NovaV2().ServerAddVolume(t.Server.Id, volume.Id)
 	if err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func (t ServerDetachVolume) Start() error {
 	if err != nil {
 		return err
 	}
-	err = t.Client.NovaV2().Server().DeleteVolume(t.Server.Id, attachment.VolumeId)
+	err = t.Client.NovaV2().ServerDeleteVolume(t.Server.Id, attachment.VolumeId)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (t *ServerVolumeHotPlug) Start() error {
 			return fmt.Errorf("create volume failed: %s", err)
 		}
 
-		attachment, err := t.Client.NovaV2().Server().AddVolume(t.Server.Id, volume.Id)
+		attachment, err := t.Client.NovaV2().ServerAddVolume(t.Server.Id, volume.Id)
 		if err != nil {
 			return err
 		}
@@ -110,7 +110,7 @@ func (t *ServerVolumeHotPlug) Start() error {
 	}
 
 	for _, volId := range t.attachments {
-		err := t.Client.NovaV2().Server().DeleteVolume(t.Server.Id, volId)
+		err := t.Client.NovaV2().ServerDeleteVolume(t.Server.Id, volId)
 		if err != nil {
 			return err
 		}
@@ -133,7 +133,7 @@ func (t ServerVolumeHotPlug) TearDown() error {
 	console.Info("[%s] cleanup %d volumes", t.ServerId(), len(t.attachments))
 	for _, volId := range t.attachments {
 		console.Info("[%s] deleting volume %s", t.ServerId(), volId)
-		err := t.Client.CinderV2().Volume().Delete(volId, true, true)
+		err := t.Client.CinderV2().DeleteVolume(volId, true, true)
 		if err != nil {
 			console.Error("[%s] delete volume %s failed: %s", t.ServerId(), volId, err)
 			deleteFailed = append(deleteFailed, volId)

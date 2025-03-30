@@ -1,16 +1,14 @@
 debug: false
-# logFile: clouds.log
 # 输出格式，可选值: table, table-light, json, yaml
 format: table
 language: en_US
+
+# logFile: clouds.log
+
 # http 超时和重试
 # httpTimeoutSecond: 0
-# enableLogColor: false
 # retryWaitTimeSecond: 2
 # retryCount: 0
-
-retryWaitTimeSecond: 1
-retryCount: 5
 
 # 云环境配置
 clouds:

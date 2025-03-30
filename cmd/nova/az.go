@@ -21,7 +21,7 @@ var azList = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 
 		client := common.DefaultClient()
-		azInfo, err := client.NovaV2().AZ().Detail(nil)
+		azInfo, err := client.NovaV2().ListAZ(nil)
 		utility.LogError(err, "list availability zones failed", true)
 
 		if *azListFlags.Tree {

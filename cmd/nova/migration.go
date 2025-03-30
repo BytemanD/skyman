@@ -35,7 +35,7 @@ var migrationList = &cobra.Command{
 		if *migrationListFlags.Type != "" {
 			query.Set("migration_type", *migrationListFlags.Type)
 		}
-		migrations, err := client.NovaV2().Migration().List(query)
+		migrations, err := client.NovaV2().ListMigration(query)
 		if err != nil {
 			console.Fatal("%s", err)
 		}

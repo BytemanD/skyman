@@ -169,27 +169,27 @@ func (serverInspect *ServerInspect) Print() {
 }
 
 func inspect(client *openstack.Openstack, idOrName string) (*ServerInspect, error) {
-	server, err := client.NovaV2().Server().Find(idOrName)
+	server, err := client.NovaV2().FindServer(idOrName)
 	if err != nil {
 		return nil, err
 	}
 	console.Info("get server image")
-	image, err := client.GlanceV2().Images().Show(server.ImageId())
+	image, err := client.GlanceV2().GetImage(server.ImageId())
 	if err != nil {
 		return nil, err
 	}
 	server.SetImageName(image.Name)
-	interfaceAttachmetns, err := client.NovaV2().Server().ListInterfaces(server.Id)
+	interfaceAttachmetns, err := client.NovaV2().ListServerInterfaces(server.Id)
 	if err != nil {
 		return nil, err
 	}
 	console.Info("list server volumes")
-	volumeAttachments, err := client.NovaV2().Server().ListVolumes(server.Id)
+	volumeAttachments, err := client.NovaV2().ListServerVolumes(server.Id)
 	if err != nil {
 		return nil, err
 	}
 	console.Info("list server ations")
-	actions, err := client.NovaV2().Server().ListActions(server.Id)
+	actions, err := client.NovaV2().ListServerActions(server.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +205,7 @@ func inspect(client *openstack.Openstack, idOrName string) (*ServerInspect, erro
 	portQuery := url.Values{}
 	portQuery.Set("device_id", server.Id)
 	console.Info("list server ports details")
-	ports, err := client.NeutronV2().Port().List(portQuery)
+	ports, err := client.NeutronV2().ListPort(portQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +214,7 @@ func inspect(client *openstack.Openstack, idOrName string) (*ServerInspect, erro
 	}
 
 	for _, volume := range serverInspect.Volumes {
-		vol, err := client.CinderV2().Volume().Show(volume.VolumeId)
+		vol, err := client.CinderV2().GetVolume(volume.VolumeId)
 		utility.LogError(err, "get volume failed", true)
 		serverInspect.VolumeDetail[volume.VolumeId] = *vol
 	}
@@ -261,10 +261,11 @@ var serverClone = &cobra.Command{
 
 		client := common.DefaultClient()
 
-		server, err := client.NovaV2().Server().Find(args[0])
+		server, err := client.NovaV2().FindServer(args[0])
 		utility.LogIfError(err, true, "get sever %s failed", args[0])
 
-		flavor, err := client.NovaV2().Flavor().Find(server.Flavor.OriginalName, false)
+		// TODO
+		flavor, err := client.NovaV2().FindFlavor(server.Flavor.OriginalName)
 		utility.LogIfError(err, true, "get flavor %s failed", server.Flavor.OriginalName)
 
 		if serverName == "" {
@@ -284,13 +285,13 @@ var serverClone = &cobra.Command{
 		console.Info("boot bdm type: %s", server.RootBdmType)
 		console.Info("root device name: %s", server.RootDeviceName)
 		if server.RootBdmType == "volume" {
-			attachments, err := client.NovaV2().Server().ListVolumes(server.Id)
+			attachments, err := client.NovaV2().ListServerVolumes(server.Id)
 			utility.LogIfError(err, true, "get volume attachments failed")
 			for _, attachment := range attachments {
 				if attachment.Device != server.RootDeviceName {
 					continue
 				}
-				systemVolume, err := client.CinderV2().Volume().Show(attachment.VolumeId)
+				systemVolume, err := client.CinderV2().GetVolume(attachment.VolumeId)
 				utility.LogIfError(err, true, "get volume %s failed", attachment.VolumeId)
 
 				console.Info("use image: %s", systemVolume.VolumeImageMetadata["image_id"])
@@ -319,9 +320,9 @@ var serverClone = &cobra.Command{
 		} else {
 			createOpt.AvailabilityZone = server.AZ
 		}
-		newServer, err := client.NovaV2().Server().Create(createOpt)
+		newServer, err := client.NovaV2().CreateServer(createOpt)
 		utility.LogIfError(err, true, "create server failed")
-		client.NovaV2().Server().WaitStatus(newServer.Id, "ACTIVE", 2)
+		client.NovaV2().WaitServerStatus(newServer.Id, "ACTIVE", 2)
 	},
 }
 

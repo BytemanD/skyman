@@ -28,7 +28,7 @@ var agentList = &cobra.Command{
 		if host != "" {
 			query.Set("host", host)
 		}
-		agents, err := c.Agent().List(query)
+		agents, err := c.ListAgent(query)
 		utility.LogError(err, "list ports failed", true)
 		common.PrintAgents(agents, long)
 	},

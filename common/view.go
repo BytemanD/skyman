@@ -43,7 +43,7 @@ func PrintServers(items []nova.Server, long bool, c *openstack.Openstack, sortDs
 				if project, ok := projectMap[p.TenantId]; ok {
 					return project.Name
 				}
-				if project, err := c.KeystoneV3().Project().Show(p.TenantId); err == nil {
+				if project, err := c.KeystoneV3().GetProject(p.TenantId); err == nil {
 					projectMap[p.TenantId] = *project
 					return project.Name
 				}
@@ -63,7 +63,7 @@ func PrintServers(items []nova.Server, long bool, c *openstack.Openstack, sortDs
 				if image, ok := imageMap[imageId]; ok {
 					return image.Name
 				}
-				if image, err := c.GlanceV2().Images().Show(imageId); err == nil {
+				if image, err := c.GlanceV2().GetImage(imageId); err == nil {
 					imageMap[imageId] = *image
 					return image.Name
 				}
