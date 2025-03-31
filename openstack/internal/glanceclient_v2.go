@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
 	"os"
 	"strconv"
@@ -13,6 +14,8 @@ import (
 	"github.com/BytemanD/skyman/openstack/model/glance"
 	"github.com/BytemanD/skyman/openstack/session"
 	"github.com/BytemanD/skyman/utility"
+	"github.com/go-resty/resty/v2"
+	"github.com/samber/lo"
 	"github.com/wxnacy/wgo/file"
 )
 
@@ -115,25 +118,40 @@ func (c GlanceV2) UpdateImage(id string, params map[string]interface{}) (*glance
 	return &body, nil
 }
 
-func (c GlanceV2) UploadImage(id string, file string) error {
-	fileStat, err := os.Stat(file)
+func (c GlanceV2) UploadImage(id string, file string, progress ...bool) error {
+	fileReader, err := os.Open(file)
 	if err != nil {
 		return err
 	}
-	fileReader, err := os.Open(file)
+	showProgress := lo.FirstOrEmpty(progress)
+	defer fileReader.Close()
+
+	fileStat, err := os.Stat(file)
 	if err != nil {
 		return err
 	}
 	defer fileReader.Close()
 
-	// TODO:
-	reader := utility.NewProcessReader(fileReader, int(fileStat.Size()))
-	_, err = c.R().SetHeader(session.CONTENT_TYPE, session.CONTENT_TYPE_STREAM).
-		SetBody(reader).Put(URL_IMAGE_FILE.F(id))
-	return err
+	if showProgress {
+		_, err = c.Clone().
+			SetHeader(session.CONTENT_TYPE, session.CONTENT_TYPE_STREAM).
+			SetPreRequestHook(func(c *resty.Client, r *http.Request) error {
+				r.Body = utility.NewProcessReader(fileReader, fileStat.Size())
+				return nil
+			}).
+			R().ForceContentType(session.CONTENT_TYPE).
+			Put(URL_IMAGE_FILE.F(id))
+		return err
+	} else {
+		_, err = c.R().SetHeader(session.CONTENT_TYPE, session.CONTENT_TYPE_STREAM).
+			SetBody(fileReader).Put(URL_IMAGE_FILE.F(id))
+		return err
+	}
+
 }
 
-func (c GlanceV2) DownloadImage(id string, fileName string, process bool) error {
+func (c GlanceV2) DownloadImage(id string, fileName string, process ...bool) error {
+	showProgress := lo.FirstOrEmpty(process)
 	if file.IsFile(fileName) {
 		return fmt.Errorf("file %s exists", fileName)
 	}
@@ -149,8 +167,12 @@ func (c GlanceV2) DownloadImage(id string, fileName string, process bool) error 
 	}
 	defer imageWriter.Close()
 	var writer io.Writer
-	if total, err := strconv.Atoi(resp.Header().Get(session.CONTENT_LENGTH)); err == nil {
-		writer = utility.NewPbrWriter(total, imageWriter)
+	if showProgress {
+		if total, err := strconv.Atoi(resp.Header().Get(session.CONTENT_LENGTH)); err == nil {
+			writer = utility.NewProgressWriter(imageWriter, total)
+		} else {
+			writer = imageWriter
+		}
 	} else {
 		writer = imageWriter
 	}

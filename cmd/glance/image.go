@@ -76,7 +76,7 @@ var imageCreate = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		containerFormat, _ := cmd.Flags().GetString("container-format")
 		diskFormat, _ := cmd.Flags().GetString("disk-format")
-		file, _ := cmd.Flags().GetString("file")
+		localFile, _ := cmd.Flags().GetString("file")
 
 		protect, _ := cmd.Flags().GetBool("protect")
 		visibility, _ := cmd.Flags().GetString("visibility")
@@ -88,17 +88,20 @@ var imageCreate = &cobra.Command{
 			Protected:       protect,
 			Visibility:      visibility,
 		}
-		if name == "" && file != "" {
-			name, _ = common.PathExtSplit(file)
+		if localFile != "" && !file.IsFile(localFile) {
+			console.Fatal("'%s' is not a file or not exists", localFile)
+		}
+		if localFile != "" && name == "" {
+			name, _ = common.PathExtSplit(localFile)
 		}
 		reqImage.Name = name
 
 		console.Info("create image name=%s", name)
 		image, err := client.CreateImage(reqImage)
 		utility.LogError(err, "Create image failed", true)
-		if file != "" {
+		if localFile != "" {
 			console.Info("upload image")
-			err = client.UploadImage(image.Id, file)
+			err = client.UploadImage(image.Id, localFile, true)
 			if err != nil {
 				client.DeleteImage(image.Id)
 				utility.LogError(err, "Upload image failed", true)
@@ -145,14 +148,13 @@ var imageSave = &cobra.Command{
 		utility.LogError(err, fmt.Sprintf("get image %v failed", args[0]), true)
 
 		fileName := lo.CoalesceOrEmpty(
-			*imageSaveFlags.File, fmt.Sprintf("%s.%s", image.Name, image.DiskFormat),
+			*imageSaveFlags.Output, fmt.Sprintf("%s.%s", image.Name, image.DiskFormat),
 		)
 		if file.IsFile(fileName) {
 			if !*imageSaveFlags.OverWrite {
 				if !utility.DefaultScanComfirm(fmt.Sprintf("文件 %s 已存在，是否删除", fileName)) {
 					return
 				}
-			} else {
 				console.Warn("删除文件: %s", fileName)
 				if err := os.Remove(fileName); err != nil {
 					console.Fatal("删除失败 %s", err)
@@ -234,7 +236,7 @@ func init() {
 		DiskFormat:      imageCreate.Flags().String("disk-format", "", fmt.Sprintf("Format of the disk. Valid:\n%v", glance.IMAGE_DISK_FORMATS)),
 	}
 	imageSaveFlags = ImageSaveFlags{
-		File:      imageSave.Flags().String("file", "", "output file"),
+		Output:    imageSave.Flags().StringP("output", "o", "", "output file"),
 		OverWrite: imageSave.Flags().Bool("overwrite", false, "overwriter if file exists"),
 	}
 	imageSetFlags = ImageSetFlags{

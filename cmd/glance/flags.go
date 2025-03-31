@@ -32,7 +32,7 @@ type ImageCreateFlags struct {
 }
 type ImageSaveFlags struct {
 	Name      *string
-	File      *string
+	Output    *string
 	OverWrite *bool
 }
 

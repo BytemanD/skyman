@@ -1,45 +1,17 @@
 package utility
 
 import (
-	"bufio"
 	"encoding/base64"
 	"fmt"
 	"io"
 	"net"
-	"os"
 	"reflect"
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/fileutils"
-	"github.com/BytemanD/go-console/console"
 	"github.com/cheggaaa/pb/v3"
 	"github.com/samber/lo"
 )
-
-type ReaderWithProcess struct {
-	io.Reader
-	Bar *pb.ProgressBar
-}
-
-func (reader *ReaderWithProcess) increment(n int) {
-	reader.Bar.Add(n)
-	if reader.Bar.Current() >= reader.Bar.Total() {
-		reader.Bar.Finish()
-	}
-}
-
-func (reader *ReaderWithProcess) Read(p []byte) (int, error) {
-	n, err := reader.Reader.Read(p)
-	defer reader.increment(n)
-	return n, err
-}
-
-func NewProcessReader(reader io.ReadCloser, size int) *ReaderWithProcess {
-	return &ReaderWithProcess{
-		Reader: bufio.NewReaderSize(reader, 1024*32),
-		Bar:    pb.StartNew(size),
-	}
-}
 
 func GetStructTags(i interface{}) []string {
 	tags := []string{}
@@ -79,6 +51,25 @@ func GetAllIpaddress() ([]string, error) {
 	return ips, nil
 }
 
+type ProcessReader struct {
+	ReadCloser io.ReadCloser
+	bar        *pb.ProgressBar
+}
+
+func (reader *ProcessReader) Read(p []byte) (int, error) {
+	n, err := reader.ReadCloser.Read(p)
+	reader.bar.Add(n)
+	return n, err
+}
+func (reader *ProcessReader) Close() error {
+	reader.bar.Finish()
+	return reader.ReadCloser.Close()
+}
+
+func NewProcessReader(reader io.ReadCloser, size int64) *ProcessReader {
+	return &ProcessReader{reader, pb.Start64(size)}
+}
+
 type ProgressWriter struct {
 	pbr *pb.ProgressBar
 }
@@ -90,37 +81,8 @@ func (pw *ProgressWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-func NewPbrWriter(total int, writer io.Writer) io.Writer {
+func NewProgressWriter(writer io.Writer, total int) io.Writer {
 	return io.MultiWriter(writer, &ProgressWriter{pbr: pb.StartNew(total)})
-}
-
-func NewPbrReader(total int64, reader io.Reader) io.Reader {
-	return io.TeeReader(reader, &ProgressWriter{pbr: pb.Start64(total)})
-}
-
-type FileProgress struct {
-	*os.File
-	Total  int64
-	readed int64
-}
-
-func (f *FileProgress) Read(p []byte) (int, error) {
-	n, err := f.File.Read(p)
-	f.readed += int64(n)
-	console.Info("========> read: %d/%d", f.readed, f.Total)
-	return n, err
-}
-
-func OpenWithProgress(name string) (*FileProgress, error) {
-	fileStat, err := os.Stat(name)
-	if err != nil {
-		return nil, err
-	}
-	f, err := os.Open(name)
-	if err != nil {
-		return nil, err
-	}
-	return &FileProgress{File: f, Total: fileStat.Size()}, nil
 }
 
 func DefaultScanComfirm(message string) bool {
