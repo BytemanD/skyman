@@ -10,6 +10,9 @@ language: en_US
 # retryWaitTimeSecond: 2
 # retryCount: 0
 
+# 设置云环境名称
+# cloud: XXX
+
 # 云环境配置
 clouds:
   # default:

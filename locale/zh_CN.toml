@@ -47,3 +47,7 @@ other = '测试实例磁盘IO'
 
 [allTenants]
 other = '全部租户'
+
+
+[cloudName]
+other = '云名称'

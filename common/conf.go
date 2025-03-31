@@ -1,9 +1,13 @@
 package common
 
 import (
+	"fmt"
+
+	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common/i18n"
 	"github.com/BytemanD/skyman/openstack"
 	"github.com/BytemanD/skyman/openstack/model/nova"
+	"github.com/samber/lo"
 	"github.com/spf13/viper"
 )
 
@@ -21,6 +25,7 @@ var (
 type ConfGroup struct {
 	Debug               bool   `yaml:"debug"`
 	Format              string `yaml:"format"`
+	Cloud               string `yaml:"cloud"`
 	Language            string `yaml:"language"`
 	RetryCount          int    `yaml:"retryCount"`
 	LogFile             string `yaml:"logFile"`
@@ -46,5 +51,16 @@ func LoadConfig(configFile string) error {
 			nova.BAR_CHAR = "*"
 		}
 	}
+	if CONF.Debug {
+		console.EnableLogDebug()
+	}
+	if CONF.LogFile != "" {
+		console.SetLogFile(CONF.LogFile)
+	}
+	if !lo.Contains(GetOutputFormats(), CONF.Format) {
+		return fmt.Errorf("invalid foramt '%s'", CONF.Format)
+	}
+	openstack.SetCloudName(CONF.Cloud)
+
 	return nil
 }

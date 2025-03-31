@@ -181,12 +181,12 @@ func (o *Openstack) NovaV2(microVersion ...string) *internal.NovaV2 {
 			),
 			MicroVersion: &model.ApiVersion{Version: "2.1"},
 		}
-		if err := o.novaClient.DiscoverMicroVersion(); err != nil {
-			console.Warn("get current version failed: %v", err)
-		}
-		if o.novaClient.MicroVersion != nil {
-			// o.novaClient.SetHeader("Openstack-Api-Version", o.novaClient.MicroVersion.Version)
-			o.novaClient.SetHeader("X-Openstack-Nova-Api-Version", o.novaClient.MicroVersion.Version)
+		if o.cloudConfig.Compute.Api.Version != "" {
+			o.novaClient.SetHeader(internal.X_OPENSTACK_NOVA_API_VERSION, o.cloudConfig.Compute.Api.Version)
+		} else {
+			if err := o.novaClient.DiscoverMicroVersion(); err != nil {
+				console.Warn("get current version failed: %v", err)
+			}
 		}
 	})
 	return o.novaClient
@@ -239,6 +239,7 @@ func loadFromEnv() {
 
 	cloud.Identity.Api.Version = lo.CoalesceOrEmpty(os.Getenv("OS_IDENTITY_API_VERSION"), cloud.Identity.Api.Version)
 	cloud.Neutron.Endpoint = lo.CoalesceOrEmpty(os.Getenv("OS_NEUTRON_ENDPOINT"), cloud.Neutron.Endpoint)
+	cloud.Compute.Api.Version = lo.CoalesceOrEmpty(os.Getenv("OS_COMPUTE_API_VERSION"), cloud.Compute.Api.Version)
 
 }
 func connectCloud() (*Openstack, error) {
@@ -294,16 +295,12 @@ func GetOne(name string) (*Openstack, error) {
 // 否则从环境变量读取 cloud;
 // 最后，使用默认的cloud.
 func Connect(name ...string) (*Openstack, error) {
-	if len(name) > 0 && name[0] != "" {
-		return GetOne(name[0])
+	useCloudName := lo.FirstOrEmpty(append(name, cloudName))
+	if useCloudName != "" {
+		return GetOne(useCloudName)
 	}
-	if os.Getenv(ENV_CLOUD_NAME) != "" {
-		return GetOne(os.Getenv(ENV_CLOUD_NAME))
-	}
+	console.Debug("load cloud config from env")
 	loadFromEnv()
-	if c, ok := CONF.Clouds["default"]; ok {
-		cloud = c
-	}
 	if cloud.Auth.AuthUrl == "" {
 		return nil, fmt.Errorf("auth url is empty, forget to load env or set cloud name?")
 	}

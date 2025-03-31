@@ -58,6 +58,7 @@ func init() {
 			Other: "define resources from template file"},
 		{ID: "undefineResourcesFromTempFile",
 			Other: "undefine resources from template file"},
+		{ID: "cloudName", Other: "cloud name"},
 	}
 	defaultMessageMap = map[string]i18n.Message{}
 

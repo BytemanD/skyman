@@ -1,8 +1,6 @@
 package cloud
 
 import (
-	"os"
-
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/common/datatable"
 	"github.com/BytemanD/skyman/openstack"
@@ -29,29 +27,23 @@ var CloudsCmd = &cobra.Command{
 		common.PrintItems(
 			[]datatable.Column[CloudView]{
 				{Name: "Name"},
-				{Name: "AuthUrl", RenderFunc: func(item CloudView) any {
-					return item.Auth.AuthUrl
-				}},
+				{Name: "AuthUrl", RenderFunc: func(item CloudView) any { return item.Auth.AuthUrl }},
 				{Name: "RegionName"},
-				{Name: "ProjectName", RenderFunc: func(item CloudView) any {
-					return item.Auth.ProjectName
-				}},
-				{Name: "Username", RenderFunc: func(item CloudView) any {
-					return item.Auth.Username
-				}},
+				{Name: "ProjectName", RenderFunc: func(item CloudView) any { return item.Auth.ProjectName }},
+				{Name: "Username", RenderFunc: func(item CloudView) any { return item.Auth.Username }},
 			},
 			[]datatable.Column[CloudView]{},
 			items,
 			common.TableOptions{},
 		)
-		if os.Getenv("OS_CLOUD_NAME") != "" {
-			if lo.HasKey(openstack.CONF.Clouds, os.Getenv("OS_CLOUD_NAME")) {
-				println(color.CyanString("使用云环境: %s", os.Getenv("OS_CLOUD_NAME")))
+		if cloudName := openstack.CloudName(); cloudName != "" {
+			if lo.HasKey(openstack.CONF.Clouds, cloudName) {
+				println(color.CyanString("使用云环境: %s", cloudName))
 			} else {
-				println(color.YellowString("云环境: %s, 不存在", os.Getenv("OS_CLOUD_NAME")))
+				println(color.RedString("云环境 '%s' 不存在, 请检查配置或者环境变量", cloudName))
 			}
 		} else {
-			println(color.YellowString("云名称未配置, 使用环境变量或者默认环境"))
+			println(color.YellowString("云名称未配置, 使用环境变量"))
 		}
 	},
 }

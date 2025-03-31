@@ -6,7 +6,6 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -125,21 +124,8 @@ func main() {
 		Short:   "Golang OpenStack Client \n" + LOGO,
 		Version: getVersion(),
 		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
-			format, _ := cmd.Flags().GetString("format")
 			conf, _ := cmd.Flags().GetString("conf")
-			debug, _ := cmd.Flags().GetBool("debug")
-
-			if format != "" && !lo.Contains(common.GetOutputFormats(), format) {
-				fmt.Printf("invalid foramt '%s'\n", format)
-				os.Exit(1)
-			}
 			common.LoadConfig(conf)
-			if common.CONF.Debug || debug {
-				console.EnableLogDebug()
-			}
-			if common.CONF.LogFile != "" {
-				console.SetLogFile(common.CONF.LogFile)
-			}
 			if viper.ConfigFileUsed() == "" {
 				console.Debug("配置文件查找失败")
 			} else {
@@ -153,15 +139,20 @@ func main() {
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, i18n.T("showDebug"))
 	rootCmd.PersistentFlags().String("log-file", "", i18n.T("logFile"))
 	rootCmd.PersistentFlags().Bool("log-color", false, i18n.T("enableLogColor"))
-	rootCmd.PersistentFlags().StringP("conf", "c", os.Getenv("SKYMAN_CONF_FILE"),
-		i18n.T("thePathOfConfigFile"))
 	rootCmd.PersistentFlags().StringP("format", "f", "table",
 		fmt.Sprintf(i18n.T("formatAndSupported"), common.GetOutputFormats()))
+	rootCmd.PersistentFlags().String("cloud", "", i18n.T("cloudName"))
+	rootCmd.PersistentFlags().StringP("conf", "c", os.Getenv("SKYMAN_CONF_FILE"),
+		i18n.T("thePathOfConfigFile"))
+
+	viper.AutomaticEnv()
+	viper.SetEnvPrefix("SKYMAN")
 
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	viper.BindPFlag("format", rootCmd.PersistentFlags().Lookup("format"))
 	viper.BindPFlag("logFile", rootCmd.PersistentFlags().Lookup("log-file"))
 	viper.BindPFlag("enableLogColor", rootCmd.PersistentFlags().Lookup("log-color"))
+	viper.BindPFlag("cloud", rootCmd.PersistentFlags().Lookup("cloud"))
 
 	rootCmd.PersistentFlags().String("compute-api-version", "", "Compute API version")
 

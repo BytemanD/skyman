@@ -3,15 +3,13 @@ package openstack
 import (
 	"os"
 	"path"
-	"strings"
 
 	"github.com/samber/lo"
 	"github.com/spf13/viper"
 )
 
-const ENV_CLOUD_NAME = "OS_CLOUD_NAME"
-
 var cloud Cloud
+var cloudName string
 var CONF Config
 
 type Config struct {
@@ -26,6 +24,7 @@ type Cloud struct {
 	TokenExpireTime int         `yaml:"tokenExpireTime"`
 	Identity        Identity    `yaml:"identity"`
 	Neutron         NeutronConf `yaml:"neutron"`
+	Compute         Compute     `yaml:"compute"`
 	RegionName      string      `yaml:"region_name" mapstructure:"region_name"`
 	Auth            Auth        `yaml:"auth"`
 }
@@ -49,22 +48,14 @@ type Api struct {
 type Identity struct {
 	Api Api `yaml:"api"`
 }
+type Compute struct {
+	Api Api `yaml:"api"`
+}
 type NeutronConf struct {
 	Endpoint string `yaml:"endpoint"`
 }
 
 func LoadConfig(file ...string) error {
-	viper.AutomaticEnv()
-	viper.SetEnvPrefix("OS")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(
-		"AUTH.USER.NAME", "USERNAME",
-		"AUTH.USER.PASSWORD", "PASSWORD",
-		"AUTH.USER.DOMAIN", "USER_DOMAIN",
-		"AUTH.PROJECT", "PROJECT",
-		"AUTH.REGION.ID", "REGION_NAME",
-		"NEUTRON.ENDPOINT", "NEUTRON_ENDPOINT",
-		".", "_"))
-
 	viper.SetConfigType("yaml")
 	if len(file) > 0 && file[0] != "" {
 		viper.SetConfigFile(file[0])
@@ -92,7 +83,12 @@ func LoadConfig(file ...string) error {
 func SetOpenstackConfig(c Config) {
 	CONF = c
 }
-
+func SetCloudName(name string) {
+	cloudName = name
+}
+func CloudName() string {
+	return cloudName
+}
 func CloudConfig() Cloud {
 	return cloud
 }

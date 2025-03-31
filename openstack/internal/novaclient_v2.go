@@ -18,10 +18,20 @@ import (
 	"github.com/samber/lo"
 )
 
+const X_OPENSTACK_NOVA_API_VERSION = "X-Openstack-Nova-Api-Version"
+
 type microVersion struct {
 	Version      int
 	MicroVersion int
 }
+
+func (v microVersion) Compare(other microVersion) int {
+	if v.Version != other.Version {
+		return v.Version - other.Version
+	}
+	return v.MicroVersion - other.MicroVersion
+}
+
 type NovaV2 struct {
 	*ServiceClient
 	MicroVersion *model.ApiVersion
@@ -34,13 +44,13 @@ func getMicroVersion(vertionStr string) microVersion {
 	return microVersion{Version: v, MicroVersion: micro}
 }
 
+func (c *NovaV2) GetMicroVersion() string {
+	return c.Header().Get(X_OPENSTACK_NOVA_API_VERSION)
+}
 func (c *NovaV2) MicroVersionLargeEqual(version string) bool {
-	clientVersion := getMicroVersion(c.MicroVersion.Version)
-	otherVersion := getMicroVersion(version)
-	if clientVersion.Version != otherVersion.Version {
-		return clientVersion.Version > otherVersion.Version
-	}
-	return clientVersion.MicroVersion >= otherVersion.MicroVersion
+	clientMicroVersoin := c.GetMicroVersion()
+	return getMicroVersion(clientMicroVersoin).
+		Compare(getMicroVersion(version)) >= 0
 }
 func (c *NovaV2) DiscoverMicroVersion() error {
 	console.Debug("discorver micro version for nova")
@@ -52,8 +62,8 @@ func (c *NovaV2) DiscoverMicroVersion() error {
 		if current == nil {
 			return fmt.Errorf("current version not found")
 		}
-		console.Debug("current nova version: %s", c.MicroVersion.VersoinInfo())
-		c.MicroVersion = current
+		console.Debug("use micro version: %s", current.Version)
+		c.SetHeader(X_OPENSTACK_NOVA_API_VERSION, current.Version)
 	}
 	return nil
 }
