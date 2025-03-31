@@ -21,40 +21,37 @@ import (
 
 type GlanceV2 struct{ *ServiceClient }
 
+const DEFAULT_IMAGE_LIMIT = 1000
+
 func (c GlanceV2) ListWithTotal(query url.Values, total int) ([]glance.Image, error) {
-	images := []glance.Image{}
-	fixQuery := query
-	if !fixQuery.Has("limit") {
-		if total > 0 {
-			fixQuery.Set("limit", strconv.Itoa(total))
-		}
-	} else if total > 0 {
-		limit, _ := strconv.Atoi(query.Get("limit"))
-		fixQuery.Set("limit", strconv.Itoa(min(limit, total)))
+	limit := DEFAULT_IMAGE_LIMIT
+	if query.Has("limit") {
+		limit, _ = strconv.Atoi(query.Get("limit"))
 	}
+	if total > 0 {
+		limit = min(limit, total)
+	}
+	fixQuery := query
+	images := []glance.Image{}
 	for {
+		fixQuery.Set("limit", strconv.Itoa(limit))
+		console.Info("query params: %s", fixQuery.Encode())
 		respBbody := glance.ImagesResp{}
-		console.Debug("query params: %s", query.Encode())
 		_, err := c.R().SetQueryParamsFromValues(fixQuery).SetResult(&respBbody).Get(URL_IMAGES.F())
 		if err != nil {
 			return nil, err
 		}
-		if len(respBbody.Images) == 0 {
-			break
+		if len(respBbody.Images) > 0 {
+			images = append(images, respBbody.Images...)
 		}
-		images = append(images, respBbody.Images...)
-		if len(images) >= total {
-			break
-		}
-		if respBbody.Next == "" {
+		if respBbody.Next == "" || (total > 0 && len(images) >= total) {
 			break
 		}
 		parsedUrl, _ := url.Parse(respBbody.Next)
 		fixQuery = parsedUrl.Query()
 		if parsedUrl.Query().Has("limit") && total > 0 {
-			limit, _ := strconv.Atoi(parsedUrl.Query().Get("limit"))
+			limit, _ = strconv.Atoi(parsedUrl.Query().Get("limit"))
 			limit = min(limit, total-len(images))
-			fixQuery.Set("limit", strconv.Itoa(limit))
 		}
 	}
 	return images, nil
