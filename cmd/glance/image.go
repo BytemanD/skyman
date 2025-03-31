@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/wxnacy/wgo/file"
 
+	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/common"
 	"github.com/BytemanD/skyman/openstack/model/glance"
@@ -123,19 +124,27 @@ var imageDelete = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient().GlanceV2()
 
-		for _, idOrName := range args {
-			image, err := c.FindImage(idOrName)
-			if err != nil {
-				utility.LogError(err, fmt.Sprintf("get image %v failed", idOrName), false)
-				continue
-			}
-			err = c.DeleteImage(image.Id)
-			if err != nil {
-				utility.LogError(err, fmt.Sprintf("delete image %s failed", idOrName), false)
-				continue
-			}
-			fmt.Printf("Requested to delete image %s\n", idOrName)
+		task := syncutils.TaskGroup{
+			Items:        args,
+			Title:        fmt.Sprintf("delete %d image(s)", len(args)),
+			ShowProgress: true,
+			Func: func(item any) error {
+				idOrName, _ := item.(string)
+				image, err := c.FindImage(idOrName)
+				if err != nil {
+					console.Error("get image %s failed: %s", idOrName, err)
+					return fmt.Errorf("get image %s failed", idOrName)
+				}
+				err = c.DeleteImage(image.Id)
+				if err != nil {
+					console.Error("get image %s failed: %s", idOrName, err)
+					return fmt.Errorf("delete image failed")
+				}
+				console.Info("Requested to delete image %s\n", idOrName)
+				return nil
+			},
 		}
+		task.Start()
 	},
 }
 
