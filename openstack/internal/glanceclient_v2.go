@@ -61,7 +61,7 @@ func (c GlanceV2) ListImage(query url.Values) ([]glance.Image, error) {
 }
 
 func (c GlanceV2) GetImage(id string) (*glance.Image, error) {
-	return GetResource[glance.Image](c.ServiceClient, URL_IMAGES.F(), "images")
+	return GetResource[glance.Image](c.ServiceClient, URL_IMAGE.F(id), "")
 }
 func (c GlanceV2) FoundByName(name string) (*glance.Image, error) {
 	images, err := c.ListImage(url.Values{"name": []string{name}})

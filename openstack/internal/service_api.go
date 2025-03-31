@@ -128,9 +128,15 @@ func QueryResource[T any](c *ServiceClient, u string, query url.Values, bodyKey 
 }
 
 func GetResource[T any](c *ServiceClient, u string, bodyKey string) (*T, error) {
-	result := map[string]*T{}
-	_, err := c.R().SetResult(&result).Get(u)
-	return result[bodyKey], err
+	if bodyKey == "" {
+		result := new(T)
+		_, err := c.R().SetResult(&result).Get(u)
+		return result, err
+	} else {
+		result := map[string]*T{}
+		_, err := c.R().SetResult(&result).Get(u)
+		return result[bodyKey], err
+	}
 }
 func DeleteResource(c *ServiceClient, u string, query ...url.Values) error {
 	_, err := DeleteResourceWithResp(c, u, query...)
