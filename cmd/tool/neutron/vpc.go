@@ -49,19 +49,19 @@ var vpcCreate = &cobra.Command{
 		ipVersions := strings.Split(ipVersion, ",")
 
 		// create router
-		routerParams := map[string]interface{}{"name": routerName}
+		routerParams := map[string]any{"name": routerName}
 		console.Info("create router %s", routerName)
 		router, err := c.CreateRouter(routerParams)
 		utility.LogIfError(err, true, "create router %s failed", routerName)
 		// create network
-		networkParams := map[string]interface{}{"name": networkName}
+		networkParams := map[string]any{"name": networkName}
 		console.Info("create network %s", networkName)
 		network, err := c.CreateNetwork(networkParams)
 		utility.LogIfError(err, true, "create network %s failed", networkParams)
 		// create router
 		for _, v := range ipVersions {
 			subneVerionName := fmt.Sprintf("%s-v%s", subnetName, v)
-			subnetParams := map[string]interface{}{
+			subnetParams := map[string]any{
 				"name":       subneVerionName,
 				"network_id": network.Id,
 				"ip_version": v,

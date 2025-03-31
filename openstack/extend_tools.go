@@ -52,7 +52,7 @@ func (o Openstack) PruneServers(query url.Values, yes bool, waitDeleted bool) {
 	tg := syncutils.TaskGroup{
 		Items: servers,
 		Title: fmt.Sprintf("delete %d server(s)", len(servers)),
-		Func: func(o interface{}) error {
+		Func: func(o any) error {
 			s := o.(nova.Server)
 			console.Info("delete %s", s.Id)
 			err := c.DeleteServer(s.Id)
@@ -115,7 +115,7 @@ func (o Openstack) PruneVolumes(query url.Values, matchName string, volumeType s
 		Items:        volumes,
 		Title:        fmt.Sprintf("delete %d server(s)", len(volumes)),
 		ShowProgress: true,
-		Func: func(i interface{}) error {
+		Func: func(i any) error {
 			volume := i.(cinder.Volume)
 			console.Debug("delete volume %s(%s)", volume.Id, volume.Name)
 			err := c.DeleteVolume(volume.Id, true, true)
@@ -146,7 +146,7 @@ func (o Openstack) PrunePorts(ports []neutron.Port) {
 		Title:        fmt.Sprintf("delete %d port(s)", len(ports)),
 		Items:        ports,
 		ShowProgress: true,
-		Func: func(i interface{}) error {
+		Func: func(i any) error {
 			port := i.(neutron.Port)
 			console.Debug("delete port %s(%s)", port.Id, port.Name)
 			err := c.DeletePort(port.Id)

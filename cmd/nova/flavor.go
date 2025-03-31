@@ -115,7 +115,7 @@ var flavorList = &cobra.Command{
 				{Name: "Id"}, {Name: "Name"},
 				{Name: "Vcpus", Align: text.AlignRight},
 				{Name: "Ram", Align: text.AlignRight,
-					RenderFunc: func(item nova.Flavor) interface{} { return item.HumanRam() },
+					RenderFunc: func(item nova.Flavor) any { return item.HumanRam() },
 				},
 				{Name: "Disk", Align: text.AlignRight},
 				{Name: "Ephemeral", Align: text.AlignRight},
@@ -124,7 +124,7 @@ var flavorList = &cobra.Command{
 			[]datatable.Column[nova.Flavor]{
 				{Name: "Swap"}, {Name: "RXTXFactor", Text: "RXTX Factor"},
 				{Name: "ExtraSpecs",
-					RenderFunc: func(item nova.Flavor) interface{} {
+					RenderFunc: func(item nova.Flavor) any {
 						return strings.Join(item.ExtraSpecs.GetList(), "\n")
 					},
 				},

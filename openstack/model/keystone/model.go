@@ -21,10 +21,10 @@ type Endpoint struct {
 }
 
 type Region struct {
-	Id             string      `json:"id,omitempty"`
-	ParentRegionId string      `json:"parent_region_id,omitempty"`
-	Description    string      `json:"description,omitempty"`
-	Links          interface{} `json:"links,omitempty"`
+	Id             string `json:"id,omitempty"`
+	ParentRegionId string `json:"parent_region_id,omitempty"`
+	Description    string `json:"description,omitempty"`
+	Links          any    `json:"links,omitempty"`
 }
 type Scope struct {
 	Project model.Project `json:"project,omitempty"`

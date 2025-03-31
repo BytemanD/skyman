@@ -26,20 +26,20 @@ func PrintServers(items []nova.Server, long bool, c *openstack.Openstack, sortDs
 		[]datatable.Column[nova.Server]{
 			{Name: "Id"}, {Name: "Name"},
 			{Name: "Status", AutoColor: true}, {Name: "TaskState"},
-			{Name: "PowerState", AutoColor: true, RenderFunc: func(item nova.Server) interface{} {
+			{Name: "PowerState", AutoColor: true, RenderFunc: func(item nova.Server) any {
 				return item.GetPowerState()
 			}},
-			{Name: "Addresses", Text: "Networks", WidthMax: 70, RenderFunc: func(item nova.Server) interface{} {
+			{Name: "Addresses", Text: "Networks", WidthMax: 70, RenderFunc: func(item nova.Server) any {
 				return strings.Join(item.GetNetworks(), "\n")
 			}},
 			{Name: "Host"},
 		},
 		[]datatable.Column[nova.Server]{
 			{Name: "AZ", Text: "AZ"}, {Name: "InstanceName"},
-			{Name: "Flavor", RenderFunc: func(p nova.Server) interface{} {
+			{Name: "Flavor", RenderFunc: func(p nova.Server) any {
 				return p.Flavor.OriginalName
 			}},
-			{Name: "Project", RenderFunc: func(p nova.Server) interface{} {
+			{Name: "Project", RenderFunc: func(p nova.Server) any {
 				if project, ok := projectMap[p.TenantId]; ok {
 					return project.Name
 				}
@@ -49,13 +49,13 @@ func PrintServers(items []nova.Server, long bool, c *openstack.Openstack, sortDs
 				}
 				return p.TenantId
 			}},
-			{Name: "Vcpus", RenderFunc: func(p nova.Server) interface{} {
+			{Name: "Vcpus", RenderFunc: func(p nova.Server) any {
 				return p.Flavor.Vcpus
 			}},
-			{Name: "Ram", RenderFunc: func(p nova.Server) interface{} {
+			{Name: "Ram", RenderFunc: func(p nova.Server) any {
 				return p.Flavor.Ram
 			}},
-			{Name: "Image", RenderFunc: func(p nova.Server) interface{} {
+			{Name: "Image", RenderFunc: func(p nova.Server) any {
 				imageId := p.ImageId()
 				if imageId == "" {
 					return ""
@@ -84,12 +84,12 @@ func PrintAggregates(items []nova.Aggregate, long bool) {
 			{Name: "Id"},
 			{Name: "Name"},
 			{Name: "AvailabilityZone"},
-			{Name: "HostNum", RenderFunc: func(item nova.Aggregate) interface{} {
+			{Name: "HostNum", RenderFunc: func(item nova.Aggregate) any {
 				return len(item.Hosts)
 			}},
 		},
 		[]datatable.Column[nova.Aggregate]{
-			{Name: "Metadata", RenderFunc: func(item nova.Aggregate) interface{} {
+			{Name: "Metadata", RenderFunc: func(item nova.Aggregate) any {
 				return item.MarshalMetadata()
 			}},
 		},
@@ -103,10 +103,10 @@ func PrintAggregate(item nova.Aggregate) {
 	PrintItem(
 		[]datatable.Field[nova.Aggregate]{
 			{Name: "Id"}, {Name: "Name"}, {Name: "AvailabilityZone"},
-			{Name: "Hosts", RenderFunc: func(item nova.Aggregate) interface{} {
+			{Name: "Hosts", RenderFunc: func(item nova.Aggregate) any {
 				return strings.Join(item.Hosts, "\n")
 			}},
-			{Name: "Metadata", RenderFunc: func(item nova.Aggregate) interface{} {
+			{Name: "Metadata", RenderFunc: func(item nova.Aggregate) any {
 
 				return item.MarshalMetadata()
 			}},
@@ -121,19 +121,19 @@ func PrintAggregate(item nova.Aggregate) {
 func PrintKeypair(item nova.Keypair) {
 	PrintItem(
 		[]datatable.Field[nova.Keypair]{
-			{Name: "Id", RenderFunc: func(item nova.Keypair) interface{} {
+			{Name: "Id", RenderFunc: func(item nova.Keypair) any {
 				return item.Keypair.Id
 			}},
-			{Name: "Name", RenderFunc: func(item nova.Keypair) interface{} {
+			{Name: "Name", RenderFunc: func(item nova.Keypair) any {
 				return item.Keypair.Name
 			}},
-			{Name: "Type", RenderFunc: func(item nova.Keypair) interface{} {
+			{Name: "Type", RenderFunc: func(item nova.Keypair) any {
 				return item.Keypair.Type
 			}},
-			{Name: "Fingerprint", RenderFunc: func(item nova.Keypair) interface{} {
+			{Name: "Fingerprint", RenderFunc: func(item nova.Keypair) any {
 				return item.Keypair.Fingerprint
 			}},
-			{Name: "UserId", RenderFunc: func(item nova.Keypair) interface{} {
+			{Name: "UserId", RenderFunc: func(item nova.Keypair) any {
 				return item.Keypair.UserId
 			}},
 		},
@@ -149,7 +149,7 @@ func PrintNetworks(items []neutron.Network, long bool) {
 			{Name: "Id"}, {Name: "Name"},
 			{Name: "Status", AutoColor: true},
 			{Name: "AdminStateUp", AutoColor: true},
-			{Name: "Subnets", RenderFunc: func(item neutron.Network) interface{} {
+			{Name: "Subnets", RenderFunc: func(item neutron.Network) any {
 				return strings.Join(item.Subnets, "\n")
 			}},
 		},
@@ -188,7 +188,7 @@ func PrintSubnets(items []neutron.Subnet, long bool) {
 		},
 		[]datatable.Column[neutron.Subnet]{
 			{Name: "EnableDhcp", Text: "Dhcp"},
-			{Name: "AllocationPools", RenderFunc: func(item neutron.Subnet) interface{} {
+			{Name: "AllocationPools", RenderFunc: func(item neutron.Subnet) any {
 				return strings.Join(item.GetAllocationPoolsList(), ",")
 			}},
 			{Name: "IpVersion"},
@@ -206,7 +206,7 @@ func PrintSubnet(item neutron.Subnet) {
 			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 			{Name: "NetworkId"}, {Name: "Cidr"}, {Name: "IpVersion"},
 			{Name: "EnableDhcp"},
-			{Name: "AllocationPools", RenderFunc: func(item neutron.Subnet) interface{} {
+			{Name: "AllocationPools", RenderFunc: func(item neutron.Subnet) any {
 				return strings.Join(item.GetAllocationPoolsList(), ",")
 			}},
 			{Name: "GatewayIp"}, {Name: "RevisionNumber"}, {Name: "HostRouters"},
@@ -243,7 +243,7 @@ func PrintRouter(item neutron.Router) {
 			{Name: "AvailabilityZoneHints"},
 			{Name: "AvailabilityZones"},
 			{Name: "Distributed"},
-			{Name: "ExternalGatewayInfo", RenderFunc: func(item neutron.Router) interface{} {
+			{Name: "ExternalGatewayInfo", RenderFunc: func(item neutron.Router) any {
 				return item.MarshalExternalGatewayInfo()
 			}},
 			{Name: "HA", Text: "Ha"},
@@ -265,7 +265,7 @@ func PrintPorts(items []neutron.Port, long bool) {
 			{Name: "BindingVnicType", Text: "VnicType"},
 			{Name: "BindingVifType", Text: "VifType"},
 			{Name: "MACAddress", Text: "MAC Address"},
-			{Name: "FixedIps", RenderFunc: func(item neutron.Port) interface{} {
+			{Name: "FixedIps", RenderFunc: func(item neutron.Port) any {
 				ips := []string{}
 				if !long {
 					for _, fixedIp := range item.FixedIps {
@@ -284,7 +284,7 @@ func PrintPorts(items []neutron.Port, long bool) {
 			{Name: "DeviceId"},
 			{Name: "TenantId"},
 			{Name: "BindingProfile"},
-			{Name: "SecurityGroups", RenderFunc: func(item neutron.Port) interface{} {
+			{Name: "SecurityGroups", RenderFunc: func(item neutron.Port) any {
 				return strings.Join(item.SecurityGroups, "\n")
 			}},
 		},
@@ -303,10 +303,10 @@ func PrintPort(item neutron.Port) {
 			{Name: "MACAddress", Text: "MAC Address"},
 			{Name: "BindingVnicType"},
 			{Name: "BindingVifType"},
-			{Name: "BindingProfile", RenderFunc: func(item neutron.Port) interface{} {
+			{Name: "BindingProfile", RenderFunc: func(item neutron.Port) any {
 				return item.MarshalBindingProfile()
 			}},
-			{Name: "BindingDetails", RenderFunc: func(item neutron.Port) interface{} {
+			{Name: "BindingDetails", RenderFunc: func(item neutron.Port) any {
 				return item.MarshalVifDetails()
 			}},
 			{Name: "BindingHostId"},
@@ -328,7 +328,7 @@ func PrintSecurityGroups(items []neutron.SecurityGroup, long bool) {
 			{Name: "Id"}, {Name: "Name"},
 			{Name: "ProjectId"},
 			{Name: "RevisionNumber"},
-			{Name: "Rules", RenderFunc: func(item neutron.SecurityGroup) interface{} {
+			{Name: "Rules", RenderFunc: func(item neutron.SecurityGroup) any {
 				rules := []string{}
 				for _, rule := range item.Rules {
 					rules = append(rules, rule.String())
@@ -352,7 +352,7 @@ func PrintSecurityGroup(item neutron.SecurityGroup) {
 			{Name: "RevisionNumber"},
 			{Name: "CreatedAt"},
 			{Name: "UpdatedAt"},
-			{Name: "Rules", RenderFunc: func(item neutron.SecurityGroup) interface{} {
+			{Name: "Rules", RenderFunc: func(item neutron.SecurityGroup) any {
 				rules := []string{}
 				for _, rule := range item.Rules {
 					rules = append(rules, rule.String())
@@ -371,7 +371,7 @@ func PrintSecurityGroupRules(items []neutron.SecurityGroupRule, long bool) {
 			{Name: "Id"},
 			{Name: "Protocol"},
 			{Name: "RemoteIpPrefix"},
-			{Name: "PortRange", RenderFunc: func(p neutron.SecurityGroupRule) interface{} {
+			{Name: "PortRange", RenderFunc: func(p neutron.SecurityGroupRule) any {
 				return p.PortRange()
 			}},
 			{Name: "RemoteGroupId"},
@@ -393,7 +393,7 @@ func PrintSecurityGroupRule(item neutron.SecurityGroupRule) {
 			{Name: "Direction"},
 			{Name: "Ethertype"},
 			{Name: "RemoteIpPrefix"},
-			{Name: "PortRange", RenderFunc: func(item neutron.SecurityGroupRule) interface{} {
+			{Name: "PortRange", RenderFunc: func(item neutron.SecurityGroupRule) any {
 				return item.PortRange()
 			}},
 			{Name: "RemoteGroupId"},
@@ -425,7 +425,7 @@ func PrintQosPolicy(item neutron.QosPolicy) {
 			{Name: "Description"},
 			{Name: "Shared"},
 			{Name: "ProjectId", Text: "Project"},
-			{Name: "Rules", RenderFunc: func(item neutron.QosPolicy) interface{} {
+			{Name: "Rules", RenderFunc: func(item neutron.QosPolicy) any {
 				bytes, _ := json.Marshal(item.Rules)
 				return string(bytes)
 			}},
@@ -456,7 +456,7 @@ func PrintQosPolicyRule(item neutron.QosRule) {
 			{Name: "Description"},
 			{Name: "Shared"},
 			{Name: "ProjectId", Text: "Project"},
-			{Name: "Rules", RenderFunc: func(item neutron.QosRule) interface{} {
+			{Name: "Rules", RenderFunc: func(item neutron.QosRule) any {
 				bytes, _ := json.Marshal(item)
 				return string(bytes)
 			}},
@@ -472,7 +472,7 @@ func PrintAgents(items []neutron.Agent, long bool) {
 			{Name: "Id"}, {Name: "AgentType"},
 			{Name: "Host"},
 			{Name: "AvailabilityZone", Align: text.AlignRight},
-			{Name: "Alive", AutoColor: true, RenderFunc: func(item neutron.Agent) interface{} {
+			{Name: "Alive", AutoColor: true, RenderFunc: func(item neutron.Agent) any {
 				return item.AliveEmoji()
 			}},
 			{Name: "AdminStateUp"},
@@ -492,7 +492,7 @@ func PrintImages(items []glance.Image, long bool) {
 			{Name: "Id"}, {Name: "Name"},
 			{Name: "Status", AutoColor: true},
 			{Name: "Size", Align: text.AlignRight,
-				RenderFunc: func(item glance.Image) interface{} {
+				RenderFunc: func(item glance.Image) any {
 					return item.HumanSize()
 				}},
 			{Name: "DiskFormat"}, {Name: "ContainerFormat"},
@@ -514,14 +514,14 @@ func PrintImage(item glance.Image, human bool) {
 			{Name: "DirectUrl"}, {Name: "Status"},
 			{Name: "ContainerFormat"}, {Name: "DiskFormat"},
 			{Name: "File"},
-			{Name: "Size", RenderFunc: func(item glance.Image) interface{} {
+			{Name: "Size", RenderFunc: func(item glance.Image) any {
 				if human {
 					return item.HumanSize()
 				} else {
 					return item.Size
 				}
 			}},
-			{Name: "Properties", RenderFunc: func(item glance.Image) interface{} {
+			{Name: "Properties", RenderFunc: func(item glance.Image) any {
 				return strings.Join(item.GetPropertyList(), "\n")
 			}},
 			{Name: "VirtualSize"}, {Name: "ProcessInfo"}, {Name: "Protected"},
@@ -600,7 +600,7 @@ func PrintEndpoints(items []keystone.Endpoint, long bool, serviceMap map[string]
 	PrintItems(
 		[]datatable.Column[keystone.Endpoint]{
 			{Name: "Id"}, {Name: "RegionId"},
-			{Name: "Service", RenderFunc: func(item keystone.Endpoint) interface{} {
+			{Name: "Service", RenderFunc: func(item keystone.Endpoint) any {
 				if serviceMap != nil {
 					if service, ok := serviceMap[item.ServiceId]; ok {
 						return service.NameOrId()
@@ -622,7 +622,7 @@ func PrintEndpoint(item keystone.Endpoint, serviceMap map[string]keystone.Servic
 	PrintItem(
 		[]datatable.Field[keystone.Endpoint]{
 			{Name: "Id"}, {Name: "RegionId"},
-			{Name: "Service", RenderFunc: func(item keystone.Endpoint) interface{} {
+			{Name: "Service", RenderFunc: func(item keystone.Endpoint) any {
 				if serviceMap != nil {
 					if service, ok := serviceMap[item.ServiceId]; ok {
 						return service.NameOrId()
@@ -722,7 +722,7 @@ func PrintVolumeTypes(items []cinder.VolumeType, long bool) {
 		},
 		[]datatable.Column[cinder.VolumeType]{
 			{Name: "Description"},
-			{Name: "ExtraSpecs", RenderFunc: func(item cinder.VolumeType) interface{} {
+			{Name: "ExtraSpecs", RenderFunc: func(item cinder.VolumeType) any {
 				return strings.Join(item.GetExtraSpecsList(), "\n")
 			}},
 		},
@@ -737,7 +737,7 @@ func PrintVolumeType(volumeType cinder.VolumeType) {
 			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 			{Name: "IsPublic"}, {Name: "IsEncrypted"},
 			{Name: "QosSpecsId"},
-			{Name: "ExtraSpecs", RenderFunc: func(item cinder.VolumeType) interface{} {
+			{Name: "ExtraSpecs", RenderFunc: func(item cinder.VolumeType) any {
 				return strings.Join(item.GetExtraSpecsList(), "\n")
 			}},
 		},
@@ -751,12 +751,12 @@ func PrintVolumes(items []cinder.Volume, long bool) {
 			{Name: "Id"}, {Name: "Name"}, {Name: "Status", AutoColor: true},
 			{Name: "Size", Align: text.AlignRight},
 			{Name: "Bootable"}, {Name: "VolumeType"},
-			{Name: "Attachments", RenderFunc: func(item cinder.Volume) interface{} {
+			{Name: "Attachments", RenderFunc: func(item cinder.Volume) any {
 				return strings.Join(item.GetAttachmentList(), "\n")
 			}},
 		},
 		[]datatable.Column[cinder.Volume]{
-			{Name: "Metadata", RenderFunc: func(item cinder.Volume) interface{} {
+			{Name: "Metadata", RenderFunc: func(item cinder.Volume) any {
 				return strings.Join(item.GetMetadataList(), "\n")
 			}},
 		},
@@ -769,16 +769,16 @@ func PrintVolume(volume cinder.Volume) {
 			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 			{Name: "Status"}, {Name: "TaskStatus"},
 			{Name: "Size"}, {Name: "Bootable"},
-			{Name: "Attachments", RenderFunc: func(item cinder.Volume) interface{} {
+			{Name: "Attachments", RenderFunc: func(item cinder.Volume) any {
 				return strings.Join(item.GetAttachmentList(), "\n")
 			}},
 			{Name: "VolumeType"},
-			{Name: "Metadata", RenderFunc: func(item cinder.Volume) interface{} {
+			{Name: "Metadata", RenderFunc: func(item cinder.Volume) any {
 				return strings.Join(item.GetMetadataList(), "\n")
 			}},
 			{Name: "AvailabilityZone"}, {Name: "Host"},
 			{Name: "Multiattach"}, {Name: "GroupId"}, {Name: "SourceVolid"},
-			{Name: "VolumeImageMetadata", RenderFunc: func(item cinder.Volume) interface{} {
+			{Name: "VolumeImageMetadata", RenderFunc: func(item cinder.Volume) any {
 				return strings.Join(item.GetImageMetadataList(), "\n")
 			}},
 			{Name: "CreatedAt"}, {Name: "UpdatedAt"},
@@ -810,7 +810,7 @@ func PrintSnapshot(snapshot cinder.Snapshot) {
 			{Name: "Status"},
 			{Name: "VolumeId"},
 			{Name: "Size"},
-			{Name: "Metadata", RenderFunc: func(p cinder.Snapshot) interface{} {
+			{Name: "Metadata", RenderFunc: func(p cinder.Snapshot) any {
 				if p.Metadata == nil {
 					return ""
 				}
@@ -849,7 +849,7 @@ func PrintBackup(backup cinder.Backup) {
 			{Name: "Status"},
 			{Name: "VolumeId"},
 			{Name: "Size"},
-			{Name: "Metadata", RenderFunc: func(p cinder.Backup) interface{} {
+			{Name: "Metadata", RenderFunc: func(p cinder.Backup) any {
 				if p.Metadata == nil {
 					return ""
 				}

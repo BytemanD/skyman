@@ -40,7 +40,7 @@ func (c NeutronV2) ListRouterByName(name string) ([]neutron.Router, error) {
 func (c NeutronV2) GetRouter(id string) (*neutron.Router, error) {
 	return GetResource[neutron.Router](c.ServiceClient, URL_ROUTER.F(id), ROUTER)
 }
-func (c NeutronV2) CreateRouter(params map[string]interface{}) (*neutron.Router, error) {
+func (c NeutronV2) CreateRouter(params map[string]any) (*neutron.Router, error) {
 	result := struct {
 		Router neutron.Router `json:"router"`
 	}{}
@@ -102,9 +102,9 @@ func (c NeutronV2) GetNetwork(id string) (*neutron.Network, error) {
 func (c NeutronV2) FindNetwork(idOrName string) (*neutron.Network, error) {
 	return QueryByIdOrName(idOrName, c.GetNetwork, c.ListNetwork)
 }
-func (c NeutronV2) CreateNetwork(params map[string]interface{}) (*neutron.Network, error) {
+func (c NeutronV2) CreateNetwork(params map[string]any) (*neutron.Network, error) {
 	body := struct{ Network neutron.Network }{}
-	if _, err := c.R().SetBody(map[string]interface{}{"network": params}).
+	if _, err := c.R().SetBody(map[string]any{"network": params}).
 		SetResult(&body).Post(URL_NETWORKS.F()); err != nil {
 		return nil, err
 	}
@@ -130,9 +130,9 @@ func (c NeutronV2) GetSubnet(id string) (*neutron.Subnet, error) {
 func (c NeutronV2) FindSubnet(idOrName string) (*neutron.Subnet, error) {
 	return QueryByIdOrName(idOrName, c.GetSubnet, c.ListSubnet)
 }
-func (c NeutronV2) CreateSubnet(params map[string]interface{}) (*neutron.Subnet, error) {
+func (c NeutronV2) CreateSubnet(params map[string]any) (*neutron.Subnet, error) {
 	body := struct{ Subnet neutron.Subnet }{}
-	if _, err := c.R().SetBody(map[string]interface{}{"subnet": params}).SetResult(&body).
+	if _, err := c.R().SetBody(map[string]any{"subnet": params}).SetResult(&body).
 		Post(URL_SUBNETS.F()); err != nil {
 		return nil, err
 	}
@@ -156,17 +156,17 @@ func (c NeutronV2) ListPortByDeviceId(deviceId string) (neutron.Ports, error) {
 func (c NeutronV2) GetPort(id string) (*neutron.Port, error) {
 	return GetResource[neutron.Port](c.ServiceClient, URL_PORT.F(id), PORT)
 }
-func (c NeutronV2) UpdatePort(id string, options map[string]interface{}) (*neutron.Port, error) {
+func (c NeutronV2) UpdatePort(id string, options map[string]any) (*neutron.Port, error) {
 	body := struct{ Port neutron.Port }{}
-	if _, err := c.R().SetBody(map[string]interface{}{"port": options}).
+	if _, err := c.R().SetBody(map[string]any{"port": options}).
 		SetResult(&body).Put(URL_PORT.F(id)); err != nil {
 		return nil, err
 	}
 	return &body.Port, nil
 }
-func (c NeutronV2) CreatePort(params map[string]interface{}) (*neutron.Port, error) {
+func (c NeutronV2) CreatePort(params map[string]any) (*neutron.Port, error) {
 	body := struct{ Port neutron.Port }{}
-	if _, err := c.R().SetBody(map[string]interface{}{"port": params}).SetResult(&body).
+	if _, err := c.R().SetBody(map[string]any{"port": params}).SetResult(&body).
 		Post(URL_PORTS.F()); err != nil {
 		return nil, err
 	}

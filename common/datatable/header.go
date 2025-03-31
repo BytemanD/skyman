@@ -11,8 +11,8 @@ type Column[T any] struct {
 	// 只有 Table.Style 等于 light 是才会生效
 	AutoColor  bool
 	ForceColor bool
-	RenderFunc func(item T) interface{}
-	SlotColumn func(item T, column Column[T]) interface{}
+	RenderFunc func(item T) any
+	SlotColumn func(item T, column Column[T]) any
 	SortMode   table.SortMode
 	Matchs     []string
 	Marshal    bool
@@ -26,8 +26,8 @@ type Field[T any] struct {
 	// 只有 Table.Style 等于 light 是才会生效
 	AutoColor  bool
 	ForceColor bool
-	RenderFunc func(item T) interface{}
-	SlotColumn func(item T, column Field[T]) interface{}
+	RenderFunc func(item T) any
+	SlotColumn func(item T, column Field[T]) any
 	SortMode   table.SortMode
 	// 模糊匹配
 	Matchs   []string

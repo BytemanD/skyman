@@ -13,7 +13,7 @@ import (
 	"github.com/samber/lo"
 )
 
-func GetStructTags(i interface{}) []string {
+func GetStructTags(i any) []string {
 	tags := []string{}
 	iType := reflect.TypeOf(i)
 	for i := 0; i < iType.NumField(); i++ {

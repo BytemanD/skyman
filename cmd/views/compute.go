@@ -23,38 +23,38 @@ func PrintServer(server nova.Server, client *openstack.Openstack) {
 			{Name: "Id"}, {Name: "Name"}, {Name: "Description"},
 			{Name: "Id"}, {Name: "InstanceName"},
 			{Name: "Flavor:original_name", Text: "Flavor:original_name",
-				Slot: func(item interface{}) interface{} {
+				Slot: func(item any) any {
 					p, _ := item.(nova.Server)
 					return p.Flavor.OriginalName
 				}},
 			{Name: "Flavor:ram", Text: "Flavor:ram",
-				Slot: func(item interface{}) interface{} {
+				Slot: func(item any) any {
 					p, _ := item.(nova.Server)
 					return p.Flavor.Ram
 				}},
 			{Name: "Flavor:vcpus", Text: "Flavor:vcpus",
-				Slot: func(item interface{}) interface{} {
+				Slot: func(item any) any {
 					p, _ := item.(nova.Server)
 					return p.Flavor.Vcpus
 				}},
 			{Name: "Flavor:disk", Text: "Flavor:disk",
-				Slot: func(item interface{}) interface{} {
+				Slot: func(item any) any {
 					p, _ := item.(nova.Server)
 					return p.Flavor.Disk
 				}},
 			{Name: "Flavor:swap", Text: "Flavor:swap",
-				Slot: func(item interface{}) interface{} {
+				Slot: func(item any) any {
 					p, _ := item.(nova.Server)
 					return p.Flavor.Swap
 				}},
 			{Name: "Flavor:extra_specs", Text: "Flavor:extra_specs",
-				Slot: func(item interface{}) interface{} {
+				Slot: func(item any) any {
 					p, _ := item.(nova.Server)
 					return p.GetFlavorExtraSpecsString()
 
 				}},
 			{Name: "Image",
-				Slot: func(item interface{}) interface{} {
+				Slot: func(item any) any {
 					p, _ := item.(nova.Server)
 					if p.ImageName() != "" {
 						return fmt.Sprintf("%s (%s)", p.ImageName(), p.ImageId())
@@ -65,7 +65,7 @@ func PrintServer(server nova.Server, client *openstack.Openstack) {
 			{Name: "AZ", Text: "AZ"}, {Name: "Host"}, {Name: "HypervisorHostname"},
 			{Name: "Status"}, {Name: "TaskState"}, {Name: "PowerState"},
 			{Name: "RootBdmType"}, {Name: "RootDeviceName"},
-			{Name: "SecurityGroups", Slot: func(item interface{}) interface{} {
+			{Name: "SecurityGroups", Slot: func(item any) any {
 				p := item.(nova.Server)
 				bytes, _ := json.Marshal(p.SecurityGroups)
 				return string(bytes)
@@ -74,22 +74,22 @@ func PrintServer(server nova.Server, client *openstack.Openstack) {
 			{Name: "Created"}, {Name: "LaunchedAt"}, {Name: "Updated"}, {Name: "TerminatedAt"},
 
 			{Name: "Fault:code", Text: "Fault:code",
-				Slot: func(item interface{}) interface{} {
+				Slot: func(item any) any {
 					p, _ := item.(nova.Server)
 					return p.Fault.Code
 				}},
 			{Name: "Fault:message", Text: "Fault:message",
-				Slot: func(item interface{}) interface{} {
+				Slot: func(item any) any {
 					p, _ := item.(nova.Server)
 					return p.Fault.Message
 				}},
 			{Name: "Fault:details", Text: "Fault:details",
-				Slot: func(item interface{}) interface{} {
+				Slot: func(item any) any {
 					p, _ := item.(nova.Server)
 					return p.Fault.Details
 				}},
 			{Name: "UserId"},
-			{Name: "TenantId", Text: "ProjectId", Slot: func(item interface{}) interface{} {
+			{Name: "TenantId", Text: "ProjectId", Slot: func(item any) any {
 				p, _ := item.(nova.Server)
 				if client != nil {
 					project, err := client.KeystoneV3().GetProject(p.TenantId)
@@ -114,21 +114,21 @@ func PrintFlavor(server nova.Flavor) {
 			{Name: "Vcpus"}, {Name: "Ram"}, {Name: "Disk"}, {Name: "Swap"},
 			{Name: "RXTXFactor", Text: "RXTXFactor"},
 			{Name: "OS-FLV-EXT-DATA:ephemeral", Text: "OS-FLV-EXT-DATA:ephemeral",
-				Slot: func(item interface{}) interface{} {
+				Slot: func(item any) any {
 					p, _ := item.(nova.Flavor)
 					return p.Ephemeral
 				}},
 			{Name: "os-flavor-access:is_public", Text: "os-flavor-access:is_public",
-				Slot: func(item interface{}) interface{} {
+				Slot: func(item any) any {
 					p, _ := item.(nova.Flavor)
 					return p.IsPublic
 				}},
 			{Name: "OS-FLV-DISABLED:disabled", Text: "OS-FLV-DISABLED:disabled",
-				Slot: func(item interface{}) interface{} {
+				Slot: func(item any) any {
 					p, _ := item.(nova.Flavor)
 					return p.Disabled
 				}},
-			{Name: "ExtraSpecs", Slot: func(item interface{}) interface{} {
+			{Name: "ExtraSpecs", Slot: func(item any) any {
 				p, _ := item.(nova.Flavor)
 				extraSpecs := p.ExtraSpecs.GetList()
 				sort.Strings(extraSpecs)
@@ -251,7 +251,7 @@ func PrintAzInfoYaml(azInfo []nova.AvailabilityZone) {
 	fmt.Println(yamlString)
 }
 
-func PrintServiceTable(item interface{}) {
+func PrintServiceTable(item any) {
 	pt := common.PrettyItemTable{
 		Item: item,
 		ShortFields: []common.Column{

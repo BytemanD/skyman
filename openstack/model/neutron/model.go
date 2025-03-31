@@ -17,15 +17,15 @@ type Route struct {
 }
 type Router struct {
 	model.Resource
-	AdminStateUp          bool                   `json:"admin_state_up,omitempty"`
-	Distributed           bool                   `json:"distributed,omitempty"`
-	HA                    bool                   `json:"ha,omitempty"`
-	Routes                []Route                `json:"routes,omitempty"`
-	RevsionNumber         int                    `json:"revision_number,omitempty"`
-	ExternalGatewayInfo   map[string]interface{} `json:"external_gateway_info,omitempty"`
-	AvailabilityZones     []string               `json:"availability_zones,omitempty"`
-	AvailabilityZoneHints []string               `json:"availability_zone_hints,omitempty"`
-	Tags                  []string               `json:"tags,omitempty"`
+	AdminStateUp          bool           `json:"admin_state_up,omitempty"`
+	Distributed           bool           `json:"distributed,omitempty"`
+	HA                    bool           `json:"ha,omitempty"`
+	Routes                []Route        `json:"routes,omitempty"`
+	RevsionNumber         int            `json:"revision_number,omitempty"`
+	ExternalGatewayInfo   map[string]any `json:"external_gateway_info,omitempty"`
+	AvailabilityZones     []string       `json:"availability_zones,omitempty"`
+	AvailabilityZoneHints []string       `json:"availability_zone_hints,omitempty"`
+	Tags                  []string       `json:"tags,omitempty"`
 }
 
 func (router Router) MarshalExternalGatewayInfo() string {
@@ -90,19 +90,19 @@ func (fixedIp FixedIp) String() string {
 
 type Port struct {
 	model.Resource
-	AdminStateUp    bool                   `json:"admin_state_up,omitempty"`
-	MACAddress      string                 `json:"mac_address"`
-	BindingHostId   string                 `json:"binding:host_id,omitempty"`
-	BindingVnicType string                 `json:"binding:vnic_type,omitempty"`
-	BindingVifType  string                 `json:"binding:vif_type,omitempty"`
-	BindingDetails  map[string]interface{} `json:"binding:vif_details,omitempty"`
-	BindingProfile  map[string]interface{} `json:"binding:profile,omitempty"`
-	QosPolicyId     string                 `json:"qos_policy_id,omitempty"`
-	FixedIps        []FixedIp              `json:"fixed_ips"`
-	DeviceOwner     string                 `json:"device_owner"`
-	DeviceId        string                 `json:"device_id"`
-	SecurityGroups  []string               `json:"security_groups"`
-	RevsionNumber   int                    `json:"revision_number"`
+	AdminStateUp    bool           `json:"admin_state_up,omitempty"`
+	MACAddress      string         `json:"mac_address"`
+	BindingHostId   string         `json:"binding:host_id,omitempty"`
+	BindingVnicType string         `json:"binding:vnic_type,omitempty"`
+	BindingVifType  string         `json:"binding:vif_type,omitempty"`
+	BindingDetails  map[string]any `json:"binding:vif_details,omitempty"`
+	BindingProfile  map[string]any `json:"binding:profile,omitempty"`
+	QosPolicyId     string         `json:"qos_policy_id,omitempty"`
+	FixedIps        []FixedIp      `json:"fixed_ips"`
+	DeviceOwner     string         `json:"device_owner"`
+	DeviceId        string         `json:"device_id"`
+	SecurityGroups  []string       `json:"security_groups"`
+	RevsionNumber   int            `json:"revision_number"`
 }
 type Agent struct {
 	model.Resource
@@ -151,7 +151,7 @@ func (port Port) MarshalBindingProfile() string {
 	return string(bytes)
 }
 func (port Port) VifDetailList() []string {
-	return lo.MapToSlice(port.BindingDetails, func(k string, v interface{}) string {
+	return lo.MapToSlice(port.BindingDetails, func(k string, v any) string {
 		return fmt.Sprintf("%s=%s", k, v)
 	})
 }

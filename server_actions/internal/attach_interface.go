@@ -23,7 +23,7 @@ func (t ServerAttachPort) Start() error {
 		return err
 	}
 	console.Info("[%s] creating port", t.Server.Id)
-	port, err := t.Client.NeutronV2().CreatePort(map[string]interface{}{
+	port, err := t.Client.NeutronV2().CreatePort(map[string]any{
 		"network_id": nextNetwork,
 	})
 	if err != nil {
@@ -161,7 +161,7 @@ func (t *ServerAttachHotPlug) Start() error {
 			return err
 		}
 		console.Info("[%s] creating port", t.Server.Id)
-		port, err := t.Client.NeutronV2().CreatePort(map[string]interface{}{
+		port, err := t.Client.NeutronV2().CreatePort(map[string]any{
 			"network_id": nextNetwork,
 		})
 		if err != nil {

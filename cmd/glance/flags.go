@@ -11,6 +11,7 @@ type ImageListFlags struct {
 	Name       *string
 	Human      *bool
 	Visibility *string
+	Status     *string
 
 	Total *uint
 	// page size

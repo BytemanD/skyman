@@ -26,18 +26,18 @@ var POWER_STATE = []string{
 }
 
 type Flavor struct {
-	Id           string      `json:"id,omitempty"`
-	Name         string      `json:"name,omitempty"`
-	OriginalName string      `json:"original_name,omitempty"`
-	Ram          int         `json:"ram,omitempty"`
-	Vcpus        int         `json:"vcpus,omitempty"`
-	Disk         int         `json:"disk"`
-	Swap         interface{} `json:"swap,omitempty"`
-	RXTXFactor   float32     `json:"rxtx_factor,omitempty"`
-	ExtraSpecs   ExtraSpecs  `json:"extra_specs,omitempty"`
-	IsPublic     bool        `json:"os-flavor-access:is_public,omitempty"`
-	Ephemeral    int         `json:"OS-FLV-DISABLED:ephemeral,omitempty"`
-	Disabled     bool        `json:"OS-FLV-DISABLED:disabled,omitempty"`
+	Id           string     `json:"id,omitempty"`
+	Name         string     `json:"name,omitempty"`
+	OriginalName string     `json:"original_name,omitempty"`
+	Ram          int        `json:"ram,omitempty"`
+	Vcpus        int        `json:"vcpus,omitempty"`
+	Disk         int        `json:"disk"`
+	Swap         any        `json:"swap,omitempty"`
+	RXTXFactor   float32    `json:"rxtx_factor,omitempty"`
+	ExtraSpecs   ExtraSpecs `json:"extra_specs,omitempty"`
+	IsPublic     bool       `json:"os-flavor-access:is_public,omitempty"`
+	Ephemeral    int        `json:"OS-FLV-DISABLED:ephemeral,omitempty"`
+	Disabled     bool       `json:"OS-FLV-DISABLED:disabled,omitempty"`
 }
 
 func (flavor Flavor) Marshal() string {
@@ -90,7 +90,7 @@ type Server struct {
 	HypervisorHostname string                  `json:"OS-EXT-SRV-ATTR:hypervisor_hostname,omitempty"`
 	AZ                 string                  `json:"OS-EXT-AZ:availability_zone,omitempty"`
 	Flavor             Flavor                  `json:"flavor,omitempty"`
-	Image              interface{}             `json:"image,omitempty"`
+	Image              any                     `json:"image,omitempty"`
 	Fault              Fault                   `json:"fault,omitempty"`
 	Addresses          map[string]AddressList  `json:"addresses,omitempty"`
 	InstanceName       string                  `json:"OS-EXT-SRV-ATTR:instance_name,omitempty"`
@@ -126,14 +126,14 @@ type ServersResp struct {
 }
 
 func (s Server) ImageId() string {
-	if p, ok := s.Image.(map[string]interface{}); ok {
+	if p, ok := s.Image.(map[string]any); ok {
 		return p["id"].(string)
 	}
 	return ""
 }
 
 func (s Server) ImageName() string {
-	if p, ok := s.Image.(map[string]interface{}); ok {
+	if p, ok := s.Image.(map[string]any); ok {
 		if p["name"] == nil {
 			return ""
 		} else if name, ok := p["name"].(string); ok {
@@ -233,28 +233,28 @@ type HypervisorServer struct {
 	UUID string `json:"uuid"`
 }
 type CpuInfo struct {
-	Arch     string                 `json:"arch"`
-	Model    string                 `json:"model"`
-	Vendor   string                 `json:"vendor"`
-	Features []string               `json:"Features"`
-	Topology map[string]interface{} `json:"topology"`
+	Arch     string         `json:"arch"`
+	Model    string         `json:"model"`
+	Vendor   string         `json:"vendor"`
+	Features []string       `json:"Features"`
+	Topology map[string]any `json:"topology"`
 }
 type Hypervisor struct {
 	model.Resource
-	Host               string                 `json:"host"`
-	HypervisorHostname string                 `json:"hypervisor_hostname"`
-	HostIp             string                 `json:"host_ip"`
-	Status             string                 `json:"status"`
-	State              string                 `json:"state"`
-	Type               string                 `json:"hypervisor_type"`
-	Version            int                    `json:"hypervisor_version"`
-	Uptime             string                 `json:"uptime"`
-	Vcpus              int                    `json:"vcpus"`
-	VcpusUsed          int                    `json:"vcpus_used"`
-	MemoryMB           int                    `json:"memory_mb"`
-	MemoryMBUsed       int                    `json:"memory_mb_used"`
-	ExtraResources     map[string]interface{} `json:"extra_resources"`
-	CpuInfo            CpuInfo                `json:"cpu_info"`
+	Host               string         `json:"host"`
+	HypervisorHostname string         `json:"hypervisor_hostname"`
+	HostIp             string         `json:"host_ip"`
+	Status             string         `json:"status"`
+	State              string         `json:"state"`
+	Type               string         `json:"hypervisor_type"`
+	Version            int            `json:"hypervisor_version"`
+	Uptime             string         `json:"uptime"`
+	Vcpus              int            `json:"vcpus"`
+	VcpusUsed          int            `json:"vcpus_used"`
+	MemoryMB           int            `json:"memory_mb"`
+	MemoryMBUsed       int            `json:"memory_mb_used"`
+	ExtraResources     map[string]any `json:"extra_resources"`
+	CpuInfo            CpuInfo        `json:"cpu_info"`
 
 	NumaNodes map[string]NumaNode
 	Servers   []HypervisorServer
@@ -393,7 +393,7 @@ func (hypervisor Hypervisor) NumaNodesBar() string {
 }
 func (hypervisor *Hypervisor) SetNumaNodes(data []byte) error {
 	dataMap := struct {
-		Hypervisor map[string]interface{}
+		Hypervisor map[string]any
 	}{}
 
 	if err := json.Unmarshal(data, &dataMap); err != nil {
@@ -608,14 +608,14 @@ func (agg Aggregate) MarshalMetadata() string {
 }
 
 type ServerGroup struct {
-	Id        string                 `json:"id"`
-	Name      string                 `json:"name"`
-	Policies  []string               `json:"policies"`
-	Custom    bool                   `json:"custom"`
-	Members   []string               `json:"members"`
-	Metadata  map[string]interface{} `json:"metadata"`
-	ProjectId string                 `json:"project_id"`
-	UserId    string                 `json:"user_id"`
+	Id        string         `json:"id"`
+	Name      string         `json:"name"`
+	Policies  []string       `json:"policies"`
+	Custom    bool           `json:"custom"`
+	Members   []string       `json:"members"`
+	Metadata  map[string]any `json:"metadata"`
+	ProjectId string         `json:"project_id"`
+	UserId    string         `json:"user_id"`
 }
 
 func (serverGroup ServerGroup) GetMetadataList() []string {

@@ -29,14 +29,14 @@ var CloudsCmd = &cobra.Command{
 		common.PrintItems(
 			[]datatable.Column[CloudView]{
 				{Name: "Name"},
-				{Name: "AuthUrl", RenderFunc: func(item CloudView) interface{} {
+				{Name: "AuthUrl", RenderFunc: func(item CloudView) any {
 					return item.Auth.AuthUrl
 				}},
 				{Name: "RegionName"},
-				{Name: "ProjectName", RenderFunc: func(item CloudView) interface{} {
+				{Name: "ProjectName", RenderFunc: func(item CloudView) any {
 					return item.Auth.ProjectName
 				}},
-				{Name: "Username", RenderFunc: func(item CloudView) interface{} {
+				{Name: "Username", RenderFunc: func(item CloudView) any {
 					return item.Auth.Username
 				}},
 			},

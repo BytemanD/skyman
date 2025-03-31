@@ -111,7 +111,7 @@ func (t DataTable[T]) renderItem(columns []Column[T], item T) table.Row {
 	row := table.Row{}
 	matched := true
 	for _, column := range columns {
-		var value interface{}
+		var value any
 		switch {
 		case column.RenderFunc != nil:
 			value = column.RenderFunc(item)

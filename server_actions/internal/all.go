@@ -164,7 +164,7 @@ func (t ServerActionTest) ServerMustNotError() error {
 }
 
 func (t ServerActionTest) CreateBlankVolume() (*cinder.Volume, error) {
-	options := map[string]interface{}{
+	options := map[string]any{
 		"size": t.Config.VolumeSize,
 	}
 	if t.Config.VolumeType != "" {

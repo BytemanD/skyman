@@ -42,10 +42,10 @@ type Image struct {
 	OSHashValue     string   `json:"os_hash_value,omitempty"`
 	Schema          string   `json:"schema,omitempty"`
 	File            string   `json:"file,omitempty"`
-	raw             map[string]interface{}
+	raw             map[string]any
 }
 
-func (img *Image) SetRaw(raw map[string]interface{}) {
+func (img *Image) SetRaw(raw map[string]any) {
 	img.raw = raw
 }
 
@@ -53,8 +53,8 @@ func (img Image) HumanSize() string {
 	return humanize.IBytes(uint64(img.Size))
 }
 
-func (img Image) GetProperties() map[string]interface{} {
-	proerties := map[string]interface{}{}
+func (img Image) GetProperties() map[string]any {
+	proerties := map[string]any{}
 	tags := append(utility.GetStructTags(img), utility.GetStructTags(img.Resource)...)
 
 	for k, v := range img.raw {
@@ -67,7 +67,7 @@ func (img Image) GetProperties() map[string]interface{} {
 	return proerties
 }
 func (img Image) GetPropertyList() []string {
-	return lo.MapToSlice(img.GetProperties(), func(k string, v interface{}) string {
+	return lo.MapToSlice(img.GetProperties(), func(k string, v any) string {
 		return fmt.Sprintf("%s=%s", k, v)
 	})
 }
@@ -86,7 +86,7 @@ type ImagesResp struct {
 }
 
 type AttributeOp struct {
-	Op    string      `json:"op"`
-	Path  string      `json:"path"`
-	Value interface{} `json:"value"`
+	Op    string `json:"op"`
+	Path  string `json:"path"`
+	Value any    `json:"value"`
 }

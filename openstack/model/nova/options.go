@@ -23,7 +23,7 @@ type ServerOpt struct {
 	Flavor               string                  `json:"flavorRef,omitempty"`
 	Image                string                  `json:"imageRef,omitempty"`
 	Name                 string                  `json:"name,omitempty"`
-	Networks             interface{}             `json:"networks,omitempty"`
+	Networks             any                     `json:"networks,omitempty"`
 	AvailabilityZone     string                  `json:"availability_zone,omitempty"`
 	BlockDeviceMappingV2 []BlockDeviceMappingV2  `json:"block_device_mapping_v2,omitempty"`
 	MinCount             uint16                  `json:"min_count"`
@@ -51,7 +51,7 @@ type RebuilOpt struct {
 	ImageId  string
 	Password string
 	Name     string
-	UserData interface{}
+	UserData any
 }
 
 type KeypairOpt struct {

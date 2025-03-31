@@ -61,7 +61,7 @@ var hypervisorList = &cobra.Command{
 		if *hypervisorListFlags.WithServers {
 			pt.StyleSeparateRows = true
 			pt.ShortColumns = append(pt.ShortColumns,
-				common.Column{Name: "servers", Slot: func(item interface{}) interface{} {
+				common.Column{Name: "servers", Slot: func(item any) any {
 					p, _ := item.(nova.Hypervisor)
 					hypervisorServers := []string{}
 					for _, s := range p.Servers {
@@ -93,33 +93,33 @@ var hypervisorShow = &cobra.Command{
 				{Name: "Vcpus"}, {Name: "VcpusUsed"},
 				{Name: "MemoryMB", Text: "Memory MB"},
 				{Name: "MemoryMBUsed", Text: "Memory Used MB"},
-				{Name: "ExtraResources", Slot: func(item interface{}) interface{} {
+				{Name: "ExtraResources", Slot: func(item any) any {
 					p, _ := item.(nova.Hypervisor)
 					return p.ExtraResourcesMarshal(true)
 				}},
 				{Name: "CpuInfoArch",
-					Slot: func(item interface{}) interface{} {
+					Slot: func(item any) any {
 						p, _ := item.(nova.Hypervisor)
 						return p.CpuInfo.Arch
 					}},
 				{Name: "CpuInfoModel",
-					Slot: func(item interface{}) interface{} {
+					Slot: func(item any) any {
 						p, _ := item.(nova.Hypervisor)
 						return p.CpuInfo.Model
 					}},
 				{Name: "CpuInfoVendor",
-					Slot: func(item interface{}) interface{} {
+					Slot: func(item any) any {
 						p, _ := item.(nova.Hypervisor)
 						return p.CpuInfo.Vendor
 					},
 				},
 				{Name: "CpuInfoFeature",
-					Slot: func(item interface{}) interface{} {
+					Slot: func(item any) any {
 						p, _ := item.(nova.Hypervisor)
 						return p.CpuInfo.Features
 					},
 				},
-				{Name: "NumaNodes", Slot: func(item interface{}) interface{} {
+				{Name: "NumaNodes", Slot: func(item any) any {
 					p, _ := item.(nova.Hypervisor)
 					if common.CONF.Format == common.FORMAT_TABLE_LIGHT {
 						return p.NumaNodesBar()

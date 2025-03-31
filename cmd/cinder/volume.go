@@ -95,7 +95,7 @@ var volumeCreate = &cobra.Command{
 		volumeType, _ := cmd.Flags().GetString("type")
 		multiattach, _ := cmd.Flags().GetBool("multiattach")
 
-		params := map[string]interface{}{"name": args[0]}
+		params := map[string]any{"name": args[0]}
 		if size > 0 {
 			params["size"] = size
 		}

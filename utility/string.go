@@ -32,7 +32,7 @@ func LogError(err error, message string, exit bool) {
 		os.Exit(1)
 	}
 }
-func LogIfError(err error, exit bool, format string, args ...interface{}) {
+func LogIfError(err error, exit bool, format string, args ...any) {
 	if err == nil {
 		return
 	}
@@ -68,7 +68,7 @@ func MatchPingResult(text string) []string {
 }
 
 func UnmarshalJsonKey(bytes []byte, key string, v any) error {
-	tmp := map[string]interface{}{}
+	tmp := map[string]any{}
 	if err := json.Unmarshal(bytes, &tmp); err != nil {
 		return err
 	}

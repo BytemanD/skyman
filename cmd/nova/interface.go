@@ -20,7 +20,7 @@ func printinterfaceAttachments(items []nova.InterfaceAttachment) {
 			{Name: "PortState", AutoColor: true},
 			{Name: "PortId"},
 			{Name: "NetId"},
-			{Name: "FixedIps", Text: "IP Addresses", Slot: func(item interface{}) interface{} {
+			{Name: "FixedIps", Text: "IP Addresses", Slot: func(item any) any {
 				attachment, _ := item.(nova.InterfaceAttachment)
 				return strings.Join(attachment.GetIpAddresses(), ", ")
 			}},

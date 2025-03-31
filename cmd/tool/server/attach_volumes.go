@@ -41,10 +41,10 @@ var attachVolume = &cobra.Command{
 			MaxWorker:    parallel,
 			Title:        fmt.Sprintf("create %d volume(s)", len(volumes)),
 			ShowProgress: true,
-			Func: func(item interface{}) error {
+			Func: func(item any) error {
 				p := item.(int)
 				name := fmt.Sprintf("skyman-volume-%d", p+1)
-				createOption := map[string]interface{}{
+				createOption := map[string]any{
 					"name": name, "size": size,
 				}
 				if volumeType != "" {
@@ -74,7 +74,7 @@ var attachVolume = &cobra.Command{
 			Title:        fmt.Sprintf("attach %d volume(s)", len(volumes)),
 			MaxWorker:    parallel,
 			ShowProgress: true,
-			Func: func(item interface{}) error {
+			Func: func(item any) error {
 				p := item.(Volume)
 				console.Debug("[volume: %s] attaching", p)
 				attachment, err := client.NovaV2().ServerAddVolume(server.Id, p.Id)

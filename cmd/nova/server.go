@@ -130,11 +130,11 @@ var serverList = &cobra.Command{
 			ShortColumns: []common.Column{
 				{Name: "Id"}, {Name: "Name", Sort: true}, {Name: "Status", AutoColor: true},
 				{Name: "TaskState"},
-				{Name: "PowerState", AutoColor: true, Slot: func(item interface{}) interface{} {
+				{Name: "PowerState", AutoColor: true, Slot: func(item any) any {
 					p, _ := (item).(nova.Server)
 					return p.GetPowerState()
 				}},
-				{Name: "Addresses", Text: "Networks", WidthMax: 70, Slot: func(item interface{}) interface{} {
+				{Name: "Addresses", Text: "Networks", WidthMax: 70, Slot: func(item any) any {
 					p, _ := (item).(nova.Server)
 					return strings.Join(p.GetNetworks(), "\n")
 				}},
@@ -142,11 +142,11 @@ var serverList = &cobra.Command{
 			},
 			LongColumns: []common.Column{
 				{Name: "AZ", Text: "AZ"}, {Name: "InstanceName"},
-				{Name: "Flavor", Slot: func(item interface{}) interface{} {
+				{Name: "Flavor", Slot: func(item any) any {
 					p, _ := (item).(nova.Server)
 					return p.Flavor.OriginalName
 				}},
-				{Name: "Project", Slot: func(item interface{}) interface{} {
+				{Name: "Project", Slot: func(item any) any {
 					p, _ := (item).(nova.Server)
 					if project, ok := projectMap[p.TenantId]; ok {
 						return project.Name
@@ -157,15 +157,15 @@ var serverList = &cobra.Command{
 					}
 					return p.TenantId
 				}},
-				{Name: "Vcpus", Slot: func(item interface{}) interface{} {
+				{Name: "Vcpus", Slot: func(item any) any {
 					p, _ := (item).(nova.Server)
 					return p.Flavor.Vcpus
 				}},
-				{Name: "Ram", Slot: func(item interface{}) interface{} {
+				{Name: "Ram", Slot: func(item any) any {
 					p, _ := (item).(nova.Server)
 					return p.Flavor.Ram
 				}},
-				{Name: "Image", Slot: func(item interface{}) interface{} {
+				{Name: "Image", Slot: func(item any) any {
 					p, _ := (item).(nova.Server)
 					imageId := p.ImageId()
 					if imageId == "" {
@@ -757,7 +757,7 @@ var serverSet = &cobra.Command{
 			serverPassword = getPasswordInput()
 		}
 
-		params := map[string]interface{}{}
+		params := map[string]any{}
 		if *setFlags.Name != "" {
 			params["name"] = *setFlags.Name
 		}

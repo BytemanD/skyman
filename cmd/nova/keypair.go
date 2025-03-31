@@ -36,15 +36,15 @@ var keypairList = &cobra.Command{
 		}
 		pt := common.PrettyTable{
 			ShortColumns: []common.Column{
-				{Name: "Name", Slot: func(item interface{}) interface{} {
+				{Name: "Name", Slot: func(item any) any {
 					p, _ := item.(nova.Keypair)
 					return p.Keypair.Name
 				}},
-				{Name: "Type", Slot: func(item interface{}) interface{} {
+				{Name: "Type", Slot: func(item any) any {
 					p, _ := item.(nova.Keypair)
 					return p.Keypair.Type
 				}},
-				{Name: "Fingerprint", Slot: func(item interface{}) interface{} {
+				{Name: "Fingerprint", Slot: func(item any) any {
 					p, _ := item.(nova.Keypair)
 					return p.Keypair.Fingerprint
 				}},

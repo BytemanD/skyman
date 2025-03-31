@@ -27,8 +27,8 @@ type Column struct {
 	// 只有 Table.Style 等于 light 是才会生效
 	AutoColor  bool
 	ForceColor bool
-	Slot       func(item interface{}) interface{}
-	SlotColumn func(item interface{}, column Column) interface{}
+	Slot       func(item any) any
+	SlotColumn func(item any, column Column) any
 	Sort       bool
 	SortMode   table.SortMode
 	Filters    []string
@@ -41,7 +41,7 @@ type PrettyTable struct {
 	Title             string
 	ShortColumns      []Column
 	LongColumns       []Column
-	Items             []interface{}
+	Items             []any
 	ColumnConfigs     []table.ColumnConfig
 	Style             string
 	StyleSeparateRows bool
@@ -65,7 +65,7 @@ func (pt *PrettyTable) AddDisplayFields(fields ...string) {
 		pt.DisplayFields = append(pt.DisplayFields, capColName)
 	}
 }
-func (pt *PrettyTable) AddItems(items interface{}) {
+func (pt *PrettyTable) AddItems(items any) {
 	value := reflect.ValueOf(items)
 	for i := 0; i < value.Len(); i++ {
 		if value.Index(i).Kind() == reflect.Ptr {
@@ -77,7 +77,7 @@ func (pt *PrettyTable) AddItems(items interface{}) {
 }
 func (pt *PrettyTable) CleanItems() {
 	if len(pt.Items) > 0 {
-		pt.Items = []interface{}{}
+		pt.Items = []any{}
 	}
 }
 func (pt *PrettyTable) SetStyleLight() {
@@ -187,7 +187,7 @@ func (pt PrettyTable) RenderToTable(long bool) string {
 		isFiltered := false
 		matchedCount := len(columns)
 		for _, column := range columns {
-			var value interface{}
+			var value any
 			if column.Slot != nil {
 				value = column.Slot(item)
 			} else if column.SlotColumn != nil {
@@ -255,7 +255,7 @@ func (pt PrettyTable) PrintYaml() string {
 type PrettyItemTable struct {
 	ShortFields     []Column
 	LongFields      []Column
-	Item            interface{}
+	Item            any
 	Title           string
 	Style           string
 	Number2WidthMax int
@@ -291,7 +291,7 @@ func (pt PrettyItemTable) Print(long bool) string {
 	reflectValue := reflect.ValueOf(pt.Item)
 	for _, field := range fields {
 		var (
-			fieldValue interface{}
+			fieldValue any
 			fieldLabel string
 		)
 		if field.Text == "" {

@@ -182,8 +182,8 @@ func (c NovaV2) ServerDeleteInterface(id, portId string) (*resty.Response, error
 
 // server actions
 
-func (c NovaV2) serverDoAction(action, id string, params interface{}, result ...interface{}) (*resty.Response, error) {
-	req := c.R().SetBody(map[string]interface{}{action: params})
+func (c NovaV2) serverDoAction(action, id string, params any, result ...any) (*resty.Response, error) {
+	req := c.R().SetBody(map[string]any{action: params})
 	if len(result) > 0 {
 		req.SetResult(result[0])
 	}
@@ -247,7 +247,7 @@ func (c NovaV2) ResizeRevert(id string) error {
 }
 
 func (c NovaV2) RebuildServer(id string, opt nova.RebuilOpt) error {
-	options := map[string]interface{}{}
+	options := map[string]any{}
 	if opt.ImageId != "" {
 		options["imageRef"] = opt.ImageId
 	}
@@ -266,7 +266,7 @@ func (c NovaV2) RebuildServer(id string, opt nova.RebuilOpt) error {
 	return err
 }
 func (c NovaV2) EvacuateServer(id string, password string, host string, force bool) error {
-	data := map[string]interface{}{}
+	data := map[string]any{}
 	if password != "" {
 		data["password"] = password
 	}
@@ -280,7 +280,7 @@ func (c NovaV2) EvacuateServer(id string, password string, host string, force bo
 	return err
 }
 func (c NovaV2) SetServerPassword(id string, password, user string) error {
-	data := map[string]interface{}{"adminPass": password}
+	data := map[string]any{"adminPass": password}
 	if user != "" {
 		data["userName"] = user
 	}
@@ -288,7 +288,7 @@ func (c NovaV2) SetServerPassword(id string, password, user string) error {
 	return err
 }
 func (c NovaV2) SetServerState(id string, active bool) error {
-	data := map[string]interface{}{}
+	data := map[string]any{}
 	if active {
 		data["state"] = "active"
 	} else {
@@ -299,7 +299,7 @@ func (c NovaV2) SetServerState(id string, active bool) error {
 }
 
 func (c NovaV2) GetServerConsoleLog(id string, length uint) (*nova.ConsoleLog, error) {
-	params := map[string]interface{}{}
+	params := map[string]any{}
 	if length != 0 {
 		params["length"] = length
 	}
@@ -311,7 +311,7 @@ func (c NovaV2) GetServerConsoleLog(id string, length uint) (*nova.ConsoleLog, e
 	return &result, nil
 }
 func (c NovaV2) getVNCConsole(id string, consoleType string) (*nova.Console, error) {
-	params := map[string]interface{}{"type": consoleType}
+	params := map[string]any{"type": consoleType}
 	result := map[string]*nova.Console{"console": {}}
 	_, err := c.serverDoAction("os-getVNCConsole", id, params, &result)
 	if err != nil {
@@ -320,8 +320,8 @@ func (c NovaV2) getVNCConsole(id string, consoleType string) (*nova.Console, err
 	return result["console"], nil
 }
 func (c NovaV2) getRemoteConsole(id string, protocol string, consoleType string) (*nova.Console, error) {
-	params := map[string]interface{}{
-		"remote_console": map[string]interface{}{
+	params := map[string]any{
+		"remote_console": map[string]any{
 			"protocol": protocol,
 			"type":     consoleType,
 		},
@@ -345,7 +345,7 @@ func (c NovaV2) GetServerConsoleUrl(id string, consoleType string) (*nova.Consol
 }
 
 func (c NovaV2) ServerMigrate(id string, host string) error {
-	data := map[string]interface{}{}
+	data := map[string]any{}
 	if host != "" {
 		server, err := c.GetServer(id)
 		if err != nil {
@@ -361,8 +361,8 @@ func (c NovaV2) ServerMigrate(id string, host string) error {
 	_, err := c.serverDoAction("migrate", id, data)
 	return err
 }
-func (c NovaV2) ServerLiveMigrate(id string, blockMigrate interface{}, host string) error {
-	data := map[string]interface{}{"block_migration": blockMigrate}
+func (c NovaV2) ServerLiveMigrate(id string, blockMigrate any, host string) error {
+	data := map[string]any{"block_migration": blockMigrate}
 	if host != "" {
 		server, err := c.GetServer(id)
 		if err != nil {
@@ -379,7 +379,7 @@ func (c NovaV2) ServerLiveMigrate(id string, blockMigrate interface{}, host stri
 	return err
 }
 func (c NovaV2) ServerRegionLiveMigrate(id string, destRegion string, blockMigrate bool, dryRun bool, destHost string) (*nova.RegionMigrateResp, error) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"region":          destRegion,
 		"block_migration": blockMigrate,
 		"dry_run":         dryRun,
@@ -411,18 +411,18 @@ func (c NovaV2) ServerCreateImage(id string, imagName string, metadata map[strin
 	return result.ImageId, nil
 }
 func (c NovaV2) ServerRename(id string, name string) error {
-	_, err := c.serverDoAction("rename", id, map[string]interface{}{"name": name})
+	_, err := c.serverDoAction("rename", id, map[string]any{"name": name})
 	return err
 }
 
 // server update api
 
-func (c NovaV2) SetServer(id string, params map[string]interface{}) error {
+func (c NovaV2) SetServer(id string, params map[string]any) error {
 	_, err := c.R().SetBody(ReqBody{"server": params}).Put(URL_SERVER.F(id))
 	return err
 }
 func (c NovaV2) ServerSetName(id string, name string) error {
-	return c.SetServer(id, map[string]interface{}{"name": name})
+	return c.SetServer(id, map[string]any{"name": name})
 }
 
 // server actions api
@@ -672,12 +672,12 @@ func (c NovaV2) GetByHostBinary(host string, binary string) (*nova.Service, erro
 	}
 }
 
-func (c NovaV2) doServiceAction(action string, params map[string]interface{}) error {
+func (c NovaV2) doServiceAction(action string, params map[string]any) error {
 	result := struct{ Service nova.Service }{}
 	_, err := c.R().SetResult(&result).SetBody(params).Put(URL_COMPUTE_SERVICE_ACTION.F(action))
 	return err
 }
-func (c NovaV2) update(id string, update map[string]interface{}) (*nova.Service, error) {
+func (c NovaV2) update(id string, update map[string]any) (*nova.Service, error) {
 	result := struct{ Service nova.Service }{}
 	_, err := c.R().SetBody(update).SetResult(&result).Put(URL_COMPUTE_SERVICE.F(id))
 	if err != nil {
@@ -691,9 +691,9 @@ func (c NovaV2) UpService(host string, binary string) (*nova.Service, error) {
 		if err != nil {
 			return nil, err
 		}
-		return c.update(service.Id, map[string]interface{}{"forced_down": false})
+		return c.update(service.Id, map[string]any{"forced_down": false})
 	}
-	err := c.doServiceAction("force-down", map[string]interface{}{
+	err := c.doServiceAction("force-down", map[string]any{
 		"host": host, "binary": binary, "forced_down": false,
 	})
 	if err != nil {
@@ -708,9 +708,9 @@ func (c NovaV2) DownService(host string, binary string) (*nova.Service, error) {
 		if err != nil {
 			return nil, err
 		}
-		return c.update(service.Id, map[string]interface{}{"forced_down": true})
+		return c.update(service.Id, map[string]any{"forced_down": true})
 	}
-	err := c.doServiceAction("force-down", map[string]interface{}{
+	err := c.doServiceAction("force-down", map[string]any{
 		"host": host, "binary": binary, "forced_down": true,
 	})
 	if err != nil {
@@ -725,9 +725,9 @@ func (c NovaV2) EnableService(host string, binary string) (*nova.Service, error)
 		if err != nil {
 			return nil, err
 		}
-		return c.update(service.Id, map[string]interface{}{"status": "enabled"})
+		return c.update(service.Id, map[string]any{"status": "enabled"})
 	}
-	err := c.doServiceAction("enable", map[string]interface{}{
+	err := c.doServiceAction("enable", map[string]any{
 		"host": host, "binary": binary, "status": "enabled",
 	})
 	if err != nil {
@@ -742,13 +742,13 @@ func (c NovaV2) DisableService(host string, binary string, reason string) (*nova
 		if err != nil {
 			return nil, err
 		}
-		body := map[string]interface{}{"status": "disabled"}
+		body := map[string]any{"status": "disabled"}
 		if reason != "" {
 			body["disabled_reason"] = reason
 		}
 		return c.update(service.Id, body)
 	}
-	err := c.doServiceAction("disable", map[string]interface{}{
+	err := c.doServiceAction("disable", map[string]any{
 		"host": host, "binary": binary, "status": "disabled",
 	})
 	if err != nil {

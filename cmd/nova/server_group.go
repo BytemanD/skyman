@@ -33,18 +33,18 @@ var groupList = &cobra.Command{
 			ShortColumns: []common.Column{
 				{Name: "Id"},
 				{Name: "Name", Sort: true},
-				{Name: "Policies", Slot: func(item interface{}) interface{} {
+				{Name: "Policies", Slot: func(item any) any {
 					p, _ := item.(nova.ServerGroup)
 					return strings.Join(p.Policies, "\n")
 				}},
 			},
 			LongColumns: []common.Column{
 				{Name: "Custom"},
-				{Name: "Members", Slot: func(item interface{}) interface{} {
+				{Name: "Members", Slot: func(item any) any {
 					p, _ := item.(nova.ServerGroup)
 					return strings.Join(p.Members, "\n")
 				}},
-				{Name: "Metadata", Slot: func(item interface{}) interface{} {
+				{Name: "Metadata", Slot: func(item any) any {
 					p, _ := item.(nova.ServerGroup)
 					return strings.Join(p.GetMetadataList(), "\n")
 				}},

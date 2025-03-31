@@ -63,11 +63,11 @@ var attachInterfaces = &cobra.Command{
 				MaxWorker:    parallel,
 				Title:        fmt.Sprintf("create %d port(s)", len(nets)),
 				ShowProgress: true,
-				Func: func(item interface{}) error {
+				Func: func(item any) error {
 					p := item.(int)
 					name := fmt.Sprintf("skyman-port-%d", p+1)
 					console.Debug("creating port %s", name)
-					options := map[string]interface{}{
+					options := map[string]any{
 						"name": name, "network_id": nets[p],
 					}
 					if securityGroup != nil {
@@ -102,7 +102,7 @@ var attachInterfaces = &cobra.Command{
 			MaxWorker:    parallel,
 			Title:        fmt.Sprintf("attach %d port(s)", len(interfaces)),
 			ShowProgress: true,
-			Func: func(item interface{}) error {
+			Func: func(item any) error {
 				p := item.(Interface)
 				attachment, err := client.NovaV2().ServerAddInterface(server.Id, p.NetId, p.PortId)
 				if err != nil {
@@ -117,7 +117,7 @@ var attachInterfaces = &cobra.Command{
 						console.Info("[interface: %s] update port security group to %s(%s)", port.Id, sg, securityGroup.Id)
 						_, err = client.NeutronV2().UpdatePort(
 							port.Id,
-							map[string]interface{}{"security_groups": []string{securityGroup.Id}},
+							map[string]any{"security_groups": []string{securityGroup.Id}},
 						)
 						utility.LogIfError(err, true, "[interface: %s]update port security group failed", port.Id)
 					}

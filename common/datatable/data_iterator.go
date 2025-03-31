@@ -102,7 +102,7 @@ func (t DataIterator[T]) renderItem(item T, fields []Field[T]) string {
 			fieldText = splitTitle(field.Name)
 		}
 
-		var fieldValue interface{}
+		var fieldValue any
 		switch {
 		case field.RenderFunc != nil:
 			fieldValue = field.RenderFunc(item)

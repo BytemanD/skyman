@@ -42,6 +42,9 @@ var ImageList = &cobra.Command{
 		if *imageListFlags.Limit != 0 {
 			query.Set("limit", fmt.Sprintf("%d", *imageListFlags.Limit))
 		}
+		if *imageListFlags.Status != "" {
+			query.Set("status", *imageListFlags.Status)
+		}
 
 		c := common.DefaultClient().GlanceV2()
 		images, err := c.ListWithTotal(query, int(*imageListFlags.Total))
@@ -177,7 +180,7 @@ var imageSet = &cobra.Command{
 
 		image, err := c.FindImage(args[0])
 		utility.LogError(err, "Get image failed", true)
-		params := map[string]interface{}{}
+		params := map[string]any{}
 
 		if *imageSetFlags.Name != "" {
 			params["name"] = *imageSetFlags.Name
@@ -219,7 +222,8 @@ func init() {
 		Name:       ImageList.Flags().StringP("name", "n", "", "Search by image name"),
 		Limit:      ImageList.Flags().Uint("limit", 0, "Number of images to request in each paginated request"),
 		Total:      ImageList.Flags().Uint("total", 0, "Maximum number of images to get"),
-		Visibility: ImageList.Flags().String("visibility", "", "The visibility of the images to display."),
+		Visibility: ImageList.Flags().String("visibility", "", "The visibility of the images to get."),
+		Status:     ImageList.Flags().String("status", "", "The status of the images to get."),
 		Long:       ImageList.Flags().BoolP("long", "l", false, "List additional fields in output"),
 	}
 

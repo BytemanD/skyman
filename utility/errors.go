@@ -47,30 +47,30 @@ func (e ImageNotActive) Error() string {
 func (e ServerNotBooted) Error() string {
 	return fmt.Sprintf("server %s is not booted", e.Args...)
 }
-func NewActionNotFinishedError(args ...interface{}) ActionNotFinishedError {
+func NewActionNotFinishedError(args ...any) ActionNotFinishedError {
 	return ActionNotFinishedError{Args: args}
 }
 func NewGuestNoIpaddressError() GuestNoIpaddressError {
 	return GuestNoIpaddressError{}
 }
 func NewVolumeHasTaskError(volumeId string) VolumeHasTaskError {
-	return VolumeHasTaskError{Args: []interface{}{volumeId}}
+	return VolumeHasTaskError{Args: []any{volumeId}}
 }
 func NewGuestHasNoIpaddressError(ipAddress []string) GuestHasNoIpaddressError {
-	return GuestHasNoIpaddressError{Args: []interface{}{strings.Join(ipAddress, ", ")}}
+	return GuestHasNoIpaddressError{Args: []any{strings.Join(ipAddress, ", ")}}
 }
 func NewPingLossPackage(lossed int) PingLossPackage {
-	return PingLossPackage{Args: []interface{}{lossed}}
+	return PingLossPackage{Args: []any{lossed}}
 }
 func NewServerNotStopped(serverId string) ServerNotStopped {
-	return ServerNotStopped{Args: []interface{}{serverId}}
+	return ServerNotStopped{Args: []any{serverId}}
 }
 func NewSnapshotIsNotAvailable(snapshotId string) SnapshotIsNotAvailable {
-	return SnapshotIsNotAvailable{Args: []interface{}{snapshotId}}
+	return SnapshotIsNotAvailable{Args: []any{snapshotId}}
 }
 func NewServerNotBootedError(serverId string) ServerNotBooted {
-	return ServerNotBooted{Args: []interface{}{serverId}}
+	return ServerNotBooted{Args: []any{serverId}}
 }
 func NewImageNotActiveError(imageId string) ImageNotActive {
-	return ImageNotActive{Args: []interface{}{imageId}}
+	return ImageNotActive{Args: []any{imageId}}
 }

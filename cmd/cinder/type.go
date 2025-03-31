@@ -69,7 +69,7 @@ var typeList = &cobra.Command{
 			},
 			LongColumns: []common.Column{
 				{Name: "Description"},
-				{Name: "ExtraSpecs", Slot: func(item interface{}) interface{} {
+				{Name: "ExtraSpecs", Slot: func(item any) any {
 					obj, _ := (item).(cinder.VolumeType)
 					return strings.Join(obj.GetExtraSpecsList(), "\n")
 				}},
@@ -129,7 +129,7 @@ var typeCreate = &cobra.Command{
 		private, _ := cmd.Flags().GetBool("private")
 		properties, _ := cmd.Flags().GetStringArray("property")
 
-		params := map[string]interface{}{
+		params := map[string]any{
 			"name": args[0],
 		}
 		if public {
@@ -141,7 +141,7 @@ var typeCreate = &cobra.Command{
 			params["os-volume-type-access:is_public"] = false
 		}
 		if len(properties) > 0 {
-			extraSpecs := map[string]interface{}{}
+			extraSpecs := map[string]any{}
 			for _, property := range properties {
 				kv, _ := common.SplitKeyValue(property)
 				extraSpecs[kv[0]] = kv[1]

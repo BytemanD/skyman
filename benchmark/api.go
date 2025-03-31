@@ -38,7 +38,7 @@ func RunBenchmarkTest(cases []ServerShow) []BenchmarkResult {
 		Title:        fmt.Sprintf("test %d case(s)", len(cases)),
 		ShowProgress: true,
 		MaxWorker:    len(cases),
-		Func: func(item interface{}) error {
+		Func: func(item any) error {
 			p, _ := item.(ServerShow)
 			result := BenchmarkResult{Start: time.Now()}
 			if err := p.PreStart(); err != nil {

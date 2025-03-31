@@ -45,7 +45,7 @@ var detachInterfaces = &cobra.Command{
 			MaxWorker:    parallel,
 			Title:        fmt.Sprintf("detach %d interface(s)", len(interfaces)),
 			ShowProgress: true,
-			Func: func(item interface{}) error {
+			Func: func(item any) error {
 				p := item.(nova.InterfaceAttachment)
 				console.Info("[interface: %s] detaching", p.PortId)
 				err := client.NovaV2().DeleteServerInterfaceAndWait(server.Id, p.PortId, time.Minute*5)

@@ -71,7 +71,7 @@ var routerCreate = &cobra.Command{
 		// name, _ := cmd.Flags().GetString("name")
 		disable, _ := cmd.Flags().GetBool("disable")
 		description, _ := cmd.Flags().GetString("description")
-		params := map[string]interface{}{
+		params := map[string]any{
 			"name": args[0],
 		}
 		if disable {

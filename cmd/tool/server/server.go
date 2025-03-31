@@ -310,7 +310,7 @@ var serverClone = &cobra.Command{
 			}
 
 		} else {
-			if image, ok := server.Image.(map[string]interface{}); !ok {
+			if image, ok := server.Image.(map[string]any); !ok {
 				console.Error("parse server image failed, image: %v", image)
 				createOpt.Image = fmt.Sprintf("%s", image["id"])
 			}

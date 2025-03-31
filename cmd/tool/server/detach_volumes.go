@@ -63,7 +63,7 @@ var detachVolumes = &cobra.Command{
 			Items:        detachVolumes,
 			MaxWorker:    parallel,
 			ShowProgress: true,
-			Func: func(item interface{}) error {
+			Func: func(item any) error {
 				p := item.(string)
 				console.Info("[volume: %s] request to detach", p)
 				err := client.NovaV2().DeleteServerVolumeAndWait(server.Id, p, 600)
@@ -84,7 +84,7 @@ var detachVolumes = &cobra.Command{
 			Items:        detachVolumes,
 			MaxWorker:    parallel,
 			ShowProgress: true,
-			Func: func(item interface{}) error {
+			Func: func(item any) error {
 				p := item.(string)
 				console.Debug("[volume: %s] deleting", p)
 				err := cinderClient.DeleteVolume(p, true, true)

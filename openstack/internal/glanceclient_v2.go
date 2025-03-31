@@ -35,7 +35,7 @@ func (c GlanceV2) ListWithTotal(query url.Values, total int) ([]glance.Image, er
 	images := []glance.Image{}
 	for {
 		fixQuery.Set("limit", strconv.Itoa(limit))
-		console.Info("query params: %s", fixQuery.Encode())
+		console.Debug("query params: %s", fixQuery.Encode())
 		respBbody := glance.ImagesResp{}
 		_, err := c.R().SetQueryParamsFromValues(fixQuery).SetResult(&respBbody).Get(URL_IMAGES.F())
 		if err != nil {
@@ -89,7 +89,7 @@ func (c GlanceV2) CreateImage(options glance.Image) (*glance.Image, error) {
 	return &respBody, err
 
 }
-func (c GlanceV2) UpdateImage(id string, params map[string]interface{}) (*glance.Image, error) {
+func (c GlanceV2) UpdateImage(id string, params map[string]any) (*glance.Image, error) {
 	attributies := []glance.AttributeOp{}
 	for k, v := range params {
 		attributies = append(attributies, glance.AttributeOp{
@@ -107,7 +107,7 @@ func (c GlanceV2) UpdateImage(id string, params map[string]interface{}) (*glance
 	if err != nil {
 		return nil, err
 	}
-	rawBody := map[string]interface{}{}
+	rawBody := map[string]any{}
 	if err := json.Unmarshal(resp.Body(), &rawBody); err != nil {
 		return nil, err
 	}

@@ -50,20 +50,20 @@ func listServerActionsWithSpend(serverId string, actionName string, requestId st
 
 	pt := common.PrettyTable{
 		ShortColumns: []common.Column{
-			{Name: "Name", Slot: func(item interface{}) interface{} {
+			{Name: "Name", Slot: func(item any) any {
 				p, _ := (item).(nova.InstanceAction)
 				return p.Action
 			}},
-			{Name: "RequestId", Slot: func(item interface{}) interface{} {
+			{Name: "RequestId", Slot: func(item any) any {
 				p, _ := (item).(nova.InstanceAction)
 				return p.RequestId
 			}},
-			{Name: "StartTime", Slot: func(item interface{}) interface{} {
+			{Name: "StartTime", Slot: func(item any) any {
 				p, _ := item.(nova.InstanceAction)
 				return p.StartTime
 			}},
 			{Name: "SpendTime", Text: "Spend time (seconds)",
-				Slot: func(item interface{}) interface{} {
+				Slot: func(item any) any {
 					p, _ := (item).(nova.InstanceAction)
 					spendTime, err := p.GetSpendTime()
 					if err != nil {
@@ -83,7 +83,7 @@ func listServerActionsWithSpend(serverId string, actionName string, requestId st
 			pt.LongColumns = append(pt.LongColumns,
 				common.Column{
 					Name: event.Event,
-					SlotColumn: func(item interface{}, column common.Column) interface{} {
+					SlotColumn: func(item any, column common.Column) any {
 						p, _ := (item).(nova.InstanceAction)
 						for _, e := range p.Events {
 							if e.Event == column.Name {

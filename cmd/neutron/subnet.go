@@ -45,7 +45,7 @@ var subnetCreate = &cobra.Command{
 		network, err := c.FindNetwork(netIdOrName)
 		utility.LogError(err, "get network failed", true)
 
-		subnet, err := c.CreateSubnet(map[string]interface{}{
+		subnet, err := c.CreateSubnet(map[string]any{
 			"name":        args[0],
 			"cidr":        cidr,
 			"network_id":  network.Id,

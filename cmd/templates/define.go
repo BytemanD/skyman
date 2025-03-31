@@ -56,7 +56,7 @@ func createNetwork(client *openstack.Openstack, network Network) {
 		console.Warn("network %s exists", network.Name)
 		return
 	}
-	netParams := map[string]interface{}{
+	netParams := map[string]any{
 		"name": network.Name,
 	}
 	console.Info("creating network %s", network.Name)
@@ -66,7 +66,7 @@ func createNetwork(client *openstack.Openstack, network Network) {
 		if subnet.IpVersion == 0 {
 			subnet.IpVersion = 4
 		}
-		subnetParams := map[string]interface{}{
+		subnetParams := map[string]any{
 			"name":       subnet.Name,
 			"network_id": net.Id,
 			"cidr":       subnet.Cidr,

@@ -13,13 +13,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func GetYaml(v interface{}) (string, error) {
+func GetYaml(v any) (string, error) {
 	jsonString, err := stringutils.JsonDumpsIndent(v)
 	if err != nil {
 		return "", nil
 	}
 	bytes := []byte(jsonString)
-	var out interface{}
+	var out any
 	yaml.Unmarshal(bytes, &out)
 	yamlBytes, err := yaml.Marshal(out)
 	if err != nil {
@@ -43,7 +43,7 @@ func RegistryLongFlag(cmd ...*cobra.Command) {
 	}
 }
 
-func MarshalModel(obj interface{}, indent bool) string {
+func MarshalModel(obj any, indent bool) string {
 	var m []byte
 	if indent {
 		m, _ = json.MarshalIndent(obj, "", "  ")
