@@ -1,6 +1,7 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/BytemanD/go-console/console"
@@ -34,11 +35,15 @@ type ConfGroup struct {
 	RetryWaitTimeSecond int    `yaml:"retryWaitTimeSecond"`
 }
 
-func LoadConfig(configFile string) error {
-	if err := openstack.LoadConfig(configFile); err != nil {
-		return err
+var ErrInvalidConf = errors.New("invalid format in config file")
+
+func LoadConfig(configFile string) (err error) {
+	if err = openstack.LoadConfig(configFile); err != nil {
+		return
 	}
-	viper.Unmarshal(&CONF)
+	if err = viper.Unmarshal(&CONF); err != nil {
+		return fmt.Errorf("unmarshal config file failed: %w", err)
+	}
 
 	i18n.InitLocalizer(CONF.Language)
 	if CONF.BarChar != "" {

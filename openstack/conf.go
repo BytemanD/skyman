@@ -1,6 +1,8 @@
 package openstack
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"path"
 
@@ -55,7 +57,7 @@ type NeutronConf struct {
 	Endpoint string `yaml:"endpoint"`
 }
 
-func LoadConfig(file ...string) error {
+func LoadConfig(file ...string) (err error) {
 	viper.SetConfigType("yaml")
 	if len(file) > 0 && file[0] != "" {
 		viper.SetConfigFile(file[0])
@@ -66,17 +68,21 @@ func LoadConfig(file ...string) error {
 			userConfDir = path.Join(userConfDir, "skyman")
 		}
 		confDirs := []string{".", userConfDir, path.Join("/etc", "skyman")}
-
 		for _, p := range confDirs {
 			if p != "" {
 				viper.AddConfigPath(p)
 			}
 		}
 	}
-	if err := viper.ReadInConfig(); err != nil {
+	if err = viper.ReadInConfig(); err != nil {
+		if errors.As(err, &viper.ConfigFileNotFoundError{}) {
+			return nil
+		}
 		return err
 	}
-	viper.Unmarshal(&CONF)
+	if err = viper.Unmarshal(&CONF); err != nil {
+		return fmt.Errorf("unmarshal config file failed: %w", err)
+	}
 	return nil
 }
 

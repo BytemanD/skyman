@@ -125,7 +125,10 @@ func main() {
 		Version: getVersion(),
 		PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 			conf, _ := cmd.Flags().GetString("conf")
-			common.LoadConfig(conf)
+			if err := common.LoadConfig(conf); err != nil {
+				console.Error("load config file failed: %s", err)
+				os.Exit(1)
+			}
 			if viper.ConfigFileUsed() == "" {
 				console.Debug("配置文件查找失败")
 			} else {
