@@ -52,15 +52,15 @@ Use "skyman [command] --help" for more information about a command.
 
 1. 直接使用二进制文件
    
-   - 先拷贝 skyman 文件到节点任意目录下
+   - 拷贝 skyman 文件到节点任意目录下
    
-   - 然后增加执行权限:`chmod u+x skyman` 
+   - 增加执行权限:`chmod u+x skyman` 
    
    - 导入 openstack 环境变量后，执行 ./skyman 命令
 
 2. 安装rpm 包
    
-   - 先安装rpm包： rpm -iUvh dist/skyman-<版本>-1.x86_64.rpm
+   - 安装rpm包：`rpm -iUvh dist/skyman-<版本>-1.x86_64.rpm`
    
    - 导入 openstack 环境变量后，执行 skyman 命令
      

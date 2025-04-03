@@ -156,12 +156,8 @@ func (reports IperfReports) PrintBps() {
 	})
 	rowConfigAutoMerge := table.RowConfig{AutoMerge: true}
 	tableWriter.AppendHeader(
-		table.Row{"Client -> Server", "Bandwidth", "Bandwidth"},
+		table.Row{"Client -> Server", "Sender BPS", "Receiver BPS"},
 		rowConfigAutoMerge,
-	)
-	tableWriter.AppendHeader(
-		table.Row{"", "Sender", "Receiver"},
-		rowConfigAutoMerge, rowConfigAutoMerge, rowConfigAutoMerge,
 	)
 
 	console.Debug("reports %v", reports.Reports)
@@ -201,11 +197,7 @@ func (reports IperfReports) PrintPps() {
 	})
 	rowConfigAutoMerge := table.RowConfig{AutoMerge: true}
 	tableWriter.AppendHeader(
-		table.Row{"Client -> Server", "PPS", "PPS"},
-		rowConfigAutoMerge,
-	)
-	tableWriter.AppendHeader(
-		table.Row{"", "Sender(Lost/Total)", "Receiver(Lost/Total)"},
+		table.Row{"Client -> Server", "Sender PPS (Lost/Total)", "Receiver PPS (Lost/Total)"},
 		rowConfigAutoMerge, rowConfigAutoMerge, rowConfigAutoMerge,
 	)
 	var (

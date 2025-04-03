@@ -39,7 +39,7 @@ var attachVolume = &cobra.Command{
 		taskGroup := syncutils.TaskGroup{
 			Items:        lo.Range(nums),
 			MaxWorker:    parallel,
-			Title:        fmt.Sprintf("create %d volume(s)", len(volumes)),
+			Title:        fmt.Sprintf("create %d volume(s)", nums),
 			ShowProgress: true,
 			Func: func(item any) error {
 				p := item.(int)

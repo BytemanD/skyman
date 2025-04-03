@@ -8,6 +8,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/compare"
 	"github.com/BytemanD/go-console/console"
+	"github.com/samber/lo"
 )
 
 type Interval interface {
@@ -119,7 +120,8 @@ func RetryWithErrors(condition RetryCondition, matchErrors []string, function fu
 }
 
 // 如果匹配 matchError, 重试, 否则退出
-func RetryWithError(condition RetryCondition, retryError error, function func() error) error {
+func RetryWithError(condition RetryCondition, retryError error, function func() error, enableWarnings ...bool) error {
+	enableWarning := lo.FirstOrEmpty(enableWarnings)
 	startTime := time.Now()
 	var err error
 	for {
@@ -133,8 +135,9 @@ func RetryWithError(condition RetryCondition, retryError error, function func() 
 		if !errors.Is(err, retryError) {
 			return fmt.Errorf("unexcept error: %w", err)
 		}
-		console.Warn("catch error: %s, retrying", err)
-
+		if enableWarning {
+			console.Warn("catch error: (%s), retrying", err)
+		}
 		time.Sleep(condition.NextInterval())
 	}
 }

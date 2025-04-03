@@ -159,7 +159,7 @@ func (c NovaV2) ServerAddVolume(id, volumeId string) (*nova.VolumeAttachment, er
 }
 
 func (c NovaV2) ServerDeleteVolume(id, volumeId string) error {
-	return DeleteResource(c.ServiceClient, URL_SERVER_VOLUMES.F(id))
+	return DeleteResource(c.ServiceClient, URL_SERVER_VOLUME.F(id, volumeId))
 }
 
 // server interface api
@@ -808,7 +808,7 @@ func (c NovaV2) ListAgg(query url.Values) ([]nova.Aggregate, error) {
 	)
 }
 func (c NovaV2) GetAgg(id string) (*nova.Aggregate, error) {
-	return GetResource[nova.Aggregate](c.ServiceClient, URL_AGGREGATE.F(), "aggregate")
+	return GetResource[nova.Aggregate](c.ServiceClient, URL_AGGREGATE.F(id), "aggregate")
 }
 func (c NovaV2) CreateAgg(agg nova.Aggregate) (*nova.Aggregate, error) {
 	result := struct {
@@ -897,10 +897,10 @@ func (c NovaV2) WaitServerStatus(serverId string, status string, interval int) (
 	var server *nova.Server
 	err := utility.RetryWithError(
 		utility.RetryCondition{
-			Timeout:     time.Second * 60 * 10,
+			Timeout:     time.Minute * 10,
 			IntervalMin: time.Second * time.Duration(interval),
 		},
-		ErrServerIsError,
+		ErrServerStatusNotExpect,
 		func() error {
 			server, err := c.GetServer(serverId)
 			if err != nil {
@@ -913,7 +913,8 @@ func (c NovaV2) WaitServerStatus(serverId string, status string, interval int) (
 			if strings.EqualFold(server.Status, status) {
 				return nil
 			}
-			return fmt.Errorf("server status is %s, but want: %s", server.Status, status)
+			return fmt.Errorf("%w, expect: %s, but got: %s",
+				ErrServerStatusNotExpect, status, server.Status)
 		},
 	)
 	return server, err

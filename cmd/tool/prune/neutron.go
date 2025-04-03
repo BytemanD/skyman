@@ -43,8 +43,9 @@ var portPrune = &cobra.Command{
 			}
 			filterPorts = append(filterPorts, port)
 		}
+		console.Info("ubound ports: %d", len(filterPorts))
 		if len(filterPorts) == 0 {
-			console.Info("all ports is not unbound nothing to do")
+			console.Info("nothing to do")
 			return
 		}
 		c.PrunePorts(filterPorts)

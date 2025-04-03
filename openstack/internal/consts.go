@@ -53,8 +53,8 @@ const (
 	URL_AVAILABILITY_ZONES_DETAIL UrlPath = "os-availability-zone/detail"
 	// 聚合
 	URL_AGGREGATES        UrlPath = "os-aggregates"
-	URL_AGGREGATE         UrlPath = "os-aggregates/%d"
-	URL_AGGREGATE_ACTION  UrlPath = "os-aggregates/%d/action"
+	URL_AGGREGATE         UrlPath = "os-aggregates/%s"
+	URL_AGGREGATE_ACTION  UrlPath = "os-aggregates/%s/action"
 	URL_AGGREGATES_DETAIL UrlPath = "os-aggregates/detail"
 	// 虚拟机迁移
 	URL_MIGRATIONS_LIST UrlPath = "os-migrations"

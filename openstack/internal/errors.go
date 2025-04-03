@@ -11,3 +11,4 @@ var ErrServerNotStopped = errors.New("server is not stopped")
 
 var ErrServerIsNotDeleted = errors.New("server is not deleted")
 var ErrServerIsError = errors.New("server is error")
+var ErrServerStatusNotExpect = errors.New("server status is not expect")
