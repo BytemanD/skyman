@@ -26,8 +26,13 @@ function main(){
     if [[ $? -eq 0 ]]; then
         echo "INFO" "容器已存在, 启动 ..."
         docker start ${containerName}
+        if [[ $? -ne 0 ]]; then
+            echo "ERROR" "容器 ${containerName} 启动失败"
+            docker rm -f ${containerName}
+            exit 1
+        fi
     else
-        docker run -itd \
+        docker run -itd -e TZ="Asia/Shanghai" \
             --name ${containerName} \
             -v $(pwd):/mnt \
             skyman-openeuler-builder \
