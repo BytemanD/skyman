@@ -10,7 +10,8 @@ RUN yum install -y wget git rpm-build rpmdevtools -y which make gcc glibc-devel 
 RUN yum install -y https://mirrors.aliyun.com/epel/7/x86_64/Packages/u/ucl-1.03-24.el7.x86_64.rpm
 RUN yum install -y https://mirrors.aliyun.com/epel/7/x86_64/Packages/u/upx-3.96-9.el7.x86_64.rpm
 # Install golang
-RUN wget -q https://golang.google.cn/dl/go1.24.1.linux-amd64.tar.gz
+# RUN wget -q https://golang.google.cn/dl/go1.24.1.linux-amd64.tar.gz
+RUN wget -q https://mirrors.aliyun.com/golang/go1.24.1.linux-amd64.tar.gz
 RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.24.1.linux-amd64.tar.gz
 RUN cp /usr/local/go/bin/* /usr/bin/
 

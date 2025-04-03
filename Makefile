@@ -2,7 +2,7 @@
 UPX=$(shell which upx 2> /dev/null)
 VERSION := $(shell go run cmd/skyman.go -v |awk '{{print $$3}}')
 GO_VERSION := $(shell go version |awk '{{print $$3}}')
-BUILD_DATE := $(shell date +'%Y-%m-%d %H:%M:%S')
+BUILD_DATE := $(shell date +'%F %T')
 UNAME := $(shell uname -si)
 
 BUILD_SPEC=/tmp/skyman.spec
