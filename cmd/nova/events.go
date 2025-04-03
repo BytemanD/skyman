@@ -9,6 +9,7 @@ import (
 	"github.com/BytemanD/go-console/console"
 	"github.com/BytemanD/skyman/cmd/flags"
 	"github.com/BytemanD/skyman/common"
+	"github.com/BytemanD/skyman/common/datatable"
 	"github.com/BytemanD/skyman/openstack/model/nova"
 	"github.com/BytemanD/skyman/utility"
 )
@@ -22,15 +23,6 @@ func listServerActions(serverId string, actionName string, last int, long bool) 
 
 	actions, err := client.NovaV2().ListServerActions(serverId)
 	utility.LogError(err, "list actions failed", true)
-	pt := common.PrettyTable{
-		ShortColumns: []common.Column{
-			{Name: "Action"}, {Name: "RequestId"}, {Name: "StartTime", Sort: true},
-			{Name: "Message"},
-		},
-		LongColumns: []common.Column{
-			{Name: "ProjectId"}, {Name: "UserId"},
-		},
-	}
 	if actionName != "" {
 		actions = lo.Filter(actions, func(item nova.InstanceAction, _ int) bool {
 			return item.Action == actionName
@@ -39,8 +31,18 @@ func listServerActions(serverId string, actionName string, last int, long bool) 
 	if last > 0 {
 		actions = common.LastN(actions, last)
 	}
-	pt.Items = append(pt.Items, actions)
-	common.PrintPrettyTable(pt, long)
+	common.PrintItems(
+		[]datatable.Column[nova.InstanceAction]{
+			{Name: "Action"}, {Name: "RequestId"},
+			{Name: "StartTime"},
+			{Name: "Message"},
+		},
+		[]datatable.Column[nova.InstanceAction]{
+			{Name: "ProjectId"}, {Name: "UserId"},
+		},
+		actions,
+		common.TableOptions{},
+	)
 }
 func listServerActionsWithSpend(serverId string, actionName string, requestId string, last int, long bool) {
 	client := common.DefaultClient()

@@ -16,7 +16,7 @@ import (
 var detachInterfaces = &cobra.Command{
 	Use:   "remove-interfaces <server>",
 	Short: "Remove interfaces from server",
-	Args:  cobra.MinimumNArgs(1),
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		nums, _ := cmd.Flags().GetInt("nums")
 		parallel, _ := cmd.Flags().GetInt("parallel")
