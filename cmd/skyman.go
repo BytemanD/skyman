@@ -144,10 +144,9 @@ func main() {
 		},
 	}
 
-	rootCmd.PersistentFlags().BoolP("debug", "d", false, i18n.T("showDebug"))
+	rootCmd.PersistentFlags().BoolP("debug", "d", false, i18n.T("enableDebug"))
 	rootCmd.PersistentFlags().String("log-file", "", i18n.T("logFile"))
-	rootCmd.PersistentFlags().Bool("log-color", false, i18n.T("enableLogColor"))
-	rootCmd.PersistentFlags().StringP("format", "f", "table",
+	rootCmd.PersistentFlags().StringP("format", "f", "table-light",
 		fmt.Sprintf(i18n.T("formatAndSupported"), common.GetOutputFormats()))
 	rootCmd.PersistentFlags().String("cloud", "", i18n.T("cloudName"))
 	rootCmd.PersistentFlags().StringP("conf", "c", os.Getenv("SKYMAN_CONF_FILE"),
@@ -159,7 +158,6 @@ func main() {
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	viper.BindPFlag("format", rootCmd.PersistentFlags().Lookup("format"))
 	viper.BindPFlag("logFile", rootCmd.PersistentFlags().Lookup("log-file"))
-	viper.BindPFlag("enableLogColor", rootCmd.PersistentFlags().Lookup("log-color"))
 	viper.BindPFlag("cloud", rootCmd.PersistentFlags().Lookup("cloud"))
 
 	rootCmd.PersistentFlags().String("compute-api-version", "", "Compute API version")

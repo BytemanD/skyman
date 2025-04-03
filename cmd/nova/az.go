@@ -12,7 +12,7 @@ import (
 var (
 	azListFlags flags.AZListFlags
 )
-var AZ = &cobra.Command{Use: "availability-zone", Aliases: []string{"az"}}
+var AZ = &cobra.Command{Use: "availability-zone", Aliases: []string{"az"}, Short: "管理可用区"}
 
 var azList = &cobra.Command{
 	Use:   "list",

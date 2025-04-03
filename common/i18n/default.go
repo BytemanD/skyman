@@ -12,7 +12,6 @@ func getDefaultMessage(msgId string) *i18n.Message {
 	value, ok := defaultMessageMap[msgId]
 	if !ok {
 		console.Fatal("get default message failed, %s", msgId)
-
 	}
 	return &value
 }
@@ -22,8 +21,8 @@ func init() {
 		{ID: "thePathOfConfigFile",
 			Other: "the path of config file",
 		},
-		{ID: "showDebug",
-			Other: "show debug messages",
+		{ID: "enableDebug",
+			Other: "enable debug log",
 		},
 		{ID: "formatAndSupported",
 			Other: "output format, supported: %v",

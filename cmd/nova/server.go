@@ -27,7 +27,7 @@ import (
 	"github.com/BytemanD/skyman/utility"
 )
 
-var Server = &cobra.Command{Use: "server"}
+var Server = &cobra.Command{Use: "server", Short: "管理实例"}
 
 func refreshServers(c *openstack.Openstack, filterHosts []string, host, az string, query url.Values) []nova.Server {
 	items := []nova.Server{}
