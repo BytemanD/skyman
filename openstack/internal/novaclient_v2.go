@@ -34,10 +34,10 @@ func (v microVersion) Compare(other microVersion) int {
 
 type NovaV2 struct {
 	*ServiceClient
-	MicroVersion *model.ApiVersion
+	// Version *model.ApiVersion
 }
 
-func getMicroVersion(vertionStr string) microVersion {
+func ParsetVersionFromString(vertionStr string) microVersion {
 	versionList := strings.Split(vertionStr, ".")
 	v, _ := strconv.Atoi(versionList[0])
 	micro, _ := strconv.Atoi(versionList[1])
@@ -49,22 +49,28 @@ func (c *NovaV2) GetMicroVersion() string {
 }
 func (c *NovaV2) MicroVersionLargeEqual(version string) bool {
 	clientMicroVersoin := c.GetMicroVersion()
-	return getMicroVersion(clientMicroVersoin).
-		Compare(getMicroVersion(version)) >= 0
+	return ParsetVersionFromString(clientMicroVersoin).
+		Compare(ParsetVersionFromString(version)) >= 0
+}
+func (c *NovaV2) GetApiVersions() (model.ApiVersions, error) {
+	result := struct{ Versions model.ApiVersions }{}
+	if _, err := c.Index(&result); err != nil {
+		return nil, err
+	}
+	return result.Versions, nil
 }
 func (c *NovaV2) DiscoverMicroVersion() error {
 	console.Debug("discorver micro version for nova")
-	result := struct{ Versions model.ApiVersions }{}
-	if _, err := c.Index(&result); err != nil {
-		return err
-	} else {
-		current := result.Versions.Current()
-		if current == nil {
-			return fmt.Errorf("current version not found")
-		}
-		console.Debug("use micro version: %s", current.Version)
-		c.SetHeader(X_OPENSTACK_NOVA_API_VERSION, current.Version)
+	versions, err := c.GetApiVersions()
+	if err != nil {
+		return fmt.Errorf("get api versions failed: %s", err)
 	}
+	current := versions.Current()
+	if current == nil {
+		return fmt.Errorf("current version not found")
+	}
+	console.Debug("use micro version: %s", current.Version)
+	c.SetHeader(X_OPENSTACK_NOVA_API_VERSION, current.Version)
 	return nil
 }
 func (c *NovaV2) String() string {

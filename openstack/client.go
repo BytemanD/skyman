@@ -179,9 +179,14 @@ func (o *Openstack) NovaV2(microVersion ...string) *internal.NovaV2 {
 			ServiceClient: internal.NewServiceClient(
 				o.Region(), COMPUTE, NOVA, PUBLIC, V2_1, o.AuthPlugin,
 			),
-			MicroVersion: &model.ApiVersion{Version: "2.1"},
+			// ApiVersion: model.ApiVersion{Version: "2.1"},
 		}
 		if o.cloudConfig.Compute.Api.Version != "" {
+			// v := internal.ParsetVersionFromString(o.cloudConfig.Compute.Api.Version)
+			// o.novaClient.ApiVersion = model.ApiVersion{
+			// Version:    v.Version,
+			// MinVersion: Version,
+			// }
 			o.novaClient.SetHeader(internal.X_OPENSTACK_NOVA_API_VERSION, o.cloudConfig.Compute.Api.Version)
 		} else {
 			if err := o.novaClient.DiscoverMicroVersion(); err != nil {

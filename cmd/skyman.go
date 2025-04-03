@@ -80,11 +80,16 @@ var versionCmd = &cobra.Command{
 		fmt.Printf("  %-11s: %s\n", "Keystone", identityVerion.VersoinInfo())
 
 		errors := 0
-		err = client.NovaV2().DiscoverMicroVersion()
+
+		versions, err := client.NovaV2().GetApiVersions()
 		if err == nil {
-			fmt.Printf("  %-11s: %s\n", "Nova", client.NovaV2().MicroVersion.VersoinInfo())
+			if currentVersion := versions.Current(); currentVersion != nil {
+				fmt.Printf("  %-11s: %s\n", "Nova", versions.Current().VersoinInfo())
+			} else {
+				fmt.Printf("  %-11s: Unknown (%s)\n", "Nova", err)
+			}
 		} else {
-			fmt.Printf("  %-11s: Unknown (%s)\n", "Nova", err)
+			fmt.Printf("  %-11s: get api versions failed (%s)\n", "Nova", err)
 			errors++
 		}
 		imageVerion, err := client.GlanceV2().GetCurrentVersion()
