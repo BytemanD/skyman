@@ -40,13 +40,12 @@ var detachInterfaces = &cobra.Command{
 			console.Warn("nothing to do")
 			return
 		}
-		taskGroup2 := syncutils.TaskGroup{
+		taskGroup2 := syncutils.TaskGroup[nova.InterfaceAttachment]{
 			Items:        detachInterfaces,
 			MaxWorker:    parallel,
 			Title:        fmt.Sprintf("detach %d interface(s)", len(interfaces)),
 			ShowProgress: true,
-			Func: func(item any) error {
-				p := item.(nova.InterfaceAttachment)
+			Func: func(p nova.InterfaceAttachment) error {
 				console.Info("[interface: %s] detaching", p.PortId)
 				err := client.NovaV2().DeleteServerInterfaceAndWait(server.Id, p.PortId, time.Minute*5)
 				if err != nil {

@@ -33,13 +33,12 @@ type CaseInterface interface {
 
 func RunBenchmarkTest(cases []ServerShow) []BenchmarkResult {
 	results := []BenchmarkResult{}
-	task := syncutils.TaskGroup{
+	task := syncutils.TaskGroup[ServerShow]{
 		Items:        cases,
 		Title:        fmt.Sprintf("test %d case(s)", len(cases)),
 		ShowProgress: true,
 		MaxWorker:    len(cases),
-		Func: func(item any) error {
-			p, _ := item.(ServerShow)
+		Func: func(p ServerShow) error {
 			result := BenchmarkResult{Start: time.Now()}
 			if err := p.PreStart(); err != nil {
 				result.Err = err

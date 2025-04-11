@@ -59,12 +59,11 @@ var detachVolumes = &cobra.Command{
 			console.Warn("nothing to do")
 			return
 		}
-		taskGroup := syncutils.TaskGroup{
+		taskGroup := syncutils.TaskGroup[string]{
 			Items:        detachVolumes,
 			MaxWorker:    parallel,
 			ShowProgress: true,
-			Func: func(item any) error {
-				p := item.(string)
+			Func: func(p string) error {
 				console.Info("[volume: %s] request to detach", p)
 				err := client.NovaV2().DeleteServerVolumeAndWait(server.Id, p, 600)
 				if err != nil {
@@ -80,12 +79,11 @@ var detachVolumes = &cobra.Command{
 		if !clean {
 			return
 		}
-		taskGroup2 := syncutils.TaskGroup{
+		taskGroup2 := syncutils.TaskGroup[string]{
 			Items:        detachVolumes,
 			MaxWorker:    parallel,
 			ShowProgress: true,
-			Func: func(item any) error {
-				p := item.(string)
+			Func: func(p string) error {
 				console.Debug("[volume: %s] deleting", p)
 				err := cinderClient.DeleteVolume(p, true, true)
 				// TODO: wait deleted

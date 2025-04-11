@@ -198,7 +198,7 @@ func (t *Case) testActions(testId int, serverId string) (actionsReport WorkerRep
 	if title == "" {
 		title = strings.Join(t.Actions.FormatActions(), ",")
 	}
-	pbr := console.NewPbr(t.Actions.Total(), fmt.Sprintf("%s (%d)", title, testId))
+	pbr := console.NewProgressLinear(t.Actions.Total(), fmt.Sprintf("%s (%d)", title, testId))
 	for _, actionName := range t.Actions.Actions() {
 		action := internal.VALID_ACTIONS.Get(actionName, server, t.Client)
 		action.SetConfig(t.Config)
@@ -254,7 +254,7 @@ func (t *Case) Start() {
 		return
 	}
 	console.Info("run case, worker=%d actions=%s", t.Config.Workers, t.Actions.FormatActions())
-	go console.WaitPbrs()
+	go console.WaitAllProgressBar()
 	if len(t.UseServers) > 0 {
 		console.Warn("use exits servers: %s", strings.Join(t.UseServers, ","))
 		syncutils.StartTasks(

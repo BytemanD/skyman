@@ -1,6 +1,6 @@
 module github.com/BytemanD/skyman
 
-go 1.24.0
+go 1.24.1
 
 require (
 	github.com/spf13/cobra v1.7.0
@@ -18,7 +18,7 @@ require golang.org/x/exp v0.0.0-20221208152030-732eee02a75a // indirect
 
 require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
-	github.com/go-resty/resty/v2 v2.13.1
+	github.com/go-resty/resty/v2 v2.16.5
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/howeyc/gopass v0.0.0-20210920133722-c8aef6fb66ef
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -32,15 +32,15 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/subosito/gotenv v1.4.2 // indirect
-	golang.org/x/crypto v0.23.0 // indirect
-	golang.org/x/sys v0.25.0 // indirect
-	golang.org/x/term v0.20.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/term v0.27.0 // indirect
 	golang.org/x/text v0.21.0
 	gopkg.in/ini.v1 v1.67.0 // indirect
 )
 
 require (
-	github.com/BytemanD/easygo/pkg v0.1.2
+	github.com/BytemanD/easygo/pkg v0.1.3-0.20250411024555-20dc3c5bb557
 	github.com/MichaelMure/go-term-markdown v0.1.4
 	github.com/cheggaaa/pb/v3 v3.1.5
 	github.com/jedib0t/go-pretty/v6 v6.5.8
@@ -50,7 +50,7 @@ require (
 )
 
 require (
-	github.com/BytemanD/go-console v0.0.4
+	github.com/BytemanD/go-console v0.0.6-0.20250411020730-368697ebf830
 	github.com/MichaelMure/go-term-text v0.3.1 // indirect
 	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/alecthomas/chroma v0.7.1 // indirect
@@ -66,7 +66,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/wxnacy/wgo v1.0.4
 	golang.org/x/image v0.0.0-20191206065243-da761ea9ff43 // indirect
-	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 )
 
 replace github.com/BytemanD/skyman => ./

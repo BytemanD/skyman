@@ -124,12 +124,11 @@ var imageDelete = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := common.DefaultClient().GlanceV2()
 
-		task := syncutils.TaskGroup{
+		task := syncutils.TaskGroup[string]{
 			Items:        args,
 			Title:        fmt.Sprintf("delete %d image(s)", len(args)),
 			ShowProgress: true,
-			Func: func(item any) error {
-				idOrName, _ := item.(string)
+			Func: func(idOrName string) error {
 				image, err := c.FindImage(idOrName)
 				if err != nil {
 					console.Error("get image %s failed: %s", idOrName, err)

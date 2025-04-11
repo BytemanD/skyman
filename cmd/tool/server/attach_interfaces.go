@@ -58,13 +58,12 @@ var attachInterfaces = &cobra.Command{
 		mu := sync.Mutex{}
 
 		if !useNetId {
-			taskGroup := syncutils.TaskGroup{
+			taskGroup := syncutils.TaskGroup[int]{
 				Items:        lo.Range(len(nets)),
 				MaxWorker:    parallel,
 				Title:        fmt.Sprintf("create %d port(s)", len(nets)),
 				ShowProgress: true,
-				Func: func(item any) error {
-					p := item.(int)
+				Func: func(p int) error {
 					name := fmt.Sprintf("skyman-port-%d", p+1)
 					console.Debug("creating port %s", name)
 					options := map[string]any{
@@ -97,13 +96,12 @@ var attachInterfaces = &cobra.Command{
 			return
 		}
 		attachFailed := false
-		taskGroup2 := syncutils.TaskGroup{
+		taskGroup2 := syncutils.TaskGroup[Interface]{
 			Items:        interfaces,
 			MaxWorker:    parallel,
 			Title:        fmt.Sprintf("attach %d port(s)", len(interfaces)),
 			ShowProgress: true,
-			Func: func(item any) error {
-				p := item.(Interface)
+			Func: func(p Interface) error {
 				attachment, err := client.NovaV2().ServerAddInterface(server.Id, p.NetId, p.PortId)
 				if err != nil {
 					console.Error("[interface: %s] attach failed: %v", p, err)

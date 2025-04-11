@@ -36,13 +36,12 @@ var attachVolume = &cobra.Command{
 		volumes := []Volume{}
 		mu := sync.Mutex{}
 
-		taskGroup := syncutils.TaskGroup{
+		taskGroup := syncutils.TaskGroup[int]{
 			Items:        lo.Range(nums),
 			MaxWorker:    parallel,
 			Title:        fmt.Sprintf("create %d volume(s)", nums),
 			ShowProgress: true,
-			Func: func(item any) error {
-				p := item.(int)
+			Func: func(p int) error {
 				name := fmt.Sprintf("skyman-volume-%d", p+1)
 				createOption := map[string]any{
 					"name": name, "size": size,
@@ -69,13 +68,12 @@ var attachVolume = &cobra.Command{
 		if len(volumes) == 0 {
 			return
 		}
-		taskGroup2 := syncutils.TaskGroup{
+		taskGroup2 := syncutils.TaskGroup[Volume]{
 			Items:        volumes,
 			Title:        fmt.Sprintf("attach %d volume(s)", len(volumes)),
 			MaxWorker:    parallel,
 			ShowProgress: true,
-			Func: func(item any) error {
-				p := item.(Volume)
+			Func: func(p Volume) error {
 				console.Debug("[volume: %s] attaching", p)
 				attachment, err := client.NovaV2().ServerAddVolume(server.Id, p.Id)
 				if err != nil {
