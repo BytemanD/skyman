@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -62,7 +63,7 @@ var versionCmd = &cobra.Command{
 		if GoVersion == "" {
 			GoVersion = runtime.Version()
 		}
-		println("Client:")
+		println(color.CyanString("Client:"))
 		fmt.Printf("  %-14s: %s\n", "Version", getVersion())
 		fmt.Printf("  %-14s: %s\n", "GoVersion", GoVersion)
 		fmt.Printf("  %-14s: %s\n", "BuildDate", BuildDate)
@@ -70,7 +71,7 @@ var versionCmd = &cobra.Command{
 
 		client := common.DefaultClient()
 
-		fmt.Println("Servers:")
+		println(color.CyanString("Servers:"))
 
 		identityVerion, err := client.KeystoneV3().GetStableVersion()
 		utility.LogError(err, "get idendity veresion failed", true)
